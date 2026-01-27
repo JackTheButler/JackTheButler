@@ -82,6 +82,27 @@ expect(result.requests.total).toBeGreaterThan(10000);
 
 ### 1.0.0-rc.2: Security Hardening
 
+**Create audit_log table (migration):**
+
+```sql
+CREATE TABLE IF NOT EXISTS audit_log (
+  id TEXT PRIMARY KEY,
+  actor_type TEXT NOT NULL,
+  actor_id TEXT,
+  action TEXT NOT NULL,
+  resource_type TEXT NOT NULL,
+  resource_id TEXT,
+  details TEXT,
+  ip_address TEXT,
+  user_agent TEXT,
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE INDEX idx_audit_created ON audit_log(created_at);
+CREATE INDEX idx_audit_actor ON audit_log(actor_type, actor_id);
+CREATE INDEX idx_audit_resource ON audit_log(resource_type, resource_id);
+```
+
 **Security checklist:**
 
 1. **Authentication**

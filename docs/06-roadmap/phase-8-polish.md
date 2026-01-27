@@ -178,6 +178,23 @@ export class EmailAdapter implements ChannelAdapter {
 
 ### 0.9.0-alpha.3: Automation Rules Engine
 
+**Create table (migration):**
+
+```sql
+CREATE TABLE IF NOT EXISTS automation_rules (
+  id TEXT PRIMARY KEY,
+  name TEXT NOT NULL,
+  description TEXT,
+  trigger_type TEXT NOT NULL,
+  trigger_config TEXT NOT NULL,
+  action_type TEXT NOT NULL,
+  action_config TEXT NOT NULL,
+  enabled INTEGER NOT NULL DEFAULT 1,
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+```
+
 **Files to create:**
 
 ```

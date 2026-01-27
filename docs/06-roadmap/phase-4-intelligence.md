@@ -115,9 +115,28 @@ src/ai/
 │   └── search.ts             # Vector search
 ```
 
-**Schema already exists from Phase 1:**
-- `knowledge_base` table
-- `knowledge_embeddings` virtual table (sqlite-vec)
+**Create tables (migration):**
+- `knowledge_base` table - FAQ, policies, amenities content
+- `knowledge_embeddings` virtual table (sqlite-vec) - vector embeddings
+
+```sql
+-- Add to migration
+CREATE TABLE IF NOT EXISTS knowledge_base (
+  id TEXT PRIMARY KEY,
+  category TEXT NOT NULL,
+  title TEXT NOT NULL,
+  content TEXT NOT NULL,
+  keywords TEXT DEFAULT '[]',
+  status TEXT NOT NULL DEFAULT 'active',
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+);
+
+CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_embeddings USING vec0(
+  id TEXT PRIMARY KEY,
+  embedding FLOAT[1536]
+);
+```
 
 **Knowledge service:**
 

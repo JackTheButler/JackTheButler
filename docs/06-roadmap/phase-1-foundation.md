@@ -191,10 +191,11 @@ export const settings = sqliteTable('settings', {
 
 ### 0.2.0-alpha.4: Core Schema
 
-**Add remaining core tables to schema.ts:**
+**Add core tables to schema.ts (7 tables):**
 
 ```typescript
-// Tables to add (structure only, not all columns):
+// Core tables for Phase 1:
+export const settings = sqliteTable('settings', { /* ... */ });
 export const guests = sqliteTable('guests', { /* ... */ });
 export const reservations = sqliteTable('reservations', { /* ... */ });
 export const conversations = sqliteTable('conversations', { /* ... */ });
@@ -204,6 +205,11 @@ export const staff = sqliteTable('staff', { /* ... */ });
 ```
 
 Refer to [Data Model](../03-architecture/data-model.md) for complete schema.
+
+**Note:** Supporting tables added in later phases:
+- `knowledge_base`, `knowledge_embeddings` → Phase 4 (Intelligence)
+- `automation_rules` → Phase 8 (Automation)
+- `audit_log` → Phase 9 (Security)
 
 **Acceptance criteria:**
 - [ ] All core tables defined in schema.ts
