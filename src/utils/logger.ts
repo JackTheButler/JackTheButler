@@ -35,7 +35,7 @@ export const logger: Logger = pino(
         transport: devTransport,
         base: {
           app: 'jack',
-          version: '0.3.0',
+          version: '0.5.0',
         },
         formatters: {
           level: (label) => ({ level: label }),
@@ -45,7 +45,7 @@ export const logger: Logger = pino(
         level: config.log.level,
         base: {
           app: 'jack',
-          version: '0.3.0',
+          version: '0.5.0',
         },
         formatters: {
           level: (label) => ({ level: label }),

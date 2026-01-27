@@ -48,7 +48,7 @@ export function createApp() {
   app.get('/', (c) => {
     return c.json({
       name: 'Jack The Butler',
-      version: '0.3.0',
+      version: '0.5.0',
       status: 'running',
       docs: '/api/v1',
       health: '/health',

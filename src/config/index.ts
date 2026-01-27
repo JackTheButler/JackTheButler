@@ -27,7 +27,22 @@ const configSchema = z.object({
 
   // JWT Authentication
   jwt: z.object({
-    secret: z.string().min(32, 'JWT secret must be at least 32 characters').default('development-secret-change-in-production-min-32-chars'),
+    secret: z
+      .string()
+      .min(32, 'JWT secret must be at least 32 characters')
+      .default('development-secret-change-in-production-min-32-chars'),
+  }),
+
+  // AI Configuration
+  ai: z.object({
+    provider: z.enum(['claude', 'openai', 'ollama']).default('claude'),
+    anthropicApiKey: z.string().optional(),
+    openaiApiKey: z.string().optional(),
+    ollamaBaseUrl: z.string().default('http://localhost:11434'),
+    model: z.string().optional(),
+    embeddingModel: z.string().optional(),
+    maxTokens: z.coerce.number().int().min(1).max(8192).default(1024),
+    temperature: z.coerce.number().min(0).max(2).default(0.7),
   }),
 });
 
@@ -63,6 +78,16 @@ export function loadConfig(): Config {
     },
     jwt: {
       secret: process.env.JWT_SECRET,
+    },
+    ai: {
+      provider: process.env.AI_PROVIDER,
+      anthropicApiKey: process.env.ANTHROPIC_API_KEY,
+      openaiApiKey: process.env.OPENAI_API_KEY,
+      ollamaBaseUrl: process.env.OLLAMA_BASE_URL,
+      model: process.env.AI_MODEL,
+      embeddingModel: process.env.AI_EMBEDDING_MODEL,
+      maxTokens: process.env.AI_MAX_TOKENS,
+      temperature: process.env.AI_TEMPERATURE,
     },
   };
 

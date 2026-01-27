@@ -4,9 +4,9 @@
   "description": "AI-powered hospitality assistant for hotels",
   "type": "module",
   "scripts": {
-    "dev": "tsx watch src/index.ts",
+    "dev": "tsx watch --env-file=.env.development src/index.ts",
     "build": "tsc && tsc-alias",
-    "start": "node dist/index.js",
+    "start": "node --env-file=.env dist/index.js",
     "lint": "oxlint src/",
     "lint:fix": "oxlint src/ --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
@@ -22,7 +22,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx src/db/seed.ts",
+    "db:seed": "tsx --env-file=.env.development src/db/seed.ts",
     "docs": "npx @redocly/cli preview-docs docs/api/openapi.yaml",
     "docs:lint": "npx @redocly/cli lint docs/api/openapi.yaml"
   },
@@ -54,12 +54,15 @@
     "vitest": "^2.1.0"
   },
   "dependencies": {
+    "@anthropic-ai/sdk": "^0.71.2",
     "@hono/node-server": "^1.19.9",
     "better-sqlite3": "^12.6.2",
     "drizzle-orm": "^0.45.1",
     "hono": "^4.11.7",
     "jose": "^6.1.3",
+    "openai": "^6.16.0",
     "pino": "^10.3.0",
+    "sqlite-vec": "0.1.7-alpha.2",
     "ws": "^8.19.0",
     "zod": "^4.3.6"
   }

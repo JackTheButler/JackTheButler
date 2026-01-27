@@ -1,14 +1,18 @@
 /**
  * WebSocket Server
  *
- * Real-time communication for dashboard and notifications.
+ * Real-time communication for:
+ * - Staff dashboard notifications (/ws)
+ * - Guest webchat (/chat)
  */
 
 import { WebSocketServer, WebSocket } from 'ws';
-import type { Server } from 'node:http';
+import type { Server, IncomingMessage } from 'node:http';
+import type { Duplex } from 'node:stream';
 import { jwtVerify } from 'jose';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { handleChatConnection } from '@/channels/webchat/index.js';
 
 const log = createLogger('websocket');
 
@@ -24,7 +28,7 @@ interface WSMessage {
 }
 
 /**
- * Active WebSocket connections
+ * Active WebSocket connections (staff dashboard)
  */
 const clients = new Map<string, Set<AuthenticatedSocket>>();
 
@@ -32,9 +36,31 @@ const clients = new Map<string, Set<AuthenticatedSocket>>();
  * Setup WebSocket server on existing HTTP server
  */
 export function setupWebSocket(server: Server): WebSocketServer {
-  const wss = new WebSocketServer({ server, path: '/ws' });
+  // Staff dashboard WebSocket server (noServer mode for manual routing)
+  const wss = new WebSocketServer({ noServer: true });
   const config = loadConfig();
   const secret = new TextEncoder().encode(config.jwt.secret);
+
+  // Guest chat WebSocket server (noServer mode for manual routing)
+  const chatWss = new WebSocketServer({ noServer: true });
+
+  // Handle HTTP upgrade requests manually to route to correct WebSocket server
+  server.on('upgrade', (request: IncomingMessage, socket: Duplex, head: Buffer) => {
+    const pathname = new URL(request.url || '', `http://${request.headers.host}`).pathname;
+
+    if (pathname === '/ws') {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit('connection', ws, request);
+      });
+    } else if (pathname === '/chat') {
+      chatWss.handleUpgrade(request, socket, head, (ws) => {
+        chatWss.emit('connection', ws, request);
+      });
+    } else {
+      // Unknown WebSocket path - destroy connection
+      socket.destroy();
+    }
+  });
 
   // Heartbeat interval to detect dead connections
   const heartbeatInterval = setInterval(() => {
@@ -53,6 +79,7 @@ export function setupWebSocket(server: Server): WebSocketServer {
     clearInterval(heartbeatInterval);
   });
 
+  // Handle staff dashboard connections
   wss.on('connection', async (ws: AuthenticatedSocket, req) => {
     ws.isAlive = true;
 
@@ -130,13 +157,18 @@ export function setupWebSocket(server: Server): WebSocketServer {
     });
   });
 
-  log.info('WebSocket server started on /ws');
+  // Handle guest chat connections
+  chatWss.on('connection', (ws) => {
+    handleChatConnection(ws);
+  });
+
+  log.info('WebSocket server started on /ws (staff) and /chat (guests)');
 
   return wss;
 }
 
 /**
- * Handle incoming WebSocket messages
+ * Handle incoming WebSocket messages (staff dashboard)
  */
 function handleMessage(ws: AuthenticatedSocket, message: WSMessage) {
   log.debug({ type: message.type, userId: ws.userId }, 'Received message');

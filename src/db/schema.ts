@@ -347,6 +347,64 @@ export const tasks = sqliteTable(
 );
 
 // ===================
+// Knowledge Base
+// ===================
+
+/**
+ * Hotel knowledge base items (FAQ, policies, amenities)
+ */
+export const knowledgeBase = sqliteTable(
+  'knowledge_base',
+  {
+    id: text('id').primaryKey(),
+
+    // Category: faq, policy, amenity, service, room_type, local_info
+    category: text('category').notNull(),
+    title: text('title').notNull(),
+    content: text('content').notNull(),
+
+    // Keywords for search (JSON array)
+    keywords: text('keywords').notNull().default('[]'),
+
+    // Status: active, archived
+    status: text('status').notNull().default('active'),
+
+    // Metadata
+    priority: integer('priority').notNull().default(0),
+    language: text('language').notNull().default('en'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_knowledge_category').on(table.category),
+    index('idx_knowledge_status').on(table.status),
+  ]
+);
+
+/**
+ * Knowledge embeddings for vector search
+ * Note: This table stores raw embedding data.
+ * For similarity search, we use sqlite-vec extension with raw SQL queries.
+ */
+export const knowledgeEmbeddings = sqliteTable('knowledge_embeddings', {
+  id: text('id')
+    .primaryKey()
+    .references(() => knowledgeBase.id, { onDelete: 'cascade' }),
+  // Store embedding as JSON array (sqlite-vec will handle the vector operations)
+  embedding: text('embedding').notNull(),
+  model: text('model').notNull(),
+  dimensions: integer('dimensions').notNull(),
+  createdAt: text('created_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// ===================
 // Type Exports
 // ===================
 
@@ -370,3 +428,9 @@ export type NewMessage = typeof messages.$inferInsert;
 
 export type Task = typeof tasks.$inferSelect;
 export type NewTask = typeof tasks.$inferInsert;
+
+export type KnowledgeItem = typeof knowledgeBase.$inferSelect;
+export type NewKnowledgeItem = typeof knowledgeBase.$inferInsert;
+
+export type KnowledgeEmbedding = typeof knowledgeEmbeddings.$inferSelect;
+export type NewKnowledgeEmbedding = typeof knowledgeEmbeddings.$inferInsert;

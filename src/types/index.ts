@@ -2,13 +2,15 @@
  * TypeScript Type Definitions
  *
  * Shared types used across the application:
+ * - Channel types
  * - Message types
  * - Conversation types
- * - Guest types
- * - Channel types
+ * - Event types
  *
  * @see docs/04-specs/conventions/id-formats.md
  */
 
-// Types will be added as needed in each phase
-export {};
+export * from './channel.js';
+export * from './message.js';
+export * from './conversation.js';
+export * from './events.js';

@@ -10,6 +10,7 @@ data/
 # Environment
 .env
 .env.local
+.env.development
 .env.*.local
 
 # Logs
