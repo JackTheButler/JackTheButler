@@ -1,0 +1,372 @@
+/**
+ * Database Schema - Drizzle ORM Definitions
+ *
+ * Core tables for Jack The Butler:
+ * - settings: Global configuration
+ * - guests: Guest profiles
+ * - reservations: Booking records
+ * - conversations: Communication threads
+ * - messages: Individual messages
+ * - tasks: Service requests and work orders
+ * - staff: Hotel staff users
+ *
+ * @see docs/03-architecture/data-model.md
+ */
+
+import { sql } from 'drizzle-orm';
+import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
+
+// ===================
+// Settings
+// ===================
+
+/**
+ * Global configuration key-value store
+ */
+export const settings = sqliteTable('settings', {
+  key: text('key').primaryKey(),
+  value: text('value').notNull(),
+  updatedAt: text('updated_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+// ===================
+// Guests
+// ===================
+
+/**
+ * Guest profiles with preferences and history
+ */
+export const guests = sqliteTable(
+  'guests',
+  {
+    id: text('id').primaryKey(),
+
+    // Identity
+    firstName: text('first_name').notNull(),
+    lastName: text('last_name').notNull(),
+    email: text('email'),
+    phone: text('phone'),
+
+    // Profile
+    language: text('language').default('en'),
+    loyaltyTier: text('loyalty_tier'),
+    vipStatus: text('vip_status'),
+
+    // External references (JSON object)
+    externalIds: text('external_ids').notNull().default('{}'),
+
+    // Preferences (JSON array)
+    preferences: text('preferences').notNull().default('[]'),
+
+    // Stats
+    stayCount: integer('stay_count').notNull().default(0),
+    totalRevenue: real('total_revenue').notNull().default(0),
+    lastStayDate: text('last_stay_date'),
+
+    // Metadata
+    notes: text('notes'),
+    tags: text('tags').default('[]'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    uniqueIndex('idx_guests_email').on(table.email),
+    uniqueIndex('idx_guests_phone').on(table.phone),
+    index('idx_guests_name').on(table.lastName, table.firstName),
+  ]
+);
+
+// ===================
+// Reservations
+// ===================
+
+/**
+ * Booking records synced from PMS
+ */
+export const reservations = sqliteTable(
+  'reservations',
+  {
+    id: text('id').primaryKey(),
+    guestId: text('guest_id')
+      .notNull()
+      .references(() => guests.id),
+
+    // Identity
+    confirmationNumber: text('confirmation_number').notNull().unique(),
+    externalId: text('external_id'),
+
+    // Stay details
+    roomNumber: text('room_number'),
+    roomType: text('room_type').notNull(),
+    arrivalDate: text('arrival_date').notNull(),
+    departureDate: text('departure_date').notNull(),
+
+    // Status: confirmed, checked_in, checked_out, cancelled, no_show
+    status: text('status').notNull().default('confirmed'),
+
+    // Timing (ISO 8601 datetime strings)
+    estimatedArrival: text('estimated_arrival'),
+    actualArrival: text('actual_arrival'),
+    estimatedDeparture: text('estimated_departure'),
+    actualDeparture: text('actual_departure'),
+
+    // Financial
+    rateCode: text('rate_code'),
+    totalRate: real('total_rate'),
+    balance: real('balance').default(0),
+
+    // Additional (JSON arrays)
+    specialRequests: text('special_requests').default('[]'),
+    notes: text('notes').default('[]'),
+
+    // Sync tracking
+    syncedAt: text('synced_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_reservations_guest').on(table.guestId),
+    index('idx_reservations_dates').on(table.arrivalDate, table.departureDate),
+    index('idx_reservations_status').on(table.status),
+    index('idx_reservations_room').on(table.roomNumber),
+  ]
+);
+
+// ===================
+// Staff
+// ===================
+
+/**
+ * Hotel staff users
+ */
+export const staff = sqliteTable(
+  'staff',
+  {
+    id: text('id').primaryKey(),
+
+    // Identity
+    email: text('email').notNull().unique(),
+    name: text('name').notNull(),
+    phone: text('phone'),
+
+    // Role: admin, manager, front_desk, concierge, housekeeping, maintenance
+    role: text('role').notNull(),
+    department: text('department'),
+
+    // Permissions (JSON array)
+    permissions: text('permissions').notNull().default('[]'),
+
+    // Status: active, inactive
+    status: text('status').notNull().default('active'),
+    lastActiveAt: text('last_active_at'),
+
+    // Auth (bcrypt hash)
+    passwordHash: text('password_hash'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [index('idx_staff_role').on(table.role), index('idx_staff_department').on(table.department)]
+);
+
+// ===================
+// Conversations
+// ===================
+
+/**
+ * Guest communication threads
+ */
+export const conversations = sqliteTable(
+  'conversations',
+  {
+    id: text('id').primaryKey(),
+    guestId: text('guest_id').references(() => guests.id),
+    reservationId: text('reservation_id').references(() => reservations.id),
+
+    // Channel: whatsapp, sms, email, webchat
+    channelType: text('channel_type').notNull(),
+    // Phone number, email address, or session ID
+    channelId: text('channel_id').notNull(),
+
+    // State: new, active, escalated, resolved, closed
+    state: text('state').notNull().default('active'),
+    assignedTo: text('assigned_to').references(() => staff.id),
+
+    // Context
+    currentIntent: text('current_intent'),
+    // Metadata as JSON object
+    metadata: text('metadata').notNull().default('{}'),
+
+    // Timing
+    lastMessageAt: text('last_message_at'),
+    resolvedAt: text('resolved_at'),
+
+    // Timeout tracking
+    idleWarnedAt: text('idle_warned_at'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_conversations_guest').on(table.guestId),
+    index('idx_conversations_channel').on(table.channelType, table.channelId),
+    index('idx_conversations_state').on(table.state),
+    index('idx_conversations_assigned').on(table.assignedTo),
+  ]
+);
+
+// ===================
+// Messages
+// ===================
+
+/**
+ * Individual messages within conversations
+ */
+export const messages = sqliteTable(
+  'messages',
+  {
+    id: text('id').primaryKey(),
+    conversationId: text('conversation_id')
+      .notNull()
+      .references(() => conversations.id),
+
+    // Direction: inbound, outbound
+    direction: text('direction').notNull(),
+    // Sender: guest, ai, staff, system
+    senderType: text('sender_type').notNull(),
+    senderId: text('sender_id'),
+
+    // Content
+    content: text('content').notNull(),
+    // Content type: text, image, audio, video, document, location, interactive
+    contentType: text('content_type').notNull().default('text'),
+    // Media as JSON array
+    media: text('media'),
+
+    // AI metadata
+    intent: text('intent'),
+    confidence: real('confidence'),
+    // Entities as JSON array
+    entities: text('entities'),
+
+    // Channel metadata
+    channelMessageId: text('channel_message_id'),
+    // Delivery status: pending, sent, delivered, read, failed
+    deliveryStatus: text('delivery_status').default('sent'),
+    deliveryError: text('delivery_error'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_messages_conversation').on(table.conversationId),
+    index('idx_messages_created').on(table.conversationId, table.createdAt),
+    index('idx_messages_channel_id').on(table.channelMessageId),
+  ]
+);
+
+// ===================
+// Tasks
+// ===================
+
+/**
+ * Service requests and work orders
+ */
+export const tasks = sqliteTable(
+  'tasks',
+  {
+    id: text('id').primaryKey(),
+    conversationId: text('conversation_id').references(() => conversations.id),
+
+    // Type: housekeeping, maintenance, concierge, room_service, other
+    type: text('type').notNull(),
+    department: text('department').notNull(),
+
+    // Details
+    roomNumber: text('room_number'),
+    description: text('description').notNull(),
+    // Items as JSON array
+    items: text('items'),
+    // Priority: urgent, high, standard, low
+    priority: text('priority').notNull().default('standard'),
+
+    // Status: pending, assigned, in_progress, completed, cancelled
+    status: text('status').notNull().default('pending'),
+    assignedTo: text('assigned_to').references(() => staff.id),
+
+    // External reference
+    externalId: text('external_id'),
+    externalSystem: text('external_system'),
+
+    // Timing
+    dueAt: text('due_at'),
+    startedAt: text('started_at'),
+    completedAt: text('completed_at'),
+
+    // Notes
+    notes: text('notes'),
+    completionNotes: text('completion_notes'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_tasks_conversation').on(table.conversationId),
+    index('idx_tasks_status').on(table.status),
+    index('idx_tasks_department').on(table.department, table.status),
+    index('idx_tasks_assigned').on(table.assignedTo),
+    index('idx_tasks_room').on(table.roomNumber),
+  ]
+);
+
+// ===================
+// Type Exports
+// ===================
+
+export type Settings = typeof settings.$inferSelect;
+export type NewSettings = typeof settings.$inferInsert;
+
+export type Guest = typeof guests.$inferSelect;
+export type NewGuest = typeof guests.$inferInsert;
+
+export type Reservation = typeof reservations.$inferSelect;
+export type NewReservation = typeof reservations.$inferInsert;
+
+export type Staff = typeof staff.$inferSelect;
+export type NewStaff = typeof staff.$inferInsert;
+
+export type Conversation = typeof conversations.$inferSelect;
+export type NewConversation = typeof conversations.$inferInsert;
+
+export type Message = typeof messages.$inferSelect;
+export type NewMessage = typeof messages.$inferInsert;
+
+export type Task = typeof tasks.$inferSelect;
+export type NewTask = typeof tasks.$inferInsert;

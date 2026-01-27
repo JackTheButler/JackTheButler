@@ -1,0 +1,21 @@
+# Jack The Butler - Local Development
+# Usage: docker compose up
+
+services:
+  jack:
+    build: .
+    ports:
+      - "3000:3000"
+    volumes:
+      - jack-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - PORT=3000
+      - DATABASE_PATH=/app/data/jack.db
+      - LOG_LEVEL=info
+      # Add your API keys here or use .env file
+      # - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+    restart: unless-stopped
+
+volumes:
+  jack-data:
