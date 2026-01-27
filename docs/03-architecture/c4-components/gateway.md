@@ -187,7 +187,6 @@ interface AIResponse {
 interface ConversationContext {
   conversationId: string;
   guestId: string;
-  propertyId: string;
 
   // Current state
   state: 'new' | 'active' | 'escalated' | 'resolved';
@@ -267,11 +266,12 @@ gateway:
 
 | Service | Purpose | Required |
 |---------|---------|----------|
-| PostgreSQL | Conversation storage | Yes |
-| Redis | Pub/sub, sessions | Yes |
-| Channel Service | Message delivery | Yes |
+| SQLite | Conversation storage | Yes (embedded) |
+| Channel Adapters | Message delivery | Yes |
 | AI Engine | Response generation | Yes |
-| Integration Service | Hotel systems | No (graceful degradation) |
+| Integration Layer | Hotel systems | No (graceful degradation) |
+
+Note: All services run in-process in the single-container deployment. SQLite and the in-memory cache require no external services.
 
 ---
 

@@ -192,7 +192,6 @@ interface Reservation {
   guestName: string;
 
   // Stay Details
-  propertyId: string;
   roomNumber?: string;
   roomType: string;
   arrivalDate: Date;
@@ -330,8 +329,8 @@ class HTNGAdapter implements PMSAdapter {
 
 ```typescript
 class SyncEngine {
-  async syncArrivals(propertyId: string): Promise<SyncResult> {
-    const pmsAdapter = this.getAdapter(propertyId, 'pms');
+  async syncArrivals(): Promise<SyncResult> {
+    const pmsAdapter = this.pmsAdapter;
 
     // Get arrivals for today and tomorrow
     const today = new Date();
@@ -374,12 +373,9 @@ class SyncEngine {
 
 ```typescript
 class ActionExecutor {
-  async createHousekeepingTask(
-    propertyId: string,
-    request: ServiceRequest
-  ): Promise<TaskResult> {
-    // Get appropriate adapter
-    const adapter = this.getAdapter(propertyId, 'housekeeping');
+  async createHousekeepingTask(request: ServiceRequest): Promise<TaskResult> {
+    // Get housekeeping adapter
+    const adapter = this.housekeepingAdapter;
 
     // Map to system-specific format
     const task: HousekeepingTask = {
@@ -398,7 +394,6 @@ class ActionExecutor {
     await db.task.create({
       data: {
         externalId: taskId,
-        propertyId,
         conversationId: request.conversationId,
         type: 'housekeeping',
         status: 'pending',
@@ -418,7 +413,7 @@ async postRoomServiceCharge(
   confirmationNumber: string,
   order: RoomServiceOrder
 ): Promise<ChargeResult> {
-  const pmsAdapter = this.getAdapter(order.propertyId, 'pms');
+  const pmsAdapter = this.pmsAdapter;
 
   const charge: Charge = {
     amount: order.total,

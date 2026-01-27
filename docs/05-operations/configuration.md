@@ -29,8 +29,7 @@ Priority: Environment variables > Config files > Database defaults
 
 | Variable | Description | Required |
 |----------|-------------|----------|
-| `DATABASE_URL` | PostgreSQL connection string | Yes |
-| `REDIS_URL` | Redis connection string | Yes |
+| `DATABASE_PATH` | SQLite database file path | No (default: `./data/jack.db`) |
 
 ### Security
 
@@ -366,7 +365,7 @@ Use `.env` file (gitignored):
 
 ```bash
 ANTHROPIC_API_KEY=sk-ant-...
-DATABASE_URL=postgresql://...
+DATABASE_PATH=./data/jack.db
 ```
 
 ### Production
@@ -398,13 +397,12 @@ Configuration is validated on startup:
 
 ```bash
 # Validate configuration
-npm run config:validate
+pnpm config:validate
 
 # Output
-✓ Database connection
-✓ Redis connection
+✓ Database accessible
 ✓ AI provider credentials
-✓ Channel credentials
+✓ Channel credentials (if configured)
 ✓ Required settings present
 ```
 

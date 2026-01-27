@@ -73,10 +73,10 @@ This architecture documentation follows the [C4 Model](https://c4model.com/):
 │                                                                      │
 │  ┌───────────────────────────────────────────────────────────────┐  │
 │  │                        DATA LAYER                              │  │
-│  │  ┌────────────┐  ┌────────────┐  ┌────────────┐               │  │
-│  │  │ PostgreSQL │  │   Redis    │  │   Vector   │               │  │
-│  │  │  (State)   │  │  (Queue)   │  │    DB      │               │  │
-│  │  └────────────┘  └────────────┘  └────────────┘               │  │
+│  │  ┌─────────────────────────────────────────────────────────┐  │  │
+│  │  │          SQLite + sqlite-vec (single file)              │  │  │
+│  │  │   Guests • Conversations • Tasks • Embeddings           │  │  │
+│  │  └─────────────────────────────────────────────────────────┘  │  │
 │  └───────────────────────────────────────────────────────────────┘  │
 │                                                                      │
 └──────────────────────────────────────────────────────────────────────┘
@@ -194,27 +194,27 @@ AI confidence below threshold
 
 | Layer | Technology | Rationale |
 |-------|------------|-----------|
-| Gateway | Node.js / TypeScript | Event-driven, WebSocket support |
+| Gateway | Node.js / TypeScript / Hono | Fast, event-driven, WebSocket support |
 | API | REST + WebSocket | REST for CRUD, WS for real-time |
-| Database | PostgreSQL | Relational data, JSONB flexibility |
-| Queue | Redis | Pub/sub, caching, rate limiting |
-| Vector DB | pgvector / Pinecone | RAG for knowledge base |
+| Database | SQLite + Drizzle | Zero-config, single file, self-contained |
+| Vector Search | sqlite-vec | Embeddings without separate service |
+| Cache | In-memory LRU | Simple, no external service needed |
 | AI | Claude API (primary) | Quality, safety, tool use |
-| Deployment | Docker / Kubernetes | Self-hosted flexibility |
+| Deployment | Docker (single container) | Self-hosted friendly |
 
 ---
 
 ## Deployment Options
 
 ### Self-Hosted (Primary)
-- Docker Compose for single-property
-- Kubernetes for multi-property
-- Hotel controls all data
 
-### Cloud-Hosted (Future)
-- Managed SaaS option
-- Multi-tenant architecture
-- Regional data residency
+Jack is designed for **self-hosted deployment** on hotel infrastructure:
+
+- **Docker** - Single container, one-command deploy
+- **Direct Node.js** - For custom environments
+- **Docker Compose** - With local LLM (Ollama)
+
+Each hotel runs their own instance, keeping guest data on their own servers. No external database services required - everything runs in a single container with SQLite.
 
 ---
 

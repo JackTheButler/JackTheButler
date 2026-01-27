@@ -339,7 +339,7 @@ function extractConversationId(email: ParsedEmail): string | null {
 <script src="https://cdn.jackthebutler.com/widget.js"></script>
 <script>
   JackChat.init({
-    propertyId: 'hotel-123',
+    apiUrl: 'https://jack.yourhotel.com',  // Your Jack instance URL
     position: 'bottom-right',
     theme: {
       primaryColor: '#1a365d',

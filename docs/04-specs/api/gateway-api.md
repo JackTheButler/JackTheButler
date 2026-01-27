@@ -39,8 +39,7 @@ Response:
     "id": "usr_123",
     "email": "staff@hotel.com",
     "name": "Maria Garcia",
-    "role": "front_desk",
-    "propertyId": "prop_456"
+    "role": "front_desk"
   }
 }
 ```
@@ -52,11 +51,10 @@ Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
 
 ### Service Authentication
 
-API keys for service-to-service communication.
+API keys for external service callbacks (webhooks).
 
 ```http
 X-API-Key: jack_sk_live_...
-X-Property-ID: prop_456
 ```
 
 ---

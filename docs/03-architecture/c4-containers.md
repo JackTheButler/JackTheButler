@@ -61,14 +61,14 @@ The container diagram shows the major deployable/runnable components that make u
 │  ┌─────────────────────────────────────────────────────────────────────────┐   │
 │  │                            DATA LAYER                                    │   │
 │  │                                                                          │   │
-│  │  ┌────────────┐     ┌────────────┐     ┌────────────┐                   │   │
-│  │  │ PostgreSQL │     │   Redis    │     │  Vector DB │                   │   │
-│  │  │            │     │            │     │            │                   │   │
-│  │  │ • Guests   │     │ • Pub/Sub  │     │ • Knowledge│                   │   │
-│  │  │ • Convos   │     │ • Cache    │     │ • Embeddings│                  │   │
-│  │  │ • Tasks    │     │ • Sessions │     │ • Semantic │                   │   │
-│  │  │ • Config   │     │ • Queues   │     │   search   │                   │   │
-│  │  └────────────┘     └────────────┘     └────────────┘                   │   │
+│  │  │  ┌─────────────────────────────────────────────────────────────┐      │   │
+│  │  │                    SQLite + sqlite-vec                      │      │   │
+│  │  │                                                             │      │   │
+│  │  │   • Guests & Preferences   • Conversations & Messages       │      │   │
+│  │  │   • Tasks & Assignments    • Knowledge Base Embeddings      │      │   │
+│  │  │   • Configuration          • Semantic Search                │      │   │
+│  │  │                                                             │      │   │
+│  │  └─────────────────────────────────────────────────────────────┘      │   │
 │  │                                                                          │   │
 │  └──────────────────────────────────────────────────────────────────────────┘   │
 │                                                                                 │
@@ -108,7 +108,7 @@ Handles communication with external messaging platforms.
 | Technology | Node.js / TypeScript |
 | Responsibilities | Platform adapters, message normalization, delivery tracking |
 | Scaling | Per-channel horizontal scaling |
-| Dependencies | Gateway, Redis |
+| Dependencies | Gateway |
 
 **Supported channels:**
 - WhatsApp Business API
@@ -220,62 +220,60 @@ Configuration and administration interface.
 
 ---
 
-### PostgreSQL
+### SQLite Database
 
-Primary relational database for persistent data.
+Single-file database for all persistent data.
 
 | Attribute | Value |
 |-----------|-------|
-| Technology | PostgreSQL 15+ |
-| Purpose | Guests, conversations, tasks, configuration |
-| Scaling | Primary-replica, connection pooling |
-| Backup | Continuous WAL archiving |
+| Technology | SQLite + better-sqlite3 |
+| ORM | Drizzle |
+| Purpose | All application data |
+| Backup | Simple file copy |
 
-**Key schemas:**
+**Key tables:**
 - `guests` - Guest profiles and preferences
 - `conversations` - Message history
 - `tasks` - Service requests and work orders
-- `config` - Property and system settings
+- `config` - System settings
 
 [Data model →](data-model.md)
 
 ---
 
-### Redis
+### Vector Search (sqlite-vec)
 
-In-memory data store for caching and messaging.
-
-| Attribute | Value |
-|-----------|-------|
-| Technology | Redis 7+ |
-| Purpose | Pub/sub, caching, sessions, queues |
-| Scaling | Redis Cluster for HA |
-| Persistence | RDB + AOF |
-
-**Uses:**
-- Real-time message pub/sub
-- Session storage
-- Rate limiting
-- Task queues
-- Response caching
-
----
-
-### Vector Database
-
-Semantic search for knowledge retrieval.
+Embedded vector search for knowledge retrieval.
 
 | Attribute | Value |
 |-----------|-------|
-| Technology | pgvector (PostgreSQL) or Pinecone |
+| Technology | sqlite-vec extension |
 | Purpose | RAG, semantic search, similarity matching |
-| Scaling | Depends on implementation |
+| Scaling | Single-node (suitable for hotel scale) |
 
 **Content:**
 - Hotel FAQs and policies
 - Menu items and descriptions
 - Local recommendations
 - Historical successful responses
+
+---
+
+### In-Memory Cache
+
+Simple LRU cache for frequently accessed data.
+
+| Attribute | Value |
+|-----------|-------|
+| Technology | In-memory LRU cache |
+| Purpose | Guest lookups, session data, rate limiting |
+| Persistence | None (rebuilt on restart) |
+
+**Uses:**
+- Guest profile caching
+- Session storage
+- Rate limiting counters
+- Response caching
 
 ---
 
@@ -295,13 +293,15 @@ Used for:
 ### Asynchronous (Event-Driven)
 
 ```
-Service → Redis Pub/Sub → Subscribed Services
+Service → EventEmitter → Subscribed Handlers
 ```
 
 Used for:
 - Message routing
 - Task notifications
 - Real-time updates
+
+Note: For single-tenant self-hosted deployment, in-process event emitters replace Redis pub/sub.
 
 ### WebSocket (Bidirectional)
 
@@ -318,46 +318,54 @@ Used for:
 
 ## Deployment View
 
-### Docker Compose (Single Property)
+### Docker (Recommended)
+
+Single container deployment - no external services needed:
+
+```bash
+docker run -d \
+  --name jack \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -e JWT_SECRET=your-secret \
+  jackthebutler/jack:latest
+```
+
+### Docker Compose (With Ollama)
+
+For deployments with local LLM:
 
 ```yaml
 services:
-  gateway:
-    image: jack/gateway
+  jack:
+    image: jackthebutler/jack:latest
     ports: ["3000:3000"]
+    volumes:
+      - jack-data:/app/data
+    environment:
+      - OLLAMA_BASE_URL=http://ollama:11434
 
-  channel-service:
-    image: jack/channel-service
+  ollama:
+    image: ollama/ollama:latest
+    volumes:
+      - ollama-data:/root/.ollama
 
-  ai-engine:
-    image: jack/ai-engine
-
-  integration-service:
-    image: jack/integration-service
-
-  postgres:
-    image: postgres:15
-
-  redis:
-    image: redis:7
+volumes:
+  jack-data:
+  ollama-data:
 ```
 
-### Kubernetes (Multi-Property)
+### Direct Node.js
 
-```
-┌─────────────────────────────────────────────────────┐
-│                   Kubernetes Cluster                │
-├─────────────────────────────────────────────────────┤
-│  ┌─────────────┐  ┌─────────────┐  ┌─────────────┐ │
-│  │  Property A │  │  Property B │  │  Property C │ │
-│  │  Namespace  │  │  Namespace  │  │  Namespace  │ │
-│  └─────────────┘  └─────────────┘  └─────────────┘ │
-│                                                     │
-│  ┌─────────────────────────────────────────────┐   │
-│  │            Shared Services                   │   │
-│  │  (AI Engine, Vector DB, Monitoring)         │   │
-│  └─────────────────────────────────────────────┘   │
-└─────────────────────────────────────────────────────┘
+For non-Docker environments:
+
+```bash
+git clone https://github.com/jackthebutler/jack.git
+cd jack
+pnpm install
+pnpm build
+node dist/index.js
 ```
 
 ---

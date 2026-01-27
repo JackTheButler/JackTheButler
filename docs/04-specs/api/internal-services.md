@@ -7,9 +7,9 @@ Internal service communication for Jack The Butler.
 ## Overview
 
 Internal services communicate via:
-- **Direct imports** - Within the same process
-- **Redis pub/sub** - Cross-process events
-- **HTTP** - Service-to-service calls (future microservices)
+- **Direct imports** - Within the same process (primary)
+- **EventEmitter** - In-process events (default)
+- **Optional Redis** - Cross-process events (for scaled deployments)
 
 ---
 
@@ -30,8 +30,8 @@ Internal services communicate via:
 
 | Service | Module | Responsibility |
 |---------|--------|----------------|
-| CacheService | `@/services/cache` | Redis caching |
-| QueueService | `@/queue` | Job queue management |
+| CacheService | `@/services/cache` | In-memory LRU caching |
+| QueueService | `@/queue` | In-process job queue |
 | MetricsService | `@/utils/metrics` | Metrics collection |
 
 ---
@@ -530,43 +530,31 @@ type EventType =
 
 ### Implementation
 
+For self-hosted single-tenant deployments, events use in-process EventEmitter:
+
 ```typescript
-import { Redis } from 'ioredis';
 import { EventEmitter } from 'events';
 
 class EventBus {
-  private local = new EventEmitter();
-  private redis: Redis;
-  private subscriber: Redis;
+  private emitter = new EventEmitter();
 
-  constructor(redisUrl: string) {
-    this.redis = new Redis(redisUrl);
-    this.subscriber = new Redis(redisUrl);
-
-    // Subscribe to all events
-    this.subscriber.psubscribe('events:*');
-    this.subscriber.on('pmessage', (_pattern, channel, message) => {
-      const event = channel.replace('events:', '');
-      const payload = JSON.parse(message);
-      this.local.emit(event, payload);
-    });
-  }
-
-  async emit<T extends EventType>(event: T, payload: EventPayload<T>) {
-    // Emit locally
-    this.local.emit(event, payload);
-
-    // Publish to Redis for cross-process
-    await this.redis.publish(`events:${event}`, JSON.stringify(payload));
+  emit<T extends EventType>(event: T, payload: EventPayload<T>) {
+    this.emitter.emit(event, payload);
   }
 
   on<T extends EventType>(event: T, handler: EventHandler<T>) {
-    this.local.on(event, handler);
+    this.emitter.on(event, handler);
+  }
+
+  off<T extends EventType>(event: T, handler: EventHandler<T>) {
+    this.emitter.off(event, handler);
   }
 }
 
-export const eventBus = new EventBus(process.env.REDIS_URL!);
+export const eventBus = new EventBus();
 ```
+
+For scaled deployments (multiple instances), Redis can be optionally enabled via configuration.
 
 ---
 
@@ -592,7 +580,7 @@ graph TD
     AutomationService --> ConversationService
     AutomationService --> TaskService
 
-    EventBus --> Redis
+    EventBus --> InMemory
 ```
 
 ---

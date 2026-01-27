@@ -1,8 +1,8 @@
-# ADR-003: Redis for Message Queue
+# ADR-003: In-Memory Queue with Optional Redis
 
 ## Status
 
-Accepted
+Accepted (Updated for self-hosted architecture)
 
 ## Context
 
@@ -18,19 +18,52 @@ Jack The Butler requires asynchronous messaging for:
 - Low latency for real-time feel (<50ms)
 - Pub/Sub for broadcasting to multiple subscribers
 - Reliable message delivery
-- Simple operations (self-hosted friendly)
+- **Zero external dependencies** (self-hosted friendly)
 - Support for rate limiting
 - Session storage for WebSocket connections
 
 ### Constraints
 
-- Hotels may self-host with limited DevOps expertise
+- Hotels self-host with limited DevOps expertise
+- Single-tenant deployment (one instance per hotel)
 - Must handle 100-1000 messages per minute per property
 - Cost-sensitive (hotels aren't big tech companies)
 
 ## Decision
 
-Use **Redis** as the message broker, cache, and session store.
+Use **in-memory queues and event emitters** as the default, with **Redis as an optional enhancement** for larger deployments.
+
+### Default: In-Memory (Self-Hosted)
+
+For single-tenant self-hosted deployments, use Node.js EventEmitter and in-memory data structures:
+
+```typescript
+import { EventEmitter } from 'events';
+
+// Simple pub/sub
+const events = new EventEmitter();
+events.emit('conversation:update', { conversationId: '123', ... });
+
+// In-memory queue with persistence
+class InMemoryQueue {
+  private queue: Message[] = [];
+
+  async push(message: Message) {
+    this.queue.push(message);
+    // Optionally persist to SQLite for durability
+  }
+
+  async pop(): Promise<Message | undefined> {
+    return this.queue.shift();
+  }
+}
+
+// LRU cache for hot data
+import { LRUCache } from 'lru-cache';
+const cache = new LRUCache({ max: 1000, ttl: 3600000 });
+```
+
+### Optional: Redis (High-Volume)
 
 ### Use Cases
 
@@ -85,27 +118,32 @@ if (current > 80) {
 
 ## Consequences
 
-### Positive
+### Positive (In-Memory Default)
 
-- **Simplicity**: Single technology for multiple use cases
-- **Performance**: In-memory, extremely fast
-- **Operational simplicity**: Easy to deploy, monitor, backup
-- **Battle-tested**: Widely used, well-understood
-- **Cost-effective**: Low resource requirements
-- **Self-host friendly**: Simple to run on-premise
+- **Zero dependencies**: No external services to install or manage
+- **Simplicity**: Single process, no network overhead
+- **Self-host friendly**: Works out of the box
+- **Performance**: No serialization or network latency
+- **Cost-effective**: No additional infrastructure
+
+### Positive (Optional Redis)
+
+- **Horizontal scaling**: Multiple instances can share state
+- **Persistence**: Messages survive process restarts
+- **Battle-tested**: Widely used for this purpose
 
 ### Negative
 
-- **Persistence limitations**: Not designed as primary data store
-- **No exactly-once delivery**: At-most-once or at-least-once semantics
-- **Memory bound**: All data must fit in RAM
-- **Limited querying**: Not a full message broker
+- **In-memory limitations**: State lost on restart (acceptable for cache/sessions)
+- **No horizontal scaling** without Redis
+- **Memory bound**: Queue size limited by process memory
 
-### Risks
+### Mitigations
 
-- Message loss during Redis restart - mitigate with AOF persistence and replicas
-- Memory exhaustion - mitigate with TTLs and monitoring
-- Scale limitations - mitigate with Redis Cluster for larger deployments
+- Critical data (messages, tasks) stored in SQLite, not queue
+- Queue used only for transient operations
+- LRU eviction prevents memory exhaustion
+- Optional Redis upgrade path for growth
 
 ## Alternatives Considered
 

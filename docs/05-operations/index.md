@@ -28,29 +28,23 @@ This section covers running Jack in production, including:
 
 ### Prerequisites
 
-- Docker and Docker Compose
-- PostgreSQL 15+
-- Redis 7+
-- Node.js 20+ (for development)
-- API keys for AI provider (Anthropic/OpenAI)
-- WhatsApp Business API access (for WhatsApp channel)
+- Docker (recommended) or Node.js 22+
+- API key for AI provider (Anthropic recommended)
+- WhatsApp Business API access (optional, for WhatsApp channel)
+
+No external databases required - Jack uses embedded SQLite.
 
 ### Minimal Deployment
 
 ```bash
-# Clone repository
-git clone https://github.com/jackthebutler/jack.git
-cd jack
-
-# Configure environment
-cp .env.example .env
-# Edit .env with your settings
-
-# Start services
-docker-compose up -d
-
-# Run database migrations
-docker-compose exec gateway npm run migrate
+# One-command Docker deployment
+docker run -d \
+  --name jack \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  -e ANTHROPIC_API_KEY=sk-ant-... \
+  -e JWT_SECRET=your-secure-secret-min-32-chars \
+  jackthebutler/jack:latest
 
 # Access dashboard
 open http://localhost:3000
@@ -62,9 +56,9 @@ open http://localhost:3000
 
 | Option | Best For | Complexity |
 |--------|----------|------------|
-| Docker Compose | Single property, development | Low |
-| Kubernetes | Multi-property, production | Medium |
-| Cloud Managed | Hands-off operation | Low |
+| Docker (recommended) | Most deployments | Low |
+| Direct Node.js | Custom environments | Low |
+| Docker Compose | With local LLM (Ollama) | Medium |
 
 See [Deployment Guide](deployment.md) for detailed instructions.
 
@@ -74,15 +68,13 @@ See [Deployment Guide](deployment.md) for detailed instructions.
 
 ```
 ┌─────────────────────────────────────────────────────────────┐
-│                      Load Balancer                          │
-│                    (nginx / cloud LB)                       │
-└─────────────────────────────┬───────────────────────────────┘
-                              │
-┌─────────────────────────────┼───────────────────────────────┐
+│                    JACK THE BUTLER                          │
+│                  (Single Container)                         │
+├─────────────────────────────────────────────────────────────┤
 │                             │                               │
 │  ┌──────────────────────────┼──────────────────────────┐   │
-│  │                     Gateway (x3)                     │   │
-│  │               (Node.js, WebSocket)                   │   │
+│  │                   Gateway (Node.js)                   │   │
+│  │              REST API • WebSocket • Webhooks         │   │
 │  └──────────────────────────┬──────────────────────────┘   │
 │                             │                               │
 │         ┌───────────────────┼───────────────────┐          │
@@ -95,10 +87,10 @@ See [Deployment Guide](deployment.md) for detailed instructions.
 │                                                             │
 │  ┌─────────────────────────────────────────────────────┐   │
 │  │                    Data Layer                        │   │
-│  │  ┌──────────┐  ┌──────────┐  ┌──────────┐          │   │
-│  │  │PostgreSQL│  │  Redis   │  │ Vector DB│          │   │
-│  │  │ (Primary)│  │ (Cluster)│  │(pgvector)│          │   │
-│  │  └──────────┘  └──────────┘  └──────────┘          │   │
+│  │  ┌────────────────────────────────────────────────┐ │   │
+│  │  │  SQLite + sqlite-vec (embedded, single file)    │   │
+│  │  │  Guests • Conversations • Tasks • Embeddings   │   │
+│  │  └────────────────────────────────────────────────┘ │   │
 │  └─────────────────────────────────────────────────────┘   │
 │                                                             │
 └─────────────────────────────────────────────────────────────┘
@@ -134,11 +126,11 @@ See [Deployment Guide](deployment.md) for detailed instructions.
 
 | Data | Frequency | Retention | Method |
 |------|-----------|-----------|--------|
-| PostgreSQL | Continuous | 30 days | WAL archiving |
-| PostgreSQL | Daily | 90 days | pg_dump |
-| Redis | Hourly | 7 days | RDB snapshot |
+| SQLite Database | Daily | 30 days | File copy (`cp jack.db backup.db`) |
 | Configuration | On change | Forever | Git |
-| Secrets | On change | Versioned | Vault |
+| Secrets | On change | Versioned | Environment file backup |
+
+SQLite makes backups simple - just copy the database file while the application is idle or use SQLite's `.backup` command.
 
 ---
 
@@ -157,22 +149,30 @@ See [Deployment Guide](deployment.md) for detailed instructions.
 
 ## Support
 
-### Logs Location
+### Logs
 
-| Service | Log Path |
-|---------|----------|
-| Gateway | `/var/log/jack/gateway.log` |
-| AI Engine | `/var/log/jack/ai-engine.log` |
-| Channel Service | `/var/log/jack/channels.log` |
-| Integration | `/var/log/jack/integrations.log` |
+Jack logs to stdout/stderr in JSON format (via Pino). View logs with:
 
-### Health Endpoints
+```bash
+# Docker
+docker logs jack
 
-| Service | Endpoint |
-|---------|----------|
-| Gateway | `GET /health` |
-| AI Engine | `GET /health` |
-| Channel Service | `GET /health` |
+# Direct Node.js
+# Logs go to stdout, redirect as needed
+```
+
+### Health Endpoint
+
+```bash
+curl http://localhost:3000/health
+
+# Response:
+{
+  "status": "healthy",
+  "version": "1.0.0",
+  "database": "connected"
+}
+```
 
 ---
 

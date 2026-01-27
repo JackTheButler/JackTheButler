@@ -358,17 +358,11 @@ async function assignEscalation(
   const target = getEscalationTarget(decision.reason, conversation);
 
   // Find available staff for target role
-  const staff = await getAvailableStaffByRole(
-    conversation.propertyId,
-    target.role
-  );
+  const staff = await getAvailableStaffByRole(target.role);
 
   if (staff.length === 0) {
     // Try fallback
-    const fallbackStaff = await getAvailableStaffByRole(
-      conversation.propertyId,
-      target.fallbackRole
-    );
+    const fallbackStaff = await getAvailableStaffByRole(target.fallbackRole);
 
     if (fallbackStaff.length === 0) {
       // Alert on-call manager
@@ -452,7 +446,7 @@ async function notifyEscalation(
 
   // For critical, also notify duty manager
   if (decision.priority === 'critical') {
-    const dutyManager = await getDutyManager(conversation.propertyId);
+    const dutyManager = await getDutyManager();
     await sendNotification({
       recipientId: dutyManager.id,
       channels: ['push', 'sms'],

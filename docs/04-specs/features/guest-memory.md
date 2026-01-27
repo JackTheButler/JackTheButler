@@ -18,7 +18,6 @@ Guest Memory is the system that maintains persistent knowledge about guests acro
 interface GuestProfile {
   // Identity
   id: string;
-  propertyId: string;
   externalIds: {
     pms?: string;
     loyalty?: string;
@@ -257,18 +256,17 @@ Message received from channel
 
 ```typescript
 async function identifyGuest(
-  propertyId: string,
   channel: ChannelType,
   channelId: string
 ): Promise<GuestProfile | null> {
   // Step 1: Direct match by channel identifier
-  let guest = await findGuestByChannelId(propertyId, channel, channelId);
+  let guest = await findGuestByChannelId(channel, channelId);
   if (guest) return guest;
 
   // Step 2: Match by phone (if channel provides phone)
   if (channel === 'whatsapp' || channel === 'sms') {
     const phone = normalizePhone(channelId);
-    guest = await findGuestByPhone(propertyId, phone);
+    guest = await findGuestByPhone(phone);
     if (guest) {
       await linkChannelToGuest(guest.id, channel, channelId);
       return guest;
@@ -276,7 +274,7 @@ async function identifyGuest(
   }
 
   // Step 3: Check active reservations with matching contact
-  const reservation = await findReservationByContact(propertyId, channelId);
+  const reservation = await findReservationByContact(channelId);
   if (reservation) {
     guest = await getOrCreateGuestFromReservation(reservation);
     await linkChannelToGuest(guest.id, channel, channelId);
