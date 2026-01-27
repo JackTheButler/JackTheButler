@@ -34,21 +34,21 @@ Staff can look up any guest to view their profile, preferences, stay history, an
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ GUEST PROFILE                                    [Edit] [History]  │
+│ GUEST PROFILE                                     [Edit] [History]  │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
 │ Sarah Chen                                              GOLD MEMBER │
-│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
+│ ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━│
 │                                                                     │
 │ CURRENT STAY                                                        │
 │ ─────────────                                                       │
 │ Room: 612 (moved from 412 - noise complaint)                        │
-│ Dates: Mar 15-18, 2024 (Night 3 of 3)                              │
-│ Rate: $189/night | Booked via: Direct                              │
+│ Dates: Mar 15-18, 2024 (Night 3 of 3)                               │
+│ Rate: $189/night | Booked via: Direct                               │
 │ Purpose: Business                                                   │
 │                                                                     │
 │ ⚠️ SERVICE RECOVERY IN PROGRESS                                     │
-│ Noise issue on night 1. Moved rooms + 1 night comped.              │
+│ Noise issue on night 1. Moved rooms + 1 night comped.               │
 │ GM follow-up scheduled tomorrow.                                    │
 │                                                                     │
 │ PREFERENCES                                                         │
@@ -61,14 +61,14 @@ Staff can look up any guest to view their profile, preferences, stay history, an
 │                                                                     │
 │ STAY HISTORY (4 stays)                                              │
 │ ─────────────────────                                               │
-│ Mar 2024    3 nights    Business    ⚠️ Current (recovery)          │
-│ Nov 2023    2 nights    Business    ⭐⭐⭐⭐⭐ "Excellent service"   │
+│ Mar 2024    3 nights    Business    ⚠️ Current (recovery)           │
+│ Nov 2023    2 nights    Business    ⭐⭐⭐⭐⭐ "Excellent service"    │
 │ Aug 2023    4 nights    Leisure     ⭐⭐⭐⭐ "Room was great"        │
 │ Mar 2023    2 nights    Business    No feedback                     │
 │                                                                     │
 │ LIFETIME VALUE                                                      │
 │ ──────────────                                                      │
-│ Total stays: 4 | Total revenue: $2,847 | Avg rating: 4.5           │
+│ Total stays: 4 | Total revenue: $2,847 | Avg rating: 4.5            │
 │                                                                     │
 │ NOTES                                                               │
 │ ─────                                                               │
@@ -93,24 +93,24 @@ For quick staff reference without full profile:
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│ 🔍 Search: "412"                                                   │
+│ 🔍 Search: "412"                                                    │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│ Room 412 - VACANT (was Sarah Chen, moved to 612)                   │
+│ Room 412 - VACANT (was Sarah Chen, moved to 612)                    │
 │                                                                     │
-│ Showing: Room 612 - Sarah Chen                                     │
-│ ───────────────────────────────────────────────────────────────────│
+│ Showing: Room 612 - Sarah Chen                                      │
+│ ────────────────────────────────────────────────────────━───────────│
 │                                                                     │
 │ 🏆 Gold Member                                                      │
-│ 📅 Night 3 of 3                                                    │
-│ ⚠️ Service recovery - handle with care                             │
+│ 📅 Night 3 of 3                                                     │
+│ ⚠️ Service recovery - handle with care                              │
 │                                                                     │
 │ KEY PREFERENCES                                                     │
-│ • Vegetarian, no mushrooms                                         │
-│ • Prefers text communication                                       │
-│ • Likes room cool                                                  │
+│ • Vegetarian, no mushrooms                                          │
+│ • Prefers text communication                                        │
+│ • Likes room cool                                                   │
 │                                                                     │
-│                                    [Full Profile] [Message Guest]  │
+│                                    [Full Profile] [Message Guest]   │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -126,17 +126,17 @@ Jack surfaces relevant guest information at key moments:
 Front Desk Screen:
 
 ┌─────────────────────────────────────────────────────────────────────┐
-│ ARRIVING: Sarah Chen                                    Room 412   │
+│ ARRIVING: Sarah Chen                                    Room 412    │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│ 💡 SUGGESTED TALKING POINTS                                        │
+│ 💡 SUGGESTED TALKING POINTS                                         │
 │                                                                     │
-│ • "Welcome back, Ms. Chen!" (4th stay)                             │
-│ • Gold member - offer lounge access                                │
-│ • Pre-arranged: Early check-in confirmed for noon                  │
-│ • Preference: High floor assigned ✓                                │
+│ • "Welcome back, Ms. Chen!" (4th stay)                              │
+│ • Gold member - offer lounge access                                 │
+│ • Pre-arranged: Early check-in confirmed for noon                   │
+│ • Preference: High floor assigned ✓                                 │
 │                                                                     │
-│ • Last feedback mentioned enjoying the spa - offer promotion?      │
+│ • Last feedback mentioned enjoying the spa - offer promotion?       │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
 ```
@@ -147,14 +147,14 @@ Front Desk Screen:
 Server Tablet:
 
 ┌─────────────────────────────────────────────────────────────────────┐
-│ Table 7: Room 612 charge                                           │
+│ Table 7: Room 612 charge                                            │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│ Sarah Chen - Gold Member                                           │
+│ Sarah Chen - Gold Member                                            │
 │                                                                     │
-│ 🍽️ DIETARY: Vegetarian, no mushrooms                               │
+│ 🍽️ DIETARY: Vegetarian, no mushrooms                                │
 │                                                                     │
-│ ⚠️ Guest had service issue earlier - extra attentive service       │
+│ ⚠️ Guest had service issue earlier - extra attentive service        │
 │    recommended                                                      │
 │                                                                     │
 └─────────────────────────────────────────────────────────────────────┘
@@ -166,21 +166,21 @@ Server Tablet:
 Housekeeping Supervisor Alert:
 
 ┌─────────────────────────────────────────────────────────────────────┐
-│ 🔔 VIP ARRIVAL IN 2 HOURS                                          │
+│ 🔔 VIP ARRIVAL IN 2 HOURS                                           │
 ├─────────────────────────────────────────────────────────────────────┤
 │                                                                     │
-│ Room 801: James Morrison (CEO, TechCorp)                           │
-│ Arriving: 2:00 PM                                                  │
+│ Room 801: James Morrison (CEO, TechCorp)                            │
+│ Arriving: 2:00 PM                                                   │
 │                                                                     │
 │ Special requirements:                                               │
-│ • Fiji water only (6 bottles)                                      │
-│ • Remove minibar alcohol                                           │
-│ • Extra hangers (12)                                               │
-│ • Desk must be clear                                               │
+│ • Fiji water only (6 bottles)                                       │
+│ • Remove minibar alcohol                                            │
+│ • Extra hangers (12)                                                │
+│ • Desk must be clear                                                │
 │                                                                     │
-│ Room 801 status: Cleaning in progress                              │
+│ Room 801 status: Cleaning in progress                               │
 │                                                                     │
-│                                         [View Checklist] [Confirm] │
+│                                         [View Checklist] [Confirm]  │
 └─────────────────────────────────────────────────────────────────────┘
 ```
 

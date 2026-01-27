@@ -7,24 +7,24 @@ Use cases for guest interactions with Jack The Butler across the entire guest jo
 ## Guest Journey Map
 
 ```
-┌─────────────┐    ┌─────────────┐    ┌─────────────┐    ┌─────────────┐
-│  DREAMING   │ → │   BOOKING   │ → │  PRE-STAY   │ → │   ARRIVAL   │
-│             │    │             │    │             │    │             │
-│ (Out of     │    │ (Out of     │    │ • Requests  │    │ • Check-in  │
-│  scope)     │    │  scope)     │    │ • Questions │    │ • Orientation│
-└─────────────┘    └─────────────┘    └─────────────┘    └─────────────┘
-                                            │                   │
-                                            ▼                   ▼
-┌─────────────┐    ┌─────────────┐    ┌─────────────────────────────────┐
-│  ADVOCACY   │ ← │  POST-STAY  │ ← │           DURING STAY            │
-│             │    │             │    │                                 │
-│ (Reviews -  │    │ • Follow-up │    │ • Service requests              │
-│  partial)   │    │ • Lost item │    │ • Information inquiries         │
-│             │    │ • Feedback  │    │ • Issues & complaints           │
-└─────────────┘    └─────────────┘    │ • Dining & room service         │
-                                      │ • Concierge services            │
-                                      │ • Check-out                     │
-                                      └─────────────────────────────────┘
+┌─────────────┐   ┌─────────────┐   ┌─────────────┐   ┌──────────────┐
+│  DREAMING   │ → │   BOOKING   │ → │  PRE-STAY   │ → │   ARRIVAL    │
+│             │   │             │   │             │   │              │
+│ (Out of     │   │ (Out of     │   │ • Requests  │   │ • Check-in   │
+│  scope)     │   │  scope)     │   │ • Questions │   │ • Orientation│
+└─────────────┘   └─────────────┘   └─────────────┘   └──────────────┘
+                                           │                 │
+                                           ▼                 ▼
+┌─────────────┐   ┌─────────────┐    ┌─────────────────────────────────┐
+│  ADVOCACY   │ ← │  POST-STAY  │  ← │           DURING STAY           │
+│             │   │             │    │                                 │
+│ (Reviews -  │   │ • Follow-up │    │ • Service requests              │
+│  partial)   │   │ • Lost item │    │ • Information inquiries         │
+│             │   │ • Feedback  │    │ • Issues & complaints           │
+└─────────────┘   └─────────────┘    │ • Dining & room service         │
+                                     │ • Concierge services            │
+                                     │ • Check-out                     │
+                                     └─────────────────────────────────┘
 ```
 
 ---
