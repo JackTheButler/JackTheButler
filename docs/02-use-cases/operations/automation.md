@@ -56,6 +56,70 @@ Jack: Hi Sarah! I hope you're settling into room 412.
       Is there anything I can help you with this evening?
 ```
 
+### Timing Rules
+
+Proactive messages follow these timing rules:
+
+| Rule | Behavior |
+|------|----------|
+| Timezone | **Guest timezone** if known (from phone area code or profile), otherwise **hotel timezone** |
+| Do-not-disturb hours | No proactive messages between 10 PM - 8 AM guest local time |
+| Active conversation | Defer proactive message until 30 minutes after conversation ends |
+| Recent interaction | Skip if guest messaged within last 2 hours (they're engaged) |
+
+```typescript
+interface ProactiveTimingConfig {
+  useGuestTimezone: boolean;          // Default: true
+  hotelTimezone: string;              // e.g., 'America/New_York'
+  quietHoursStart: number;            // Default: 22 (10 PM)
+  quietHoursEnd: number;              // Default: 8 (8 AM)
+  deferAfterConversationMs: number;   // Default: 1800000 (30 min)
+  skipIfRecentInteractionMs: number;  // Default: 7200000 (2 hours)
+}
+
+function shouldSendProactive(
+  guest: Guest,
+  conversation: Conversation | null,
+  config: ProactiveTimingConfig
+): { canSend: boolean; reason?: string; nextAttempt?: Date } {
+  const guestTz = config.useGuestTimezone && guest.timezone
+    ? guest.timezone
+    : config.hotelTimezone;
+
+  const guestLocalHour = getHourInTimezone(new Date(), guestTz);
+
+  // Check quiet hours
+  if (guestLocalHour >= config.quietHoursStart || guestLocalHour < config.quietHoursEnd) {
+    const nextAllowed = getNextQuietHoursEnd(guestTz, config.quietHoursEnd);
+    return { canSend: false, reason: 'quiet_hours', nextAttempt: nextAllowed };
+  }
+
+  // Check active conversation
+  if (conversation?.state === 'active' || conversation?.state === 'escalated') {
+    return { canSend: false, reason: 'active_conversation' };
+  }
+
+  // Check recently ended conversation
+  if (conversation?.endedAt) {
+    const msSinceEnd = Date.now() - conversation.endedAt.getTime();
+    if (msSinceEnd < config.deferAfterConversationMs) {
+      const nextAttempt = new Date(conversation.endedAt.getTime() + config.deferAfterConversationMs);
+      return { canSend: false, reason: 'recent_conversation', nextAttempt };
+    }
+  }
+
+  // Check recent interaction
+  if (guest.lastInteractionAt) {
+    const msSinceInteraction = Date.now() - guest.lastInteractionAt.getTime();
+    if (msSinceInteraction < config.skipIfRecentInteractionMs) {
+      return { canSend: false, reason: 'recent_interaction' };
+    }
+  }
+
+  return { canSend: true };
+}
+```
+
 ### Suppression Rules
 
 Notifications are suppressed when:
@@ -64,6 +128,7 @@ Notifications are suppressed when:
 - Service recovery flag active (requires staff approval)
 - Guest marked as Do Not Disturb
 - Previous notification within 4 hours (configurable)
+- **Quiet hours** (10 PM - 8 AM guest local time)
 
 ---
 
@@ -178,6 +243,100 @@ Jack attempts to contact guests who haven't arrived by expected time, then proce
                         │
                         └── Midnight ──→ Process as no-show per policy
 ```
+
+### Edge Cases
+
+| Scenario | Handling |
+|----------|----------|
+| Guest responds "arriving now" at 11:55 PM | **Cancel no-show timer**, keep room, notify front desk of late arrival. If guest doesn't arrive by 1 AM, alert front desk again (don't auto-process). |
+| Guest responds after midnight no-show processed | If room not resold: **reverse no-show**, reinstate reservation, apologize. If room resold: escalate to duty manager for relocation. |
+| Late response with cancellation request | Process cancellation per policy (may still charge first night depending on policy timing). |
+| Guest unreachable (wrong number, blocked, etc.) | After 2 failed delivery attempts, try **email fallback**. If no email, proceed with staff-only decisions. |
+| Multiple rooms on reservation | Process no-show for **entire reservation** unless guest specifies partial arrival. |
+
+```typescript
+interface NoShowConfig {
+  initialOutreachAfterMs: number;    // Default: 7200000 (2 hours after ETA)
+  defaultETAHour: number;            // Default: 18 (6 PM if no ETA provided)
+  secondOutreachAfterMs: number;     // Default: 14400000 (4 hours after first)
+  alertFrontDeskHour: number;        // Default: 23 (11 PM)
+  processNoShowHour: number;         // Default: 0 (midnight)
+  lateArrivalGracePeriodMs: number;  // Default: 3600000 (1 hour after midnight)
+}
+
+async function handleLateResponse(
+  reservation: Reservation,
+  response: GuestResponse,
+  noShowStatus: NoShowStatus
+): Promise<NoShowAction> {
+  // Guest says they're coming
+  if (response.intent === 'arriving' || response.intent === 'delayed') {
+    // If no-show already processed
+    if (noShowStatus.processed) {
+      const room = await getRoomStatus(reservation.roomNumber);
+
+      if (room.status === 'vacant' || room.assignedTo === reservation.id) {
+        // Room still available - reverse no-show
+        await reverseNoShow(reservation);
+        await notifyGuest(reservation.guestId,
+          "I've reinstated your reservation. We'll have your room ready!");
+        return { action: 'reversed', requiresStaffAction: true };
+      } else {
+        // Room resold - escalate
+        await escalateToDutyManager(reservation, 'no_show_late_arrival_room_resold');
+        return { action: 'escalated', requiresStaffAction: true };
+      }
+    }
+
+    // No-show not yet processed - cancel timer
+    await cancelNoShowTimer(reservation.id);
+    await updateReservation(reservation.id, {
+      estimatedArrival: response.estimatedArrival || 'late',
+      notes: `Guest confirmed late arrival at ${new Date().toISOString()}`
+    });
+    await notifyFrontDesk(reservation, 'late_arrival_confirmed');
+    return { action: 'cancelled', requiresStaffAction: false };
+  }
+
+  // Guest wants to cancel
+  if (response.intent === 'cancel') {
+    return await processCancellation(reservation, noShowStatus);
+  }
+
+  return { action: 'unknown', requiresStaffAction: true };
+}
+```
+
+### Who Posts the No-Show Charge?
+
+| Scenario | Actor | Action |
+|----------|-------|--------|
+| Auto-processed at midnight | **System (Jack)** | Posts charge to PMS if `autoChargeNoShow: true` in config |
+| Staff clicks "Process No-Show" | **Staff** | System posts charge on staff's behalf, staff ID logged |
+| Staff clicks "Hold Until Morning" | **None yet** | No charge until staff decision next day |
+| Guest has deposit pre-auth | **System** | Captures pre-auth amount |
+| No payment method on file | **Alerts front desk** | Staff must decide (waive or collection) |
+
+```yaml
+noShow:
+  autoChargeNoShow: false           # Default: false (require staff decision)
+  chargeAmount: first_night         # Options: first_night, full_stay, custom
+  notifyGuestOfCharge: true         # Send charge notification to guest
+  requireStaffApproval: true        # Staff must click button (recommended)
+```
+
+### Room Release Timing
+
+| Event | Room Status |
+|-------|-------------|
+| Midnight (no-show processed) | Marked as **releasable** (available for walk-ins) |
+| 6 AM next day | Room officially **released** to inventory |
+| Guest contacts after release | Check availability, may need alternate room |
+
+The delay between "releasable" and "released" allows for:
+1. Very late arrivals (flight delays, etc.)
+2. Staff override before housekeeping reassigns
+3. Coordination with walk-in guests
 
 ### Initial Outreach
 

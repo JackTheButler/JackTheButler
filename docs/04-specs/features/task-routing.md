@@ -380,6 +380,212 @@ async function assignEscalation(
 
 ---
 
+## Escalation Queue Management
+
+### Queue Ordering
+
+Escalations are ordered using a **priority-weighted FIFO** algorithm:
+
+```typescript
+interface EscalationQueueItem {
+  conversationId: string;
+  priority: EscalationPriority;
+  escalatedAt: Date;
+  slaDeadline: Date;
+  score: number;  // Calculated for ordering
+}
+
+function calculateQueueScore(item: EscalationQueueItem): number {
+  const priorityWeights = {
+    critical: 10000,
+    high: 1000,
+    normal: 100
+  };
+
+  const ageMinutes = (Date.now() - item.escalatedAt.getTime()) / 60000;
+  const slaRemainingMinutes = (item.slaDeadline.getTime() - Date.now()) / 60000;
+
+  // Score = priority weight + age bonus - SLA urgency penalty
+  // Higher score = should be handled first
+  let score = priorityWeights[item.priority];
+  score += ageMinutes * 10;  // Older items get +10 per minute
+  score += Math.max(0, 30 - slaRemainingMinutes) * 50;  // SLA urgency in last 30 min
+
+  return score;
+}
+
+// Queue is sorted by score descending
+// Result: Critical items first, then high + aging, then normal + aging
+// Within same priority, older items and SLA-approaching items surface
+```
+
+### Queue Position Display
+
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│ ESCALATION QUEUE                                    12 conversations │
+├─────────────────────────────────────────────────────────────────────┤
+│ #1  🔴 Room 412 - Complaint         Critical    2 min   SLA: 3 min  │
+│ #2  🔴 Room 801 - VIP Request       High        8 min   SLA: 2 min  │
+│ #3  🟡 Room 308 - Billing           High        5 min   SLA: 5 min  │
+│ #4  🟡 Room 215 - General           Normal      15 min  SLA: 0 min  │ ⚠️
+│ ... │
+└─────────────────────────────────────────────────────────────────────┘
+```
+
+### Reassignment Between Agents
+
+```typescript
+interface ReassignmentReason {
+  type: 'manual' | 'shift_end' | 'agent_busy' | 'skill_mismatch' | 'sla_risk';
+  note?: string;
+}
+
+async function reassignEscalation(
+  conversationId: string,
+  fromStaffId: string,
+  toStaffId: string | null,  // null = return to queue
+  reason: ReassignmentReason
+): Promise<void> {
+  const conversation = await getConversation(conversationId);
+
+  // Log reassignment
+  await createAuditLog({
+    action: 'escalation.reassigned',
+    conversationId,
+    actorId: fromStaffId,
+    metadata: {
+      fromStaffId,
+      toStaffId,
+      reason: reason.type,
+      note: reason.note
+    }
+  });
+
+  if (toStaffId) {
+    // Direct reassignment to another agent
+    await updateConversation(conversationId, { assignedTo: toStaffId });
+    await notifyStaff(toStaffId, {
+      type: 'escalation_assigned',
+      conversation,
+      message: `Reassigned from ${fromStaffId}: ${reason.note || reason.type}`
+    });
+
+    // Notify guest of handoff
+    await sendToConversation(conversationId, {
+      senderType: 'system',
+      content: `I've connected you with ${await getStaffName(toStaffId)} who will continue helping you.`
+    });
+  } else {
+    // Return to queue
+    await updateConversation(conversationId, {
+      assignedTo: null,
+      state: 'escalated'  // Remains escalated, just unassigned
+    });
+
+    // Recalculate queue position (may have higher priority now due to age)
+    await reindexQueueItem(conversationId);
+  }
+}
+```
+
+### SLA Violation Detection
+
+```typescript
+interface SLAConfig {
+  critical: { response: 5, resolution: 15 };    // minutes
+  high: { response: 10, resolution: 30 };
+  normal: { response: 15, resolution: 60 };
+}
+
+// Check runs every minute
+async function checkSLAViolations(): Promise<void> {
+  const escalations = await getActiveEscalations();
+
+  for (const escalation of escalations) {
+    const slaConfig = SLA_CONFIG[escalation.priority];
+    const ageMinutes = (Date.now() - escalation.escalatedAt.getTime()) / 60000;
+
+    // Response SLA (time to first staff response)
+    if (!escalation.firstResponseAt && ageMinutes > slaConfig.response) {
+      await handleSLABreach(escalation, 'response');
+    }
+
+    // Resolution SLA (time to resolve)
+    if (ageMinutes > slaConfig.resolution) {
+      await handleSLABreach(escalation, 'resolution');
+    }
+
+    // Warning at 80% of SLA
+    if (!escalation.slaWarned && ageMinutes > slaConfig.response * 0.8) {
+      await sendSLAWarning(escalation);
+    }
+  }
+}
+
+async function handleSLABreach(escalation: Escalation, type: 'response' | 'resolution'): Promise<void> {
+  // Log breach
+  await createMetric('sla.breach', {
+    conversationId: escalation.conversationId,
+    priority: escalation.priority,
+    type,
+    breachMinutes: calculateBreachMinutes(escalation)
+  });
+
+  // Alert supervisor
+  const supervisor = await getDepartmentSupervisor('front_desk');
+  await sendUrgentNotification(supervisor.id, {
+    title: `SLA Breach: ${type}`,
+    message: `Room ${escalation.roomNumber} - ${escalation.priority} escalation exceeded ${type} SLA`,
+    action: { type: 'view_conversation', conversationId: escalation.conversationId }
+  });
+
+  // For critical, also page duty manager
+  if (escalation.priority === 'critical') {
+    await pageDutyManager(escalation, `Critical SLA breach: ${type}`);
+  }
+}
+```
+
+### Queue Overflow Handling
+
+When escalation queue exceeds capacity thresholds:
+
+| Queue Size | Action |
+|------------|--------|
+| > 20 | Alert shift supervisor |
+| > 35 | Page duty manager, consider calling in staff |
+| > 50 | Emergency mode: auto-response to new escalations, prioritize critical only |
+
+```typescript
+const QUEUE_THRESHOLDS = {
+  warning: 20,
+  critical: 35,
+  emergency: 50
+};
+
+async function handleQueueOverflow(queueSize: number): Promise<void> {
+  if (queueSize > QUEUE_THRESHOLDS.emergency) {
+    // Emergency mode
+    await setEmergencyMode(true);
+    await sendToAllEscalated({
+      content: "We're experiencing high demand. A team member will be with you as soon as possible. " +
+               "For urgent matters, please call the front desk directly."
+    });
+    await notifyAllManagers('queue_emergency', { queueSize });
+
+  } else if (queueSize > QUEUE_THRESHOLDS.critical) {
+    await pageDutyManager(null, `Escalation queue critical: ${queueSize} items`);
+    await suggestCallInStaff();
+
+  } else if (queueSize > QUEUE_THRESHOLDS.warning) {
+    await alertSupervisor('queue_warning', { queueSize });
+  }
+}
+```
+
+---
+
 ## Notification
 
 ### Task Notifications
@@ -423,6 +629,85 @@ async function notifyTaskCreated(task: Task): Promise<void> {
 
   await sendNotifications(notifications);
 }
+```
+
+### Task Completion Notification Timing
+
+When a task completes, guest notification follows these rules:
+
+| Scenario | Notification Timing | Behavior |
+|----------|---------------------|----------|
+| Normal completion | **Immediate** | Send within 5 seconds of task marked complete |
+| Guest in active conversation | **Contextual** | Inject into conversation flow (not separate message) |
+| Multiple tasks pending | **Batched** | If 2+ tasks complete within 60s, batch into single message |
+| Guest checked out | **Suppressed** | Don't notify, log for records only |
+| Quiet hours (10 PM - 8 AM) | **Queued** | Hold until 8 AM unless task was marked urgent |
+
+```typescript
+interface CompletionNotificationConfig {
+  batchWindowMs: number;           // Default: 60000 (60 seconds)
+  respectQuietHours: boolean;      // Default: true
+  quietHoursStart: number;         // Default: 22 (10 PM)
+  quietHoursEnd: number;           // Default: 8 (8 AM)
+  suppressAfterCheckout: boolean;  // Default: true
+  urgentBypassQuietHours: boolean; // Default: true
+}
+
+async function notifyTaskCompleted(task: Task, config: CompletionNotificationConfig): Promise<void> {
+  const guest = await getGuest(task.guestId);
+  const reservation = await getActiveReservation(guest.id);
+
+  // Check if guest has checked out
+  if (config.suppressAfterCheckout && (!reservation || reservation.status === 'checked_out')) {
+    await logCompletionSuppressed(task, 'guest_checked_out');
+    return;
+  }
+
+  // Check quiet hours (unless urgent)
+  const guestHour = getGuestLocalHour(guest);
+  const inQuietHours = guestHour >= config.quietHoursStart || guestHour < config.quietHoursEnd;
+
+  if (config.respectQuietHours && inQuietHours) {
+    if (task.priority !== 'urgent' || !config.urgentBypassQuietHours) {
+      await queueNotificationUntil(task, getNextQuietHoursEnd(guest));
+      return;
+    }
+  }
+
+  // Check for active conversation
+  const conversation = await getActiveConversation(guest.id);
+
+  if (conversation) {
+    // Inject into conversation instead of separate notification
+    await injectCompletionIntoConversation(conversation, task);
+    return;
+  }
+
+  // Check for batching (other tasks completed recently)
+  const recentCompletions = await getRecentCompletions(guest.id, config.batchWindowMs);
+
+  if (recentCompletions.length > 0) {
+    // Add to batch queue, will send when batch window closes
+    await addToBatch(guest.id, task);
+    return;
+  }
+
+  // Send immediate notification
+  await sendGuestNotification(guest, {
+    template: 'task_completed',
+    data: {
+      taskType: task.type,
+      description: task.description,
+      roomNumber: reservation.roomNumber
+    }
+  });
+}
+
+// Batch notification example
+// "Your requests have been completed:
+//  • Extra towels delivered to room 412
+//  • Iron and ironing board delivered
+//  Is there anything else I can help with?"
 ```
 
 ### Escalation Notifications

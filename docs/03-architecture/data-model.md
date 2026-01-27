@@ -2,36 +2,34 @@
 
 Entity relationships and database schema for Jack The Butler.
 
+**Database:** SQLite with better-sqlite3 and sqlite-vec extension
+
 ---
 
 ## Entity Relationship Diagram
 
 ```
-┌─────────────────┐       ┌─────────────────┐       ┌─────────────────┐
-│    Property     │       │      Guest      │       │   Reservation   │
-├─────────────────┤       ├─────────────────┤       ├─────────────────┤
-│ id              │       │ id              │       │ id              │
-│ name            │       │ property_id     │───┐   │ property_id     │
-│ code            │       │ first_name      │   │   │ guest_id        │──┐
-│ timezone        │       │ last_name       │   │   │ confirmation_no │  │
-│ settings        │       │ email           │   │   │ room_number     │  │
-└────────┬────────┘       │ phone           │   │   │ arrival_date    │  │
-         │                │ language        │   │   │ departure_date  │  │
-         │                │ loyalty_tier    │   │   │ status          │  │
-         │                │ preferences     │   │   └─────────────────┘  │
-         │                │ external_ids    │   │            │           │
-         │                └────────┬────────┘   │            │           │
-         │                         │            │            │           │
-         │    ┌────────────────────┘            │            │           │
-         │    │                                 │            │           │
-         │    │    ┌────────────────────────────┘            │           │
-         │    │    │                                         │           │
-         ▼    ▼    ▼                                         ▼           │
-┌─────────────────────────────────────────────────────────────────────┐ │
-│                          Conversation                                │ │
-├─────────────────────────────────────────────────────────────────────┤ │
-│ id                                                                   │ │
-│ property_id ─────────────────────────────────────────────────────────┘ │
+┌─────────────────┐       ┌─────────────────┐
+│      Guest      │       │   Reservation   │
+├─────────────────┤       ├─────────────────┤
+│ id              │       │ id              │
+│ first_name      │       │ guest_id        │──┐
+│ last_name       │       │ confirmation_no │  │
+│ email           │       │ room_number     │  │
+│ phone           │       │ arrival_date    │  │
+│ language        │       │ departure_date  │  │
+│ loyalty_tier    │       │ status          │  │
+│ preferences     │       └─────────────────┘  │
+│ external_ids    │                │           │
+└────────┬────────┘                │           │
+         │                         │           │
+         │    ┌────────────────────┘           │
+         │    │                                │
+         ▼    ▼                                ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│                          Conversation                                │
+├─────────────────────────────────────────────────────────────────────┤
+│ id                                                                   │
 │ guest_id ────────────────────────────────────────────────────────────┘
 │ reservation_id ──────────────────────────────────────────────────────┘
 │ channel_type
@@ -61,30 +59,52 @@ Entity relationships and database schema for Jack The Butler.
 
 ---
 
+## SQLite Configuration
+
+Jack uses SQLite with WAL mode for concurrent access:
+
+```typescript
+import Database from 'better-sqlite3';
+import * as sqliteVec from 'sqlite-vec';
+
+const db = new Database('data/jack.db');
+
+// Enable WAL mode for concurrent reads during writes
+db.pragma('journal_mode = WAL');
+
+// Wait up to 5 seconds for locks
+db.pragma('busy_timeout = 5000');
+
+// Balance between safety and performance
+db.pragma('synchronous = NORMAL');
+
+// Enable foreign keys
+db.pragma('foreign_keys = ON');
+
+// Load sqlite-vec for vector search
+sqliteVec.load(db);
+```
+
+---
+
 ## Core Entities
 
-### Property
+### Settings
 
-Represents a hotel property.
+Global configuration for the hotel.
 
 ```sql
-CREATE TABLE properties (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  name VARCHAR(255) NOT NULL,
-  code VARCHAR(50) UNIQUE NOT NULL,
-  timezone VARCHAR(50) NOT NULL DEFAULT 'UTC',
-  settings JSONB NOT NULL DEFAULT '{}',
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+CREATE TABLE IF NOT EXISTS settings (
+  key TEXT PRIMARY KEY,
+  value TEXT NOT NULL,
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
--- Settings JSONB structure:
--- {
---   "channels": { "whatsapp": true, "sms": true },
---   "features": { "proactiveMessaging": true },
---   "escalation": { "threshold": 0.7 },
---   "branding": { "name": "The Grand Hotel" }
--- }
+-- Example settings:
+-- key: 'hotel.name', value: 'The Grand Hotel'
+-- key: 'hotel.timezone', value: 'America/New_York'
+-- key: 'channels.whatsapp.enabled', value: 'true'
+-- key: 'escalation.threshold', value: '0.7'
 ```
 
 ### Guest
@@ -92,49 +112,45 @@ CREATE TABLE properties (
 Guest profiles with preferences and history.
 
 ```sql
-CREATE TABLE guests (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  property_id UUID NOT NULL REFERENCES properties(id),
+CREATE TABLE IF NOT EXISTS guests (
+  id TEXT PRIMARY KEY,  -- UUID generated in application
 
   -- Identity
-  first_name VARCHAR(100) NOT NULL,
-  last_name VARCHAR(100) NOT NULL,
-  email VARCHAR(255),
-  phone VARCHAR(50),
+  first_name TEXT NOT NULL,
+  last_name TEXT NOT NULL,
+  email TEXT,
+  phone TEXT,
 
   -- Profile
-  language VARCHAR(10) DEFAULT 'en',
-  loyalty_tier VARCHAR(50),
-  vip_status VARCHAR(50),
+  language TEXT DEFAULT 'en',
+  loyalty_tier TEXT,
+  vip_status TEXT,
 
-  -- External references
-  external_ids JSONB NOT NULL DEFAULT '{}',
+  -- External references (JSON object)
   -- { "pms": "12345", "loyalty": "G98765" }
+  external_ids TEXT NOT NULL DEFAULT '{}',
 
-  -- Preferences (learned + stated)
-  preferences JSONB NOT NULL DEFAULT '[]',
-  -- [{ "category": "room", "key": "floor", "value": "high", "source": "stated" }]
+  -- Preferences (JSON array)
+  -- [{ "category": "room", "key": "floor", "value": "high", "source": "stated", "confidence": 1.0 }]
+  preferences TEXT NOT NULL DEFAULT '[]',
 
   -- Stats
   stay_count INTEGER NOT NULL DEFAULT 0,
-  total_revenue DECIMAL(10, 2) NOT NULL DEFAULT 0,
-  last_stay_date DATE,
+  total_revenue REAL NOT NULL DEFAULT 0,
+  last_stay_date TEXT,
 
   -- Metadata
   notes TEXT,
-  tags VARCHAR(50)[],
+  -- Tags stored as JSON array: ["vip", "business"]
+  tags TEXT DEFAULT '[]',
 
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-  UNIQUE(property_id, email),
-  UNIQUE(property_id, phone)
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_guests_property ON guests(property_id);
-CREATE INDEX idx_guests_email ON guests(property_id, email);
-CREATE INDEX idx_guests_phone ON guests(property_id, phone);
-CREATE INDEX idx_guests_external_ids ON guests USING GIN(external_ids);
+CREATE UNIQUE INDEX IF NOT EXISTS idx_guests_email ON guests(email) WHERE email IS NOT NULL;
+CREATE UNIQUE INDEX IF NOT EXISTS idx_guests_phone ON guests(phone) WHERE phone IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(last_name, first_name);
 ```
 
 ### Reservation
@@ -142,53 +158,49 @@ CREATE INDEX idx_guests_external_ids ON guests USING GIN(external_ids);
 Booking records synced from PMS.
 
 ```sql
-CREATE TABLE reservations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  property_id UUID NOT NULL REFERENCES properties(id),
-  guest_id UUID NOT NULL REFERENCES guests(id),
+CREATE TABLE IF NOT EXISTS reservations (
+  id TEXT PRIMARY KEY,
+  guest_id TEXT NOT NULL REFERENCES guests(id),
 
   -- Identity
-  confirmation_number VARCHAR(50) NOT NULL,
-  external_id VARCHAR(100),
+  confirmation_number TEXT NOT NULL UNIQUE,
+  external_id TEXT,
 
   -- Stay details
-  room_number VARCHAR(20),
-  room_type VARCHAR(50) NOT NULL,
-  arrival_date DATE NOT NULL,
-  departure_date DATE NOT NULL,
+  room_number TEXT,
+  room_type TEXT NOT NULL,
+  arrival_date TEXT NOT NULL,  -- YYYY-MM-DD
+  departure_date TEXT NOT NULL,  -- YYYY-MM-DD
 
-  -- Status
-  status VARCHAR(20) NOT NULL DEFAULT 'confirmed',
-  -- confirmed, checked_in, checked_out, cancelled, no_show
+  -- Status: confirmed, checked_in, checked_out, cancelled, no_show
+  status TEXT NOT NULL DEFAULT 'confirmed',
 
-  -- Timing
-  estimated_arrival TIMESTAMPTZ,
-  actual_arrival TIMESTAMPTZ,
-  estimated_departure TIMESTAMPTZ,
-  actual_departure TIMESTAMPTZ,
+  -- Timing (ISO 8601 datetime strings)
+  estimated_arrival TEXT,
+  actual_arrival TEXT,
+  estimated_departure TEXT,
+  actual_departure TEXT,
 
   -- Financial
-  rate_code VARCHAR(50),
-  total_rate DECIMAL(10, 2),
-  balance DECIMAL(10, 2) DEFAULT 0,
+  rate_code TEXT,
+  total_rate REAL,
+  balance REAL DEFAULT 0,
 
-  -- Additional
-  special_requests TEXT[],
-  notes JSONB NOT NULL DEFAULT '[]',
+  -- Additional (JSON arrays)
+  special_requests TEXT DEFAULT '[]',
+  notes TEXT DEFAULT '[]',
 
   -- Sync tracking
-  synced_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  synced_at TEXT NOT NULL DEFAULT (datetime('now')),
 
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-
-  UNIQUE(property_id, confirmation_number)
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_reservations_property ON reservations(property_id);
-CREATE INDEX idx_reservations_guest ON reservations(guest_id);
-CREATE INDEX idx_reservations_dates ON reservations(property_id, arrival_date, departure_date);
-CREATE INDEX idx_reservations_status ON reservations(property_id, status);
+CREATE INDEX IF NOT EXISTS idx_reservations_guest ON reservations(guest_id);
+CREATE INDEX IF NOT EXISTS idx_reservations_dates ON reservations(arrival_date, departure_date);
+CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
+CREATE INDEX IF NOT EXISTS idx_reservations_room ON reservations(room_number) WHERE room_number IS NOT NULL;
 ```
 
 ### Conversation
@@ -196,40 +208,40 @@ CREATE INDEX idx_reservations_status ON reservations(property_id, status);
 Guest communication threads.
 
 ```sql
-CREATE TABLE conversations (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  property_id UUID NOT NULL REFERENCES properties(id),
-  guest_id UUID REFERENCES guests(id),
-  reservation_id UUID REFERENCES reservations(id),
+CREATE TABLE IF NOT EXISTS conversations (
+  id TEXT PRIMARY KEY,
+  guest_id TEXT REFERENCES guests(id),
+  reservation_id TEXT REFERENCES reservations(id),
 
-  -- Channel
-  channel_type VARCHAR(20) NOT NULL,
-  -- whatsapp, sms, email, webchat
-  channel_id VARCHAR(255) NOT NULL,
+  -- Channel: whatsapp, sms, email, webchat
+  channel_type TEXT NOT NULL,
   -- Phone number, email address, or session ID
+  channel_id TEXT NOT NULL,
 
-  -- State
-  state VARCHAR(20) NOT NULL DEFAULT 'active',
-  -- active, escalated, resolved
-  assigned_to UUID REFERENCES staff(id),
+  -- State: new, active, escalated, resolved, abandoned
+  state TEXT NOT NULL DEFAULT 'active',
+  assigned_to TEXT REFERENCES staff(id),
 
   -- Context
-  current_intent VARCHAR(100),
-  metadata JSONB NOT NULL DEFAULT '{}',
+  current_intent TEXT,
+  -- Metadata as JSON object
+  metadata TEXT NOT NULL DEFAULT '{}',
 
   -- Timing
-  last_message_at TIMESTAMPTZ,
-  resolved_at TIMESTAMPTZ,
+  last_message_at TEXT,
+  resolved_at TEXT,
 
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  -- Timeout tracking
+  idle_warned_at TEXT,  -- When we sent "are you still there?" message
+
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_conversations_property ON conversations(property_id);
-CREATE INDEX idx_conversations_guest ON conversations(guest_id);
-CREATE INDEX idx_conversations_channel ON conversations(property_id, channel_type, channel_id);
-CREATE INDEX idx_conversations_state ON conversations(property_id, state);
-CREATE INDEX idx_conversations_assigned ON conversations(assigned_to) WHERE assigned_to IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_conversations_guest ON conversations(guest_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_channel ON conversations(channel_type, channel_id);
+CREATE INDEX IF NOT EXISTS idx_conversations_state ON conversations(state);
+CREATE INDEX IF NOT EXISTS idx_conversations_assigned ON conversations(assigned_to) WHERE assigned_to IS NOT NULL;
 ```
 
 ### Message
@@ -237,40 +249,41 @@ CREATE INDEX idx_conversations_assigned ON conversations(assigned_to) WHERE assi
 Individual messages within conversations.
 
 ```sql
-CREATE TABLE messages (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  conversation_id UUID NOT NULL REFERENCES conversations(id),
+CREATE TABLE IF NOT EXISTS messages (
+  id TEXT PRIMARY KEY,
+  conversation_id TEXT NOT NULL REFERENCES conversations(id),
 
-  -- Direction
-  direction VARCHAR(10) NOT NULL,
-  -- inbound, outbound
-  sender_type VARCHAR(20) NOT NULL,
-  -- guest, ai, staff
-  sender_id UUID,
-  -- staff ID if sender_type = 'staff'
+  -- Direction: inbound, outbound
+  direction TEXT NOT NULL,
+  -- Sender: guest, ai, staff, system
+  sender_type TEXT NOT NULL,
+  sender_id TEXT,  -- staff ID if sender_type = 'staff'
 
   -- Content
   content TEXT NOT NULL,
-  content_type VARCHAR(20) NOT NULL DEFAULT 'text',
-  -- text, media, location, interactive
-  media JSONB,
-  -- [{ "type": "image", "url": "...", "mimeType": "image/jpeg" }]
+  -- Content type: text, image, audio, video, document, location, interactive
+  content_type TEXT NOT NULL DEFAULT 'text',
+  -- Media as JSON array: [{ "type": "image", "url": "...", "mime_type": "image/jpeg" }]
+  media TEXT,
 
   -- AI metadata
-  intent VARCHAR(100),
-  confidence DECIMAL(3, 2),
-  entities JSONB,
+  intent TEXT,
+  confidence REAL,
+  -- Entities as JSON: [{ "type": "quantity", "value": 2 }]
+  entities TEXT,
 
   -- Channel metadata
-  channel_message_id VARCHAR(255),
-  delivery_status VARCHAR(20) DEFAULT 'sent',
-  -- sent, delivered, read, failed
+  channel_message_id TEXT,
+  -- Delivery status: pending, sent, delivered, read, failed
+  delivery_status TEXT DEFAULT 'sent',
+  delivery_error TEXT,
 
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_messages_conversation ON messages(conversation_id);
-CREATE INDEX idx_messages_created ON messages(conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(conversation_id, created_at);
+CREATE INDEX IF NOT EXISTS idx_messages_channel_id ON messages(channel_message_id) WHERE channel_message_id IS NOT NULL;
 ```
 
 ### Task
@@ -278,50 +291,49 @@ CREATE INDEX idx_messages_created ON messages(conversation_id, created_at);
 Service requests and work orders.
 
 ```sql
-CREATE TABLE tasks (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  property_id UUID NOT NULL REFERENCES properties(id),
-  conversation_id UUID REFERENCES conversations(id),
+CREATE TABLE IF NOT EXISTS tasks (
+  id TEXT PRIMARY KEY,
+  conversation_id TEXT REFERENCES conversations(id),
 
-  -- Type
-  type VARCHAR(50) NOT NULL,
-  -- housekeeping, maintenance, concierge, room_service
-  department VARCHAR(50) NOT NULL,
+  -- Type: housekeeping, maintenance, concierge, room_service, other
+  type TEXT NOT NULL,
+  department TEXT NOT NULL,
 
   -- Details
-  room_number VARCHAR(20),
+  room_number TEXT,
   description TEXT NOT NULL,
-  items JSONB,
-  -- [{ "item": "towels", "quantity": 2 }]
-  priority VARCHAR(20) NOT NULL DEFAULT 'standard',
-  -- urgent, high, standard, low
+  -- Items as JSON: [{ "item": "towels", "quantity": 2 }]
+  items TEXT,
+  -- Priority: urgent, high, standard, low
+  priority TEXT NOT NULL DEFAULT 'standard',
 
-  -- Status
-  status VARCHAR(20) NOT NULL DEFAULT 'pending',
-  -- pending, assigned, in_progress, completed, cancelled
-  assigned_to UUID REFERENCES staff(id),
+  -- Status: pending, assigned, in_progress, completed, cancelled
+  status TEXT NOT NULL DEFAULT 'pending',
+  assigned_to TEXT REFERENCES staff(id),
 
-  -- External reference
-  external_id VARCHAR(100),
-  external_system VARCHAR(50),
+  -- External reference (if synced to housekeeping system)
+  external_id TEXT,
+  external_system TEXT,
 
   -- Timing
-  due_at TIMESTAMPTZ,
-  started_at TIMESTAMPTZ,
-  completed_at TIMESTAMPTZ,
+  due_at TEXT,
+  started_at TEXT,
+  completed_at TEXT,
 
   -- Notes
   notes TEXT,
+  -- Completion notes from staff
+  completion_notes TEXT,
 
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_tasks_property ON tasks(property_id);
-CREATE INDEX idx_tasks_conversation ON tasks(conversation_id);
-CREATE INDEX idx_tasks_status ON tasks(property_id, status);
-CREATE INDEX idx_tasks_department ON tasks(property_id, department, status);
-CREATE INDEX idx_tasks_assigned ON tasks(assigned_to) WHERE assigned_to IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tasks_conversation ON tasks(conversation_id);
+CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
+CREATE INDEX IF NOT EXISTS idx_tasks_department ON tasks(department, status);
+CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_to) WHERE assigned_to IS NOT NULL;
+CREATE INDEX IF NOT EXISTS idx_tasks_room ON tasks(room_number) WHERE room_number IS NOT NULL;
 ```
 
 ### Staff
@@ -329,37 +341,131 @@ CREATE INDEX idx_tasks_assigned ON tasks(assigned_to) WHERE assigned_to IS NOT N
 Hotel staff users.
 
 ```sql
-CREATE TABLE staff (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  property_id UUID NOT NULL REFERENCES properties(id),
+CREATE TABLE IF NOT EXISTS staff (
+  id TEXT PRIMARY KEY,
 
   -- Identity
-  email VARCHAR(255) NOT NULL,
-  name VARCHAR(255) NOT NULL,
-  phone VARCHAR(50),
+  email TEXT NOT NULL UNIQUE,
+  name TEXT NOT NULL,
+  phone TEXT,
 
-  -- Role
-  role VARCHAR(50) NOT NULL,
-  -- admin, manager, front_desk, concierge, housekeeping, maintenance
-  department VARCHAR(50),
-  permissions JSONB NOT NULL DEFAULT '[]',
+  -- Role: admin, manager, front_desk, concierge, housekeeping, maintenance
+  role TEXT NOT NULL,
+  department TEXT,
 
-  -- Status
-  status VARCHAR(20) NOT NULL DEFAULT 'active',
-  -- active, inactive
-  last_active_at TIMESTAMPTZ,
+  -- Permissions as JSON array (see Permission Model section below)
+  permissions TEXT NOT NULL DEFAULT '[]',
 
-  -- Auth (if using local auth)
-  password_hash VARCHAR(255),
+  -- Status: active, inactive
+  status TEXT NOT NULL DEFAULT 'active',
+  last_active_at TEXT,
 
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+  -- Auth (bcrypt hash)
+  password_hash TEXT,
 
-  UNIQUE(property_id, email)
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_staff_property ON staff(property_id);
-CREATE INDEX idx_staff_role ON staff(property_id, role);
+CREATE INDEX IF NOT EXISTS idx_staff_role ON staff(role);
+CREATE INDEX IF NOT EXISTS idx_staff_department ON staff(department) WHERE department IS NOT NULL;
+```
+
+---
+
+## Permission Model
+
+Staff permissions are stored as a JSON array of permission strings. Permissions follow a resource.action pattern.
+
+### Available Permissions
+
+```typescript
+type Permission =
+  // Guest permissions
+  | 'guest.view'           // View guest profiles
+  | 'guest.view_contact'   // View email/phone (PII)
+  | 'guest.view_financial' // View revenue, balance
+  | 'guest.edit'           // Edit guest notes/tags
+  | 'guest.delete'         // Delete guest (GDPR)
+
+  // Conversation permissions
+  | 'conversation.view'    // View conversation queue
+  | 'conversation.respond' // Send messages to guests
+  | 'conversation.assign'  // Assign conversations to others
+  | 'conversation.escalate'// Escalate to manager
+
+  // Task permissions
+  | 'task.view'            // View task queue
+  | 'task.create'          // Create tasks manually
+  | 'task.assign'          // Assign tasks to others
+  | 'task.complete'        // Mark tasks complete
+
+  // Staff permissions
+  | 'staff.view'           // View staff list
+  | 'staff.manage'         // Create/edit staff
+
+  // Settings permissions
+  | 'settings.view'        // View configuration
+  | 'settings.edit'        // Edit configuration
+
+  // Analytics permissions
+  | 'analytics.view'       // View dashboards
+  | 'analytics.export';    // Export data
+```
+
+### Default Role Permissions
+
+```typescript
+const rolePermissions: Record<string, Permission[]> = {
+  admin: ['*'],  // All permissions
+
+  manager: [
+    'guest.view', 'guest.view_contact', 'guest.view_financial', 'guest.edit',
+    'conversation.view', 'conversation.respond', 'conversation.assign', 'conversation.escalate',
+    'task.view', 'task.create', 'task.assign', 'task.complete',
+    'staff.view',
+    'analytics.view', 'analytics.export'
+  ],
+
+  front_desk: [
+    'guest.view', 'guest.view_contact', 'guest.edit',
+    'conversation.view', 'conversation.respond', 'conversation.escalate',
+    'task.view', 'task.create',
+    'analytics.view'
+  ],
+
+  concierge: [
+    'guest.view', 'guest.view_contact',
+    'conversation.view', 'conversation.respond',
+    'task.view', 'task.create', 'task.complete'
+  ],
+
+  housekeeping: [
+    'task.view', 'task.complete'
+  ],
+
+  maintenance: [
+    'task.view', 'task.complete'
+  ]
+};
+```
+
+### Permission Check Example
+
+```typescript
+function hasPermission(staff: Staff, permission: Permission): boolean {
+  const permissions = JSON.parse(staff.permissions) as Permission[];
+
+  // Admin wildcard
+  if (permissions.includes('*')) return true;
+
+  // Direct permission
+  if (permissions.includes(permission)) return true;
+
+  // Role-based fallback
+  const rolePerms = rolePermissions[staff.role] || [];
+  return rolePerms.includes(permission);
+}
 ```
 
 ---
@@ -371,32 +477,63 @@ CREATE INDEX idx_staff_role ON staff(property_id, role);
 Property-specific information for RAG.
 
 ```sql
-CREATE TABLE knowledge_base (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  property_id UUID NOT NULL REFERENCES properties(id),
+CREATE TABLE IF NOT EXISTS knowledge_base (
+  id TEXT PRIMARY KEY,
 
-  -- Content
-  category VARCHAR(50) NOT NULL,
-  -- faq, policy, amenity, menu, local
-  title VARCHAR(255) NOT NULL,
+  -- Category: faq, policy, amenity, menu, local, service
+  category TEXT NOT NULL,
+  title TEXT NOT NULL,
   content TEXT NOT NULL,
-  keywords VARCHAR(100)[],
+  -- Keywords as JSON array for fallback search
+  keywords TEXT DEFAULT '[]',
 
-  -- Vector embedding (for semantic search)
-  embedding vector(1536),
+  -- Status: active, draft, archived
+  status TEXT NOT NULL DEFAULT 'active',
 
-  -- Status
-  status VARCHAR(20) NOT NULL DEFAULT 'active',
-  -- active, draft, archived
-
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_knowledge_property ON knowledge_base(property_id);
-CREATE INDEX idx_knowledge_category ON knowledge_base(property_id, category);
-CREATE INDEX idx_knowledge_embedding ON knowledge_base
-  USING ivfflat (embedding vector_cosine_ops) WITH (lists = 100);
+CREATE INDEX IF NOT EXISTS idx_knowledge_category ON knowledge_base(category);
+CREATE INDEX IF NOT EXISTS idx_knowledge_status ON knowledge_base(status);
+
+-- Full-text search for keyword fallback
+CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_fts USING fts5(
+  title,
+  content,
+  content='knowledge_base',
+  content_rowid='rowid'
+);
+```
+
+### Knowledge Embeddings (sqlite-vec)
+
+Vector embeddings for semantic search, stored in a virtual table.
+
+```sql
+-- Create sqlite-vec virtual table for embeddings
+-- Dimension is configurable based on embedding model
+CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_embeddings USING vec0(
+  id TEXT PRIMARY KEY,
+  embedding FLOAT[1536]  -- OpenAI text-embedding-3-small
+);
+
+-- For other embedding models, dimensions vary:
+-- - OpenAI text-embedding-3-small: 1536
+-- - OpenAI text-embedding-3-large: 3072
+-- - Ollama nomic-embed-text: 768
+-- - Ollama mxbai-embed-large: 1024
+```
+
+**Embedding Dimension Strategy:**
+
+When switching embedding providers, embeddings must be regenerated. The system stores the current embedding model in settings:
+
+```sql
+-- Track current embedding configuration
+INSERT INTO settings (key, value) VALUES
+  ('embeddings.model', 'text-embedding-3-small'),
+  ('embeddings.dimensions', '1536');
 ```
 
 ### Automation Rules
@@ -404,35 +541,34 @@ CREATE INDEX idx_knowledge_embedding ON knowledge_base
 Configured automation triggers.
 
 ```sql
-CREATE TABLE automation_rules (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  property_id UUID NOT NULL REFERENCES properties(id),
+CREATE TABLE IF NOT EXISTS automation_rules (
+  id TEXT PRIMARY KEY,
 
   -- Identity
-  name VARCHAR(255) NOT NULL,
+  name TEXT NOT NULL,
   description TEXT,
 
-  -- Trigger
-  trigger_type VARCHAR(50) NOT NULL,
-  -- time_based, event_based, condition_based
-  trigger_config JSONB NOT NULL,
-  -- { "type": "pre_arrival", "offsetDays": -3 }
+  -- Trigger type: time_based, event_based, condition_based
+  trigger_type TEXT NOT NULL,
+  -- Trigger config as JSON
+  -- { "type": "pre_arrival", "offset_days": -3, "time": "10:00" }
+  trigger_config TEXT NOT NULL,
 
-  -- Action
-  action_type VARCHAR(50) NOT NULL,
-  -- send_message, create_task, notify_staff
-  action_config JSONB NOT NULL,
+  -- Action type: send_message, create_task, notify_staff
+  action_type TEXT NOT NULL,
+  -- Action config as JSON
   -- { "template": "welcome", "channel": "whatsapp" }
+  action_config TEXT NOT NULL,
 
   -- Status
-  enabled BOOLEAN NOT NULL DEFAULT true,
+  enabled INTEGER NOT NULL DEFAULT 1,
 
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TEXT NOT NULL DEFAULT (datetime('now')),
+  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_automation_property ON automation_rules(property_id);
-CREATE INDEX idx_automation_enabled ON automation_rules(property_id, enabled);
+CREATE INDEX IF NOT EXISTS idx_automation_enabled ON automation_rules(enabled);
+CREATE INDEX IF NOT EXISTS idx_automation_trigger ON automation_rules(trigger_type);
 ```
 
 ### Audit Log
@@ -440,68 +576,125 @@ CREATE INDEX idx_automation_enabled ON automation_rules(property_id, enabled);
 Track significant actions for compliance.
 
 ```sql
-CREATE TABLE audit_log (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  property_id UUID NOT NULL REFERENCES properties(id),
+CREATE TABLE IF NOT EXISTS audit_log (
+  id TEXT PRIMARY KEY,
 
-  -- Actor
-  actor_type VARCHAR(20) NOT NULL,
-  -- staff, system, guest
-  actor_id UUID,
+  -- Actor type: staff, system, guest
+  actor_type TEXT NOT NULL,
+  actor_id TEXT,
 
-  -- Action
-  action VARCHAR(50) NOT NULL,
-  -- guest.view, task.create, conversation.escalate
-  resource_type VARCHAR(50) NOT NULL,
-  resource_id UUID,
+  -- Action (see Audit Actions below)
+  action TEXT NOT NULL,
+  resource_type TEXT NOT NULL,
+  resource_id TEXT,
 
-  -- Details
-  details JSONB,
-  ip_address INET,
+  -- Details as JSON
+  details TEXT,
+  ip_address TEXT,
   user_agent TEXT,
 
-  created_at TIMESTAMPTZ NOT NULL DEFAULT NOW()
+  created_at TEXT NOT NULL DEFAULT (datetime('now'))
 );
 
-CREATE INDEX idx_audit_property ON audit_log(property_id);
-CREATE INDEX idx_audit_created ON audit_log(property_id, created_at);
-CREATE INDEX idx_audit_actor ON audit_log(actor_type, actor_id);
-CREATE INDEX idx_audit_resource ON audit_log(resource_type, resource_id);
+CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
+CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_log(actor_type, actor_id);
+CREATE INDEX IF NOT EXISTS idx_audit_resource ON audit_log(resource_type, resource_id);
+CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action);
 ```
 
----
+### Audit Actions
 
-## Indexes Summary
+The following actions are logged:
 
-| Table | Index | Purpose |
-|-------|-------|---------|
-| guests | property_id, email | Guest lookup by email |
-| guests | property_id, phone | Guest lookup by phone |
-| guests | external_ids (GIN) | PMS ID lookup |
-| reservations | property_id, arrival_date | Arrivals query |
-| conversations | property_id, channel_type, channel_id | Message routing |
-| conversations | property_id, state | Queue display |
-| messages | conversation_id, created_at | History retrieval |
-| tasks | property_id, department, status | Department queues |
-| knowledge_base | embedding (ivfflat) | Semantic search |
+| Action | Resource | When Logged |
+|--------|----------|-------------|
+| `guest.view` | guest | Staff views guest profile (once per session, not per field) |
+| `guest.edit` | guest | Staff edits guest info |
+| `guest.delete` | guest | Guest data deleted (GDPR) |
+| `conversation.escalate` | conversation | AI or staff escalates |
+| `conversation.assign` | conversation | Conversation assigned to staff |
+| `conversation.resolve` | conversation | Conversation marked resolved |
+| `task.create` | task | Task created (AI or manual) |
+| `task.complete` | task | Task marked complete |
+| `staff.login` | staff | Staff logs in |
+| `staff.create` | staff | New staff created |
+| `settings.change` | settings | Configuration changed |
+| `data.export` | - | Data exported |
 
----
+**Note:** LLM API calls are NOT individually logged to audit_log (too high volume). Instead, aggregate token usage is tracked in a separate metrics table or external monitoring.
 
-## Data Retention
+### Retention Policy
 
 | Data Type | Retention | Rationale |
 |-----------|-----------|-----------|
 | Messages | 2 years | Service history |
 | Conversations | 2 years | Matches messages |
 | Tasks | 1 year | Operational records |
-| Guest profiles | Indefinite | CRM value |
+| Guest profiles | Indefinite | CRM value (unless GDPR deletion) |
 | Audit logs | 7 years | Compliance |
-| Analytics | 3 years | Trend analysis |
+| Knowledge embeddings | Indefinite | Regenerated on model change |
+
+---
+
+## Migrations
+
+Migrations are managed with Drizzle Kit. Example migration file:
+
+```typescript
+// drizzle/0001_initial.sql
+-- Generated by Drizzle Kit
+
+CREATE TABLE IF NOT EXISTS guests (
+  -- ... schema as above
+);
+
+-- ... other tables
+```
+
+Run migrations:
+
+```bash
+pnpm db:migrate      # Apply pending migrations
+pnpm db:generate     # Generate migration from schema changes
+pnpm db:studio       # Open Drizzle Studio for debugging
+```
+
+---
+
+## Type Definitions (Drizzle ORM)
+
+```typescript
+// src/db/schema.ts
+import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+
+export const guests = sqliteTable('guests', {
+  id: text('id').primaryKey(),
+  firstName: text('first_name').notNull(),
+  lastName: text('last_name').notNull(),
+  email: text('email'),
+  phone: text('phone'),
+  language: text('language').default('en'),
+  loyaltyTier: text('loyalty_tier'),
+  vipStatus: text('vip_status'),
+  externalIds: text('external_ids').notNull().default('{}'),
+  preferences: text('preferences').notNull().default('[]'),
+  stayCount: integer('stay_count').notNull().default(0),
+  totalRevenue: real('total_revenue').notNull().default(0),
+  lastStayDate: text('last_stay_date'),
+  notes: text('notes'),
+  tags: text('tags').default('[]'),
+  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`)
+});
+
+// ... similar for other tables
+```
 
 ---
 
 ## Related
 
 - [Architecture Overview](index.md)
+- [Tech Stack](tech-stack.md) - SQLite and sqlite-vec details
 - [Guest Memory Spec](../04-specs/features/guest-memory.md)
 - [Privacy Policy](../01-vision/goals-and-non-goals.md#ng3-surveillance-or-tracking)

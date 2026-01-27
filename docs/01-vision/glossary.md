@@ -4,6 +4,25 @@ Common terminology used throughout Jack The Butler documentation.
 
 ---
 
+## Terminology Standards
+
+To ensure consistency across all documentation and code, use these preferred terms:
+
+| Preferred Term | Avoid | Reasoning |
+|----------------|-------|-----------|
+| **Property** | Hotel, Resort, Venue | Generic term covering all accommodation types |
+| **Guest** | Customer, User, Client | Hospitality-specific terminology |
+| **Staff** | Employee, Agent, Worker | Clear distinction from AI agents |
+| **Conversation** | Thread, Chat, Session | Single term for communication sessions |
+| **Message** | Text, Chat message | Single unit of communication |
+| **Butler / Jack** | Bot, AI, Assistant | Guest-facing, service-oriented |
+| **Escalation** | Handoff, Transfer | Moving to human staff |
+| **Resolution** | Completion, Closure | Successfully finishing a request |
+| **Task** | Ticket, Request, Job | Unit of work for staff |
+| **Channel** | Platform, Medium | Communication pathway |
+
+---
+
 ## Core Concepts
 
 ### Jack
@@ -19,10 +38,10 @@ A communication medium through which guests or staff interact with Jack. Example
 A component that translates between a specific channel's protocol/API and Jack's internal message format.
 
 ### Conversation
-A continuous thread of communication between a guest and Jack, potentially spanning multiple channels and sessions.
+A communication session between a guest and Jack/staff. Contains multiple messages and has states (active, escalated, resolved, closed). **Preferred term** over "thread" or "chat."
 
-### Thread
-A focused sub-conversation within a larger conversation, typically around a specific request or topic.
+### Message
+A single unit of communication within a conversation. Can be text, image, audio, or document. Has direction (inbound/outbound) and sender.
 
 ---
 
@@ -47,20 +66,29 @@ A guest ask that requires action. Classified by type (service, information, comp
 
 ## Staff Domain
 
-### Agent (Human)
-A hotel staff member who interacts with Jack to handle guest requests. Not to be confused with AI agents.
+### Staff / Staff Member
+A hotel employee who uses Jack's dashboard to handle guest requests. **Preferred term** over "agent" or "employee" to avoid confusion with AI agents.
+
+### Role
+A staff member's job function determining permissions and routing. Examples: front_desk, concierge, housekeeping, maintenance, manager, admin.
+
+### Department
+An organizational unit within the property. Examples: Front Office, Housekeeping, Maintenance, Food & Beverage, Concierge.
 
 ### Assignment
-The routing of a request or conversation to a specific human agent or department.
+The routing of a task or conversation to a specific staff member or department.
 
 ### Escalation
-The transfer of a conversation from autonomous AI handling to human agent involvement.
+The transfer of a conversation from autonomous AI handling to human staff involvement. **Preferred term** over "handoff."
 
-### Handoff
-The transition of a conversation between agents, including context transfer.
+### Transfer
+Moving a conversation between staff members while preserving context. Different from escalation (AI to human).
 
 ### Queue
-A prioritized list of conversations or requests awaiting agent attention.
+A prioritized list of conversations or tasks awaiting staff attention.
+
+### Workload
+A measure of a staff member's current capacity based on active conversations and tasks.
 
 ---
 
@@ -111,7 +139,7 @@ The confidence level below which Jack routes to human agents rather than respond
 An HTTP callback that notifies Jack of events from external systems.
 
 ### Message Broker
-The internal system (e.g., Redis) that queues and routes messages between components.
+The internal system (EventEmitter for self-hosted, optional Redis for scaled deployments) that queues and routes messages between components.
 
 ### State Machine
 The model tracking conversation state and valid transitions.
@@ -147,28 +175,54 @@ Likelihood of guest recommending the hotel, potentially influenced by Jack inter
 
 | Abbreviation | Meaning |
 |--------------|---------|
+| ADR | Architecture Decision Record |
 | AI | Artificial Intelligence |
 | API | Application Programming Interface |
+| CCPA | California Consumer Privacy Act |
+| CORS | Cross-Origin Resource Sharing |
 | CRM | Customer Relationship Management |
+| CRUD | Create, Read, Update, Delete |
+| CSP | Content Security Policy |
+| DLQ | Dead Letter Queue |
+| DST | Daylight Saving Time |
 | ETA | Estimated Time of Arrival |
 | FAQ | Frequently Asked Questions |
 | GDPR | General Data Protection Regulation |
 | HTTP | Hypertext Transfer Protocol |
+| IANA | Internet Assigned Numbers Authority |
 | JSON | JavaScript Object Notation |
 | JWT | JSON Web Token |
 | LLM | Large Language Model |
+| LRU | Least Recently Used |
 | MFA | Multi-Factor Authentication |
+| MJML | Mailjet Markup Language |
+| MSW | Mock Service Worker |
 | MVP | Minimum Viable Product |
 | NLP | Natural Language Processing |
+| NPS | Net Promoter Score |
+| ORM | Object-Relational Mapping |
 | OTA | Online Travel Agency |
 | PCI | Payment Card Industry |
+| PII | Personally Identifiable Information |
+| PMS | Property Management System |
+| POS | Point of Sale |
+| RAG | Retrieval-Augmented Generation |
 | REST | Representational State Transfer |
 | SDK | Software Development Kit |
 | SLA | Service Level Agreement |
+| SMS | Short Message Service |
+| SQL | Structured Query Language |
+| SSE | Server-Sent Events |
 | SSO | Single Sign-On |
+| TLS | Transport Layer Security |
 | TTS | Text-to-Speech |
 | UI | User Interface |
+| URL | Uniform Resource Locator |
+| UTC | Coordinated Universal Time |
+| UUID | Universally Unique Identifier |
 | UX | User Experience |
+| VIP | Very Important Person |
+| WAL | Write-Ahead Logging |
 | WS | WebSocket |
 
 ---

@@ -103,6 +103,132 @@ Maria types response, sends.
 Guest sees: "Maria: I completely understand, Ms. Chen..."
 ```
 
+### Concurrent Updates
+
+When multiple parties (guest, staff, AI) interact simultaneously:
+
+#### Race Condition Handling
+
+```typescript
+interface MessageLock {
+  conversationId: string;
+  lockedBy: 'ai' | 'staff';
+  staffId?: string;
+  lockedAt: Date;
+  expiresAt: Date;  // 30 second TTL
+}
+
+async function acquireResponseLock(
+  conversationId: string,
+  actor: 'ai' | 'staff',
+  staffId?: string
+): Promise<{ acquired: boolean; heldBy?: string }> {
+  const existingLock = await getMessageLock(conversationId);
+
+  if (existingLock && existingLock.expiresAt > new Date()) {
+    // Lock held by someone else
+    if (actor === 'ai' && existingLock.lockedBy === 'staff') {
+      // AI always yields to staff
+      return { acquired: false, heldBy: existingLock.staffId };
+    }
+    if (actor === 'staff' && existingLock.lockedBy === 'staff' && existingLock.staffId !== staffId) {
+      // Another staff member has the lock
+      return { acquired: false, heldBy: existingLock.staffId };
+    }
+    if (actor === 'staff' && existingLock.lockedBy === 'ai') {
+      // Staff takes over from AI - acquire lock
+      await releaseLock(conversationId);
+    }
+  }
+
+  // Acquire lock
+  await setMessageLock({
+    conversationId,
+    lockedBy: actor,
+    staffId,
+    lockedAt: new Date(),
+    expiresAt: new Date(Date.now() + 30000)  // 30 second TTL
+  });
+
+  return { acquired: true };
+}
+```
+
+#### Message Ordering Guarantee
+
+Messages are ordered by server-side timestamp, not client send time:
+
+```typescript
+interface Message {
+  id: string;
+  conversationId: string;
+  content: string;
+  createdAt: Date;           // Server timestamp (source of truth)
+  clientTimestamp?: Date;    // Client's claimed send time (informational only)
+  sequence: number;          // Auto-incrementing per conversation
+}
+
+// Messages displayed in sequence order
+// If two messages have same timestamp, sequence breaks the tie
+// Guest always sees messages in correct order regardless of network delays
+```
+
+#### UI Conflict Resolution
+
+```typescript
+interface TypingIndicator {
+  conversationId: string;
+  userId: string;
+  userType: 'guest' | 'staff' | 'ai';
+  userName: string;
+  startedAt: Date;
+}
+
+// Staff dashboard shows:
+// - "Guest is typing..." (from channel)
+// - "Jack is composing..." (AI generating response)
+// - "Maria is typing..." (another staff member)
+
+// Conflict scenarios:
+// 1. Staff starts typing → AI response cancelled, staff takes over
+// 2. Two staff typing → Show warning "Maria is also responding"
+// 3. Guest sends while staff typing → Staff sees new message, can continue or adjust
+
+async function handleConcurrentResponse(
+  conversationId: string,
+  newMessage: Message,
+  pendingResponses: PendingResponse[]
+): Promise<void> {
+  for (const pending of pendingResponses) {
+    if (pending.responderType === 'ai') {
+      // Cancel AI response - staff/guest message takes precedence
+      await cancelAIResponse(pending.id);
+    } else if (pending.responderType === 'staff') {
+      // Notify staff of new message
+      await notifyStaffOfNewMessage(pending.staffId, conversationId, newMessage);
+    }
+  }
+}
+```
+
+#### Real-Time Sync
+
+```typescript
+// WebSocket events for conversation sync
+type ConversationEvent =
+  | { type: 'message'; message: Message }
+  | { type: 'typing'; indicator: TypingIndicator }
+  | { type: 'typing_stopped'; userId: string }
+  | { type: 'staff_joined'; staffId: string; staffName: string }
+  | { type: 'staff_left'; staffId: string }
+  | { type: 'ai_responding'; status: 'started' | 'cancelled' | 'completed' }
+  | { type: 'lock_acquired'; lockedBy: string }
+  | { type: 'lock_released' };
+
+// All clients subscribed to conversation receive events in real-time
+// Optimistic UI updates with server reconciliation
+```
+
 ---
 
 ## Task Tracking

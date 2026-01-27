@@ -73,6 +73,120 @@ For additional security, webhook sources can be IP-restricted:
 | WhatsApp/Meta | [Meta IP Ranges](https://developers.facebook.com/docs/whatsapp/api/webhooks/meta-ip-addresses) |
 | Twilio | [Twilio IP Ranges](https://www.twilio.com/docs/usage/webhooks/ip-addresses) |
 
+```typescript
+// IP allowlisting middleware
+const ALLOWED_IPS: Record<string, string[]> = {
+  whatsapp: ['157.240.0.0/16', '173.252.64.0/18', /* ... Meta ranges */],
+  twilio: ['54.172.60.0/23', '54.244.51.0/24', /* ... Twilio ranges */]
+};
+
+function ipAllowlistMiddleware(provider: string) {
+  return (req: Request, res: Response, next: NextFunction) => {
+    const clientIp = req.ip || req.connection.remoteAddress;
+    const allowed = ALLOWED_IPS[provider] || [];
+
+    // Check if IP is in any allowed range
+    const isAllowed = allowed.some(range => isIpInRange(clientIp, range));
+
+    if (!isAllowed && config.webhooks.enforceIpAllowlist) {
+      return res.status(403).json({ error: 'IP not allowed' });
+    }
+
+    next();
+  };
+}
+```
+
+### Replay Attack Prevention
+
+Prevent attackers from replaying captured webhook requests:
+
+```typescript
+const REPLAY_WINDOW_MS = 300000; // 5 minutes
+
+function validateTimestamp(timestamp: number | string): boolean {
+  const webhookTime = typeof timestamp === 'string'
+    ? parseInt(timestamp) * 1000  // WhatsApp uses seconds
+    : timestamp;
+
+  const now = Date.now();
+  const age = now - webhookTime;
+
+  // Reject if too old
+  if (age > REPLAY_WINDOW_MS) {
+    throw new ReplayAttackError('Webhook timestamp too old');
+  }
+
+  // Reject if in future (clock skew tolerance: 60s)
+  if (age < -60000) {
+    throw new ReplayAttackError('Webhook timestamp in future');
+  }
+
+  return true;
+}
+
+// Combined validation
+async function validateWebhook(
+  req: Request,
+  provider: string
+): Promise<void> {
+  // 1. Verify signature
+  const signature = req.headers[SIGNATURE_HEADERS[provider]];
+  if (!verifySignature(provider, req.body, signature)) {
+    throw new SignatureError('Invalid webhook signature');
+  }
+
+  // 2. Check timestamp (replay prevention)
+  const timestamp = extractTimestamp(req.body, provider);
+  validateTimestamp(timestamp);
+
+  // 3. Check idempotency (duplicate prevention)
+  const messageId = extractMessageId(req.body, provider);
+  if (await isDuplicate(messageId)) {
+    throw new DuplicateError('Webhook already processed');
+  }
+}
+```
+
+### Email Inbound Authentication
+
+Email webhooks (from services like SendGrid, Mailgun) require authentication:
+
+```typescript
+// SendGrid Inbound Parse
+function verifySendGridWebhook(req: Request): boolean {
+  // SendGrid uses basic auth or signed events
+  if (config.email.provider === 'sendgrid') {
+    // Option 1: Basic Auth on the endpoint
+    const auth = req.headers.authorization;
+    if (!auth || !isValidBasicAuth(auth, config.email.webhookAuth)) {
+      return false;
+    }
+  }
+  return true;
+}
+
+// Mailgun
+function verifyMailgunWebhook(
+  timestamp: string,
+  token: string,
+  signature: string
+): boolean {
+  const hmac = crypto.createHmac('sha256', config.email.mailgunApiKey);
+  hmac.update(timestamp + token);
+  const expectedSignature = hmac.digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expectedSignature)
+  );
+}
+
+// Direct IMAP (no webhook - polling)
+// Email via IMAP doesn't use webhooks; Jack polls the mailbox
+// See: IMAP configuration in channel-adapters.md
+```
+
 ---
 
 ## WhatsApp Webhooks
@@ -307,20 +421,27 @@ Supported events:
 All webhooks are processed idempotently using message IDs:
 
 ```typescript
+import { LRUCache } from 'lru-cache';
+
+// In-memory cache for processed webhooks (24h TTL)
+const processedWebhooks = new LRUCache<string, boolean>({
+  max: 10000,
+  ttl: 86400000  // 24 hours
+});
+
 async function processWebhook(messageId: string, handler: () => Promise<void>) {
   const key = `webhook:processed:${messageId}`;
 
   // Check if already processed
-  const exists = await redis.exists(key);
-  if (exists) {
+  if (processedWebhooks.has(key)) {
     return { status: 'duplicate', processed: false };
   }
 
   // Process
   await handler();
 
-  // Mark as processed (24h TTL)
-  await redis.set(key, '1', 'EX', 86400);
+  // Mark as processed
+  processedWebhooks.set(key, true);
 
   return { status: 'success', processed: true };
 }

@@ -365,6 +365,194 @@ class SyncEngine {
 }
 ```
 
+### Sync Consistency
+
+Handling scenarios where local data and PMS diverge:
+
+#### Stale Cache During Sync Window
+
+```typescript
+interface CacheEntry<T> {
+  data: T;
+  fetchedAt: Date;
+  expiresAt: Date;
+  stale: boolean;  // Explicitly marked stale
+  version: number; // For optimistic locking
+}
+
+// Cache TTLs by data type
+const CACHE_CONFIG = {
+  guest: { ttlMs: 3600000, staleTolerance: 7200000 },       // 1hr TTL, 2hr stale OK
+  reservation: { ttlMs: 300000, staleTolerance: 600000 },  // 5min TTL, 10min stale OK
+  roomStatus: { ttlMs: 60000, staleTolerance: 180000 }     // 1min TTL, 3min stale OK
+};
+
+async function getWithStaleFallback<T>(
+  key: string,
+  fetcher: () => Promise<T>,
+  config: CacheConfig
+): Promise<{ data: T; isStale: boolean }> {
+  const cached = await cache.get<CacheEntry<T>>(key);
+
+  // Fresh cache hit
+  if (cached && cached.expiresAt > new Date()) {
+    return { data: cached.data, isStale: false };
+  }
+
+  // Try to refresh
+  try {
+    const fresh = await fetcher();
+    await cache.set(key, {
+      data: fresh,
+      fetchedAt: new Date(),
+      expiresAt: new Date(Date.now() + config.ttlMs),
+      stale: false,
+      version: (cached?.version || 0) + 1
+    });
+    return { data: fresh, isStale: false };
+  } catch (error) {
+    // Fetcher failed - use stale cache if within tolerance
+    if (cached && (Date.now() - cached.fetchedAt.getTime()) < config.staleTolerance) {
+      console.warn(`Using stale cache for ${key}: ${error.message}`);
+      return { data: cached.data, isStale: true };
+    }
+    throw error;  // No valid cache, must fail
+  }
+}
+```
+
+#### Task Created Then Reservation Cancelled
+
+```typescript
+interface TaskCancellationCheck {
+  taskId: string;
+  reservationId: string;
+  action: 'keep' | 'cancel' | 'flag_for_review';
+  reason: string;
+}
+
+async function reconcileTaskWithReservation(task: Task): Promise<TaskCancellationCheck> {
+  const reservation = await pmsAdapter.getReservation(task.reservationId);
+
+  // Reservation not found (deleted from PMS)
+  if (!reservation) {
+    return {
+      taskId: task.id,
+      reservationId: task.reservationId,
+      action: 'flag_for_review',
+      reason: 'Reservation no longer exists in PMS'
+    };
+  }
+
+  // Reservation cancelled
+  if (reservation.status === 'cancelled') {
+    // If task is already in progress, flag for review (staff may have started)
+    if (task.status === 'in_progress') {
+      await notifyStaff(task.assignedTo, {
+        type: 'task_reservation_cancelled',
+        message: `Reservation for ${task.roomNumber} was cancelled. Please review task.`
+      });
+      return {
+        taskId: task.id,
+        reservationId: task.reservationId,
+        action: 'flag_for_review',
+        reason: 'Reservation cancelled but task in progress'
+      };
+    }
+
+    // If task is pending, auto-cancel
+    if (task.status === 'pending') {
+      await updateTask(task.id, {
+        status: 'cancelled',
+        notes: 'Auto-cancelled: reservation was cancelled in PMS'
+      });
+      return {
+        taskId: task.id,
+        reservationId: task.reservationId,
+        action: 'cancel',
+        reason: 'Reservation cancelled, pending task auto-cancelled'
+      };
+    }
+  }
+
+  // Guest changed rooms
+  if (reservation.roomNumber !== task.roomNumber) {
+    await updateTask(task.id, {
+      roomNumber: reservation.roomNumber,
+      notes: `Room changed from ${task.roomNumber} to ${reservation.roomNumber}`
+    });
+    await notifyStaff(task.assignedTo, {
+      type: 'task_room_changed',
+      message: `Guest moved from ${task.roomNumber} to ${reservation.roomNumber}`
+    });
+  }
+
+  return {
+    taskId: task.id,
+    reservationId: task.reservationId,
+    action: 'keep',
+    reason: 'Reservation valid'
+  };
+}
+
+// Run reconciliation periodically (every 5 minutes with sync)
+async function reconcileAllActiveTasks(): Promise<void> {
+  const activeTasks = await getActiveTasks();
+
+  for (const task of activeTasks) {
+    if (task.reservationId) {
+      await reconcileTaskWithReservation(task);
+    }
+  }
+}
+```
+
+#### Conflict Resolution Strategy
+
+| Conflict Type | Resolution |
+|---------------|------------|
+| PMS has newer guest data | **PMS wins** - update local cache |
+| Jack has newer preference | **Jack wins** - will sync to PMS on next write |
+| Room number changed | **PMS wins** - update all related tasks/conversations |
+| Reservation cancelled | **PMS wins** - cancel pending tasks, flag in-progress |
+| Guest profile merged in PMS | **Detect via ID change** - update internal references |
+| Concurrent note additions | **Merge both** - timestamps preserved |
+
+```typescript
+interface ConflictResolution {
+  field: string;
+  localValue: any;
+  pmsValue: any;
+  resolution: 'pms_wins' | 'local_wins' | 'merge' | 'manual';
+  resolvedValue: any;
+}
+
+function resolveConflict(
+  field: string,
+  local: { value: any; updatedAt: Date },
+  pms: { value: any; updatedAt: Date }
+): ConflictResolution {
+  // PMS is source of truth for reservation/room data
+  const pmsWinsFields = ['status', 'roomNumber', 'checkInDate', 'checkOutDate', 'rateCode'];
+  if (pmsWinsFields.includes(field)) {
+    return { field, localValue: local.value, pmsValue: pms.value, resolution: 'pms_wins', resolvedValue: pms.value };
+  }
+
+  // Jack is source of truth for learned preferences
+  const localWinsFields = ['preferences.learned', 'conversationHistory', 'aiNotes'];
+  if (localWinsFields.some(f => field.startsWith(f))) {
+    return { field, localValue: local.value, pmsValue: pms.value, resolution: 'local_wins', resolvedValue: local.value };
+  }
+
+  // Last-write-wins for other fields
+  if (local.updatedAt > pms.updatedAt) {
+    return { field, localValue: local.value, pmsValue: pms.value, resolution: 'local_wins', resolvedValue: local.value };
+  } else {
+    return { field, localValue: local.value, pmsValue: pms.value, resolution: 'pms_wins', resolvedValue: pms.value };
+  }
+}
+```
+
 ---
 
 ## Action Executor

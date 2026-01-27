@@ -226,7 +226,7 @@ Significant decisions are documented as ADRs:
 |-----|-------|--------|
 | [001](decisions/001-gateway-architecture.md) | Gateway-centric architecture | Accepted |
 | [002](decisions/002-ai-provider-abstraction.md) | AI provider abstraction | Accepted |
-| [003](decisions/003-message-queue.md) | Redis for message queue | Accepted |
+| [003](decisions/003-message-queue.md) | In-memory queue with optional Redis | Accepted |
 | [004](decisions/004-pms-integration-pattern.md) | PMS integration pattern | Proposed |
 
 ---

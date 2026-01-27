@@ -277,6 +277,235 @@ pms:
     maxAttempts: 3
     backoff: exponential
     initialDelay: 1000
+    maxDelay: 30000       # Cap at 30 seconds
+    jitter: true          # Add randomness to prevent thundering herd
+```
+
+---
+
+## Retry Logic
+
+### Retry Configuration
+
+```typescript
+interface RetryConfig {
+  maxAttempts: number;       // Default: 3
+  initialDelayMs: number;    // Default: 1000 (1 second)
+  maxDelayMs: number;        // Default: 30000 (30 seconds)
+  backoffMultiplier: number; // Default: 2 (exponential)
+  jitter: boolean;           // Default: true
+  retryableErrors: string[]; // HTTP status codes or error types
+}
+
+const DEFAULT_RETRY_CONFIG: RetryConfig = {
+  maxAttempts: 3,
+  initialDelayMs: 1000,
+  maxDelayMs: 30000,
+  backoffMultiplier: 2,
+  jitter: true,
+  retryableErrors: ['ETIMEDOUT', 'ECONNRESET', 'ECONNREFUSED', '429', '500', '502', '503', '504']
+};
+```
+
+### Exponential Backoff with Jitter
+
+```typescript
+function calculateBackoff(attempt: number, config: RetryConfig): number {
+  // Base delay with exponential increase
+  let delay = config.initialDelayMs * Math.pow(config.backoffMultiplier, attempt - 1);
+
+  // Cap at max delay
+  delay = Math.min(delay, config.maxDelayMs);
+
+  // Add jitter (0-50% of delay) to prevent thundering herd
+  if (config.jitter) {
+    const jitterRange = delay * 0.5;
+    delay = delay + Math.random() * jitterRange;
+  }
+
+  return Math.floor(delay);
+}
+
+// Example delays for 3 attempts:
+// Attempt 1: 1000ms + 0-500ms jitter = 1000-1500ms
+// Attempt 2: 2000ms + 0-1000ms jitter = 2000-3000ms
+// Attempt 3: 4000ms + 0-2000ms jitter = 4000-6000ms
+```
+
+### Retry Implementation
+
+```typescript
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  config: RetryConfig = DEFAULT_RETRY_CONFIG,
+  context: { operationName: string; metadata?: Record<string, any> }
+): Promise<T> {
+  let lastError: Error;
+
+  for (let attempt = 1; attempt <= config.maxAttempts; attempt++) {
+    try {
+      return await operation();
+    } catch (error) {
+      lastError = error;
+
+      // Check if error is retryable
+      if (!isRetryable(error, config.retryableErrors)) {
+        throw error;  // Non-retryable, fail immediately
+      }
+
+      // Check if we have attempts remaining
+      if (attempt === config.maxAttempts) {
+        break;  // No more retries
+      }
+
+      // Calculate and wait for backoff
+      const delayMs = calculateBackoff(attempt, config);
+
+      console.warn(`Retry ${attempt}/${config.maxAttempts} for ${context.operationName} ` +
+                   `after ${delayMs}ms: ${error.message}`);
+
+      await sleep(delayMs);
+    }
+  }
+
+  // All retries exhausted - send to dead letter queue
+  await sendToDeadLetterQueue({
+    operation: context.operationName,
+    error: lastError,
+    metadata: context.metadata,
+    attempts: config.maxAttempts,
+    failedAt: new Date()
+  });
+
+  throw lastError;
+}
+
+function isRetryable(error: Error, retryableErrors: string[]): boolean {
+  // Check error code
+  if ('code' in error && retryableErrors.includes(String(error.code))) {
+    return true;
+  }
+
+  // Check HTTP status
+  if ('status' in error && retryableErrors.includes(String(error.status))) {
+    return true;
+  }
+
+  // Check for specific retryable error types
+  if (error.message?.includes('timeout') || error.message?.includes('ECONNRESET')) {
+    return true;
+  }
+
+  return false;
+}
+```
+
+### Dead Letter Queue
+
+When all retries are exhausted, failed operations go to a dead letter queue:
+
+```typescript
+interface DeadLetterItem {
+  id: string;
+  operation: string;
+  payload: any;
+  error: {
+    message: string;
+    code?: string;
+    stack?: string;
+  };
+  attempts: number;
+  firstAttemptAt: Date;
+  lastAttemptAt: Date;
+  status: 'pending' | 'retrying' | 'resolved' | 'abandoned';
+  resolvedBy?: string;
+  resolvedAt?: Date;
+  notes?: string;
+}
+
+class DeadLetterQueue {
+  async add(item: Omit<DeadLetterItem, 'id' | 'status'>): Promise<string> {
+    const id = generateId('dlq');
+
+    await db.deadLetterQueue.create({
+      data: {
+        id,
+        ...item,
+        status: 'pending'
+      }
+    });
+
+    // Alert operations team
+    await alertOps({
+      type: 'dead_letter',
+      operation: item.operation,
+      error: item.error.message,
+      itemId: id
+    });
+
+    return id;
+  }
+
+  async retry(itemId: string): Promise<void> {
+    const item = await db.deadLetterQueue.findUnique({ where: { id: itemId } });
+
+    await db.deadLetterQueue.update({
+      where: { id: itemId },
+      data: { status: 'retrying', lastAttemptAt: new Date() }
+    });
+
+    try {
+      await replayOperation(item.operation, item.payload);
+      await db.deadLetterQueue.update({
+        where: { id: itemId },
+        data: { status: 'resolved', resolvedAt: new Date() }
+      });
+    } catch (error) {
+      await db.deadLetterQueue.update({
+        where: { id: itemId },
+        data: {
+          status: 'pending',
+          error: { message: error.message, code: error.code },
+          attempts: item.attempts + 1
+        }
+      });
+      throw error;
+    }
+  }
+
+  async abandon(itemId: string, reason: string, staffId: string): Promise<void> {
+    await db.deadLetterQueue.update({
+      where: { id: itemId },
+      data: {
+        status: 'abandoned',
+        resolvedBy: staffId,
+        resolvedAt: new Date(),
+        notes: reason
+      }
+    });
+  }
+}
+```
+
+### Monitoring Dead Letter Queue
+
+```yaml
+alerts:
+  deadLetterQueue:
+    # Alert if items accumulating
+    - condition: count > 10
+      severity: warning
+      message: "Dead letter queue has {count} items"
+
+    # Alert if old items not resolved
+    - condition: oldest_item_age > 4h
+      severity: high
+      message: "Dead letter item pending for {age}"
+
+    # Alert on specific operations
+    - condition: operation == 'postCharge' && count > 0
+      severity: critical
+      message: "Failed charge posting in dead letter queue"
 ```
 
 ---

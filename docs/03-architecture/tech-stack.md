@@ -167,6 +167,137 @@ llm:
   baseUrl: http://localhost:11434
 ```
 
+### Provider Fallback Behavior
+
+When the primary AI provider fails, Jack automatically falls back to alternatives.
+
+#### Fallback Configuration
+
+```yaml
+ai:
+  fallback:
+    enabled: true
+    chain: [claude, openai, local]  # Fallback order
+
+    triggers:
+      consecutiveFailures: 3       # Failures before switching
+      timeoutMs: 10000             # Timeout per request
+      errorCodes: [500, 502, 503, 504, 'ECONNREFUSED', 'ETIMEDOUT']
+
+    circuitBreaker:
+      enabled: true
+      failureThreshold: 5          # Failures to open circuit
+      resetTimeMs: 60000           # Time before retry (1 minute)
+      halfOpenRequests: 2          # Test requests when half-open
+
+    costs:
+      trackUsage: true
+      alertThresholdUsd: 100       # Daily cost alert
+```
+
+#### Fallback Implementation
+
+```typescript
+class LLMFallbackManager {
+  private circuitState: Map<string, CircuitState> = new Map();
+  private failureCounts: Map<string, number> = new Map();
+
+  async complete(request: CompletionRequest): Promise<CompletionResponse> {
+    for (const providerName of this.config.fallback.chain) {
+      const circuit = this.getCircuit(providerName);
+
+      // Skip if circuit is open
+      if (circuit.state === 'open') {
+        continue;
+      }
+
+      try {
+        const provider = this.providers[providerName];
+        const response = await this.withTimeout(
+          provider.complete(request),
+          this.config.fallback.triggers.timeoutMs
+        );
+
+        // Success - reset failures
+        this.resetFailures(providerName);
+        return response;
+
+      } catch (error) {
+        this.recordFailure(providerName, error);
+
+        // Check if should open circuit
+        if (this.shouldOpenCircuit(providerName)) {
+          this.openCircuit(providerName);
+        }
+
+        // Try next provider
+        continue;
+      }
+    }
+
+    // All providers failed
+    throw new AllProvidersFailedError(this.config.fallback.chain);
+  }
+
+  private shouldOpenCircuit(provider: string): boolean {
+    const failures = this.failureCounts.get(provider) || 0;
+    return failures >= this.config.fallback.circuitBreaker.failureThreshold;
+  }
+}
+```
+
+#### Prompt Compatibility
+
+Prompts are provider-agnostic with minor adaptations:
+
+```typescript
+function adaptPrompt(prompt: string, provider: string): string {
+  // Claude uses XML tags, others use markdown
+  if (provider !== 'claude' && prompt.includes('<')) {
+    return convertXmlToMarkdown(prompt);
+  }
+
+  // Adjust system prompt style per provider
+  const systemAdaptations = {
+    claude: { prefix: 'You are', suffix: '' },
+    openai: { prefix: 'You are', suffix: 'Be concise.' },
+    local: { prefix: '### System\nYou are', suffix: '' }
+  };
+
+  return applyAdaptation(prompt, systemAdaptations[provider]);
+}
+```
+
+#### Cost Implications
+
+| Provider | Input Cost | Output Cost | Relative Cost |
+|----------|------------|-------------|---------------|
+| Claude (Sonnet) | $3/MTok | $15/MTok | 1x (baseline) |
+| OpenAI (GPT-4o) | $5/MTok | $15/MTok | ~1.2x |
+| Ollama (local) | $0 | $0 | 0x (hardware only) |
+
+Cost tracking per provider:
+
+```typescript
+async function trackUsage(provider: string, tokens: TokenUsage): Promise<void> {
+  const cost = calculateCost(provider, tokens);
+
+  await db.insert(usageMetrics).values({
+    provider,
+    inputTokens: tokens.input,
+    outputTokens: tokens.output,
+    costUsd: cost,
+    timestamp: new Date()
+  });
+
+  // Check daily cost alert
+  const dailyTotal = await getDailyTotal();
+  if (dailyTotal > config.costs.alertThresholdUsd) {
+    await notifyOps('AI cost threshold exceeded', { dailyTotal });
+  }
+}
+```
+
 ---
 
 ## Messaging Channels

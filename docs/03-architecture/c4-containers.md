@@ -53,7 +53,7 @@ The container diagram shows the major deployable/runnable components that make u
 │  │  │ • Email    │     │ • Memory   │     │ • Housekeeping │               │   │
 │  │  │ • WebChat  │     │ • Skills   │     │ • Maintenance  │               │   │
 │  │  │            │     │            │     │                │               │   │
-│  │  │ Node.js    │     │ Python     │     │ Node.js        │               │   │
+│  │  │ Node.js    │     │ Node.js    │     │ Node.js        │               │   │
 │  │  └────────────┘     └────────────┘     └────────────────┘               │   │
 │  │                                                                          │   │
 │  └──────────────────────────────────────────────────────────────────────────┘   │
@@ -93,7 +93,7 @@ The central orchestration service that coordinates all communication.
 **Key interfaces:**
 - REST API for CRUD operations
 - WebSocket for real-time updates
-- Internal gRPC for service communication
+- In-process EventEmitter for service communication
 
 [Component details →](c4-components/gateway.md)
 
@@ -126,10 +126,10 @@ Processes messages and generates intelligent responses.
 
 | Attribute | Value |
 |-----------|-------|
-| Technology | Python |
+| Technology | Node.js / TypeScript |
 | Responsibilities | Intent classification, response generation, skill execution |
 | Scaling | Horizontal, stateless |
-| Dependencies | Gateway, Vector DB, AI providers |
+| Dependencies | Gateway, sqlite-vec, AI providers |
 
 **Capabilities:**
 - Multi-provider AI support (Claude, GPT, local)
@@ -150,7 +150,7 @@ Connects Jack to hotel operational systems.
 | Technology | Node.js / TypeScript |
 | Responsibilities | PMS sync, task creation, system abstraction |
 | Scaling | Vertical (connection limits) |
-| Dependencies | Gateway, PostgreSQL |
+| Dependencies | Gateway, SQLite |
 
 **Integrations:**
 - Property Management Systems (Opera, Mews, Cloudbeds)
