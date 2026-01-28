@@ -7,6 +7,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { conversationService } from '@/services/conversation.js';
+import { guestContextService } from '@/services/guest-context.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth } from '../middleware/auth.js';
 import type { ContentType, ChannelType } from '@/types/index.js';
@@ -98,6 +99,16 @@ conversationsRouter.patch('/:id', validateBody(updateBodySchema), async (c) => {
   });
 
   return c.json({ conversation });
+});
+
+/**
+ * GET /api/v1/conversations/:id/guest
+ * Get guest context for a conversation (profile + reservation)
+ */
+conversationsRouter.get('/:id/guest', async (c) => {
+  const id = c.req.param('id');
+  const guestContext = await guestContextService.getContextByConversation(id);
+  return c.json({ guestContext });
 });
 
 /**

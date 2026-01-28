@@ -5,7 +5,7 @@
  */
 
 import { eq, and, desc, sql } from 'drizzle-orm';
-import { db, tasks, staff, conversations } from '@/db/index.js';
+import { db, tasks, staff } from '@/db/index.js';
 import type { Task } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -18,30 +18,30 @@ export type TaskPriority = 'urgent' | 'high' | 'standard' | 'low';
 export type TaskType = 'housekeeping' | 'maintenance' | 'concierge' | 'room_service' | 'other';
 
 export interface CreateTaskInput {
-  conversationId?: string;
+  conversationId?: string | undefined;
   type: TaskType;
   department: string;
-  roomNumber?: string;
+  roomNumber?: string | undefined;
   description: string;
-  items?: string[];
-  priority?: TaskPriority;
-  dueAt?: string;
+  items?: string[] | undefined;
+  priority?: TaskPriority | undefined;
+  dueAt?: string | undefined;
 }
 
 export interface UpdateTaskInput {
-  status?: TaskStatus;
-  assignedTo?: string | null;
-  priority?: TaskPriority;
-  notes?: string;
-  completionNotes?: string;
+  status?: TaskStatus | undefined;
+  assignedTo?: string | null | undefined;
+  priority?: TaskPriority | undefined;
+  notes?: string | undefined;
+  completionNotes?: string | undefined;
 }
 
 export interface ListTasksOptions {
-  status?: TaskStatus;
-  department?: string;
-  assignedTo?: string;
-  limit?: number;
-  offset?: number;
+  status?: TaskStatus | undefined;
+  department?: string | undefined;
+  assignedTo?: string | undefined;
+  limit?: number | undefined;
+  offset?: number | undefined;
 }
 
 export interface TaskSummary {
@@ -53,7 +53,7 @@ export interface TaskSummary {
   priority: string;
   status: string;
   assignedTo: string | null;
-  assignedName?: string;
+  assignedName?: string | undefined;
   dueAt: string | null;
   createdAt: string;
 }
@@ -220,10 +220,11 @@ export class TaskService {
    * Complete a task
    */
   async complete(id: string, notes?: string): Promise<Task> {
-    return this.update(id, {
-      status: 'completed',
-      completionNotes: notes,
-    });
+    const input: UpdateTaskInput = { status: 'completed' };
+    if (notes !== undefined) {
+      input.completionNotes = notes;
+    }
+    return this.update(id, input);
   }
 }
 

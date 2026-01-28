@@ -52,7 +52,7 @@ export function createApp() {
   app.get('/', (c) => {
     return c.json({
       name: 'Jack The Butler',
-      version: '0.7.0',
+      version: '0.8.0',
       status: 'running',
       docs: '/api/v1',
       health: '/health',

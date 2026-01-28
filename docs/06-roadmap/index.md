@@ -49,7 +49,8 @@ This roadmap defines a **phased, incremental build approach** where each release
 | 5 | 0.6.0 | **Channels** | WhatsApp integration | Real messages |
 | 6 | 0.7.0 | **Operations** | Staff dashboard, tasks | Staff can work |
 | 7 | 0.8.0 | **Integration** | PMS sync, guest profiles | Hotel data flows |
-| 8 | 0.9.0 | **Polish** | Multi-channel, automation | Feature complete |
+| 8 | 0.9.0 | **Polish** | Multi-channel, automation engine | Feature complete |
+| 8b | 0.9.5 | **Admin Console** | Integration UI, automation UI | Admin can configure |
 | 9 | 1.0.0 | **Launch** | Production hardening | Go live |
 
 ---

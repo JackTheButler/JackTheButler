@@ -19,6 +19,10 @@ export const ID_PREFIXES = {
   staff: 'stf',
   session: 'ses',
   knowledge: 'kb',
+  rule: 'rule',
+  alog: 'alog',
+  integration: 'int',
+  integrationLog: 'ilog',
 } as const;
 
 export type IdPrefix = keyof typeof ID_PREFIXES;

@@ -92,6 +92,16 @@ export interface ConversationUpdatedEvent extends BaseEvent {
 }
 
 /**
+ * Conversation escalated event
+ */
+export interface ConversationEscalatedEvent extends BaseEvent {
+  type: typeof EventTypes.CONVERSATION_ESCALATED;
+  conversationId: string;
+  reasons: string[];
+  priority: 'urgent' | 'high' | 'standard';
+}
+
+/**
  * Task created event
  */
 export interface TaskCreatedEvent extends BaseEvent {
@@ -111,6 +121,7 @@ export type AppEvent =
   | MessageSentEvent
   | ConversationCreatedEvent
   | ConversationUpdatedEvent
+  | ConversationEscalatedEvent
   | TaskCreatedEvent;
 
 /**

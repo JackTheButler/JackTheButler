@@ -53,6 +53,19 @@ class ApiClient {
       body: JSON.stringify(body),
     });
   }
+
+  put<T>(path: string, body: unknown) {
+    return this.fetch<T>(path, {
+      method: 'PUT',
+      body: JSON.stringify(body),
+    });
+  }
+
+  delete<T>(path: string) {
+    return this.fetch<T>(path, {
+      method: 'DELETE',
+    });
+  }
 }
 
 export const api = new ApiClient();

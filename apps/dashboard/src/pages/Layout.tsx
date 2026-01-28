@@ -37,6 +37,8 @@ export function Layout() {
   const navItems = [
     { path: '/', label: 'Conversations' },
     { path: '/tasks', label: 'Tasks' },
+    { path: '/settings/integrations', label: 'Integrations' },
+    { path: '/settings/automations', label: 'Automations' },
   ];
 
   return (
@@ -46,19 +48,24 @@ export function Layout() {
           <div className="flex items-center gap-6">
             <span className="font-semibold text-gray-900">Jack</span>
             <nav className="flex gap-4">
-              {navItems.map((item) => (
-                <Link
-                  key={item.path}
-                  to={item.path}
-                  className={`text-sm ${
-                    location.pathname === item.path
-                      ? 'text-gray-900 font-medium'
-                      : 'text-gray-600 hover:text-gray-900'
-                  }`}
-                >
-                  {item.label}
-                </Link>
-              ))}
+              {navItems.map((item) => {
+                const isActive = item.path === '/'
+                  ? location.pathname === '/'
+                  : location.pathname.startsWith(item.path);
+                return (
+                  <Link
+                    key={item.path}
+                    to={item.path}
+                    className={`text-sm ${
+                      isActive
+                        ? 'text-gray-900 font-medium'
+                        : 'text-gray-600 hover:text-gray-900'
+                    }`}
+                  >
+                    {item.label}
+                  </Link>
+                );
+              })}
             </nav>
           </div>
           <div className="flex items-center gap-4">

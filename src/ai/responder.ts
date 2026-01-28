@@ -8,6 +8,7 @@
 import type { Conversation, Message } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { Response, Responder } from '@/pipeline/responder.js';
+import type { GuestContext } from '@/services/guest-context.js';
 import type { LLMProvider } from './types.js';
 import { KnowledgeService, type KnowledgeSearchResult } from './knowledge/index.js';
 import { IntentClassifier, type ClassificationResult } from './intent/index.js';
@@ -75,13 +76,15 @@ export class AIResponder implements Responder {
   /**
    * Generate a response for a message
    */
-  async generate(conversation: Conversation, message: InboundMessage): Promise<Response> {
+  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext): Promise<Response> {
     const startTime = Date.now();
 
     log.debug(
       {
         conversationId: conversation.id,
         message: message.content.substring(0, 50),
+        hasGuestContext: !!guestContext?.guest,
+        hasReservation: !!guestContext?.reservation,
       },
       'Generating AI response'
     );
@@ -99,7 +102,7 @@ export class AIResponder implements Responder {
     const history = await this.getConversationHistory(conversation.id);
 
     // 4. Build the prompt
-    const messages = this.buildPromptMessages(message.content, classification, knowledgeContext, history);
+    const messages = this.buildPromptMessages(message.content, classification, knowledgeContext, history, guestContext);
 
     // 5. Generate response
     const response = await this.provider.complete({
@@ -116,6 +119,8 @@ export class AIResponder implements Responder {
         intent: classification.intent,
         confidence: classification.confidence,
         knowledgeHits: knowledgeContext.length,
+        guestName: guestContext?.guest?.fullName,
+        roomNumber: guestContext?.reservation?.roomNumber,
         duration,
       },
       'AI response generated'
@@ -129,6 +134,12 @@ export class AIResponder implements Responder {
         classification,
         knowledgeContext: knowledgeContext.map((k) => ({ id: k.id, title: k.title, similarity: k.similarity })),
         usage: response.usage,
+        guestContext: guestContext?.guest ? {
+          guestId: guestContext.guest.id,
+          guestName: guestContext.guest.fullName,
+          reservationId: guestContext.reservation?.id,
+          roomNumber: guestContext.reservation?.roomNumber,
+        } : undefined,
       },
     };
   }
@@ -151,12 +162,58 @@ export class AIResponder implements Responder {
     currentMessage: string,
     classification: ClassificationResult,
     knowledgeContext: KnowledgeSearchResult[],
-    history: Message[]
+    history: Message[],
+    guestContext?: GuestContext
   ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
 
     // System prompt with context
     let systemContent = BUTLER_SYSTEM_PROMPT;
+
+    // Add guest context if available
+    if (guestContext?.guest) {
+      systemContent += '\n\n## Current Guest Information:';
+      systemContent += `\n- Name: ${guestContext.guest.fullName}`;
+      if (guestContext.guest.loyaltyTier) {
+        systemContent += `\n- Loyalty Status: ${guestContext.guest.loyaltyTier}`;
+      }
+      if (guestContext.guest.vipStatus) {
+        systemContent += `\n- VIP Status: ${guestContext.guest.vipStatus}`;
+      }
+      if (guestContext.guest.language && guestContext.guest.language !== 'en') {
+        systemContent += `\n- Preferred Language: ${guestContext.guest.language}`;
+      }
+      if (guestContext.guest.preferences && guestContext.guest.preferences.length > 0) {
+        systemContent += '\n- Known Preferences:';
+        for (const pref of guestContext.guest.preferences) {
+          systemContent += `\n  - ${pref.category}: ${pref.value}`;
+        }
+      }
+    }
+
+    // Add reservation context if available
+    if (guestContext?.reservation) {
+      const res = guestContext.reservation;
+      systemContent += '\n\n## Current Reservation:';
+      systemContent += `\n- Confirmation: ${res.confirmationNumber}`;
+      if (res.roomNumber) {
+        systemContent += `\n- Room: ${res.roomNumber} (${res.roomType})`;
+      } else {
+        systemContent += `\n- Room Type: ${res.roomType}`;
+      }
+      systemContent += `\n- Check-in: ${res.arrivalDate}`;
+      systemContent += `\n- Check-out: ${res.departureDate}`;
+      systemContent += `\n- Status: ${res.isCheckedIn ? 'Currently checked in' : 'Not yet checked in'}`;
+      if (res.isCheckedIn) {
+        systemContent += `\n- Days Remaining: ${res.daysRemaining}`;
+      }
+      if (res.specialRequests && res.specialRequests.length > 0) {
+        systemContent += '\n- Special Requests:';
+        for (const req of res.specialRequests) {
+          systemContent += `\n  - ${req}`;
+        }
+      }
+    }
 
     // Add knowledge context if available
     if (knowledgeContext.length > 0) {
@@ -175,6 +232,11 @@ export class AIResponder implements Responder {
       if (classification.requiresAction) {
         systemContent += '\nNote: This may require creating a task or action.';
       }
+    }
+
+    // Personalization instruction
+    if (guestContext?.guest) {
+      systemContent += `\n\n## Important: Address the guest by name (${guestContext.guest.firstName}) when appropriate. Personalize responses based on their profile and reservation details.`;
     }
 
     messages.push({ role: 'system', content: systemContent });

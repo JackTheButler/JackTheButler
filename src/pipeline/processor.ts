@@ -4,14 +4,17 @@
  * Central pipeline for processing incoming messages:
  * 1. Identify guest (for phone-based channels)
  * 2. Find or create conversation
- * 3. Save inbound message
- * 4. Generate response
- * 5. Save outbound message
- * 6. Return response for delivery
+ * 3. Match to guest profile and reservation
+ * 4. Save inbound message
+ * 5. Generate response (with guest context for personalization)
+ * 6. Save outbound message
+ * 7. Return response for delivery
  */
 
 import { ConversationService, conversationService } from '@/services/conversation.js';
 import { GuestService, guestService } from '@/services/guest.js';
+import { guestContextService, type GuestContext } from '@/services/guest-context.js';
+import { getEscalationManager } from '@/ai/escalation.js';
 import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
@@ -55,7 +58,31 @@ export class MessageProcessor {
 
     log.debug({ conversationId: conversation.id, guestId: conversation.guestId }, 'Conversation resolved');
 
-    // 3. Save inbound message
+    // 3. Match to guest and reservation (for phone/email channels)
+    let guestContext: GuestContext | undefined;
+    if (inbound.channel === 'whatsapp' || inbound.channel === 'sms') {
+      try {
+        // Match and link conversation to guest/reservation
+        await guestContextService.matchConversation(conversation.id, { phone: inbound.channelId });
+        // Get full guest context for AI
+        guestContext = await guestContextService.getContextByConversation(conversation.id);
+        if (guestContext.guest) {
+          log.debug(
+            {
+              conversationId: conversation.id,
+              guestName: guestContext.guest.fullName,
+              hasReservation: !!guestContext.reservation,
+              roomNumber: guestContext.reservation?.roomNumber,
+            },
+            'Guest context loaded'
+          );
+        }
+      } catch (error) {
+        log.warn({ error, conversationId: conversation.id }, 'Failed to load guest context');
+      }
+    }
+
+    // 4. Save inbound message
     const savedInbound = await this.conversationSvc.addMessage(conversation.id, {
       direction: 'inbound',
       senderType: 'guest',
@@ -74,12 +101,52 @@ export class MessageProcessor {
       timestamp: new Date(),
     });
 
-    // 4. Generate response
-    const response = await this.responder.generate(conversation, inbound);
+    // 5. Generate response (with guest context for personalization)
+    const response = await this.responder.generate(conversation, inbound, guestContext);
 
     log.debug({ conversationId: conversation.id, intent: response.intent }, 'Response generated');
 
-    // 5. Save outbound message
+    // 5b. Check for escalation
+    const escalationManager = getEscalationManager();
+    const escalationDecision = await escalationManager.shouldEscalate(
+      conversation.id,
+      inbound.content,
+      response.confidence ?? 0.5
+    );
+
+    if (escalationDecision.shouldEscalate) {
+      log.info(
+        {
+          conversationId: conversation.id,
+          reasons: escalationDecision.reasons,
+          priority: escalationDecision.priority,
+        },
+        'Escalating conversation'
+      );
+
+      // Update conversation state to escalated
+      await this.conversationSvc.update(conversation.id, { state: 'escalated' });
+
+      // Emit escalation event
+      events.emit({
+        type: EventTypes.CONVERSATION_ESCALATED,
+        conversationId: conversation.id,
+        reasons: escalationDecision.reasons,
+        priority: escalationDecision.priority,
+        timestamp: new Date(),
+      });
+
+      // Modify response to acknowledge escalation
+      response.content = `I understand you'd like to speak with someone from our team. I'm connecting you with a staff member who can assist you further. ${escalationDecision.priority === 'urgent' ? 'Someone will be with you shortly.' : 'Please hold on while I find someone to help.'}\n\nIn the meantime, is there anything else I can help clarify?`;
+      response.metadata = {
+        ...response.metadata,
+        escalated: true,
+        escalationReasons: escalationDecision.reasons,
+        escalationPriority: escalationDecision.priority,
+      };
+    }
+
+    // 6. Save outbound message
     const savedOutbound = await this.conversationSvc.addMessage(conversation.id, {
       direction: 'outbound',
       senderType: 'ai',
@@ -106,7 +173,7 @@ export class MessageProcessor {
       'Message processed'
     );
 
-    // 6. Return response for delivery
+    // 7. Return response for delivery
     const result: OutboundMessage = {
       conversationId: conversation.id,
       content: response.content,

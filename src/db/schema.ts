@@ -434,3 +434,168 @@ export type NewKnowledgeItem = typeof knowledgeBase.$inferInsert;
 
 export type KnowledgeEmbedding = typeof knowledgeEmbeddings.$inferSelect;
 export type NewKnowledgeEmbedding = typeof knowledgeEmbeddings.$inferInsert;
+
+// ===================
+// Automation Rules
+// ===================
+
+/**
+ * Automation rules for scheduled/event-driven actions
+ */
+export const automationRules = sqliteTable(
+  'automation_rules',
+  {
+    id: text('id').primaryKey(),
+
+    // Rule identity
+    name: text('name').notNull(),
+    description: text('description'),
+
+    // Trigger configuration
+    // Type: time_based, event_based
+    triggerType: text('trigger_type').notNull(),
+    // JSON object with trigger-specific config
+    triggerConfig: text('trigger_config').notNull(),
+
+    // Action configuration
+    // Type: send_message, create_task, notify_staff, webhook
+    actionType: text('action_type').notNull(),
+    // JSON object with action-specific config
+    actionConfig: text('action_config').notNull(),
+
+    // Status
+    enabled: integer('enabled', { mode: 'boolean' }).notNull().default(true),
+
+    // Execution tracking
+    lastRunAt: text('last_run_at'),
+    lastError: text('last_error'),
+    runCount: integer('run_count').notNull().default(0),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_automation_rules_enabled').on(table.enabled),
+    index('idx_automation_rules_trigger_type').on(table.triggerType),
+  ]
+);
+
+/**
+ * Log of automation rule executions
+ */
+export const automationLogs = sqliteTable(
+  'automation_logs',
+  {
+    id: text('id').primaryKey(),
+    ruleId: text('rule_id')
+      .notNull()
+      .references(() => automationRules.id, { onDelete: 'cascade' }),
+
+    // Execution details
+    // Status: success, failed, skipped
+    status: text('status').notNull(),
+    triggerData: text('trigger_data'), // JSON object
+    actionResult: text('action_result'), // JSON object
+    errorMessage: text('error_message'),
+    executionTimeMs: integer('execution_time_ms'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_automation_logs_rule').on(table.ruleId),
+    index('idx_automation_logs_status').on(table.status),
+    index('idx_automation_logs_created').on(table.createdAt),
+  ]
+);
+
+export type AutomationRule = typeof automationRules.$inferSelect;
+export type NewAutomationRule = typeof automationRules.$inferInsert;
+
+export type AutomationLog = typeof automationLogs.$inferSelect;
+export type NewAutomationLog = typeof automationLogs.$inferInsert;
+
+// ===================
+// Integration Configs
+// ===================
+
+/**
+ * Integration configuration storage
+ * Stores provider credentials and settings (encrypted)
+ */
+export const integrationConfigs = sqliteTable(
+  'integration_configs',
+  {
+    id: text('id').primaryKey(),
+
+    // Identity
+    integrationId: text('integration_id').notNull(), // e.g., 'sms', 'email', 'ai'
+    providerId: text('provider_id').notNull(), // e.g., 'twilio', 'mailgun', 'anthropic'
+
+    // Status
+    enabled: integer('enabled', { mode: 'boolean' }).notNull().default(false),
+    // Status: not_configured, configured, connected, error, disabled
+    status: text('status').notNull().default('not_configured'),
+
+    // Configuration (encrypted JSON)
+    config: text('config').notNull().default('{}'),
+
+    // Connection tracking
+    lastCheckedAt: text('last_checked_at'),
+    lastError: text('last_error'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    uniqueIndex('idx_integration_configs_unique').on(table.integrationId, table.providerId),
+    index('idx_integration_configs_integration').on(table.integrationId),
+    index('idx_integration_configs_status').on(table.status),
+  ]
+);
+
+/**
+ * Integration event logs
+ * Tracks connection tests, syncs, webhooks, and errors
+ */
+export const integrationLogs = sqliteTable(
+  'integration_logs',
+  {
+    id: text('id').primaryKey(),
+    integrationId: text('integration_id').notNull(),
+    providerId: text('provider_id').notNull(),
+
+    // Event details
+    // Type: connection_test, sync, webhook, send, receive, error, config_changed
+    eventType: text('event_type').notNull(),
+    // Status: success, failed
+    status: text('status').notNull(),
+    details: text('details'), // JSON object with event-specific data
+    errorMessage: text('error_message'),
+    latencyMs: integer('latency_ms'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_integration_logs_integration').on(table.integrationId, table.providerId),
+    index('idx_integration_logs_event_type').on(table.eventType),
+    index('idx_integration_logs_created').on(table.createdAt),
+  ]
+);
+
+export type IntegrationConfig = typeof integrationConfigs.$inferSelect;
+export type NewIntegrationConfig = typeof integrationConfigs.$inferInsert;
+
+export type IntegrationLog = typeof integrationLogs.$inferSelect;
+export type NewIntegrationLog = typeof integrationLogs.$inferInsert;

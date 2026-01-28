@@ -40,14 +40,15 @@ describe('GuestService', () => {
 
   describe('findOrCreateByPhone', () => {
     it('should create a new guest when none exists', async () => {
-      const phone = '+14155551234';
+      // Use a phone number NOT in seeded data (mock PMS has +14155551234 and +14155555678)
+      const phone = '+14155550000';
 
       const guest = await service.findOrCreateByPhone(phone);
 
       expect(guest).toBeDefined();
       expect(guest.phone).toBe(phone);
       expect(guest.firstName).toBe('Guest');
-      expect(guest.lastName).toBe('1234'); // Last 4 digits
+      expect(guest.lastName).toBe('0000'); // Last 4 digits
     });
 
     it('should return existing guest when phone matches', async () => {

@@ -15,3 +15,10 @@ export * from './providers/index.js';
 export { KnowledgeService } from './knowledge/index.js';
 export { IntentClassifier, IntentTaxonomy, getIntentDefinition } from './intent/index.js';
 export { AIResponder, type AIResponderConfig } from './responder.js';
+export {
+  EscalationManager,
+  getEscalationManager,
+  resetEscalationManager,
+  type EscalationDecision,
+  type EscalationConfig,
+} from './escalation.js';

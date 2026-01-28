@@ -9,6 +9,9 @@ import { Hono } from 'hono';
 import { authRoutes } from './auth.js';
 import { conversationsRouter } from './conversations.js';
 import { tasksRouter } from './tasks.js';
+import { adminRouter } from './admin.js';
+import { integrationRoutes } from './integrations.js';
+import { automationRoutes } from './automation.js';
 
 const api = new Hono();
 
@@ -20,6 +23,15 @@ api.route('/conversations', conversationsRouter);
 
 // Task routes
 api.route('/tasks', tasksRouter);
+
+// Admin routes
+api.route('/admin', adminRouter);
+
+// Integration management routes
+api.route('/integrations', integrationRoutes);
+
+// Automation management routes
+api.route('/automation', automationRoutes);
 
 /**
  * GET /api/v1

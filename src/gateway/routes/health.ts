@@ -6,6 +6,7 @@
 
 import { Hono } from 'hono';
 import { isDatabaseHealthy } from '@/db/index.js';
+import { scheduler } from '@/services/scheduler.js';
 
 const health = new Hono();
 
@@ -51,14 +52,16 @@ health.get('/ready', (c) => {
  */
 health.get('/', (c) => {
   const dbHealthy = isDatabaseHealthy();
+  const schedulerStatus = scheduler.getStatus();
 
   return c.json({
     status: dbHealthy ? 'healthy' : 'unhealthy',
-    version: '0.7.0',
+    version: '0.8.0',
     uptime: process.uptime(),
     checks: {
       database: dbHealthy ? 'ok' : 'error',
     },
+    scheduler: schedulerStatus,
     timestamp: new Date().toISOString(),
   });
 });

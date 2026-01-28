@@ -35,7 +35,7 @@ describe('Health Routes', () => {
 
       expect(res.status).toBe(200);
       expect(json.status).toBe('healthy');
-      expect(json.version).toBe('0.7.0');
+      expect(json.version).toBe('0.8.0');
       expect(json.uptime).toBeGreaterThan(0);
       expect(json.checks.database).toBe('ok');
     });
@@ -50,7 +50,7 @@ describe('Root Route', () => {
 
       expect(res.status).toBe(200);
       expect(json.name).toBe('Jack The Butler');
-      expect(json.version).toBe('0.7.0');
+      expect(json.version).toBe('0.8.0');
       expect(json.status).toBe('running');
     });
   });

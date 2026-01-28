@@ -7,6 +7,7 @@
 
 import type { Conversation } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
+import type { GuestContext } from '@/services/guest-context.js';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 
@@ -29,8 +30,11 @@ export interface Response {
 export interface Responder {
   /**
    * Generate a response for a message
+   * @param conversation - The conversation context
+   * @param message - The inbound message to respond to
+   * @param guestContext - Optional guest context with profile and reservation info
    */
-  generate(conversation: Conversation, message: InboundMessage): Promise<Response>;
+  generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext): Promise<Response>;
 }
 
 /**
@@ -38,9 +42,11 @@ export interface Responder {
  * Simply echoes back the received message.
  */
 export class EchoResponder implements Responder {
-  async generate(_conversation: Conversation, message: InboundMessage): Promise<Response> {
+  async generate(_conversation: Conversation, message: InboundMessage, guestContext?: GuestContext): Promise<Response> {
+    // Include guest name in echo if available
+    const greeting = guestContext?.guest ? `Hello ${guestContext.guest.firstName}! ` : '';
     return {
-      content: `Echo: ${message.content}`,
+      content: `${greeting}Echo: ${message.content}`,
       confidence: 1.0,
       intent: 'echo',
     };
@@ -146,9 +152,9 @@ export function getDefaultResponder(): Responder {
 
   // Return a wrapper that waits for initialization
   return {
-    async generate(conversation: Conversation, message: InboundMessage): Promise<Response> {
+    async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext): Promise<Response> {
       const responder = await getResponderAsync();
-      return responder.generate(conversation, message);
+      return responder.generate(conversation, message, guestContext);
     },
   };
 }
@@ -166,7 +172,7 @@ export function resetResponder(): void {
  * Default responder instance (lazy loaded)
  */
 export const defaultResponder: Responder = {
-  generate(conversation: Conversation, message: InboundMessage): Promise<Response> {
-    return getDefaultResponder().generate(conversation, message);
+  generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext): Promise<Response> {
+    return getDefaultResponder().generate(conversation, message, guestContext);
   },
 };

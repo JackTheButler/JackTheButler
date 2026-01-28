@@ -1,0 +1,203 @@
+/**
+ * SMS Channel Adapter (Twilio)
+ *
+ * Handles SMS message processing and sending via Twilio.
+ */
+
+import type { ChannelAdapter, SendResult, ChannelMessagePayload } from '@/types/channel.js';
+import { TwilioAPI, getTwilioAPI } from './api.js';
+import { MessageProcessor, getProcessor } from '@/pipeline/processor.js';
+import { loadConfig } from '@/config/index.js';
+import { createLogger } from '@/utils/logger.js';
+import { db } from '@/db/index.js';
+import { messages } from '@/db/schema.js';
+import { eq } from 'drizzle-orm';
+
+const log = createLogger('sms');
+
+/**
+ * Twilio webhook body structure
+ */
+export interface TwilioWebhookBody {
+  MessageSid: string;
+  AccountSid: string;
+  From: string;
+  To: string;
+  Body: string;
+  NumMedia: string;
+  NumSegments: string;
+  SmsStatus?: string;
+  // Media fields (if NumMedia > 0)
+  MediaUrl0?: string;
+  MediaContentType0?: string;
+}
+
+/**
+ * Twilio status callback body
+ */
+export interface TwilioStatusBody {
+  MessageSid: string;
+  MessageStatus: string;
+  ErrorCode?: string;
+  ErrorMessage?: string;
+}
+
+/**
+ * SMS channel adapter using Twilio
+ */
+export class SMSAdapter implements ChannelAdapter {
+  readonly channel = 'sms' as const;
+  private api: TwilioAPI;
+  private processor: MessageProcessor;
+
+  constructor(api: TwilioAPI, processor: MessageProcessor) {
+    this.api = api;
+    this.processor = processor;
+    log.info('SMS adapter initialized');
+  }
+
+  /**
+   * Handle an incoming SMS message from Twilio webhook
+   */
+  async handleIncomingMessage(body: TwilioWebhookBody): Promise<string> {
+    log.info(
+      {
+        messageSid: body.MessageSid,
+        from: body.From,
+        hasMedia: parseInt(body.NumMedia, 10) > 0,
+      },
+      'Processing incoming SMS'
+    );
+
+    // Only process text messages for now
+    if (parseInt(body.NumMedia, 10) > 0) {
+      log.info({ numMedia: body.NumMedia }, 'SMS contains media, sending fallback');
+      const fallbackResponse = "I can only process text messages at the moment. Please send your request as text.";
+      await this.api.sendMessage(body.From, fallbackResponse);
+      return fallbackResponse;
+    }
+
+    // Create inbound message
+    const inbound = {
+      id: body.MessageSid,
+      channel: 'sms' as const,
+      channelId: body.From,
+      content: body.Body,
+      contentType: 'text' as const,
+      timestamp: new Date(),
+      raw: body,
+    };
+
+    try {
+      // Process through pipeline
+      const response = await this.processor.process(inbound);
+
+      // Send response
+      await this.send(body.From, {
+        content: response.content,
+        contentType: 'text',
+        metadata: response.metadata,
+      });
+
+      return response.content;
+    } catch (error) {
+      log.error({ err: error, messageSid: body.MessageSid }, 'Failed to process SMS');
+
+      // Send error response
+      const errorMessage = "I'm sorry, I encountered an error processing your request. Please try again or contact the front desk for assistance.";
+      await this.api.sendMessage(body.From, errorMessage);
+      return errorMessage;
+    }
+  }
+
+  /**
+   * Handle a status callback from Twilio
+   */
+  async handleStatusCallback(body: TwilioStatusBody): Promise<void> {
+    log.debug(
+      {
+        messageSid: body.MessageSid,
+        status: body.MessageStatus,
+      },
+      'SMS status update'
+    );
+
+    // Map Twilio status to our status
+    const statusMap: Record<string, string> = {
+      queued: 'pending',
+      sending: 'pending',
+      sent: 'sent',
+      delivered: 'delivered',
+      undelivered: 'failed',
+      failed: 'failed',
+    };
+
+    const deliveryStatus = statusMap[body.MessageStatus] || 'pending';
+
+    // Update message status in database
+    try {
+      await db
+        .update(messages)
+        .set({
+          deliveryStatus,
+          deliveryError: body.ErrorMessage,
+        })
+        .where(eq(messages.channelMessageId, body.MessageSid));
+    } catch (error) {
+      log.warn({ err: error, messageSid: body.MessageSid }, 'Failed to update SMS status');
+    }
+  }
+
+  /**
+   * Send an SMS message
+   */
+  async send(to: string, message: ChannelMessagePayload): Promise<SendResult> {
+    const result = await this.api.sendMessage(to, message.content);
+
+    return {
+      channelMessageId: result.sid,
+      status: 'sent',
+    };
+  }
+}
+
+/**
+ * Cached adapter instance
+ */
+let cachedAdapter: SMSAdapter | null = null;
+
+/**
+ * Get the SMS adapter
+ */
+export function getSMSAdapter(): SMSAdapter | null {
+  if (cachedAdapter) {
+    return cachedAdapter;
+  }
+
+  const config = loadConfig();
+
+  if (!config.sms.accountSid || !config.sms.authToken || !config.sms.phoneNumber) {
+    log.debug('SMS/Twilio not configured');
+    return null;
+  }
+
+  const api = getTwilioAPI();
+  if (!api) {
+    return null;
+  }
+
+  const processor = getProcessor();
+  cachedAdapter = new SMSAdapter(api, processor);
+
+  return cachedAdapter;
+}
+
+/**
+ * Reset cached adapter (for testing)
+ */
+export function resetSMSAdapter(): void {
+  cachedAdapter = null;
+}
+
+export { TwilioAPI, getTwilioAPI, resetTwilioAPI } from './api.js';
+export { verifyTwilioSignature } from './security.js';
