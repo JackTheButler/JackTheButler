@@ -5,7 +5,7 @@
  * Run with: pnpm db:seed
  */
 
-import { db, staff, settings, knowledgeBase } from './index.js';
+import { db, staff, settings, knowledgeBase, tasks } from './index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 
@@ -232,6 +232,52 @@ async function seed() {
     });
   }
   log.info({ count: knowledgeSeedData.length }, 'Seeded knowledge base');
+
+  // Seed sample tasks
+  const taskData = [
+    {
+      id: generateId('task'),
+      type: 'housekeeping',
+      department: 'housekeeping',
+      roomNumber: '302',
+      description: 'Extra towels requested',
+      priority: 'standard',
+      status: 'pending',
+    },
+    {
+      id: generateId('task'),
+      type: 'maintenance',
+      department: 'maintenance',
+      roomNumber: '415',
+      description: 'AC not cooling properly',
+      priority: 'high',
+      status: 'pending',
+    },
+    {
+      id: generateId('task'),
+      type: 'room_service',
+      department: 'food_beverage',
+      roomNumber: '208',
+      description: 'Breakfast order: 2 eggs, toast, coffee',
+      priority: 'standard',
+      status: 'in_progress',
+      assignedTo: 'staff-concierge-001',
+    },
+    {
+      id: generateId('task'),
+      type: 'concierge',
+      department: 'front_desk',
+      description: 'Restaurant reservation for 4 at 7pm',
+      priority: 'standard',
+      status: 'completed',
+      assignedTo: 'staff-concierge-001',
+    },
+  ];
+
+  for (const task of taskData) {
+    await db.insert(tasks).values(task);
+  }
+  log.info({ count: taskData.length }, 'Seeded tasks');
 
   log.info('Database seed complete!');
 }

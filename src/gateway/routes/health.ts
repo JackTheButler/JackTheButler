@@ -54,7 +54,7 @@ health.get('/', (c) => {
 
   return c.json({
     status: dbHealthy ? 'healthy' : 'unhealthy',
-    version: '0.6.0',
+    version: '0.7.0',
     uptime: process.uptime(),
     checks: {
       database: dbHealthy ? 'ok' : 'error',

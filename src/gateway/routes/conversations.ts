@@ -9,7 +9,8 @@ import { z } from 'zod';
 import { conversationService } from '@/services/conversation.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth } from '../middleware/auth.js';
-import type { ContentType } from '@/types/index.js';
+import type { ContentType, ChannelType } from '@/types/index.js';
+import { getWhatsAppAdapter } from '@/channels/whatsapp/index.js';
 
 // Validation schemas
 const listQuerySchema = z.object({
@@ -130,6 +131,9 @@ conversationsRouter.post('/:id/messages', validateBody(sendMessageBodySchema), a
   const userId = c.get('userId');
   const body = c.get('validatedBody') as z.infer<typeof sendMessageBodySchema>;
 
+  // Get conversation to know channel details
+  const conversation = await conversationService.getById(id);
+
   const message = await conversationService.addMessage(id, {
     direction: 'outbound',
     senderType: 'staff',
@@ -138,9 +142,42 @@ conversationsRouter.post('/:id/messages', validateBody(sendMessageBodySchema), a
     contentType: body.contentType as ContentType,
   });
 
-  // TODO: Send through channel adapter
+  // Send through channel adapter
+  try {
+    await sendToChannel(
+      conversation.channelType as ChannelType,
+      conversation.channelId,
+      body.content
+    );
+  } catch (err) {
+    // Log error but don't fail the request - message is saved
+    console.error('Failed to send to channel:', err);
+  }
 
   return c.json({ message }, 201);
 });
+
+/**
+ * Send a message through the appropriate channel adapter
+ */
+async function sendToChannel(
+  channelType: ChannelType,
+  channelId: string,
+  content: string
+): Promise<void> {
+  switch (channelType) {
+    case 'whatsapp': {
+      const adapter = getWhatsAppAdapter();
+      if (adapter) {
+        await adapter.send(channelId, { content, contentType: 'text' });
+      }
+      break;
+    }
+    // Other channels can be added here
+    default:
+      // No adapter for this channel
+      break;
+  }
+}
 
 export { conversationsRouter };

@@ -19,7 +19,7 @@ info:
     - Health checks (`/health/*`)
     - Login (`/api/v1/auth/login`)
     - Token refresh (`/api/v1/auth/refresh`)
-  version: 0.6.0
+  version: 0.7.0
   contact:
     name: Jack The Butler
     url: https://jackthebutler.com

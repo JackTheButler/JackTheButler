@@ -8,19 +8,18 @@
 import { Hono } from 'hono';
 import { authRoutes } from './auth.js';
 import { conversationsRouter } from './conversations.js';
+import { tasksRouter } from './tasks.js';
 
 const api = new Hono();
 
 // Authentication routes
 api.route('/auth', authRoutes);
 
-// Conversation routes (Phase 3)
+// Conversation routes
 api.route('/conversations', conversationsRouter);
 
-// Placeholder for future routes
-// Phase 5: api.route('/guests', guestRoutes);
-// Phase 5: api.route('/tasks', taskRoutes);
-// Phase 6: api.route('/staff', staffRoutes);
+// Task routes
+api.route('/tasks', tasksRouter);
 
 /**
  * GET /api/v1
