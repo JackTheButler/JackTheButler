@@ -13,6 +13,7 @@ import { adminRouter } from './admin.js';
 import { extensionRoutes, legacyIntegrationRoutes } from './extensions.js';
 import { automationRoutes } from './automation.js';
 import { autonomySettingsRoutes, approvalsRoutes } from './autonomy.js';
+import { siteScraperRoutes } from '@/extensions/tools/site-scraper/routes.js';
 
 const api = new Hono();
 
@@ -42,6 +43,9 @@ api.route('/settings/autonomy', autonomySettingsRoutes);
 
 // Approval queue routes
 api.route('/approvals', approvalsRoutes);
+
+// Tool routes
+api.route('/tools/site-scraper', siteScraperRoutes);
 
 /**
  * GET /api/v1

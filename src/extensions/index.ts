@@ -113,6 +113,33 @@ export {
 } from './pms/index.js';
 
 // ============================================
+// Tool Extensions
+// ============================================
+export {
+  // Site Scraper
+  scrapeUrl,
+  scrapeUrls,
+  parseHtml,
+  processContent,
+  siteScraperRoutes,
+  // Registry
+  toolManifests,
+  getToolManifests,
+  getToolManifest,
+  // Types
+  type ToolType,
+  type ScrapeOptions,
+  type ScrapeResult,
+  type ParseOptions,
+  type ParsedContent,
+  type ContentSection,
+  type PageMetadata,
+  type ProcessedEntry,
+  type ProcessContext,
+  type KnowledgeCategory,
+} from './tools/index.js';
+
+// ============================================
 // All Manifests Registry
 // ============================================
 import { aiManifests } from './ai/index.js';
@@ -122,6 +149,9 @@ import type { AnyExtensionManifest, ExtensionCategory } from './types.js';
 
 /**
  * All registered extension manifests
+ *
+ * Note: Tools are excluded as they are built-in features accessed via the
+ * sidebar menu, not configurable extensions.
  */
 export const allManifests: Record<string, AnyExtensionManifest> = {
   ...aiManifests,

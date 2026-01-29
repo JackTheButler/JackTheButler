@@ -14,7 +14,7 @@ import type { PMSAdapter } from '@/core/interfaces/pms.js';
 /**
  * Extension categories
  */
-export type ExtensionCategory = 'ai' | 'channel' | 'pms';
+export type ExtensionCategory = 'ai' | 'channel' | 'pms' | 'tool';
 
 /**
  * Extension status
@@ -112,12 +112,32 @@ export interface PMSExtensionManifest extends ExtensionManifest {
 }
 
 /**
+ * Tool extension manifest
+ * Tools are built-in utilities for hotel onboarding and operations.
+ */
+export interface ToolExtensionManifest extends ExtensionManifest {
+  category: 'tool';
+  /** Dashboard route for the tool UI */
+  dashboardRoute: string;
+  /** Tool capabilities */
+  capabilities: {
+    /** Has dedicated UI page */
+    hasUI: boolean;
+    /** Has API endpoints */
+    hasAPI: boolean;
+    /** Requires AI processing */
+    requiresAI?: boolean;
+  };
+}
+
+/**
  * Union type for all extension manifests
  */
 export type AnyExtensionManifest =
   | AIExtensionManifest
   | ChannelExtensionManifest
-  | PMSExtensionManifest;
+  | PMSExtensionManifest
+  | ToolExtensionManifest;
 
 /**
  * Extension instance state

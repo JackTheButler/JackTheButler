@@ -10,6 +10,7 @@ import { AutomationsPage } from '@/pages/settings/automations/Automations';
 import { AutomationEditPage } from '@/pages/settings/automations/AutomationEdit';
 import { AutonomyPage } from '@/pages/settings/autonomy/Autonomy';
 import { ApprovalsPage } from '@/pages/approvals/Approvals';
+import { SiteScraperPage } from '@/pages/tools/SiteScraper';
 
 export function App() {
   return (
@@ -26,6 +27,7 @@ export function App() {
           <Route path="/settings/automations/:ruleId" element={<AutomationEditPage />} />
           <Route path="/settings/autonomy" element={<AutonomyPage />} />
           <Route path="/approvals" element={<ApprovalsPage />} />
+          <Route path="/tools/site-scraper" element={<SiteScraperPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

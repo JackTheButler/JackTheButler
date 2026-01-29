@@ -161,10 +161,11 @@ export class ExtensionRegistry {
           ext.instance = adapter;
           break;
         }
-        default: {
-          // This should never happen with proper typing
-          const unknownCategory: never = category;
-          throw new Error(`Unknown extension category: ${unknownCategory}`);
+        case 'tool': {
+          // Tools don't have instances - they're just routes and manifests
+          // The tool itself is available via its routes
+          ext.instance = null;
+          break;
         }
       }
 

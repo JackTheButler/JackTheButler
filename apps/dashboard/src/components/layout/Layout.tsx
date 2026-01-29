@@ -15,6 +15,8 @@ import {
   LogOut,
   User,
   Settings,
+  Globe,
+  Wrench,
 } from 'lucide-react';
 
 interface NavItem {
@@ -24,7 +26,10 @@ interface NavItem {
 }
 
 interface NavSection {
+  id?: string;
   title?: string;
+  icon?: React.ReactNode;
+  collapsible?: boolean;
   items: NavItem[];
 }
 
@@ -36,8 +41,49 @@ export function Layout() {
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved === 'true';
   });
+  const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
+    const saved = localStorage.getItem('sidebar-expanded-sections');
+    return saved ? JSON.parse(saved) : { tools: false, settings: false };
+  });
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  const toggleSection = (sectionId: string) => {
+    setExpandedSections((prev) => {
+      const next = { ...prev, [sectionId]: !prev[sectionId] };
+      localStorage.setItem('sidebar-expanded-sections', JSON.stringify(next));
+      return next;
+    });
+  };
+
+  // Auto-expand section when navigating directly to a child route
+  useEffect(() => {
+    const sectionsToExpand: string[] = [];
+
+    navSections.forEach((section) => {
+      if (section.id && section.collapsible) {
+        const hasActiveItem = section.items.some((item) => {
+          if (item.path === '/') return location.pathname === '/';
+          return location.pathname.startsWith(item.path);
+        });
+        if (hasActiveItem && !expandedSections[section.id]) {
+          sectionsToExpand.push(section.id);
+        }
+      }
+    });
+
+    if (sectionsToExpand.length > 0) {
+      setExpandedSections((prev) => {
+        const next = { ...prev };
+        sectionsToExpand.forEach((id) => {
+          next[id] = true;
+        });
+        localStorage.setItem('sidebar-expanded-sections', JSON.stringify(next));
+        return next;
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
@@ -95,7 +141,19 @@ export function Layout() {
       ],
     },
     {
+      id: 'tools',
+      title: 'Tools',
+      icon: <Wrench size={20} />,
+      collapsible: true,
+      items: [
+        { path: '/tools/site-scraper', label: 'Site Scraper', icon: <Globe size={20} /> },
+      ],
+    },
+    {
+      id: 'settings',
       title: 'Settings',
+      icon: <Settings size={20} />,
+      collapsible: true,
       items: [
         { path: '/settings/extensions', label: 'Extensions', icon: <Puzzle size={20} /> },
         { path: '/settings/automations', label: 'Automations', icon: <Zap size={20} /> },
@@ -133,45 +191,93 @@ export function Layout() {
 
         {/* Navigation */}
         <nav className="flex-1 py-4 overflow-y-auto">
-          {navSections.map((section, sectionIndex) => (
-            <div key={sectionIndex} className={sectionIndex > 0 ? 'mt-6' : ''}>
-              {section.title && !collapsed && (
-                <div className="px-4 mb-2">
-                  <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
-                    {section.title}
-                  </span>
-                </div>
-              )}
-              {section.title && collapsed && (
-                <div className="mx-3 mb-2 border-t border-gray-200" />
-              )}
-              <ul className="space-y-1">
-                {section.items.map((item) => {
-                  const active = isActive(item.path);
-                  return (
-                    <li key={item.path}>
-                      <Link
-                        to={item.path}
-                        className={`flex items-center gap-3 mx-2 px-3 py-2 rounded-lg transition-colors ${
-                          active
-                            ? 'bg-gray-900 text-white'
+          {navSections.map((section, sectionIndex) => {
+            const isExpanded = section.id ? expandedSections[section.id] : true;
+            const hasActiveItem = section.items.some((item) => isActive(item.path));
+
+            return (
+              <div key={sectionIndex} className={sectionIndex > 0 ? 'mt-2' : ''}>
+                {section.title && section.collapsible ? (
+                  // Collapsible section header
+                  <>
+                    {!collapsed ? (
+                      <button
+                        onClick={() => section.id && toggleSection(section.id)}
+                        className={`flex items-center justify-between w-full mx-2 px-3 py-2 rounded-lg transition-colors ${
+                          hasActiveItem && !isExpanded
+                            ? 'bg-gray-100 text-gray-900'
                             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        } ${collapsed ? 'justify-center' : ''}`}
-                        title={collapsed ? item.label : undefined}
+                        }`}
+                        style={{ width: 'calc(100% - 16px)' }}
                       >
-                        <span className={active ? 'text-white' : 'text-gray-500'}>
-                          {item.icon}
+                        <div className="flex items-center gap-3">
+                          <span className="text-gray-500">{section.icon}</span>
+                          <span className="text-sm font-medium">{section.title}</span>
+                        </div>
+                        <ChevronDown
+                          size={16}
+                          className={`text-gray-400 transition-transform ${isExpanded ? '' : '-rotate-90'}`}
+                        />
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => section.id && toggleSection(section.id)}
+                        className={`flex items-center justify-center mx-2 px-3 py-2 rounded-lg transition-colors w-[calc(100%-16px)] ${
+                          hasActiveItem && !isExpanded
+                            ? 'bg-gray-100 text-gray-900'
+                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                        }`}
+                        title={section.title}
+                      >
+                        <span className="text-gray-500">{section.icon}</span>
+                      </button>
+                    )}
+                  </>
+                ) : section.title ? (
+                  // Non-collapsible section header (just a label)
+                  <>
+                    {!collapsed && (
+                      <div className="px-4 mb-2">
+                        <span className="text-xs font-medium text-gray-400 uppercase tracking-wider">
+                          {section.title}
                         </span>
-                        {!collapsed && (
-                          <span className="text-sm font-medium">{item.label}</span>
-                        )}
-                      </Link>
-                    </li>
-                  );
-                })}
-              </ul>
-            </div>
-          ))}
+                      </div>
+                    )}
+                    {collapsed && <div className="mx-3 mb-2 border-t border-gray-200" />}
+                  </>
+                ) : null}
+
+                {/* Section items - show if expanded or not collapsible */}
+                {(!section.collapsible || isExpanded) && (
+                  <ul className={`space-y-1 ${section.collapsible ? 'mt-1' : ''}`}>
+                    {section.items.map((item) => {
+                      const active = isActive(item.path);
+                      return (
+                        <li key={item.path}>
+                          <Link
+                            to={item.path}
+                            className={`flex items-center gap-3 mx-2 px-3 py-2 rounded-lg transition-colors ${
+                              active
+                                ? 'bg-gray-900 text-white'
+                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                            } ${collapsed ? 'justify-center' : ''} ${section.collapsible && !collapsed ? 'pl-11' : ''}`}
+                            title={collapsed ? item.label : undefined}
+                          >
+                            <span className={active ? 'text-white' : 'text-gray-500'}>
+                              {item.icon}
+                            </span>
+                            {!collapsed && (
+                              <span className="text-sm font-medium">{item.label}</span>
+                            )}
+                          </Link>
+                        </li>
+                      );
+                    })}
+                  </ul>
+                )}
+              </div>
+            );
+          })}
         </nav>
 
         {/* Collapse toggle */}

@@ -78,8 +78,11 @@ export interface ExtensionGroup {
 
 /**
  * Category labels for UI
+ *
+ * Note: 'tool' category is excluded as tools are built-in features
+ * accessed via the sidebar menu, not configurable extensions.
  */
-const categoryLabels: Record<ExtensionCategory, string> = {
+const categoryLabels: Record<Exclude<ExtensionCategory, 'tool'>, string> = {
   ai: 'AI Providers',
   channel: 'Communication Channels',
   pms: 'Property Management',
@@ -142,21 +145,24 @@ export class ExtensionConfigService {
   async listExtensionsByCategory(): Promise<ExtensionGroup[]> {
     const extensions = await this.listExtensions();
 
-    const groups: Record<ExtensionCategory, ExtensionWithStatus[]> = {
+    // Only include configurable extension categories (not tools)
+    const groups: Record<Exclude<ExtensionCategory, 'tool'>, ExtensionWithStatus[]> = {
       ai: [],
       channel: [],
       pms: [],
     };
 
     for (const ext of extensions) {
-      groups[ext.manifest.category].push(ext);
+      // Skip tools - they're accessed via sidebar menu, not Extensions page
+      if (ext.manifest.category === 'tool') continue;
+      groups[ext.manifest.category as Exclude<ExtensionCategory, 'tool'>].push(ext);
     }
 
     return Object.entries(groups)
       .filter(([, exts]) => exts.length > 0)
       .map(([category, extensions]) => ({
         category: category as ExtensionCategory,
-        categoryLabel: categoryLabels[category as ExtensionCategory],
+        categoryLabel: categoryLabels[category as Exclude<ExtensionCategory, 'tool'>],
         extensions,
       }));
   }
@@ -713,6 +719,9 @@ export class ExtensionConfigService {
         return 'channel';
       case 'pms':
         return 'pms';
+      case 'tool':
+        // Tools shouldn't be in the extension config system, but handle for safety
+        return 'tool';
     }
   }
 
