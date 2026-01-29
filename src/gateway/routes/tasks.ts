@@ -14,6 +14,7 @@ const listQuerySchema = z.object({
   status: z.enum(['pending', 'assigned', 'in_progress', 'completed', 'cancelled']).optional(),
   department: z.string().optional(),
   assignedTo: z.string().optional(),
+  source: z.enum(['manual', 'auto', 'automation']).optional(),
   limit: z.coerce.number().min(1).max(100).default(50),
   offset: z.coerce.number().min(0).default(0),
 });
@@ -63,6 +64,7 @@ tasksRouter.get('/', validateQuery(listQuerySchema), async (c) => {
     status: query.status,
     department: query.department,
     assignedTo: query.assignedTo,
+    source: query.source,
     limit: query.limit,
     offset: query.offset,
   });

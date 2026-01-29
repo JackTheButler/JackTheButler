@@ -1,13 +1,13 @@
 /**
- * SMS Channel Adapter (Twilio)
+ * SMS Channel Adapter (Twilio) - Legacy
  *
- * Handles SMS message processing and sending via Twilio.
+ * @deprecated Use extension registry instead. Configure SMS via dashboard UI.
+ * All SMS functionality is now handled via src/extensions/channels/sms/
  */
 
 import type { ChannelAdapter, SendResult, ChannelMessagePayload } from '@/types/channel.js';
-import { TwilioAPI, getTwilioAPI } from './api.js';
-import { MessageProcessor, getProcessor } from '@/pipeline/processor.js';
-import { loadConfig } from '@/config/index.js';
+import { TwilioAPI } from './api.js';
+import { MessageProcessor } from '@/pipeline/processor.js';
 import { createLogger } from '@/utils/logger.js';
 import { db } from '@/db/index.js';
 import { messages } from '@/db/schema.js';
@@ -162,41 +162,22 @@ export class SMSAdapter implements ChannelAdapter {
 }
 
 /**
- * Cached adapter instance
- */
-let cachedAdapter: SMSAdapter | null = null;
-
-/**
  * Get the SMS adapter
+ *
+ * @deprecated Always returns null. Use extension registry instead.
+ * Configure SMS via the dashboard UI.
  */
 export function getSMSAdapter(): SMSAdapter | null {
-  if (cachedAdapter) {
-    return cachedAdapter;
-  }
-
-  const config = loadConfig();
-
-  if (!config.sms.accountSid || !config.sms.authToken || !config.sms.phoneNumber) {
-    log.debug('SMS/Twilio not configured');
-    return null;
-  }
-
-  const api = getTwilioAPI();
-  if (!api) {
-    return null;
-  }
-
-  const processor = getProcessor();
-  cachedAdapter = new SMSAdapter(api, processor);
-
-  return cachedAdapter;
+  log.debug('Legacy SMS adapter disabled. Use extension registry.');
+  return null;
 }
 
 /**
  * Reset cached adapter (for testing)
+ * @deprecated No longer needed
  */
 export function resetSMSAdapter(): void {
-  cachedAdapter = null;
+  // No-op
 }
 
 export { TwilioAPI, getTwilioAPI, resetTwilioAPI } from './api.js';

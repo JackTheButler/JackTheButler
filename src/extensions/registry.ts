@@ -207,6 +207,34 @@ export class ExtensionRegistry {
   }
 
   /**
+   * Reconfigure an extension with new settings (hot-reload)
+   * This disables the old instance and creates a new one with updated config
+   */
+  async reconfigure(extensionId: string, config: Record<string, unknown>): Promise<void> {
+    const ext = this.extensions.get(extensionId);
+    if (!ext) {
+      throw new Error(`Extension not found: ${extensionId}`);
+    }
+
+    log.info({ extensionId }, 'Reconfiguring extension with new settings');
+
+    // Disable old instance if active
+    if (ext.status === 'active' || ext.instance) {
+      this.disable(extensionId);
+    }
+
+    // Re-register to reset state (keep manifest)
+    ext.status = 'registered';
+    delete ext.config;
+    delete ext.lastError;
+
+    // Activate with new config
+    await this.activate(extensionId, config);
+
+    log.info({ extensionId }, 'Extension reconfigured successfully');
+  }
+
+  /**
    * Run health check on an extension
    */
   async healthCheck(extensionId: string): Promise<ConnectionTestResult> {

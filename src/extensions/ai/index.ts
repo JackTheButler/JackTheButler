@@ -8,8 +8,6 @@
 
 import type { AIProvider } from '@/core/interfaces/ai.js';
 import type { AIExtensionManifest, BaseProvider, ConnectionTestResult } from '../types.js';
-import { loadConfig } from '@/config/index.js';
-import { createLogger } from '@/utils/logger.js';
 
 import {
   createAnthropicProvider,
@@ -35,8 +33,6 @@ export {
 } from './providers/anthropic.js';
 export { OpenAIProvider, createOpenAIProvider, type OpenAIConfig } from './providers/openai.js';
 export { OllamaProvider, createOllamaProvider, type OllamaConfig } from './providers/ollama.js';
-
-const log = createLogger('extensions:ai');
 
 /**
  * AI provider types
@@ -72,12 +68,6 @@ export function getAIManifest(type: AIProviderType): AIExtensionManifest | undef
 }
 
 /**
- * Cached provider instances
- */
-let cachedProvider: CombinedAIProvider | null = null;
-let cachedEmbeddingProvider: CombinedAIProvider | null = null;
-
-/**
  * Create an AI provider by type and config
  */
 export function createAIProvider(
@@ -94,132 +84,6 @@ export function createAIProvider(
     default:
       throw new Error(`Unknown AI provider type: ${type}`);
   }
-}
-
-/**
- * Get the configured AI provider
- *
- * Uses the provider specified in config, falls back to available providers.
- */
-export function getAIProvider(): CombinedAIProvider {
-  if (cachedProvider) {
-    return cachedProvider;
-  }
-
-  const config = loadConfig();
-  const aiConfig = config.ai;
-
-  // Try configured provider first
-  const providerType = aiConfig.provider as AIProviderType;
-
-  try {
-    switch (providerType) {
-      case 'anthropic':
-        if (aiConfig.anthropicApiKey) {
-          cachedProvider = createAnthropicProvider({
-            apiKey: aiConfig.anthropicApiKey,
-            ...(aiConfig.model !== undefined && { model: aiConfig.model }),
-            ...(aiConfig.maxTokens !== undefined && { maxTokens: aiConfig.maxTokens }),
-          });
-          log.info('Using Anthropic Claude as AI provider');
-          return cachedProvider;
-        }
-        break;
-
-      case 'openai':
-        if (aiConfig.openaiApiKey) {
-          cachedProvider = createOpenAIProvider({
-            apiKey: aiConfig.openaiApiKey,
-            ...(aiConfig.model !== undefined && { model: aiConfig.model }),
-            ...(aiConfig.maxTokens !== undefined && { maxTokens: aiConfig.maxTokens }),
-          });
-          log.info('Using OpenAI as AI provider');
-          return cachedProvider;
-        }
-        break;
-
-      case 'ollama':
-        cachedProvider = createOllamaProvider({
-          ...(aiConfig.ollamaBaseUrl !== undefined && { baseUrl: aiConfig.ollamaBaseUrl }),
-          ...(aiConfig.model !== undefined && { model: aiConfig.model }),
-        });
-        log.info('Using Ollama as AI provider');
-        return cachedProvider;
-    }
-
-    // Fallback chain: Anthropic -> OpenAI -> Ollama
-    if (aiConfig.anthropicApiKey) {
-      cachedProvider = createAnthropicProvider({
-        apiKey: aiConfig.anthropicApiKey,
-        ...(aiConfig.model !== undefined && { model: aiConfig.model }),
-        ...(aiConfig.maxTokens !== undefined && { maxTokens: aiConfig.maxTokens }),
-      });
-      log.info('Falling back to Anthropic Claude as AI provider');
-      return cachedProvider;
-    }
-
-    if (aiConfig.openaiApiKey) {
-      cachedProvider = createOpenAIProvider({
-        apiKey: aiConfig.openaiApiKey,
-        ...(aiConfig.model !== undefined && { model: aiConfig.model }),
-        ...(aiConfig.maxTokens !== undefined && { maxTokens: aiConfig.maxTokens }),
-      });
-      log.info('Falling back to OpenAI as AI provider');
-      return cachedProvider;
-    }
-
-    // Default to Ollama (local)
-    cachedProvider = createOllamaProvider({
-      ...(aiConfig.ollamaBaseUrl !== undefined && { baseUrl: aiConfig.ollamaBaseUrl }),
-      ...(aiConfig.model !== undefined && { model: aiConfig.model }),
-    });
-    log.info('Falling back to Ollama as AI provider');
-    return cachedProvider;
-  } catch (error) {
-    log.error({ error }, 'Failed to create AI provider');
-    throw error;
-  }
-}
-
-/**
- * Get an embedding provider
- *
- * Prefers OpenAI for embeddings since Claude doesn't have native embedding support.
- */
-export function getEmbeddingProvider(): CombinedAIProvider {
-  if (cachedEmbeddingProvider) {
-    return cachedEmbeddingProvider;
-  }
-
-  const config = loadConfig();
-  const aiConfig = config.ai;
-
-  // Prefer OpenAI for embeddings (best quality)
-  if (aiConfig.openaiApiKey) {
-    cachedEmbeddingProvider = createOpenAIProvider({
-      apiKey: aiConfig.openaiApiKey,
-      ...(aiConfig.embeddingModel !== undefined && { embeddingModel: aiConfig.embeddingModel }),
-    });
-    log.info('Using OpenAI for embeddings');
-    return cachedEmbeddingProvider;
-  }
-
-  // Use Claude's fallback embeddings
-  if (aiConfig.anthropicApiKey) {
-    cachedEmbeddingProvider = createAnthropicProvider({
-      apiKey: aiConfig.anthropicApiKey,
-    });
-    log.info('Using Anthropic fallback for embeddings');
-    return cachedEmbeddingProvider;
-  }
-
-  // Fallback to Ollama
-  cachedEmbeddingProvider = createOllamaProvider({
-    ...(aiConfig.ollamaBaseUrl !== undefined && { baseUrl: aiConfig.ollamaBaseUrl }),
-    ...(aiConfig.embeddingModel !== undefined && { embeddingModel: aiConfig.embeddingModel }),
-  });
-  log.info('Using Ollama for embeddings');
-  return cachedEmbeddingProvider;
 }
 
 /**
@@ -241,11 +105,3 @@ export async function testAIProviderConnection(
   }
 }
 
-/**
- * Reset cached providers (for testing)
- */
-export function resetAIProviders(): void {
-  cachedProvider = null;
-  cachedEmbeddingProvider = null;
-  log.debug('AI provider cache cleared');
-}

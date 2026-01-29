@@ -3,13 +3,14 @@
  *
  * Inbound webhooks for PMS systems to push data to Jack.
  * Supports both generic format and PMS-specific endpoints.
+ * Configuration loaded from extension registry (configured via dashboard UI).
  */
 
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createLogger } from '@/utils/logger.js';
-import { loadConfig } from '@/config/index.js';
 import { getExtensionRegistry } from '@/extensions/index.js';
+import { extensionConfigService } from '@/services/extension-config.js';
 import type { NormalizedGuest, NormalizedReservation, PMSEvent, PMSEventType } from '@/core/interfaces/pms.js';
 import { validateBody } from '../../middleware/validator.js';
 
@@ -94,14 +95,34 @@ type ReservationWebhook = z.infer<typeof reservationWebhookSchema>;
 type EventWebhook = z.infer<typeof eventWebhookSchema>;
 
 /**
+ * Get PMS webhook secret from extension config
+ */
+async function getPMSWebhookSecret(): Promise<string | undefined> {
+  // Check all PMS extension configs for webhook secret
+  const pmsExtensions = ['mock-pms', 'mews', 'cloudbeds', 'opera', 'apaleo'];
+
+  for (const extId of pmsExtensions) {
+    const extConfig = await extensionConfigService.getExtensionConfig(extId);
+    if (extConfig?.config) {
+      const config = extConfig.config as { webhookSecret?: string };
+      if (config.webhookSecret) {
+        return config.webhookSecret;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Verify webhook secret
  */
-function verifyWebhookSecret(c: { req: { header: (name: string) => string | undefined } }): boolean {
-  const config = loadConfig();
-  const secret = config.pms.webhookSecret;
+async function verifyWebhookSecret(c: { req: { header: (name: string) => string | undefined } }): Promise<boolean> {
+  const secret = await getPMSWebhookSecret();
 
   if (!secret) {
     // No secret configured, allow all (dev mode)
+    log.warn('No PMS webhook secret configured, allowing request');
     return true;
   }
 
@@ -114,7 +135,7 @@ function verifyWebhookSecret(c: { req: { header: (name: string) => string | unde
  * Receive guest updates from PMS
  */
 pmsWebhooks.post('/guests', validateBody(guestWebhookSchema), async (c) => {
-  if (!verifyWebhookSecret(c)) {
+  if (!(await verifyWebhookSecret(c))) {
     log.warn('Invalid webhook secret');
     return c.json({ error: 'Unauthorized' }, 401);
   }
@@ -135,7 +156,7 @@ pmsWebhooks.post('/guests', validateBody(guestWebhookSchema), async (c) => {
  * Receive reservation updates from PMS
  */
 pmsWebhooks.post('/reservations', validateBody(reservationWebhookSchema), async (c) => {
-  if (!verifyWebhookSecret(c)) {
+  if (!(await verifyWebhookSecret(c))) {
     log.warn('Invalid webhook secret');
     return c.json({ error: 'Unauthorized' }, 401);
   }
@@ -159,7 +180,7 @@ pmsWebhooks.post('/reservations', validateBody(reservationWebhookSchema), async 
  * Receive generic events from PMS
  */
 pmsWebhooks.post('/events', validateBody(eventWebhookSchema), async (c) => {
-  if (!verifyWebhookSecret(c)) {
+  if (!(await verifyWebhookSecret(c))) {
     log.warn('Invalid webhook secret');
     return c.json({ error: 'Unauthorized' }, 401);
   }

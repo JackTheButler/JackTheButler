@@ -155,16 +155,29 @@ export function getClientIp(c: Context): string {
     return xRealIp;
   }
 
-  // Fallback to connection info (not always available)
-  return 'unknown';
+  // Try CF-Connecting-IP (Cloudflare)
+  const cfIp = c.req.header('cf-connecting-ip');
+  if (cfIp) {
+    return cfIp;
+  }
+
+  // For local development, use a unique identifier per browser session
+  // by combining user-agent hash with a timestamp bucket
+  const userAgent = c.req.header('user-agent') || 'unknown';
+  const hash = userAgent.split('').reduce((a, b) => {
+    a = ((a << 5) - a) + b.charCodeAt(0);
+    return a & a;
+  }, 0);
+
+  return `local-${Math.abs(hash)}`;
 }
 
 /**
  * Pre-configured rate limiter for auth endpoints
- * 10 requests per minute per IP
+ * 20 requests per minute per IP
  */
 export const authRateLimit = rateLimit({
-  max: 10,
+  max: 20,
   windowMs: 60 * 1000, // 1 minute
 });
 

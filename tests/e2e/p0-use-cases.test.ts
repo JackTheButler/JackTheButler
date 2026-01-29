@@ -140,6 +140,7 @@ function createTestDb() {
       items TEXT,
       priority TEXT NOT NULL DEFAULT 'standard',
       status TEXT NOT NULL DEFAULT 'pending',
+      source TEXT NOT NULL DEFAULT 'manual',
       assigned_to TEXT REFERENCES staff(id),
       external_id TEXT,
       external_system TEXT,

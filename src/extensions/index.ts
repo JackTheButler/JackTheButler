@@ -54,10 +54,7 @@ export {
   createOllamaProvider,
   // Factory
   createAIProvider,
-  getAIProvider,
-  getEmbeddingProvider,
   testAIProviderConnection,
-  resetAIProviders,
   // Manifests
   aiManifests,
   getAIManifests,

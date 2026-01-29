@@ -54,3 +54,17 @@ export {
   type ConversationEvent,
   type TransitionResult,
 } from './conversation-fsm.js';
+
+// ============================================
+// Task Router
+// ============================================
+export {
+  TaskRouter,
+  getTaskRouter,
+  resetTaskRouter,
+  type GuestContext as TaskRouterGuestContext,
+  type RoutingDecision,
+  type TaskCreationResult,
+  type TaskPriority as RouterTaskPriority,
+  type TaskSource,
+} from './task-router.js';

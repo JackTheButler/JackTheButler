@@ -2,11 +2,12 @@
  * Email Receiver (IMAP)
  *
  * Polls for new emails via IMAP and emits parsed messages.
+ * Note: EmailReceiver class can be instantiated directly with config.
+ * The getEmailReceiver() function is deprecated - use extension registry instead.
  */
 
 import Imap from 'imap';
 import { EventEmitter } from 'events';
-import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { parseEmailMessage, type ParsedEmail } from './parser.js';
 
@@ -204,45 +205,20 @@ export class EmailReceiver extends EventEmitter {
 }
 
 /**
- * Cached receiver instance
- */
-let cachedReceiver: EmailReceiver | null = null;
-
-/**
  * Get or create the email receiver
+ *
+ * @deprecated Always returns null. Use extension registry instead.
+ * Configure Email via the dashboard UI.
  */
 export function getEmailReceiver(): EmailReceiver | null {
-  if (cachedReceiver) {
-    return cachedReceiver;
-  }
-
-  const config = loadConfig();
-
-  if (!config.email.imapHost || !config.email.imapUser) {
-    log.debug('IMAP not configured');
-    return null;
-  }
-
-  const imapConfig: Imap.Config = {
-    host: config.email.imapHost,
-    port: config.email.imapPort,
-    tls: config.email.imapSecure,
-    user: config.email.imapUser,
-    password: config.email.imapPass || '',
-    tlsOptions: { rejectUnauthorized: false },
-  };
-
-  cachedReceiver = new EmailReceiver(imapConfig, config.email.pollInterval);
-
-  return cachedReceiver;
+  log.debug('Legacy getEmailReceiver disabled. Use extension registry.');
+  return null;
 }
 
 /**
  * Reset cached receiver (for testing)
+ * @deprecated No longer needed
  */
 export function resetEmailReceiver(): void {
-  if (cachedReceiver) {
-    cachedReceiver.stop();
-    cachedReceiver = null;
-  }
+  // No-op
 }

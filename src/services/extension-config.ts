@@ -637,8 +637,16 @@ export class ExtensionConfigService {
     }
 
     try {
-      await registry.activate(extensionId, config);
-      log.info({ extensionId }, 'Extension activated');
+      const ext = registry.get(extensionId);
+
+      // If already active, reconfigure to pick up new settings (hot-reload)
+      if (ext && ext.status === 'active') {
+        await registry.reconfigure(extensionId, config);
+        log.info({ extensionId }, 'Extension reconfigured (hot-reload)');
+      } else {
+        await registry.activate(extensionId, config);
+        log.info({ extensionId }, 'Extension activated');
+      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       log.error({ extensionId, error: message }, 'Failed to activate extension');

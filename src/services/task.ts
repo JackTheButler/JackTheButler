@@ -17,8 +17,11 @@ export type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 
 export type TaskPriority = 'urgent' | 'high' | 'standard' | 'low';
 export type TaskType = 'housekeeping' | 'maintenance' | 'concierge' | 'room_service' | 'other';
 
+export type TaskSource = 'manual' | 'auto' | 'automation';
+
 export interface CreateTaskInput {
   conversationId?: string | undefined;
+  source?: TaskSource | undefined;
   type: TaskType;
   department: string;
   roomNumber?: string | undefined;
@@ -40,12 +43,15 @@ export interface ListTasksOptions {
   status?: TaskStatus | undefined;
   department?: string | undefined;
   assignedTo?: string | undefined;
+  source?: TaskSource | undefined;
   limit?: number | undefined;
   offset?: number | undefined;
 }
 
 export interface TaskSummary {
   id: string;
+  conversationId: string | null;
+  source: string;
   type: string;
   department: string;
   roomNumber: string | null;
@@ -69,6 +75,7 @@ export class TaskService {
     await db.insert(tasks).values({
       id,
       conversationId: input.conversationId ?? null,
+      source: input.source ?? 'manual',
       type: input.type,
       department: input.department,
       roomNumber: input.roomNumber ?? null,
@@ -114,10 +121,15 @@ export class TaskService {
     if (options.assignedTo) {
       conditions.push(eq(tasks.assignedTo, options.assignedTo));
     }
+    if (options.source) {
+      conditions.push(eq(tasks.source, options.source));
+    }
 
     let query = db
       .select({
         id: tasks.id,
+        conversationId: tasks.conversationId,
+        source: tasks.source,
         type: tasks.type,
         department: tasks.department,
         roomNumber: tasks.roomNumber,

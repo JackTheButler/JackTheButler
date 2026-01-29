@@ -2,11 +2,12 @@
  * Twilio SMS API Client
  *
  * Wrapper around Twilio SDK for sending SMS messages.
+ * Note: TwilioAPI class can be instantiated directly with config.
+ * The getTwilioAPI() function is deprecated - use extension registry instead.
  */
 
 import twilio from 'twilio';
 import type { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message.js';
-import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('sms:api');
@@ -49,37 +50,20 @@ export class TwilioAPI {
 }
 
 /**
- * Cached API instance
- */
-let cachedAPI: TwilioAPI | null = null;
-
-/**
  * Get the Twilio API client
+ *
+ * @deprecated Always returns null. Use extension registry instead.
+ * Configure SMS via the dashboard UI, then access via extension instance.
  */
 export function getTwilioAPI(): TwilioAPI | null {
-  if (cachedAPI) {
-    return cachedAPI;
-  }
-
-  const config = loadConfig();
-
-  if (!config.sms.accountSid || !config.sms.authToken || !config.sms.phoneNumber) {
-    log.debug('Twilio SMS not configured');
-    return null;
-  }
-
-  cachedAPI = new TwilioAPI(
-    config.sms.accountSid,
-    config.sms.authToken,
-    config.sms.phoneNumber
-  );
-
-  return cachedAPI;
+  log.debug('Legacy getTwilioAPI disabled. Use extension registry.');
+  return null;
 }
 
 /**
  * Reset cached API (for testing)
+ * @deprecated No longer needed
  */
 export function resetTwilioAPI(): void {
-  cachedAPI = null;
+  // No-op
 }

@@ -2,13 +2,12 @@
  * Responder Interface and Implementations
  *
  * Generates responses for incoming messages.
- * Uses AI responder when API keys are configured, falls back to echo.
+ * Uses AI responder when configured via extension registry, falls back to echo.
  */
 
 import type { Conversation } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/services/guest-context.js';
-import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('pipeline:responder');
@@ -62,26 +61,9 @@ let initPromise: Promise<Responder> | null = null;
 
 /**
  * Initialize the AI responder asynchronously
+ * Uses extension registry to get active AI provider (configured via dashboard UI)
  */
 async function initializeAIResponder(): Promise<Responder | null> {
-  const config = loadConfig();
-  const aiConfig = config.ai;
-
-  // Check if any AI provider is configured
-  const hasAIProvider =
-    aiConfig.anthropicApiKey || aiConfig.openaiApiKey || aiConfig.provider === 'ollama';
-
-  log.debug({
-    hasAIProvider,
-    provider: aiConfig.provider,
-    hasAnthropicKey: !!aiConfig.anthropicApiKey,
-    hasOpenAIKey: !!aiConfig.openaiApiKey,
-  }, 'Checking AI provider configuration');
-
-  if (!hasAIProvider) {
-    return null;
-  }
-
   try {
     // Dynamic imports to avoid circular dependency issues
     const [extensionsModule, responderModule] = await Promise.all([
@@ -93,7 +75,7 @@ async function initializeAIResponder(): Promise<Responder | null> {
     const provider = registry.getActiveAIProvider();
 
     if (!provider) {
-      log.warn('No active AI provider in registry');
+      log.debug('No active AI provider in extension registry');
       return null;
     }
 

@@ -303,6 +303,9 @@ export const tasks = sqliteTable(
     id: text('id').primaryKey(),
     conversationId: text('conversation_id').references(() => conversations.id),
 
+    // Source: manual, auto, automation
+    source: text('source').notNull().default('manual'),
+
     // Type: housekeeping, maintenance, concierge, room_service, other
     type: text('type').notNull(),
     department: text('department').notNull(),
@@ -346,6 +349,7 @@ export const tasks = sqliteTable(
     index('idx_tasks_assigned').on(table.assignedTo),
     index('idx_tasks_room').on(table.roomNumber),
     index('idx_tasks_priority').on(table.priority),
+    index('idx_tasks_source').on(table.source),
     index('idx_tasks_created').on(table.createdAt),
   ]
 );

@@ -4,9 +4,12 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 
 type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
+type TaskSource = 'manual' | 'auto' | 'automation';
 
 interface Task {
   id: string;
+  conversationId: string | null;
+  source: TaskSource;
   type: string;
   department: string;
   roomNumber: string | null;
@@ -26,6 +29,18 @@ const statusFilters: { value: TaskStatus | 'all'; label: string }[] = [
   { value: 'completed', label: 'Completed' },
 ];
 
+const sourceFilters: { value: TaskSource | 'all'; label: string }[] = [
+  { value: 'all', label: 'All Sources' },
+  { value: 'auto', label: 'Auto' },
+  { value: 'manual', label: 'Manual' },
+];
+
+const sourceColors: Record<string, string> = {
+  auto: 'bg-indigo-100 text-indigo-700',
+  manual: 'bg-gray-100 text-gray-600',
+  automation: 'bg-teal-100 text-teal-700',
+};
+
 const priorityColors: Record<string, string> = {
   urgent: 'bg-red-100 text-red-700',
   high: 'bg-orange-100 text-orange-700',
@@ -43,13 +58,17 @@ const statusColors: Record<string, string> = {
 
 export function TasksPage() {
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<TaskStatus | 'all'>('all');
+  const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
+  const [sourceFilter, setSourceFilter] = useState<TaskSource | 'all'>('all');
 
   const { data, isLoading } = useQuery({
-    queryKey: ['tasks', filter],
+    queryKey: ['tasks', statusFilter, sourceFilter],
     queryFn: () => {
-      const params = filter !== 'all' ? `?status=${filter}` : '';
-      return api.get<{ tasks: Task[] }>(`/tasks${params}`);
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (sourceFilter !== 'all') params.set('source', sourceFilter);
+      const queryString = params.toString();
+      return api.get<{ tasks: Task[] }>(`/tasks${queryString ? `?${queryString}` : ''}`);
     },
     refetchInterval: 10000,
   });
@@ -74,21 +93,39 @@ export function TasksPage() {
     <div className="p-6">
       <div className="flex items-center justify-between mb-6">
         <h1 className="text-xl font-semibold text-gray-900">Tasks</h1>
-        <div className="flex gap-1">
-          {statusFilters.map((s) => (
-            <button
-              key={s.value}
-              onClick={() => setFilter(s.value)}
-              className={cn(
-                'px-3 py-1 text-sm rounded',
-                filter === s.value
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              )}
-            >
-              {s.label}
-            </button>
-          ))}
+        <div className="flex gap-4">
+          <div className="flex gap-1">
+            {sourceFilters.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => setSourceFilter(s.value)}
+                className={cn(
+                  'px-3 py-1 text-sm rounded',
+                  sourceFilter === s.value
+                    ? 'bg-indigo-600 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
+          <div className="flex gap-1">
+            {statusFilters.map((s) => (
+              <button
+                key={s.value}
+                onClick={() => setStatusFilter(s.value)}
+                className={cn(
+                  'px-3 py-1 text-sm rounded',
+                  statusFilter === s.value
+                    ? 'bg-gray-900 text-white'
+                    : 'text-gray-600 hover:bg-gray-100'
+                )}
+              >
+                {s.label}
+              </button>
+            ))}
+          </div>
         </div>
       </div>
 
@@ -104,6 +141,7 @@ export function TasksPage() {
                 <th className="text-left p-3 text-sm font-medium text-gray-600">Type</th>
                 <th className="text-left p-3 text-sm font-medium text-gray-600">Description</th>
                 <th className="text-left p-3 text-sm font-medium text-gray-600">Room</th>
+                <th className="text-left p-3 text-sm font-medium text-gray-600">Source</th>
                 <th className="text-left p-3 text-sm font-medium text-gray-600">Priority</th>
                 <th className="text-left p-3 text-sm font-medium text-gray-600">Status</th>
                 <th className="text-left p-3 text-sm font-medium text-gray-600">Assigned</th>
@@ -122,6 +160,20 @@ export function TasksPage() {
                   </td>
                   <td className="p-3 text-sm text-gray-600">
                     {task.roomNumber || '-'}
+                  </td>
+                  <td className="p-3">
+                    <span className={cn('text-xs px-2 py-1 rounded', sourceColors[task.source])}>
+                      {task.source === 'auto' ? '⚡ Auto' : task.source === 'automation' ? '🤖 Rule' : 'Manual'}
+                    </span>
+                    {task.conversationId && (
+                      <a
+                        href={`/conversations/${task.conversationId}`}
+                        className="ml-2 text-xs text-blue-600 hover:underline"
+                        title="View conversation"
+                      >
+                        💬
+                      </a>
+                    )}
                   </td>
                   <td className="p-3">
                     <span className={cn('text-xs px-2 py-1 rounded', priorityColors[task.priority])}>

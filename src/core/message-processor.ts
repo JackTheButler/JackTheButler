@@ -17,13 +17,16 @@
 
 import { ConversationService, conversationService } from '@/services/conversation.js';
 import { GuestService, guestService } from '@/services/guest.js';
+import { taskService, type TaskType } from '@/services/task.js';
 import { guestContextService, type GuestContext } from './guest-context.js';
 import { getEscalationManager } from './escalation-engine.js';
+import { getTaskRouter, type GuestContext as TaskRouterContext } from './task-router.js';
 import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
 import type { Responder } from '@/pipeline/responder.js';
 import { defaultResponder } from '@/pipeline/responder.js';
+import type { ClassificationResult } from '@/ai/intent/index.js';
 
 const log = createLogger('core:processor');
 
@@ -121,6 +124,88 @@ export class MessageProcessor {
     const response = await this.responder.generate(conversation, inbound, guestContext);
 
     log.debug({ conversationId: conversation.id, intent: response.intent }, 'Response generated');
+
+    // 5a. Check if task should be created (TaskRouter)
+    if (response.intent && response.confidence && response.confidence >= 0.6) {
+      const taskRouter = getTaskRouter();
+
+      // Build classification result from response
+      const classification: ClassificationResult = {
+        intent: response.intent,
+        confidence: response.confidence,
+        department: null, // Will be determined by TaskRouter
+        requiresAction: true, // Assume true, TaskRouter will verify
+      };
+
+      // Build task router context from guest context
+      const taskContext: TaskRouterContext = {
+        guestId: guestContext?.guest?.id ?? 'unknown',
+        firstName: guestContext?.guest?.firstName ?? 'Guest',
+        lastName: guestContext?.guest?.lastName ?? '',
+        isVIP: guestContext?.guest?.vipStatus === 'vip' || guestContext?.guest?.vipStatus === 'VIP',
+      };
+      // Add optional fields only if they have values
+      if (guestContext?.reservation?.roomNumber) {
+        taskContext.roomNumber = guestContext.reservation.roomNumber;
+      }
+      if (guestContext?.guest?.loyaltyTier) {
+        taskContext.loyaltyTier = guestContext.guest.loyaltyTier;
+      }
+      if (guestContext?.guest?.language) {
+        taskContext.language = guestContext.guest.language;
+      }
+
+      const routingDecision = taskRouter.process(classification, taskContext);
+
+      if (routingDecision.shouldCreateTask && routingDecision.department) {
+        try {
+          const taskInput: Parameters<typeof taskService.create>[0] = {
+            conversationId: conversation.id,
+            source: 'auto',
+            type: (routingDecision.taskType ?? 'other') as TaskType,
+            department: routingDecision.department,
+            description: routingDecision.description ?? inbound.content,
+            priority: routingDecision.priority,
+          };
+          if (guestContext?.reservation?.roomNumber) {
+            taskInput.roomNumber = guestContext.reservation.roomNumber;
+          }
+          const task = await taskService.create(taskInput);
+
+          log.info(
+            {
+              taskId: task.id,
+              conversationId: conversation.id,
+              department: routingDecision.department,
+              priority: routingDecision.priority,
+            },
+            'Auto-created task from guest request'
+          );
+
+          // Add task info to response metadata
+          response.metadata = {
+            ...response.metadata,
+            taskCreated: true,
+            taskId: task.id,
+            taskDepartment: routingDecision.department,
+            taskPriority: routingDecision.priority,
+          };
+
+          // Emit task created event
+          events.emit({
+            type: EventTypes.TASK_CREATED,
+            taskId: task.id,
+            conversationId: conversation.id,
+            type_: routingDecision.taskType ?? 'other',
+            department: routingDecision.department,
+            priority: routingDecision.priority,
+            timestamp: new Date(),
+          });
+        } catch (error) {
+          log.error({ error, conversationId: conversation.id }, 'Failed to create task');
+        }
+      }
+    }
 
     // 5b. Check for escalation
     const escalationManager = getEscalationManager();

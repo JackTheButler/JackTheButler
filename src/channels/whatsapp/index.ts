@@ -1,15 +1,16 @@
 /**
- * WhatsApp Channel Adapter
+ * WhatsApp Channel Adapter (Legacy)
  *
- * Handles WhatsApp message processing and sending.
+ * @deprecated Use extension registry instead. Configure WhatsApp via dashboard UI.
+ * This adapter is kept for reference but always returns null.
+ * All WhatsApp functionality is now handled via src/extensions/channels/whatsapp/
  */
 
 import type { ChannelAdapter, SendResult, ChannelMessagePayload } from '@/types/channel.js';
 import type { WebhookMessage, WebhookContact, WebhookStatus } from '@/gateway/routes/webhooks/whatsapp.js';
-import { WhatsAppAPI, getWhatsAppAPI } from './api.js';
+import { WhatsAppAPI } from './api.js';
 import { parseWhatsAppMessage, isSupportedMessageType } from './parser.js';
-import { MessageProcessor, getProcessor } from '@/pipeline/processor.js';
-import { loadConfig } from '@/config/index.js';
+import { MessageProcessor } from '@/pipeline/processor.js';
 import { createLogger } from '@/utils/logger.js';
 import { db } from '@/db/index.js';
 import { messages } from '@/db/schema.js';
@@ -124,41 +125,22 @@ export class WhatsAppAdapter implements ChannelAdapter {
 }
 
 /**
- * Cached adapter instance
- */
-let cachedAdapter: WhatsAppAdapter | null = null;
-
-/**
  * Get the WhatsApp adapter
+ *
+ * @deprecated Always returns null. Use extension registry instead.
+ * Configure WhatsApp via the dashboard UI.
  */
 export function getWhatsAppAdapter(): WhatsAppAdapter | null {
-  if (cachedAdapter) {
-    return cachedAdapter;
-  }
-
-  const config = loadConfig();
-
-  if (!config.whatsapp.accessToken || !config.whatsapp.phoneNumberId) {
-    log.debug('WhatsApp not configured');
-    return null;
-  }
-
-  const api = getWhatsAppAPI();
-  if (!api) {
-    return null;
-  }
-
-  const processor = getProcessor();
-  cachedAdapter = new WhatsAppAdapter(api, processor);
-
-  return cachedAdapter;
+  log.debug('Legacy WhatsApp adapter disabled. Use extension registry.');
+  return null;
 }
 
 /**
  * Reset cached adapter (for testing)
+ * @deprecated No longer needed
  */
 export function resetWhatsAppAdapter(): void {
-  cachedAdapter = null;
+  // No-op
 }
 
 export { WhatsAppAPI, getWhatsAppAPI } from './api.js';

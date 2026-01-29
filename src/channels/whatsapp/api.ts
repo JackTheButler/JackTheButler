@@ -2,9 +2,10 @@
  * WhatsApp Cloud API Client
  *
  * Sends messages via the WhatsApp Business Cloud API.
+ * Note: The WhatsAppAPI class can be instantiated directly with config.
+ * The getWhatsAppAPI() function is deprecated - use extension registry instead.
  */
 
-import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('whatsapp:api');
@@ -171,36 +172,20 @@ export class WhatsAppAPI {
 }
 
 /**
- * Cached API client instance
- */
-let cachedClient: WhatsAppAPI | null = null;
-
-/**
  * Get the WhatsApp API client
+ *
+ * @deprecated Always returns null. Use extension registry instead.
+ * Configure WhatsApp via the dashboard UI, then access via extension instance.
  */
 export function getWhatsAppAPI(): WhatsAppAPI | null {
-  if (cachedClient) {
-    return cachedClient;
-  }
-
-  const config = loadConfig();
-
-  if (!config.whatsapp.accessToken || !config.whatsapp.phoneNumberId) {
-    log.debug('WhatsApp API not configured');
-    return null;
-  }
-
-  cachedClient = new WhatsAppAPI({
-    accessToken: config.whatsapp.accessToken,
-    phoneNumberId: config.whatsapp.phoneNumberId,
-  });
-
-  return cachedClient;
+  log.debug('Legacy getWhatsAppAPI disabled. Use extension registry.');
+  return null;
 }
 
 /**
  * Reset cached client (for testing)
+ * @deprecated No longer needed
  */
 export function resetWhatsAppAPI(): void {
-  cachedClient = null;
+  // No-op
 }

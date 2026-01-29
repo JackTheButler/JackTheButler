@@ -2,12 +2,12 @@
  * Email Sender (SMTP)
  *
  * Handles outbound email sending via SMTP using nodemailer.
+ * Note: EmailSender class can be instantiated directly with config.
+ * The getEmailSender() function is deprecated - use extension registry instead.
  */
 
-import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
-import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('email:sender');
@@ -118,52 +118,20 @@ export class EmailSender {
 }
 
 /**
- * Cached sender instance
- */
-let cachedSender: EmailSender | null = null;
-
-/**
  * Get or create the email sender
+ *
+ * @deprecated Always returns null. Use extension registry instead.
+ * Configure Email via the dashboard UI.
  */
 export function getEmailSender(): EmailSender | null {
-  if (cachedSender) {
-    return cachedSender;
-  }
-
-  const config = loadConfig();
-
-  if (!config.email.smtpHost || !config.email.fromAddress) {
-    log.debug('SMTP not configured');
-    return null;
-  }
-
-  const transporter = nodemailer.createTransport({
-    host: config.email.smtpHost,
-    port: config.email.smtpPort,
-    secure: config.email.smtpSecure,
-    auth: config.email.smtpUser
-      ? {
-          user: config.email.smtpUser,
-          pass: config.email.smtpPass,
-        }
-      : undefined,
-  });
-
-  cachedSender = new EmailSender(
-    transporter,
-    config.email.fromAddress,
-    config.email.fromName
-  );
-
-  return cachedSender;
+  log.debug('Legacy getEmailSender disabled. Use extension registry.');
+  return null;
 }
 
 /**
  * Reset cached sender (for testing)
+ * @deprecated No longer needed
  */
 export function resetEmailSender(): void {
-  if (cachedSender) {
-    cachedSender.close();
-    cachedSender = null;
-  }
+  // No-op
 }
