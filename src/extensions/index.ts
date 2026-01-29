@@ -21,6 +21,27 @@
 export * from './types.js';
 
 // ============================================
+// Extension Registry & Loader
+// ============================================
+export {
+  ExtensionRegistry,
+  getExtensionRegistry,
+  resetExtensionRegistry,
+  type RegisteredExtension,
+  type ExtensionStatus,
+} from './registry.js';
+
+export {
+  ExtensionLoader,
+  getExtensionLoader,
+  resetExtensionLoader,
+  loadExtensions,
+  type ExtensionConfig,
+  type LoaderOptions,
+  type LoadResult,
+} from './loader.js';
+
+// ============================================
 // AI Extensions
 // ============================================
 export {
