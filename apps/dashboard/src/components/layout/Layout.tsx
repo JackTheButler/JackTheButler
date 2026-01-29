@@ -251,30 +251,50 @@ export function Layout() {
 
                 {/* Section items - show if expanded or not collapsible */}
                 {(!section.collapsible || isExpanded) && (
-                  <ul className={`space-y-1 ${section.collapsible ? 'mt-1' : ''}`}>
-                    {section.items.map((item) => {
-                      const active = isActive(item.path);
-                      return (
-                        <li key={item.path}>
-                          <Link
-                            to={item.path}
-                            className={`flex items-center gap-3 mx-2 px-3 py-2 rounded-lg transition-colors ${
-                              active
-                                ? 'bg-gray-900 text-white'
-                                : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                            } ${collapsed ? 'justify-center' : ''} ${section.collapsible && !collapsed ? 'pl-11' : ''}`}
-                            title={collapsed ? item.label : undefined}
-                          >
-                            <span className={active ? 'text-white' : 'text-gray-500'}>
-                              {item.icon}
-                            </span>
-                            {!collapsed && (
-                              <span className="text-sm font-medium">{item.label}</span>
+                  <ul className={`space-y-1 ${section.collapsible ? 'mt-1' : ''} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}>
+                    {(() => {
+                      const activeIndex = section.items.findIndex((item) => isActive(item.path));
+                      return section.items.map((item, index) => {
+                        const active = isActive(item.path);
+                        const showLine = section.collapsible && !collapsed && activeIndex >= 0 && index <= activeIndex;
+                        return (
+                          <li key={item.path} className={section.collapsible && !collapsed ? 'relative' : ''}>
+                            {/* Vertical line segment - only show up to active item */}
+                            {showLine && (
+                              <div
+                                className={`absolute left-2.5 w-px bg-gray-900 ${
+                                  index === 0 ? 'top-0' : '-top-1'
+                                } ${
+                                  index === activeIndex ? 'bottom-1/2' : '-bottom-1'
+                                }`}
+                              />
                             )}
-                          </Link>
-                        </li>
-                      );
-                    })}
+                            {/* Horizontal connector to active item */}
+                            {section.collapsible && !collapsed && active && (
+                              <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-px bg-gray-900" />
+                            )}
+                            <Link
+                              to={item.path}
+                              className={`flex items-center gap-3 mx-2 px-3 py-2 rounded-lg transition-colors ${
+                                active
+                                  ? 'bg-gray-900 text-white'
+                                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                              } ${collapsed ? 'justify-center' : ''} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}
+                              title={collapsed ? item.label : undefined}
+                            >
+                              {!section.collapsible && (
+                                <span className={active ? 'text-white' : 'text-gray-500'}>
+                                  {item.icon}
+                                </span>
+                              )}
+                              {!collapsed && (
+                                <span className="text-sm font-medium">{item.label}</span>
+                              )}
+                            </Link>
+                          </li>
+                        );
+                      });
+                    })()}
                   </ul>
                 )}
               </div>
