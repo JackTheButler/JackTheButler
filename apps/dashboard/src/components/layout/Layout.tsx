@@ -17,6 +17,7 @@ import {
   Settings,
   Globe,
   Wrench,
+  BookOpen,
 } from 'lucide-react';
 
 interface NavItem {
@@ -55,35 +56,6 @@ export function Layout() {
       return next;
     });
   };
-
-  // Auto-expand section when navigating directly to a child route
-  useEffect(() => {
-    const sectionsToExpand: string[] = [];
-
-    navSections.forEach((section) => {
-      if (section.id && section.collapsible) {
-        const hasActiveItem = section.items.some((item) => {
-          if (item.path === '/') return location.pathname === '/';
-          return location.pathname.startsWith(item.path);
-        });
-        if (hasActiveItem && !expandedSections[section.id]) {
-          sectionsToExpand.push(section.id);
-        }
-      }
-    });
-
-    if (sectionsToExpand.length > 0) {
-      setExpandedSections((prev) => {
-        const next = { ...prev };
-        sectionsToExpand.forEach((id) => {
-          next[id] = true;
-        });
-        localStorage.setItem('sidebar-expanded-sections', JSON.stringify(next));
-        return next;
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
 
   const toggleCollapsed = () => {
     setCollapsed((prev) => {
@@ -146,6 +118,7 @@ export function Layout() {
       icon: <Wrench size={20} />,
       collapsible: true,
       items: [
+        { path: '/tools/knowledge-base', label: 'Knowledge Base', icon: <BookOpen size={20} /> },
         { path: '/tools/site-scraper', label: 'Site Scraper', icon: <Globe size={20} /> },
       ],
     },
@@ -168,6 +141,35 @@ export function Layout() {
     }
     return location.pathname.startsWith(path);
   };
+
+  // Auto-expand section when navigating directly to a child route
+  useEffect(() => {
+    const sectionsToExpand: string[] = [];
+
+    navSections.forEach((section) => {
+      if (section.id && section.collapsible) {
+        const hasActiveItem = section.items.some((item) => {
+          if (item.path === '/') return location.pathname === '/';
+          return location.pathname.startsWith(item.path);
+        });
+        if (hasActiveItem && !expandedSections[section.id]) {
+          sectionsToExpand.push(section.id);
+        }
+      }
+    });
+
+    if (sectionsToExpand.length > 0) {
+      setExpandedSections((prev) => {
+        const next = { ...prev };
+        sectionsToExpand.forEach((id) => {
+          next[id] = true;
+        });
+        localStorage.setItem('sidebar-expanded-sections', JSON.stringify(next));
+        return next;
+      });
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   return (
     <div className="h-screen bg-gray-100 flex overflow-hidden">

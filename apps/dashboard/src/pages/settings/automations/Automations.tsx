@@ -206,7 +206,7 @@ export function AutomationsPage() {
 
   return (
     <PageContainer>
-      <PageHeader description="Automate guest communication and staff workflows">
+      <PageHeader>
         <Link to="/settings/automations/new">
           <Button size="sm">
             <Plus className="w-3.5 h-3.5 mr-1.5" />

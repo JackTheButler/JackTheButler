@@ -15,7 +15,7 @@ import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExtensionIcon, CategoryIcon } from '@/components';
-import { PageContainer, PageHeader, StatsBar, SearchInput, EmptyState } from '@/components';
+import { PageContainer, StatsBar, SearchInput, EmptyState } from '@/components';
 
 type IntegrationStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disabled';
 
@@ -176,8 +176,6 @@ export function ExtensionsPage() {
 
   return (
     <PageContainer>
-      <PageHeader description="Connect and manage AI providers, channels, and hotel systems" />
-
       {/* Stats */}
       {!isLoading && !error && (
         <StatsBar

@@ -8,12 +8,15 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
+import { eq } from 'drizzle-orm';
 import { validateBody } from '@/gateway/middleware/index.js';
 import { scrapeUrl, scrapeUrls } from './scraper.js';
 import { parseHtml } from './parser.js';
 import { processContent } from './processor.js';
 import type { ProcessedEntry } from './processor.js';
 import { logger } from '@/utils/logger.js';
+import { db, knowledgeBase } from '@/db/index.js';
+import { generateId } from '@/utils/id.js';
 
 // Define custom variables type for Hono context
 type Variables = {
@@ -390,25 +393,81 @@ async function importToKnowledgeBase(
   updated: number;
   errors: string[];
 }> {
-  // TODO: Implement actual database import
-  // This is a placeholder that will be implemented when we have the knowledge service
-
   const { skipDuplicates = true, updateExisting = false } = options;
 
   logger.info({ entryCount: entries.length, skipDuplicates, updateExisting }, 'Importing to knowledge base');
 
-  // For now, return mock success
-  // In the real implementation:
-  // 1. Check for existing entries by title/content hash
-  // 2. Skip/update as configured
-  // 3. Insert new entries
-  // 4. Generate embeddings for vector search
+  let imported = 0;
+  let skipped = 0;
+  let updated = 0;
+  const errors: string[] = [];
+
+  for (const entry of entries) {
+    try {
+      // Check for existing entry with same title
+      const existing = await db
+        .select()
+        .from(knowledgeBase)
+        .where(eq(knowledgeBase.title, entry.title))
+        .get();
+
+      if (existing) {
+        if (skipDuplicates && !updateExisting) {
+          skipped++;
+          continue;
+        }
+
+        if (updateExisting) {
+          await db
+            .update(knowledgeBase)
+            .set({
+              category: entry.category,
+              content: entry.content,
+              keywords: JSON.stringify(entry.keywords),
+              priority: entry.priority,
+              updatedAt: new Date().toISOString(),
+            })
+            .where(eq(knowledgeBase.id, existing.id))
+            .run();
+          updated++;
+          continue;
+        }
+      }
+
+      // Insert new entry
+      const id = generateId('knowledge');
+      const now = new Date().toISOString();
+
+      await db
+        .insert(knowledgeBase)
+        .values({
+          id,
+          category: entry.category,
+          title: entry.title,
+          content: entry.content,
+          keywords: JSON.stringify(entry.keywords),
+          priority: entry.priority,
+          status: 'active',
+          createdAt: now,
+          updatedAt: now,
+        })
+        .run();
+
+      imported++;
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+      errors.push(`Failed to import "${entry.title}": ${message}`);
+      logger.error({ entry: entry.title, error: message }, 'Failed to import entry');
+    }
+  }
+
+  logger.info({ imported, skipped, updated, errorCount: errors.length }, 'Knowledge base import complete');
 
   return {
-    imported: entries.length,
-    skipped: 0,
-    updated: 0,
-    errors: [],
+    imported,
+    skipped,
+    updated,
+    errors,
   };
 }
 

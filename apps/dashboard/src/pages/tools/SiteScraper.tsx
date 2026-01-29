@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { PageContainer, PageHeader } from '@/components';
+import { PageContainer } from '@/components';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -204,8 +204,6 @@ export function SiteScraperPage() {
 
   return (
     <PageContainer>
-      <PageHeader description="Import knowledge base content from your hotel website" />
-
       {error && (
         <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
           <AlertCircle className="w-5 h-5 text-red-500" />
@@ -403,7 +401,7 @@ export function SiteScraperPage() {
               <Button variant="outline" onClick={reset}>
                 Import More
               </Button>
-              <Button onClick={() => window.location.href = '/settings/extensions'}>
+              <Button onClick={() => window.location.href = '/tools/knowledge-base'}>
                 View Knowledge Base
               </Button>
             </div>

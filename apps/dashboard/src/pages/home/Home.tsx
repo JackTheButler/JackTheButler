@@ -1,9 +1,11 @@
-import { PageContainer, PageHeader } from '@/components';
+import { PageContainer } from '@/components';
 
 export function HomePage() {
   return (
     <PageContainer>
-      <PageHeader description="Welcome to Butler" />
+      <div className="text-center py-12 text-muted-foreground">
+        Dashboard coming soon
+      </div>
     </PageContainer>
   );
 }

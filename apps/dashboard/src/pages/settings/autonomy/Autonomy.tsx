@@ -245,7 +245,7 @@ export function AutonomyPage() {
 
   return (
     <PageContainer>
-      <PageHeader description="Control how autonomous Jack is for different actions">
+      <PageHeader>
         <Button
           variant="outline"
           size="sm"

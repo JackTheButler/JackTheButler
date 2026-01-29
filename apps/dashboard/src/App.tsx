@@ -11,6 +11,7 @@ import { AutomationEditPage } from '@/pages/settings/automations/AutomationEdit'
 import { AutonomyPage } from '@/pages/settings/autonomy/Autonomy';
 import { ApprovalsPage } from '@/pages/approvals/Approvals';
 import { SiteScraperPage } from '@/pages/tools/SiteScraper';
+import { KnowledgeBasePage } from '@/pages/tools/KnowledgeBase';
 
 export function App() {
   return (
@@ -27,6 +28,7 @@ export function App() {
           <Route path="/settings/automations/:ruleId" element={<AutomationEditPage />} />
           <Route path="/settings/autonomy" element={<AutonomyPage />} />
           <Route path="/approvals" element={<ApprovalsPage />} />
+          <Route path="/tools/knowledge-base" element={<KnowledgeBasePage />} />
           <Route path="/tools/site-scraper" element={<SiteScraperPage />} />
         </Route>
       </Routes>

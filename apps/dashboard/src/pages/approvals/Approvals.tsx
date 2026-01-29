@@ -18,7 +18,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageContainer, PageHeader, StatsBar, EmptyState } from '@/components';
+import { PageContainer, StatsBar, EmptyState } from '@/components';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
 type ApprovalStatus = 'pending' | 'approved' | 'rejected';
@@ -399,12 +399,6 @@ export function ApprovalsPage() {
 
   return (
     <PageContainer>
-      <PageHeader description="Review and approve AI-generated responses and actions">
-        {stats.pending > 0 && (
-          <Badge className="bg-yellow-100 text-yellow-700">{stats.pending} pending</Badge>
-        )}
-      </PageHeader>
-
       {/* Stats */}
       <StatsBar
         items={[
