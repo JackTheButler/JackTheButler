@@ -32,6 +32,11 @@ export const EventTypes = {
   // Guest events
   GUEST_CREATED: 'guest.created',
   GUEST_UPDATED: 'guest.updated',
+
+  // Approval events
+  APPROVAL_QUEUED: 'approval.queued',
+  APPROVAL_DECIDED: 'approval.decided',
+  APPROVAL_EXECUTED: 'approval.executed',
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
@@ -114,6 +119,45 @@ export interface TaskCreatedEvent extends BaseEvent {
 }
 
 /**
+ * Approval queued event
+ */
+export interface ApprovalQueuedEvent extends BaseEvent {
+  type: typeof EventTypes.APPROVAL_QUEUED;
+  payload: {
+    id: string;
+    type: string;
+    actionType: string;
+    conversationId?: string | undefined;
+    guestId?: string | undefined;
+  };
+}
+
+/**
+ * Approval decided event
+ */
+export interface ApprovalDecidedEvent extends BaseEvent {
+  type: typeof EventTypes.APPROVAL_DECIDED;
+  payload: {
+    id: string;
+    status: 'approved' | 'rejected';
+    staffId: string;
+    reason?: string | undefined;
+  };
+}
+
+/**
+ * Approval executed event
+ */
+export interface ApprovalExecutedEvent extends BaseEvent {
+  type: typeof EventTypes.APPROVAL_EXECUTED;
+  payload: {
+    id: string;
+    actionType: string;
+    actionData: Record<string, unknown>;
+  };
+}
+
+/**
  * Union of all event types
  */
 export type AppEvent =
@@ -122,7 +166,10 @@ export type AppEvent =
   | ConversationCreatedEvent
   | ConversationUpdatedEvent
   | ConversationEscalatedEvent
-  | TaskCreatedEvent;
+  | TaskCreatedEvent
+  | ApprovalQueuedEvent
+  | ApprovalDecidedEvent
+  | ApprovalExecutedEvent;
 
 /**
  * Event handler function type

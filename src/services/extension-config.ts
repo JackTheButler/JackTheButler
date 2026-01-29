@@ -20,6 +20,7 @@ import {
   type ExtensionCategory,
 } from '@/extensions/index.js';
 import type { ConnectionTestResult } from '@/extensions/types.js';
+import { resetResponder } from '@/pipeline/responder.js';
 
 const log = createLogger('service:extension-config');
 
@@ -646,6 +647,13 @@ export class ExtensionConfigService {
       } else {
         await registry.activate(extensionId, config);
         log.info({ extensionId }, 'Extension activated');
+      }
+
+      // Reset responder cache if AI extension was activated
+      // so it picks up the new provider
+      if (manifest.category === 'ai') {
+        resetResponder();
+        log.info({ extensionId }, 'Responder cache reset for AI provider change');
       }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);

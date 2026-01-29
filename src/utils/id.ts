@@ -23,6 +23,7 @@ export const ID_PREFIXES = {
   alog: 'alog',
   integration: 'int',
   integrationLog: 'ilog',
+  approval: 'apv',
 } as const;
 
 export type IdPrefix = keyof typeof ID_PREFIXES;

@@ -28,7 +28,7 @@ export const useAuth = create<AuthState>((set) => ({
       password,
     });
     api.setToken(data.accessToken);
-    localStorage.setItem('refreshToken', data.refreshToken);
+    api.setRefreshToken(data.refreshToken);
 
     const { user } = await api.get<{ user: User }>('/auth/me');
     set({ user, isAuthenticated: true, isLoading: false });
@@ -36,7 +36,7 @@ export const useAuth = create<AuthState>((set) => ({
 
   logout: () => {
     api.setToken(null);
-    localStorage.removeItem('refreshToken');
+    api.setRefreshToken(null);
     set({ user: null, isAuthenticated: false });
   },
 
@@ -48,10 +48,12 @@ export const useAuth = create<AuthState>((set) => ({
     }
 
     try {
+      // This will auto-refresh if token expired
       const { user } = await api.get<{ user: User }>('/auth/me');
       set({ user, isAuthenticated: true, isLoading: false });
     } catch {
       api.setToken(null);
+      api.setRefreshToken(null);
       set({ user: null, isAuthenticated: false, isLoading: false });
     }
   },

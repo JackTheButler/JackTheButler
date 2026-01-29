@@ -7,6 +7,8 @@ import { IntegrationsPage } from '@/pages/Integrations';
 import { IntegrationEditPage } from '@/pages/IntegrationEdit';
 import { AutomationsPage } from '@/pages/Automations';
 import { AutomationEditPage } from '@/pages/AutomationEdit';
+import { AutonomyPage } from '@/pages/settings/Autonomy';
+import { ApprovalsPage } from '@/pages/Approvals';
 
 export function App() {
   return (
@@ -20,6 +22,8 @@ export function App() {
           <Route path="/settings/integrations/:integrationId" element={<IntegrationEditPage />} />
           <Route path="/settings/automations" element={<AutomationsPage />} />
           <Route path="/settings/automations/:ruleId" element={<AutomationEditPage />} />
+          <Route path="/settings/autonomy" element={<AutonomyPage />} />
+          <Route path="/approvals" element={<ApprovalsPage />} />
         </Route>
       </Routes>
     </BrowserRouter>

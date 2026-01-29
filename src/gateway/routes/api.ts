@@ -12,6 +12,7 @@ import { tasksRouter } from './tasks.js';
 import { adminRouter } from './admin.js';
 import { extensionRoutes, legacyIntegrationRoutes } from './extensions.js';
 import { automationRoutes } from './automation.js';
+import { autonomySettingsRoutes, approvalsRoutes } from './autonomy.js';
 
 const api = new Hono();
 
@@ -35,6 +36,12 @@ api.route('/integrations', legacyIntegrationRoutes);
 
 // Automation management routes
 api.route('/automation', automationRoutes);
+
+// Autonomy settings routes
+api.route('/settings/autonomy', autonomySettingsRoutes);
+
+// Approval queue routes
+api.route('/approvals', approvalsRoutes);
 
 /**
  * GET /api/v1

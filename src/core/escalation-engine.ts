@@ -14,6 +14,7 @@ import { db } from '@/db/index.js';
 import { messages, conversations, guests, reservations } from '@/db/schema.js';
 import type { Guest } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
+import { getAutonomyEngine } from './autonomy.js';
 
 const log = createLogger('core:escalation');
 
@@ -43,6 +44,20 @@ const DEFAULT_CONFIG: EscalationConfig = {
   repetitionWindow: 5,
   repetitionThreshold: 0.7,
 };
+
+/**
+ * Get confidence threshold from autonomy settings
+ */
+function getConfidenceThresholdFromAutonomy(): number {
+  try {
+    const autonomyEngine = getAutonomyEngine();
+    const settings = autonomyEngine.getSettings();
+    // Use the escalate threshold from autonomy settings
+    return settings.confidenceThresholds.escalate;
+  } catch {
+    return DEFAULT_CONFIG.confidenceThreshold;
+  }
+}
 
 /**
  * Patterns that indicate guest wants to speak to a human
@@ -122,8 +137,9 @@ export class EscalationManager {
       };
     }
 
-    // 1. Check low confidence
-    if (classificationConfidence < this.config.confidenceThreshold) {
+    // 1. Check low confidence (use autonomy threshold if available)
+    const confidenceThreshold = getConfidenceThresholdFromAutonomy() || this.config.confidenceThreshold;
+    if (classificationConfidence < confidenceThreshold) {
       reasons.push(`Low AI confidence (${(classificationConfidence * 100).toFixed(0)}%)`);
     }
 
@@ -144,14 +160,30 @@ export class EscalationManager {
       reasons.push('Guest repeating similar request');
     }
 
-    // 5. Check VIP status
+    // 5. Check VIP status and autonomy VIP overrides
     let guest: Guest | null = null;
     if (conversation.guestId) {
       guest =
         (await db.select().from(guests).where(eq(guests.id, conversation.guestId)).get()) || null;
 
       if (guest?.vipStatus) {
-        reasons.push(`VIP guest (${guest.vipStatus})`);
+        // Check autonomy VIP overrides
+        try {
+          const autonomyEngine = getAutonomyEngine();
+          const settings = autonomyEngine.getSettings();
+
+          // Check if this is a complaint and VIP complaints should always escalate
+          const isComplaint = this.detectNegativeSentiment(messageContent) ||
+                              sentiment < this.config.sentimentThreshold;
+          if (isComplaint && settings.vipOverrides.alwaysEscalateComplaints) {
+            reasons.push(`VIP complaint escalation (${guest.vipStatus})`);
+          } else {
+            reasons.push(`VIP guest (${guest.vipStatus})`);
+          }
+        } catch {
+          // Fallback to standard VIP handling
+          reasons.push(`VIP guest (${guest.vipStatus})`);
+        }
       }
     }
 
@@ -203,6 +235,13 @@ export class EscalationManager {
    */
   detectEscalationRequest(content: string): boolean {
     return ESCALATION_PATTERNS.some((pattern) => pattern.test(content));
+  }
+
+  /**
+   * Detect if content has negative sentiment indicators
+   */
+  detectNegativeSentiment(content: string): boolean {
+    return NEGATIVE_PATTERNS.some((pattern) => pattern.test(content));
   }
 
   /**

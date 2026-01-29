@@ -10,6 +10,7 @@
 import { createLogger } from '@/utils/logger.js';
 import { getIntentDefinition, type IntentDefinition } from '@/ai/intent/taxonomy.js';
 import type { ClassificationResult } from '@/ai/intent/index.js';
+import { getAutonomyEngine, mapTaskTypeToActionType, type GuestContext as AutonomyContext } from './autonomy.js';
 
 const log = createLogger('core:task-router');
 
@@ -44,6 +45,8 @@ export interface RoutingDecision {
   description?: string;
   items?: string[];
   autoAssign?: boolean;
+  /** Whether task creation requires staff approval based on autonomy settings */
+  requiresApproval?: boolean;
 }
 
 /**
@@ -157,6 +160,20 @@ export class TaskRouter {
     // Generate description
     const description = generateDescription(classification.intent, definition);
 
+    // Check autonomy settings
+    const actionType = mapTaskTypeToActionType(taskType);
+    let requiresApproval = false;
+
+    if (actionType) {
+      const autonomyEngine = getAutonomyEngine();
+      const autonomyContext: AutonomyContext = {
+        guestId: context.guestId,
+        isVIP: context.isVIP ?? undefined,
+        loyaltyTier: context.loyaltyTier ?? undefined,
+      };
+      requiresApproval = !autonomyEngine.canAutoExecute(actionType, autonomyContext);
+    }
+
     log.info(
       {
         intent: classification.intent,
@@ -164,6 +181,7 @@ export class TaskRouter {
         priority,
         isVIP: context.isVIP,
         guestId: context.guestId,
+        requiresApproval,
       },
       'Routing decision made'
     );
@@ -175,6 +193,7 @@ export class TaskRouter {
       priority,
       description,
       autoAssign: false, // Future: could auto-assign based on availability
+      requiresApproval,
     };
   }
 

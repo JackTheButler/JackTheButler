@@ -695,3 +695,49 @@ export const responseCache = sqliteTable(
 
 export type ResponseCacheEntry = typeof responseCache.$inferSelect;
 export type NewResponseCacheEntry = typeof responseCache.$inferInsert;
+
+// ===================
+// Approval Queue
+// ===================
+
+/**
+ * Queue for actions requiring staff approval (autonomy L1 mode)
+ */
+export const approvalQueue = sqliteTable(
+  'approval_queue',
+  {
+    id: text('id').primaryKey(),
+
+    // Item type: response, task, offer
+    type: text('type').notNull(),
+    // Action type: respondToGuest, createHousekeepingTask, etc.
+    actionType: text('action_type').notNull(),
+    // Action details (JSON object)
+    actionData: text('action_data').notNull(),
+
+    // Context references
+    conversationId: text('conversation_id').references(() => conversations.id),
+    guestId: text('guest_id').references(() => guests.id),
+
+    // Status: pending, approved, rejected
+    status: text('status').notNull().default('pending'),
+
+    // Decision tracking
+    decidedAt: text('decided_at'),
+    decidedBy: text('decided_by').references(() => staff.id),
+    rejectionReason: text('rejection_reason'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_approval_queue_status').on(table.status),
+    index('idx_approval_queue_created').on(table.createdAt),
+    index('idx_approval_queue_conversation').on(table.conversationId),
+    index('idx_approval_queue_guest').on(table.guestId),
+  ]
+);
+
+export type ApprovalQueueItem = typeof approvalQueue.$inferSelect;
+export type NewApprovalQueueItem = typeof approvalQueue.$inferInsert;

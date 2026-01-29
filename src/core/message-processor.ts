@@ -21,6 +21,8 @@ import { taskService, type TaskType } from '@/services/task.js';
 import { guestContextService, type GuestContext } from './guest-context.js';
 import { getEscalationManager } from './escalation-engine.js';
 import { getTaskRouter, type GuestContext as TaskRouterContext } from './task-router.js';
+import { getAutonomyEngine, type GuestContext as AutonomyContext } from './autonomy.js';
+import { getApprovalQueue } from './approval-queue.js';
 import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
@@ -158,51 +160,111 @@ export class MessageProcessor {
       const routingDecision = taskRouter.process(classification, taskContext);
 
       if (routingDecision.shouldCreateTask && routingDecision.department) {
-        try {
-          const taskInput: Parameters<typeof taskService.create>[0] = {
+        // Build a contextual task description
+        const guestName = guestContext?.guest
+          ? `${guestContext.guest.firstName} ${guestContext.guest.lastName}`
+          : 'Guest';
+        const roomInfo = guestContext?.reservation?.roomNumber
+          ? `Room ${guestContext.reservation.roomNumber}`
+          : '';
+        const channelInfo = inbound.channel ? `via ${inbound.channel}` : '';
+
+        // Create a clear, actionable description
+        const baseDescription = routingDecision.description ?? inbound.content;
+        const contextParts = [roomInfo, channelInfo].filter(Boolean).join(' ');
+        const taskDescription = contextParts
+          ? `${guestName} (${contextParts}): ${baseDescription}`
+          : `${guestName}: ${baseDescription}`;
+
+        const taskInput: Parameters<typeof taskService.create>[0] = {
+          conversationId: conversation.id,
+          source: 'auto',
+          type: (routingDecision.taskType ?? 'other') as TaskType,
+          department: routingDecision.department,
+          description: taskDescription,
+          priority: routingDecision.priority,
+        };
+        if (guestContext?.reservation?.roomNumber) {
+          taskInput.roomNumber = guestContext.reservation.roomNumber;
+        }
+
+        // Check if task creation requires approval
+        if (routingDecision.requiresApproval) {
+          // Queue task for approval instead of creating directly
+          const approvalQueue = getApprovalQueue();
+          const actionType = routingDecision.taskType === 'housekeeping'
+            ? 'createHousekeepingTask'
+            : routingDecision.taskType === 'maintenance'
+              ? 'createMaintenanceTask'
+              : routingDecision.taskType === 'concierge'
+                ? 'createConciergeTask'
+                : routingDecision.taskType === 'room_service'
+                  ? 'createRoomServiceTask'
+                  : 'createConciergeTask';
+
+          const approvalItem = await approvalQueue.queueForApproval({
+            type: 'task',
+            actionType,
+            actionData: taskInput as unknown as Record<string, unknown>,
             conversationId: conversation.id,
-            source: 'auto',
-            type: (routingDecision.taskType ?? 'other') as TaskType,
-            department: routingDecision.department,
-            description: routingDecision.description ?? inbound.content,
-            priority: routingDecision.priority,
-          };
-          if (guestContext?.reservation?.roomNumber) {
-            taskInput.roomNumber = guestContext.reservation.roomNumber;
-          }
-          const task = await taskService.create(taskInput);
+            guestId: guestContext?.guest?.id ?? undefined,
+          });
 
           log.info(
             {
-              taskId: task.id,
+              approvalId: approvalItem.id,
               conversationId: conversation.id,
+              taskType: routingDecision.taskType,
               department: routingDecision.department,
-              priority: routingDecision.priority,
             },
-            'Auto-created task from guest request'
+            'Task queued for approval'
           );
 
-          // Add task info to response metadata
+          // Add approval info to response metadata
           response.metadata = {
             ...response.metadata,
-            taskCreated: true,
-            taskId: task.id,
+            taskPendingApproval: true,
+            approvalId: approvalItem.id,
             taskDepartment: routingDecision.department,
             taskPriority: routingDecision.priority,
           };
+        } else {
+          // Create task directly
+          try {
+            const task = await taskService.create(taskInput);
 
-          // Emit task created event
-          events.emit({
-            type: EventTypes.TASK_CREATED,
-            taskId: task.id,
-            conversationId: conversation.id,
-            type_: routingDecision.taskType ?? 'other',
-            department: routingDecision.department,
-            priority: routingDecision.priority,
-            timestamp: new Date(),
-          });
-        } catch (error) {
-          log.error({ error, conversationId: conversation.id }, 'Failed to create task');
+            log.info(
+              {
+                taskId: task.id,
+                conversationId: conversation.id,
+                department: routingDecision.department,
+                priority: routingDecision.priority,
+              },
+              'Auto-created task from guest request'
+            );
+
+            // Add task info to response metadata
+            response.metadata = {
+              ...response.metadata,
+              taskCreated: true,
+              taskId: task.id,
+              taskDepartment: routingDecision.department,
+              taskPriority: routingDecision.priority,
+            };
+
+            // Emit task created event
+            events.emit({
+              type: EventTypes.TASK_CREATED,
+              taskId: task.id,
+              conversationId: conversation.id,
+              type_: routingDecision.taskType ?? 'other',
+              department: routingDecision.department,
+              priority: routingDecision.priority,
+              timestamp: new Date(),
+            });
+          } catch (error) {
+            log.error({ error, conversationId: conversation.id }, 'Failed to create task');
+          }
         }
       }
     }
@@ -245,6 +307,83 @@ export class MessageProcessor {
         escalationReasons: escalationDecision.reasons,
         escalationPriority: escalationDecision.priority,
       };
+    }
+
+    // 5c. Check autonomy settings for response approval
+    const autonomyEngine = getAutonomyEngine();
+    await autonomyEngine.ensureLoaded();
+
+    // Build autonomy context
+    const autonomyContext: AutonomyContext = {
+      guestId: guestContext?.guest?.id ?? undefined,
+      isVIP: guestContext?.guest?.vipStatus === 'vip' || guestContext?.guest?.vipStatus === 'VIP',
+      loyaltyTier: guestContext?.guest?.loyaltyTier ?? undefined,
+      hasComplaint: response.intent?.startsWith('feedback.complaint') ?? false,
+      roomNumber: guestContext?.reservation?.roomNumber ?? undefined,
+    };
+
+    // Check if we can auto-execute the response
+    const canAutoExecute = autonomyEngine.canAutoExecute('respondToGuest', autonomyContext);
+
+    // Also check confidence-based autonomy decision
+    const confidenceDecision = autonomyEngine.shouldAutoExecuteByConfidence(
+      response.confidence ?? 0.5
+    );
+
+    if (!canAutoExecute || confidenceDecision === 'escalate') {
+      // Queue response for staff approval
+      const approvalQueue = getApprovalQueue();
+      const approvalItem = await approvalQueue.queueForApproval({
+        type: 'response',
+        actionType: 'respondToGuest',
+        actionData: {
+          conversationId: conversation.id,
+          content: response.content,
+          intent: response.intent,
+          confidence: response.confidence,
+          metadata: response.metadata,
+        },
+        conversationId: conversation.id,
+        guestId: guestContext?.guest?.id ?? undefined,
+      });
+
+      log.info(
+        {
+          conversationId: conversation.id,
+          approvalId: approvalItem.id,
+          reason: !canAutoExecute ? 'autonomy_level' : 'low_confidence',
+        },
+        'Response queued for approval'
+      );
+
+      // Return a pending response to the guest
+      const pendingResponse: OutboundMessage = {
+        conversationId: conversation.id,
+        content:
+          "Thank you for your message. A member of our team will review and respond to you shortly.",
+        contentType: 'text',
+        metadata: {
+          pendingApproval: true,
+          approvalId: approvalItem.id,
+          originalResponse: response.content,
+        },
+      };
+
+      // Save the pending response message
+      await this.conversationSvc.addMessage(conversation.id, {
+        direction: 'outbound',
+        senderType: 'system',
+        content: pendingResponse.content,
+        contentType: 'text',
+      });
+
+      const duration = Date.now() - startTime;
+      log.info(
+        { conversationId: conversation.id, duration, pendingApproval: true },
+        'Message processed (pending approval)'
+      );
+
+      return pendingResponse;
     }
 
     // 6. Save outbound message

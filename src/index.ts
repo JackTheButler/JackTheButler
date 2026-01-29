@@ -12,6 +12,7 @@ import { app, setupWebSocket } from '@/gateway/index.js';
 import { scheduler } from '@/services/scheduler.js';
 import { getEmailAdapter } from '@/channels/email/index.js';
 import { extensionConfigService } from '@/services/extension-config.js';
+import { resetResponder } from '@/pipeline/responder.js';
 
 const APP_NAME = 'Jack The Butler';
 const VERSION = '1.0.0';
@@ -43,6 +44,8 @@ async function main(): Promise<void> {
   // Load enabled extensions from database
   try {
     await extensionConfigService.loadEnabledExtensions();
+    // Reset responder cache so it picks up the newly loaded AI provider
+    resetResponder();
     logger.info('Extensions loaded from database');
   } catch (error) {
     logger.error({ error }, 'Failed to load extensions from database');
