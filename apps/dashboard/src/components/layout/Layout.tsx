@@ -49,12 +49,15 @@ export function Layout() {
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
 
-  const toggleSection = (sectionId: string) => {
-    setExpandedSections((prev) => {
-      const next = { ...prev, [sectionId]: !prev[sectionId] };
-      localStorage.setItem('sidebar-expanded-sections', JSON.stringify(next));
-      return next;
-    });
+  const toggleSection = (sectionId: string, firstItemPath?: string) => {
+    const isOpening = !expandedSections[sectionId];
+    const next = { ...expandedSections, [sectionId]: isOpening };
+    localStorage.setItem('sidebar-expanded-sections', JSON.stringify(next));
+    setExpandedSections(next);
+    // Navigate to first item when opening
+    if (isOpening && firstItemPath) {
+      navigate(firstItemPath);
+    }
   };
 
   const toggleCollapsed = () => {
@@ -85,6 +88,31 @@ export function Layout() {
       navigate('/login');
     }
   }, [isLoading, isAuthenticated, navigate]);
+
+  // Auto-expand active section and collapse others when navigating
+  useEffect(() => {
+    const collapsibleSections = [
+      { id: 'tools', paths: ['/tools/knowledge-base', '/tools/site-scraper'] },
+      { id: 'settings', paths: ['/settings/extensions', '/settings/automations', '/settings/autonomy'] },
+    ];
+
+    const newExpandedState: Record<string, boolean> = {};
+    let hasChanges = false;
+
+    collapsibleSections.forEach((section) => {
+      const hasActiveItem = section.paths.some((path) => location.pathname.startsWith(path));
+      newExpandedState[section.id] = hasActiveItem;
+      if (expandedSections[section.id] !== hasActiveItem) {
+        hasChanges = true;
+      }
+    });
+
+    if (hasChanges) {
+      setExpandedSections(newExpandedState);
+      localStorage.setItem('sidebar-expanded-sections', JSON.stringify(newExpandedState));
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [location.pathname]);
 
   if (isLoading) {
     return (
@@ -142,35 +170,6 @@ export function Layout() {
     return location.pathname.startsWith(path);
   };
 
-  // Auto-expand section when navigating directly to a child route
-  useEffect(() => {
-    const sectionsToExpand: string[] = [];
-
-    navSections.forEach((section) => {
-      if (section.id && section.collapsible) {
-        const hasActiveItem = section.items.some((item) => {
-          if (item.path === '/') return location.pathname === '/';
-          return location.pathname.startsWith(item.path);
-        });
-        if (hasActiveItem && !expandedSections[section.id]) {
-          sectionsToExpand.push(section.id);
-        }
-      }
-    });
-
-    if (sectionsToExpand.length > 0) {
-      setExpandedSections((prev) => {
-        const next = { ...prev };
-        sectionsToExpand.forEach((id) => {
-          next[id] = true;
-        });
-        localStorage.setItem('sidebar-expanded-sections', JSON.stringify(next));
-        return next;
-      });
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [location.pathname]);
-
   return (
     <div className="h-screen bg-gray-100 flex overflow-hidden">
       {/* Sidebar */}
@@ -204,7 +203,7 @@ export function Layout() {
                   <>
                     {!collapsed ? (
                       <button
-                        onClick={() => section.id && toggleSection(section.id)}
+                        onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
                         className={`flex items-center justify-between w-full mx-2 px-3 py-2 rounded-lg transition-colors ${
                           hasActiveItem && !isExpanded
                             ? 'bg-gray-100 text-gray-900'
@@ -223,7 +222,7 @@ export function Layout() {
                       </button>
                     ) : (
                       <button
-                        onClick={() => section.id && toggleSection(section.id)}
+                        onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
                         className={`flex items-center justify-center mx-2 px-3 py-2 rounded-lg transition-colors w-[calc(100%-16px)] ${
                           hasActiveItem && !isExpanded
                             ? 'bg-gray-100 text-gray-900'
