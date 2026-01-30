@@ -50,6 +50,15 @@ const conversationsRouter = new Hono<{ Variables: Variables }>();
 conversationsRouter.use('/*', requireAuth);
 
 /**
+ * GET /api/v1/conversations/stats
+ * Get conversation counts by state
+ */
+conversationsRouter.get('/stats', async (c) => {
+  const stats = await conversationService.getStats();
+  return c.json(stats);
+});
+
+/**
  * GET /api/v1/conversations
  * List conversations with optional filters
  */

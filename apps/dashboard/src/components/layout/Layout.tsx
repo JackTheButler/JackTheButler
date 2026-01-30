@@ -1,6 +1,8 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
+import { useQuery } from '@tanstack/react-query';
 import { useAuth } from '@/hooks/useAuth';
+import { api } from '@/lib/api';
 import {
   Home,
   MessageSquare,
@@ -26,6 +28,7 @@ interface NavItem {
   path: string;
   label: string;
   icon: React.ReactNode;
+  badge?: number;
 }
 
 interface NavSection {
@@ -50,6 +53,30 @@ export function Layout() {
   });
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Fetch task stats for badge
+  const { data: taskStats } = useQuery({
+    queryKey: ['taskStats'],
+    queryFn: () => api.get<{ pending: number; inProgress: number; completed: number; total: number }>('/tasks/stats'),
+    refetchInterval: 30000,
+    enabled: isAuthenticated,
+  });
+
+  // Fetch approval stats for badge
+  const { data: approvalStats } = useQuery({
+    queryKey: ['approvalStats'],
+    queryFn: () => api.get<{ stats: { pending: number } }>('/approvals/stats'),
+    refetchInterval: 30000,
+    enabled: isAuthenticated,
+  });
+
+  // Fetch conversation stats for badge
+  const { data: conversationStats } = useQuery({
+    queryKey: ['conversationStats'],
+    queryFn: () => api.get<{ needsAttention: number }>('/conversations/stats'),
+    refetchInterval: 30000,
+    enabled: isAuthenticated,
+  });
 
   const toggleSection = (sectionId: string, firstItemPath?: string) => {
     const isOpening = !expandedSections[sectionId];
@@ -133,13 +160,17 @@ export function Layout() {
     navigate('/login');
   };
 
+  const pendingTasks = taskStats?.pending || 0;
+  const pendingApprovals = approvalStats?.stats?.pending || 0;
+  const needsAttention = conversationStats?.needsAttention || 0;
+
   const navSections: NavSection[] = [
     {
       items: [
         { path: '/', label: 'Home', icon: <Home size={20} /> },
-        { path: '/inbox', label: 'Inbox', icon: <MessageSquare size={20} /> },
-        { path: '/tasks', label: 'Tasks', icon: <ClipboardList size={20} /> },
-        { path: '/approvals', label: 'Approvals', icon: <Bell size={20} /> },
+        { path: '/inbox', label: 'Inbox', icon: <MessageSquare size={20} />, badge: needsAttention },
+        { path: '/tasks', label: 'Tasks', icon: <ClipboardList size={20} />, badge: pendingTasks },
+        { path: '/approvals', label: 'Approvals', icon: <Bell size={20} />, badge: pendingApprovals },
         { path: '/guests', label: 'Guests', icon: <Users size={20} /> },
         { path: '/reservations', label: 'Reservations', icon: <CalendarDays size={20} /> },
       ],
@@ -286,12 +317,28 @@ export function Layout() {
                               title={collapsed ? item.label : undefined}
                             >
                               {!section.collapsible && (
-                                <span className={active ? 'text-white' : 'text-gray-500'}>
+                                <span className={`relative ${active ? 'text-white' : 'text-gray-500'}`}>
                                   {item.icon}
+                                  {collapsed && item.badge && item.badge > 0 && (
+                                    <span className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-medium rounded-full flex items-center justify-center ${
+                                      active ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                                    }`}>
+                                      {item.badge > 99 ? '99+' : item.badge}
+                                    </span>
+                                  )}
                                 </span>
                               )}
                               {!collapsed && (
-                                <span className="text-sm font-medium">{item.label}</span>
+                                <>
+                                  <span className="text-sm font-medium">{item.label}</span>
+                                  {item.badge && item.badge > 0 && (
+                                    <span className={`ml-auto min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full flex items-center justify-center ${
+                                      active ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                                    }`}>
+                                      {item.badge > 99 ? '99+' : item.badge}
+                                    </span>
+                                  )}
+                                </>
                               )}
                             </Link>
                           </li>

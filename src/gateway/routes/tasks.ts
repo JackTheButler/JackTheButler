@@ -54,6 +54,15 @@ const tasksRouter = new Hono<{ Variables: Variables }>();
 tasksRouter.use('/*', requireAuth);
 
 /**
+ * GET /api/v1/tasks/stats
+ * Get task counts by status
+ */
+tasksRouter.get('/stats', async (c) => {
+  const stats = await taskService.getStats();
+  return c.json(stats);
+});
+
+/**
  * GET /api/v1/tasks
  * List tasks with optional filters
  */

@@ -238,6 +238,36 @@ export class TaskService {
     }
     return this.update(id, input);
   }
+
+  /**
+   * Get task counts by status
+   */
+  async getStats(): Promise<{
+    pending: number;
+    inProgress: number;
+    completed: number;
+    total: number;
+  }> {
+    const results = await db
+      .select({
+        status: tasks.status,
+        count: sql<number>`count(*)`,
+      })
+      .from(tasks)
+      .groupBy(tasks.status);
+
+    const counts: Record<string, number> = {};
+    for (const row of results) {
+      counts[row.status] = row.count;
+    }
+
+    return {
+      pending: counts['pending'] || 0,
+      inProgress: (counts['assigned'] || 0) + (counts['in_progress'] || 0),
+      completed: counts['completed'] || 0,
+      total: Object.values(counts).reduce((sum, n) => sum + n, 0),
+    };
+  }
 }
 
 export const taskService = new TaskService();

@@ -374,6 +374,38 @@ export class ConversationService {
 
     return new Map(counts.map((c) => [c.conversationId, c.count]));
   }
+
+  /**
+   * Get conversation counts by state
+   */
+  async getStats(): Promise<{
+    new: number;
+    active: number;
+    escalated: number;
+    resolved: number;
+    needsAttention: number;
+  }> {
+    const results = await db
+      .select({
+        state: conversations.state,
+        count: sql<number>`count(*)`,
+      })
+      .from(conversations)
+      .groupBy(conversations.state);
+
+    const counts: Record<string, number> = {};
+    for (const row of results) {
+      counts[row.state] = row.count;
+    }
+
+    return {
+      new: counts['new'] || 0,
+      active: counts['active'] || 0,
+      escalated: counts['escalated'] || 0,
+      resolved: counts['resolved'] || 0,
+      needsAttention: (counts['new'] || 0) + (counts['escalated'] || 0),
+    };
+  }
 }
 
 /**
