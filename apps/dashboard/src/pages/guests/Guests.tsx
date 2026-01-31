@@ -44,17 +44,17 @@ interface GuestStats {
 }
 
 const vipColors: Record<string, string> = {
-  diamond: 'bg-purple-100 text-purple-800',
-  platinum: 'bg-gray-100 text-gray-800',
-  gold: 'bg-yellow-100 text-yellow-800',
-  silver: 'bg-slate-100 text-slate-800',
+  diamond: '!bg-gray-700 !text-white',
+  platinum: '!bg-gray-700 !text-white',
+  gold: '!bg-yellow-500 !text-white',
+  silver: '!bg-gray-700 !text-white',
 };
 
 const loyaltyColors: Record<string, string> = {
-  platinum: 'bg-gray-100 text-gray-800',
-  gold: 'bg-yellow-100 text-yellow-800',
-  silver: 'bg-slate-100 text-slate-800',
-  member: 'bg-blue-100 text-blue-800',
+  platinum: 'bg-gray-100 text-gray-600',
+  gold: 'bg-yellow-100 text-yellow-700',
+  silver: 'bg-gray-100 text-gray-600',
+  member: 'bg-gray-100 text-gray-600',
 };
 
 const formatDate = (dateStr: string | null) => {
@@ -168,13 +168,13 @@ export function GuestsPage() {
       render: (guest) => (
         <div className="flex gap-1.5">
           {guest.vipStatus && guest.vipStatus !== 'none' && (
-            <Badge className={vipColors[guest.vipStatus] || 'bg-gray-100 text-gray-800'}>
+            <Badge className={guest.vipStatus.toLowerCase() === 'gold' ? '!bg-yellow-500 !text-white' : '!bg-gray-700 !text-white'}>
               <Crown className="w-3 h-3 mr-1" />
               {guest.vipStatus}
             </Badge>
           )}
           {guest.loyaltyTier && guest.loyaltyTier !== 'none' && (
-            <Badge variant="outline" className={loyaltyColors[guest.loyaltyTier] || ''}>
+            <Badge className={loyaltyColors[guest.loyaltyTier] || 'bg-gray-100 text-gray-600'}>
               {guest.loyaltyTier}
             </Badge>
           )}

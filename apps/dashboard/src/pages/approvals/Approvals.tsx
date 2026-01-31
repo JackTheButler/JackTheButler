@@ -8,17 +8,33 @@ import {
   ListTodo,
   Gift,
   AlertCircle,
-  Filter,
   ChevronRight,
   ChevronDown,
+  MoreHorizontal,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { Card, CardContent } from '@/components/ui/card';
+import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import { PageContainer, StatsBar, EmptyState } from '@/components';
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from '@/components/ui/table';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
+import { Tooltip } from '@/components/ui/tooltip';
+import { DialogRoot, DialogContent } from '@/components/ui/dialog';
+import { PageContainer, StatsBar, EmptyState, ChannelIcon } from '@/components';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
 type ApprovalStatus = 'pending' | 'approved' | 'rejected';
@@ -56,15 +72,41 @@ interface ApprovalStats {
   rejectedToday: number;
 }
 
-const typeLabels: Record<ApprovalItemType, { label: string; icon: typeof MessageSquare }> = {
+interface ActionData {
+  content?: string;
+  intent?: string;
+  confidence?: number;
+  type?: string;
+  department?: string;
+  priority?: string;
+  description?: string;
+  roomNumber?: string;
+  [key: string]: unknown;
+}
+
+const typeConfig: Record<ApprovalItemType, { label: string; icon: typeof MessageSquare }> = {
   response: { label: 'Response', icon: MessageSquare },
   task: { label: 'Task', icon: ListTodo },
   offer: { label: 'Offer', icon: Gift },
 };
 
+const statusFilters: { value: ApprovalStatus | 'all'; label: string }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'pending', label: 'Pending' },
+  { value: 'approved', label: 'Approved' },
+  { value: 'rejected', label: 'Rejected' },
+];
+
+const priorityColors: Record<string, string> = {
+  urgent: 'bg-red-100 text-red-700',
+  high: 'bg-orange-100 text-orange-700',
+  standard: 'bg-gray-100 text-gray-600',
+  low: 'bg-gray-100 text-gray-600',
+};
+
 const statusColors: Record<ApprovalStatus, string> = {
   pending: 'bg-yellow-100 text-yellow-700',
-  approved: 'bg-green-100 text-green-700',
+  approved: 'bg-gray-100 text-gray-600',
   rejected: 'bg-red-100 text-red-700',
 };
 
@@ -79,310 +121,187 @@ function formatTimeAgo(dateStr: string): string {
   return `${Math.floor(seconds / 86400)}d ago`;
 }
 
-function ApprovalCard({
+function parseActionData(actionData: string): ActionData {
+  try {
+    return JSON.parse(actionData) as ActionData;
+  } catch {
+    return {};
+  }
+}
+
+function getPreviewText(item: ApprovalItem, actionData: ActionData): string {
+  if (item.type === 'response' && actionData.content) {
+    return String(actionData.content);
+  }
+  if (item.type === 'task' && actionData.description) {
+    return String(actionData.description);
+  }
+  return '';
+}
+
+function ExpandedRow({
   item,
-  onApprove,
+  actionData,
   onReject,
+  isRejecting,
+  showRejectForm,
+  setShowRejectForm,
 }: {
   item: ApprovalItem;
-  onApprove: () => void;
+  actionData: ActionData;
   onReject: (reason: string) => void;
+  isRejecting: boolean;
+  showRejectForm: boolean;
+  setShowRejectForm: (show: boolean) => void;
 }) {
-  const [showRejectForm, setShowRejectForm] = useState(false);
   const [rejectReason, setRejectReason] = useState('');
-  const [isApproving, setIsApproving] = useState(false);
-  const [isRejecting, setIsRejecting] = useState(false);
   const [showConversation, setShowConversation] = useState(false);
 
-  const typeInfo = typeLabels[item.type];
-  const Icon = typeInfo?.icon || MessageSquare;
-
-  // Parse action data
-  interface ActionData {
-    content?: string;
-    intent?: string;
-    confidence?: number;
-    type?: string;
-    department?: string;
-    priority?: string;
-    description?: string;
-    roomNumber?: string;
-    [key: string]: unknown;
-  }
-  let actionData: ActionData = {};
-  try {
-    actionData = JSON.parse(item.actionData) as ActionData;
-  } catch {
-    // Invalid JSON, use empty object
-  }
-
-  const handleApprove = async () => {
-    setIsApproving(true);
-    try {
-      await onApprove();
-    } finally {
-      setIsApproving(false);
-    }
-  };
-
-  const handleReject = async () => {
+  const handleReject = () => {
     if (!rejectReason.trim()) return;
-    setIsRejecting(true);
-    try {
-      await onReject(rejectReason);
-      setShowRejectForm(false);
-      setRejectReason('');
-    } finally {
-      setIsRejecting(false);
-    }
+    onReject(rejectReason);
+    setRejectReason('');
   };
 
   return (
-    <Card className="overflow-hidden">
-      <CardContent className="p-0">
-        {/* Header */}
-        <div className="flex items-center justify-between p-4 border-b bg-gray-50">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-lg bg-white shadow-sm">
-              <Icon className="w-5 h-5 text-gray-600" />
+    <div className="p-4 space-y-3">
+      {/* Content Preview */}
+      {item.type === 'response' && actionData.content && (
+        <div className="space-y-2">
+          <div className="text-xs text-gray-500 uppercase font-medium">Proposed Response</div>
+          <p className="text-sm whitespace-pre-wrap">{String(actionData.content)}</p>
+          {(actionData.intent || actionData.confidence) && (
+            <div className="flex items-center gap-2">
+              {actionData.intent && (
+                <Badge className="bg-gray-700 text-white capitalize">{String(actionData.intent)}</Badge>
+              )}
+              {actionData.confidence && (
+                <Badge className="bg-gray-700 text-white">{((actionData.confidence as number) * 100).toFixed(0)}% confident</Badge>
+              )}
             </div>
-            <div>
-              <div className="flex items-center gap-2 mb-1">
-                <span className="font-semibold">{typeInfo?.label || item.type}</span>
-                <Badge className={statusColors[item.status]}>{item.status}</Badge>
-              </div>
-              {/* Info capsules */}
-              <div className="flex flex-wrap items-center gap-1.5">
-                {item.guestName && (
-                  <Badge variant="outline" className="text-xs font-normal bg-white">
-                    {item.guestName}
-                  </Badge>
-                )}
-                {(item.roomNumber || actionData.roomNumber) && (
-                  <Badge variant="outline" className="text-xs font-normal bg-white">
-                    Room {item.roomNumber || String(actionData.roomNumber)}
-                  </Badge>
-                )}
-                {item.conversationChannel && (
-                  <Badge variant="outline" className="text-xs font-normal bg-white capitalize">
-                    {item.conversationChannel}
-                  </Badge>
-                )}
-              </div>
-            </div>
-          </div>
-          <div className="flex items-center gap-2 text-sm text-gray-500">
-            <Clock className="w-4 h-4" />
-            {formatTimeAgo(item.createdAt)}
+          )}
+        </div>
+      )}
+
+      {item.type === 'task' && actionData.description && (
+        <div className="space-y-2">
+          <div className="text-xs text-gray-500 uppercase font-medium">Task Details</div>
+          <p className="text-sm">{String(actionData.description)}</p>
+          <div className="flex items-center gap-2">
+            {actionData.department && (
+              <Badge className="bg-gray-700 text-white capitalize">{String(actionData.department)}</Badge>
+            )}
+            {actionData.type && (
+              <Badge className="bg-gray-700 text-white capitalize">{String(actionData.type)}</Badge>
+            )}
           </div>
         </div>
+      )}
 
-        {/* Conversation Context (Collapsible) */}
-        {item.conversationMessages && item.conversationMessages.length > 0 && (
-          <div className="border-b">
-            <button
-              type="button"
-              onClick={() => setShowConversation(!showConversation)}
-              className="w-full flex items-center gap-2 p-3 text-left hover:bg-gray-50 transition-colors"
-            >
-              {showConversation ? (
-                <ChevronDown className="w-4 h-4 text-gray-400" />
-              ) : (
-                <ChevronRight className="w-4 h-4 text-gray-400" />
-              )}
-              <span className="text-xs text-gray-500 uppercase font-medium">
-                Conversation Context
-              </span>
-              <Badge variant="outline" className="text-xs ml-1">
-                {item.conversationMessages.length}
-              </Badge>
-            </button>
-            {showConversation && (
-              <div className="px-4 pb-4 space-y-2 max-h-48 overflow-y-auto">
+      {item.type === 'offer' && (
+        <div className="space-y-1">
+          <div className="text-xs text-gray-500 uppercase font-medium">Proposed Offer</div>
+          <pre className="text-xs overflow-auto">{JSON.stringify(actionData, null, 2)}</pre>
+        </div>
+      )}
+
+      {/* Conversation Context - opens in dialog */}
+      {item.conversationMessages && item.conversationMessages.length > 0 && (
+        <>
+          <button
+            onClick={() => setShowConversation(true)}
+            className="text-xs text-gray-500 hover:text-gray-700 flex items-center gap-1"
+          >
+            <MessageSquare className="w-3 h-3" />
+            View conversation ({item.conversationMessages.length} messages)
+          </button>
+          <DialogRoot open={showConversation} onOpenChange={setShowConversation}>
+            <DialogContent title="Conversation" className="max-w-xl">
+              <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
                 {item.conversationMessages.map((msg) => (
                   <div
                     key={msg.id}
                     className={cn(
-                      'p-2 rounded-lg text-sm',
+                      'p-2 rounded text-sm',
                       msg.direction === 'inbound'
                         ? 'bg-gray-100 mr-8'
                         : 'bg-blue-50 ml-8'
                     )}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="font-medium text-xs text-gray-500">
-                        {msg.direction === 'inbound' ? 'Guest' : msg.senderType === 'ai' ? 'Jack' : 'Staff'}
-                      </span>
-                      <span className="text-xs text-gray-400">
-                        {formatTimeAgo(msg.createdAt)}
-                      </span>
-                    </div>
-                    <p className="whitespace-pre-wrap">{msg.content}</p>
+                    <span className="text-xs text-gray-500">
+                      {msg.direction === 'inbound' ? 'Guest' : msg.senderType === 'ai' ? 'Jack' : 'Staff'}:
+                    </span>{' '}
+                    <span className="whitespace-pre-wrap">{msg.content}</span>
                   </div>
                 ))}
               </div>
-            )}
-          </div>
-        )}
+            </DialogContent>
+          </DialogRoot>
+        </>
+      )}
 
-        {/* Content Preview */}
-        <div className="p-4">
-          {item.type === 'response' && actionData.content && (
-            <div className="space-y-2">
-              <Label className="text-xs text-gray-500 uppercase">Proposed Response</Label>
-              <div className="p-3 rounded-lg bg-blue-50 border border-blue-100">
-                <p className="text-sm whitespace-pre-wrap">{String(actionData.content)}</p>
-              </div>
-              {actionData.intent && (
-                <div className="flex items-center gap-2 text-sm">
-                  <span className="text-gray-500">Intent:</span>
-                  <Badge variant="outline">{String(actionData.intent)}</Badge>
-                  {actionData.confidence && (
-                    <span className="text-gray-400">
-                      ({((actionData.confidence as number) * 100).toFixed(0)}% confident)
-                    </span>
-                  )}
-                </div>
-              )}
-            </div>
-          )}
-
-          {item.type === 'task' && (
-            <div className="p-3 rounded-lg bg-purple-50 border border-purple-100">
-              <div className="flex items-center gap-2 mb-2">
-                <Badge variant="outline" className="capitalize">
-                  {String(actionData.type || 'task').replace('_', ' ')}
-                </Badge>
-                <Badge variant="outline">{String(actionData.department)}</Badge>
-                <Badge
-                  className={cn(
-                    actionData.priority === 'urgent'
-                      ? 'bg-red-100 text-red-700'
-                      : actionData.priority === 'high'
-                        ? 'bg-orange-100 text-orange-700'
-                        : 'bg-blue-100 text-blue-700'
-                  )}
-                >
-                  {String(actionData.priority)}
-                </Badge>
-              </div>
-              <p className="text-sm">{String(actionData.description)}</p>
-            </div>
-          )}
-
-          {item.type === 'offer' && (
-            <div className="space-y-2">
-              <Label className="text-xs text-gray-500 uppercase">Proposed Offer</Label>
-              <div className="p-3 rounded-lg bg-green-50 border border-green-100">
-                <p className="text-sm">{JSON.stringify(actionData, null, 2)}</p>
-              </div>
-            </div>
-          )}
+      {/* Rejection form */}
+      {item.status === 'pending' && showRejectForm && (
+        <div className="flex items-center gap-2 pt-2 border-t">
+          <Input
+            placeholder="Rejection reason..."
+            value={rejectReason}
+            onChange={(e) => setRejectReason(e.target.value)}
+            className="flex-1 h-8 text-sm"
+            autoFocus
+            onKeyDown={(e) => {
+              if (e.key === 'Enter' && rejectReason.trim()) handleReject();
+              if (e.key === 'Escape') setShowRejectForm(false);
+            }}
+          />
+          <Button
+            variant="destructive"
+            size="sm"
+            onClick={handleReject}
+            disabled={!rejectReason.trim() || isRejecting}
+          >
+            {isRejecting ? 'Rejecting...' : 'Reject'}
+          </Button>
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={() => setShowRejectForm(false)}
+          >
+            Cancel
+          </Button>
         </div>
+      )}
 
-        {/* Actions */}
-        {item.status === 'pending' && (
-          <div className="p-4 border-t bg-gray-50">
-            {showRejectForm ? (
-              <div className="space-y-3">
-                <Input
-                  placeholder="Enter rejection reason..."
-                  value={rejectReason}
-                  onChange={(e) => setRejectReason(e.target.value)}
-                  autoFocus
-                />
-                <div className="flex gap-2">
-                  <Button
-                    variant="destructive"
-                    size="sm"
-                    onClick={handleReject}
-                    disabled={!rejectReason.trim() || isRejecting}
-                  >
-                    {isRejecting ? 'Rejecting...' : 'Confirm Reject'}
-                  </Button>
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => {
-                      setShowRejectForm(false);
-                      setRejectReason('');
-                    }}
-                  >
-                    Cancel
-                  </Button>
-                </div>
-              </div>
-            ) : (
-              <div className="flex gap-2">
-                <Button onClick={handleApprove} disabled={isApproving} className="flex-1">
-                  <CheckCircle2 className="w-4 h-4 mr-2" />
-                  {isApproving ? 'Approving...' : 'Approve'}
-                </Button>
-                <Button
-                  variant="outline"
-                  onClick={() => setShowRejectForm(true)}
-                  className="flex-1"
-                >
-                  <XCircle className="w-4 h-4 mr-2" />
-                  Reject
-                </Button>
-              </div>
-            )}
-          </div>
-        )}
-
-        {/* Decided info */}
-        {item.status !== 'pending' && (
-          <div className="p-4 border-t bg-gray-50">
-            <div className="flex items-center gap-2 text-sm">
-              {item.status === 'approved' ? (
-                <CheckCircle2 className="w-4 h-4 text-green-600" />
-              ) : (
-                <XCircle className="w-4 h-4 text-red-600" />
-              )}
-              <span className="capitalize">{item.status}</span>
-              {item.staffName && <span className="text-gray-500">by {item.staffName}</span>}
-              {item.decidedAt && (
-                <span className="text-gray-400">{formatTimeAgo(item.decidedAt)}</span>
-              )}
-            </div>
-            {item.rejectionReason && (
-              <p className="text-sm text-red-600 mt-2">Reason: {item.rejectionReason}</p>
-            )}
-          </div>
-        )}
-      </CardContent>
-    </Card>
+    </div>
   );
-}
-
-function Label({ children, className }: { children: React.ReactNode; className?: string }) {
-  return <div className={cn('font-medium text-gray-700', className)}>{children}</div>;
 }
 
 export function ApprovalsPage() {
   const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<ApprovalStatus | 'all'>('pending');
-  const [filterType, setFilterType] = useState<ApprovalItemType | 'all'>('all');
+  const [expandedId, setExpandedId] = useState<string | null>(null);
+  const [approvingId, setApprovingId] = useState<string | null>(null);
+  const [rejectingId, setRejectingId] = useState<string | null>(null);
+  const [rejectFormId, setRejectFormId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
-    queryKey: ['approvals', filterStatus, filterType],
+    queryKey: ['approvals', filterStatus],
     queryFn: () => {
       const params = new URLSearchParams();
       if (filterStatus !== 'all') params.set('status', filterStatus);
-      if (filterType !== 'all') params.set('type', filterType);
       const queryString = params.toString();
       return api.get<{ items: ApprovalItem[]; stats: ApprovalStats }>(
         `/approvals${queryString ? `?${queryString}` : ''}`
       );
     },
-    refetchInterval: 5000, // Refresh every 5 seconds
+    refetchInterval: 5000,
   });
 
   const approveMutation = useMutation({
     mutationFn: (id: string) => api.post(`/approvals/${id}/approve`, {}),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['approvals'] });
+      setApprovingId(null);
     },
   });
 
@@ -391,115 +310,202 @@ export function ApprovalsPage() {
       api.post(`/approvals/${id}/reject`, { reason }),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['approvals'] });
+      setRejectingId(null);
     },
   });
+
+  const handleApprove = async (id: string) => {
+    setApprovingId(id);
+    approveMutation.mutate(id);
+  };
+
+  const handleReject = async (id: string, reason: string) => {
+    setRejectingId(id);
+    rejectMutation.mutate({ id, reason });
+  };
 
   const items = data?.items || [];
   const stats = data?.stats || { pending: 0, approvedToday: 0, rejectedToday: 0 };
 
+  const filters = (
+    <div className="flex gap-1 flex-nowrap">
+      {statusFilters.map((s) => (
+        <button
+          key={s.value}
+          onClick={() => setFilterStatus(s.value)}
+          className={cn(
+            'px-3 py-1 text-sm rounded whitespace-nowrap',
+            filterStatus === s.value
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-600 hover:bg-gray-100'
+          )}
+        >
+          {s.label}
+        </button>
+      ))}
+    </div>
+  );
+
   return (
     <PageContainer>
-      {/* Stats */}
       <StatsBar
         items={[
-          { label: 'Pending', value: stats.pending, icon: Clock, variant: 'warning' },
-          { label: 'Approved Today', value: stats.approvedToday, icon: CheckCircle2, variant: 'success' },
-          { label: 'Rejected Today', value: stats.rejectedToday, icon: XCircle, variant: 'error' },
+          { label: 'Pending', value: stats.pending, icon: Clock },
+          { label: 'Approved Today', value: stats.approvedToday, icon: CheckCircle2 },
+          { label: 'Rejected Today', value: stats.rejectedToday, icon: XCircle },
         ]}
       />
 
-      {/* Filters */}
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="flex gap-2">
-          <Button
-            variant={filterStatus === 'pending' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterStatus('pending')}
-          >
-            <Clock className="w-4 h-4 mr-1" />
-            Pending
-          </Button>
-          <Button
-            variant={filterStatus === 'approved' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterStatus('approved')}
-          >
-            <CheckCircle2 className="w-4 h-4 mr-1" />
-            Approved
-          </Button>
-          <Button
-            variant={filterStatus === 'rejected' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterStatus('rejected')}
-          >
-            <XCircle className="w-4 h-4 mr-1" />
-            Rejected
-          </Button>
-          <Button
-            variant={filterStatus === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterStatus('all')}
-          >
-            All
-          </Button>
+      <Card>
+        <div className="px-4 py-2 border-b flex items-center justify-between gap-4">
+          <div className="overflow-x-auto flex-1 scrollbar-hide">
+            <div className="min-w-fit">
+              {filters}
+            </div>
+          </div>
         </div>
-        <div className="flex gap-2">
-          <Filter className="w-4 h-4 text-gray-400 self-center" />
-          <Button
-            variant={filterType === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterType('all')}
-          >
-            All Types
-          </Button>
-          <Button
-            variant={filterType === 'response' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterType('response')}
-          >
-            <MessageSquare className="w-4 h-4 mr-1" />
-            Responses
-          </Button>
-          <Button
-            variant={filterType === 'task' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterType('task')}
-          >
-            <ListTodo className="w-4 h-4 mr-1" />
-            Tasks
-          </Button>
-        </div>
-      </div>
 
-      {/* Content */}
-      {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
-      ) : error ? (
-        <EmptyState
-          icon={AlertCircle}
-          title="Failed to load approvals"
-          description="Please try again later"
-        />
-      ) : items.length === 0 ? (
-        <EmptyState
-          icon={CheckCircle2}
-          title={filterStatus === 'pending' ? 'No pending approvals' : 'No items found'}
-          description={filterStatus === 'pending' ? 'All caught up! Check back later.' : 'Try changing your filters.'}
-        />
-      ) : (
-        <div className="space-y-4">
-          {items.map((item) => (
-            <ApprovalCard
-              key={item.id}
-              item={item}
-              onApprove={() => approveMutation.mutate(item.id)}
-              onReject={(reason) => rejectMutation.mutate({ id: item.id, reason })}
-            />
-          ))}
-        </div>
-      )}
+        {isLoading ? (
+          <div className="flex items-center justify-center py-12">
+            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+          </div>
+        ) : error ? (
+          <EmptyState
+            icon={AlertCircle}
+            title="Failed to load approvals"
+            description="Please try again later"
+          />
+        ) : items.length === 0 ? (
+          <EmptyState
+            icon={CheckCircle2}
+            title={filterStatus === 'pending' ? 'No pending approvals' : 'No items found'}
+            description={filterStatus === 'pending' ? 'All caught up!' : 'Try changing your filters.'}
+          />
+        ) : (
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="px-4 w-12"></TableHead>
+                <TableHead className="px-4 min-w-[140px]">Guest</TableHead>
+                <TableHead className="px-4">Preview</TableHead>
+                <TableHead className="px-4 min-w-[90px]">Priority</TableHead>
+                <TableHead className="px-4 min-w-[80px]">Time</TableHead>
+                <TableHead className="px-4 min-w-[100px]">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {items.map((item) => {
+                const actionData = parseActionData(item.actionData);
+                const typeInfo = typeConfig[item.type];
+                const Icon = typeInfo?.icon || MessageSquare;
+                const isExpanded = expandedId === item.id;
+                const preview = getPreviewText(item, actionData);
+
+                return (
+                  <>
+                    <TableRow
+                      key={item.id}
+                      className={cn('cursor-pointer', isExpanded && 'bg-muted/30')}
+                      onClick={() => setExpandedId(isExpanded ? null : item.id)}
+                    >
+                      <TableCell className="px-4">
+                        <Tooltip content={typeInfo?.label}>
+                          <Icon className="w-4 h-4 text-gray-500" />
+                        </Tooltip>
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <div className="text-sm">
+                          <div className="font-medium">{item.guestName || <span className="text-gray-400 italic">Unknown</span>}</div>
+                          <div className="flex items-center gap-1.5 mt-0.5">
+                            {item.conversationChannel && (
+                              <ChannelIcon channel={item.conversationChannel} />
+                            )}
+                            {(item.roomNumber || actionData.roomNumber) && (
+                              <span className="text-xs text-gray-500">
+                                Room {item.roomNumber || actionData.roomNumber}
+                              </span>
+                            )}
+                          </div>
+                        </div>
+                      </TableCell>
+                      <TableCell className="px-4 max-w-xs">
+                        <span className="text-sm text-gray-600 truncate block">
+                          {preview || '-'}
+                        </span>
+                      </TableCell>
+                      <TableCell className="px-4">
+                        {item.type === 'task' && actionData.priority ? (
+                          <Badge className={cn('capitalize text-xs', priorityColors[actionData.priority] || 'bg-gray-100 text-gray-600')}>
+                            {actionData.priority}
+                          </Badge>
+                        ) : null}
+                      </TableCell>
+                      <TableCell className="px-4">
+                        <span className="text-sm text-gray-500">{formatTimeAgo(item.createdAt)}</span>
+                      </TableCell>
+                      <TableCell className="px-4">
+                        {item.status === 'pending' ? (
+                          <div onClick={(e) => e.stopPropagation()}>
+                            <DropdownMenu>
+                              <DropdownMenuTrigger>
+                                <button className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
+                                  <MoreHorizontal className="w-4 h-4" />
+                                </button>
+                              </DropdownMenuTrigger>
+                              <DropdownMenuContent>
+                                <DropdownMenuItem
+                                  onClick={() => handleApprove(item.id)}
+                                  disabled={approvingId === item.id}
+                                >
+                                  {approvingId === item.id ? 'Approving...' : 'Approve'}
+                                </DropdownMenuItem>
+                                <DropdownMenuItem
+                                  onClick={() => {
+                                    setExpandedId(item.id);
+                                    setRejectFormId(item.id);
+                                  }}
+                                >
+                                  Reject
+                                </DropdownMenuItem>
+                              </DropdownMenuContent>
+                            </DropdownMenu>
+                          </div>
+                        ) : (
+                          <Tooltip
+                            content={
+                              (item.staffName || item.decidedAt || item.rejectionReason)
+                                ? `${item.staffName ? `By ${item.staffName}` : ''}${item.decidedAt ? ` • ${formatTimeAgo(item.decidedAt)}` : ''}${item.rejectionReason ? ` • ${item.rejectionReason}` : ''}`
+                                : null
+                            }
+                          >
+                            <Badge className={cn('capitalize text-xs', statusColors[item.status])}>
+                              {item.status}
+                            </Badge>
+                          </Tooltip>
+                        )}
+                      </TableCell>
+                    </TableRow>
+                    {isExpanded && (
+                      <TableRow key={`${item.id}-expanded`}>
+                        <TableCell colSpan={6} className="p-0 bg-gray-50">
+                          <ExpandedRow
+                            item={item}
+                            actionData={actionData}
+                            onReject={(reason) => handleReject(item.id, reason)}
+                            isRejecting={rejectingId === item.id}
+                            showRejectForm={rejectFormId === item.id}
+                            setShowRejectForm={(show) => setRejectFormId(show ? item.id : null)}
+                          />
+                        </TableCell>
+                      </TableRow>
+                    )}
+                  </>
+                );
+              })}
+            </TableBody>
+          </Table>
+        )}
+      </Card>
     </PageContainer>
   );
 }

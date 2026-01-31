@@ -8,6 +8,7 @@ import {
   Home,
   Users,
   ChevronRight,
+  Crown,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -62,11 +63,11 @@ const statusFilters: { value: ReservationStatus | 'all'; label: string }[] = [
 ];
 
 const statusColors: Record<ReservationStatus, string> = {
-  confirmed: 'bg-blue-100 text-blue-700',
-  checked_in: 'bg-green-100 text-green-700',
-  checked_out: 'bg-gray-100 text-gray-600',
-  cancelled: 'bg-red-100 text-red-700',
-  no_show: 'bg-orange-100 text-orange-700',
+  confirmed: '!bg-gray-100 !text-gray-600',
+  checked_in: '!bg-gray-700 !text-white',
+  checked_out: '!bg-gray-100 !text-gray-600',
+  cancelled: '!bg-gray-100 !text-gray-600',
+  no_show: '!bg-gray-100 !text-gray-600',
 };
 
 export function ReservationsPage() {
@@ -128,7 +129,8 @@ export function ReservationsPage() {
               {reservation.guest.firstName} {reservation.guest.lastName}
             </Link>
             {reservation.guest.vipStatus && (
-              <Badge variant="warning" className="ml-2 text-xs">
+              <Badge className="ml-2 text-xs bg-gray-700 text-white">
+                <Crown className="w-3 h-3 mr-1" />
                 VIP
               </Badge>
             )}
@@ -177,7 +179,7 @@ export function ReservationsPage() {
       key: 'status',
       header: 'Status',
       render: (reservation) => (
-        <Badge className={cn('capitalize', statusColors[reservation.status])}>
+        <Badge variant="secondary" className={cn('capitalize', statusColors[reservation.status])}>
           {reservation.status.replace('_', ' ')}
         </Badge>
       ),

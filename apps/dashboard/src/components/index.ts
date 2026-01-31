@@ -9,6 +9,7 @@ export { EmptyState } from './shared/EmptyState';
 export { DataTable } from './DataTable';
 export type { Column, DataTableProps, SearchConfig } from './DataTable';
 export { ExpandableSearch } from './ExpandableSearch';
+export { ChannelIcon } from './shared/ChannelIcon';
 
 // Form components
 export { SearchInput } from './shared/SearchInput';
