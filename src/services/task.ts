@@ -10,6 +10,7 @@ import type { Task } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { NotFoundError } from '@/errors/index.js';
+import { events, EventTypes } from '@/events/index.js';
 
 const log = createLogger('task');
 
@@ -90,7 +91,19 @@ export class TaskService {
 
     log.info({ taskId: id, type: input.type, department: input.department }, 'Task created');
 
-    return this.getById(id);
+    const task = await this.getById(id);
+
+    events.emit({
+      type: EventTypes.TASK_CREATED,
+      taskId: id,
+      ...(input.conversationId && { conversationId: input.conversationId }),
+      type_: input.type,
+      department: input.department,
+      priority: input.priority ?? 'standard',
+      timestamp: new Date(),
+    });
+
+    return task;
   }
 
   /**
@@ -215,7 +228,26 @@ export class TaskService {
 
     log.info({ taskId: id, updates }, 'Task updated');
 
-    return this.getById(id);
+    const task = await this.getById(id);
+
+    // Emit appropriate events
+    if (input.assignedTo !== undefined && input.assignedTo !== null) {
+      events.emit({
+        type: EventTypes.TASK_ASSIGNED,
+        taskId: id,
+        assignedTo: input.assignedTo,
+        timestamp: new Date(),
+      });
+    }
+    if (input.status === 'completed') {
+      events.emit({
+        type: EventTypes.TASK_COMPLETED,
+        taskId: id,
+        timestamp: new Date(),
+      });
+    }
+
+    return task;
   }
 
   /**

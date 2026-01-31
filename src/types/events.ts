@@ -119,6 +119,23 @@ export interface TaskCreatedEvent extends BaseEvent {
 }
 
 /**
+ * Task assigned event
+ */
+export interface TaskAssignedEvent extends BaseEvent {
+  type: typeof EventTypes.TASK_ASSIGNED;
+  taskId: string;
+  assignedTo: string;
+}
+
+/**
+ * Task completed event
+ */
+export interface TaskCompletedEvent extends BaseEvent {
+  type: typeof EventTypes.TASK_COMPLETED;
+  taskId: string;
+}
+
+/**
  * Approval queued event
  */
 export interface ApprovalQueuedEvent extends BaseEvent {
@@ -167,6 +184,8 @@ export type AppEvent =
   | ConversationUpdatedEvent
   | ConversationEscalatedEvent
   | TaskCreatedEvent
+  | TaskAssignedEvent
+  | TaskCompletedEvent
   | ApprovalQueuedEvent
   | ApprovalDecidedEvent
   | ApprovalExecutedEvent;

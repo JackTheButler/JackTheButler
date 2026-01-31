@@ -164,9 +164,9 @@ export function Layout() {
     navigate('/login');
   };
 
-  const pendingTasks = taskStats?.pending || 0;
-  const pendingApprovals = approvalStats?.stats?.pending || 0;
-  const escalatedConversations = conversationStats?.escalated || 0;
+  const pendingTasks = taskStats?.pending || undefined;
+  const pendingApprovals = approvalStats?.stats?.pending || undefined;
+  const escalatedConversations = conversationStats?.escalated || undefined;
 
   const navSections: NavSection[] = [
     {
@@ -175,6 +175,11 @@ export function Layout() {
         { path: '/inbox', label: 'Inbox', icon: <MessageSquare size={20} />, badge: escalatedConversations },
         { path: '/tasks', label: 'Tasks', icon: <ClipboardList size={20} />, badge: pendingTasks },
         { path: '/approvals', label: 'Approvals', icon: <Bell size={20} />, badge: pendingApprovals },
+      ],
+    },
+    {
+      title: 'Operations',
+      items: [
         { path: '/guests', label: 'Guests', icon: <Users size={20} /> },
         { path: '/reservations', label: 'Reservations', icon: <CalendarDays size={20} /> },
       ],
@@ -243,21 +248,15 @@ export function Layout() {
                     {!collapsed ? (
                       <button
                         onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
-                        className={`flex items-center justify-between w-full mx-2 px-3 py-2 rounded-lg transition-colors ${
+                        className={`flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg transition-colors ${
                           hasActiveItem && !isExpanded
                             ? 'bg-gray-100 text-gray-900'
                             : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
                         }`}
                         style={{ width: 'calc(100% - 16px)' }}
                       >
-                        <div className="flex items-center gap-3">
-                          <span className="text-gray-500">{section.icon}</span>
-                          <span className="text-sm font-medium">{section.title}</span>
-                        </div>
-                        <ChevronDown
-                          size={16}
-                          className={`text-gray-400 transition-transform ${isExpanded ? '' : '-rotate-90'}`}
-                        />
+                        <span className="text-gray-500">{section.icon}</span>
+                        <span className="text-sm font-medium">{section.title}</span>
                       </button>
                     ) : (
                       <button
