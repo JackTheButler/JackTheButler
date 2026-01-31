@@ -268,7 +268,7 @@ export function Layout() {
                         }`}
                         title={section.title}
                       >
-                        <span className="text-gray-500">{section.icon}</span>
+                        <span className={isExpanded ? 'text-gray-300' : 'text-gray-500'}>{section.icon}</span>
                       </button>
                     )}
                   </>
@@ -319,7 +319,7 @@ export function Layout() {
                               } ${collapsed ? 'justify-center' : ''} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}
                               title={collapsed ? item.label : undefined}
                             >
-                              {!section.collapsible && (
+                              {(!section.collapsible || collapsed) && (
                                 <span className={`relative ${active ? 'text-white' : 'text-gray-500'}`}>
                                   {item.icon}
                                   {collapsed && item.badge && item.badge > 0 && (

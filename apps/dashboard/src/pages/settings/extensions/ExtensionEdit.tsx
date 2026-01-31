@@ -239,7 +239,7 @@ function ConfigForm({
       ))}
 
       <div className="pt-4 space-y-4">
-        <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
+        <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto bg-gray-900 hover:bg-gray-800">
           {saveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {saveMutation.isPending ? 'Saving...' : 'Save Configuration'}
         </Button>
@@ -534,7 +534,7 @@ export function ExtensionEditPage() {
                   key={provider.id}
                   variant={effectiveProviderId === provider.id ? 'default' : 'outline'}
                   onClick={() => setSelectedProviderId(provider.id)}
-                  className="gap-2"
+                  className={cn('gap-2', effectiveProviderId === provider.id && 'bg-gray-900 hover:bg-gray-800')}
                 >
                   <ExtensionIcon id={provider.id} size="sm" />
                   {provider.name}

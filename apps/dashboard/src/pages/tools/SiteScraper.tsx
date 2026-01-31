@@ -244,7 +244,7 @@ export function SiteScraperPage() {
             </Button>
 
             <div className="flex justify-end pt-4 border-t">
-              <Button onClick={fetchAndProcess} disabled={validUrls.length === 0}>
+              <Button className="bg-gray-900 hover:bg-gray-800" onClick={fetchAndProcess} disabled={validUrls.length === 0}>
                 <Sparkles className="w-4 h-4 mr-2" />
                 Fetch & Process
               </Button>
@@ -366,7 +366,7 @@ export function SiteScraperPage() {
             <Button variant="outline" onClick={reset}>
               Start Over
             </Button>
-            <Button onClick={importEntries} disabled={selectedCount === 0}>
+            <Button className="bg-gray-900 hover:bg-gray-800" onClick={importEntries} disabled={selectedCount === 0}>
               <Download className="w-4 h-4 mr-2" />
               Import {selectedCount} Entries
             </Button>
@@ -401,7 +401,7 @@ export function SiteScraperPage() {
               <Button variant="outline" onClick={reset}>
                 Import More
               </Button>
-              <Button onClick={() => window.location.href = '/tools/knowledge-base'}>
+              <Button className="bg-gray-900 hover:bg-gray-800" onClick={() => window.location.href = '/tools/knowledge-base'}>
                 View Knowledge Base
               </Button>
             </div>

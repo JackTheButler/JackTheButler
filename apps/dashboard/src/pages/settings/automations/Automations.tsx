@@ -208,7 +208,7 @@ export function AutomationsPage() {
     <PageContainer>
       <PageHeader>
         <Link to="/settings/automations/new">
-          <Button size="sm">
+          <Button size="sm" className="bg-gray-900 hover:bg-gray-800">
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             New Rule
           </Button>
@@ -282,7 +282,7 @@ export function AutomationsPage() {
             description="Create your first rule to automate guest communication"
           >
             <Link to="/settings/automations/new">
-              <Button>
+              <Button className="bg-gray-900 hover:bg-gray-800">
                 <Plus className="w-4 h-4 mr-2" />
                 Create Rule
               </Button>

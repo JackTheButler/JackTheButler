@@ -1,28 +1,28 @@
 import { useState, useEffect } from 'react';
-import { PageContainer } from '@/components';
+import { PageContainer, DataTable, EmptyState } from '@/components';
+import { usePageActions } from '@/contexts/PageActionsContext';
+import type { Column } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
   Plus,
-  Trash2,
-  Pencil,
-  Search,
   X,
   Loader2,
   AlertCircle,
   Book,
+  MoreHorizontal,
 } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui/dropdown-menu';
 import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
 
 interface KnowledgeEntry {
   id: string;
@@ -55,23 +55,25 @@ const CATEGORIES = [
 ];
 
 const categoryColors: Record<string, string> = {
-  faq: 'bg-blue-100 text-blue-800',
-  policy: 'bg-purple-100 text-purple-800',
-  amenity: 'bg-green-100 text-green-800',
-  service: 'bg-orange-100 text-orange-800',
-  dining: 'bg-red-100 text-red-800',
-  room_type: 'bg-indigo-100 text-indigo-800',
-  local_info: 'bg-cyan-100 text-cyan-800',
-  contact: 'bg-yellow-100 text-yellow-800',
-  other: 'bg-gray-100 text-gray-800',
+  faq: '!bg-gray-100 !text-gray-600',
+  policy: '!bg-gray-100 !text-gray-600',
+  amenity: '!bg-gray-100 !text-gray-600',
+  service: '!bg-gray-100 !text-gray-600',
+  dining: '!bg-gray-100 !text-gray-600',
+  room_type: '!bg-gray-100 !text-gray-600',
+  local_info: '!bg-gray-100 !text-gray-600',
+  contact: '!bg-gray-100 !text-gray-600',
+  other: '!bg-gray-100 !text-gray-600',
 };
 
 export function KnowledgeBasePage() {
+  const { setActions } = usePageActions();
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [search, setSearch] = useState('');
+  const [searchQuery, setSearchQuery] = useState('');
   const [filterCategory, setFilterCategory] = useState<string>('');
   const [editingEntry, setEditingEntry] = useState<KnowledgeEntry | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
@@ -91,7 +93,7 @@ export function KnowledgeBasePage() {
       setLoading(true);
       const params = new URLSearchParams();
       if (filterCategory) params.set('category', filterCategory);
-      if (search) params.set('search', search);
+      if (searchQuery) params.set('search', searchQuery);
 
       const data = await api.get<{ entries: KnowledgeEntry[]; total: number }>(
         `/knowledge?${params.toString()}`
@@ -115,12 +117,24 @@ export function KnowledgeBasePage() {
   };
 
   useEffect(() => {
+    setActions(
+      !isAddingNew && !editingEntry ? (
+        <Button size="xs" className="bg-gray-900 hover:bg-gray-800" onClick={startAdd}>
+          <Plus className="w-3.5 h-3.5 mr-1.5" />
+          Add Entry
+        </Button>
+      ) : null
+    );
+    return () => setActions(null);
+  }, [setActions, isAddingNew, editingEntry]);
+
+  useEffect(() => {
     fetchEntries();
     fetchCategories();
-  }, [filterCategory]);
+  }, [filterCategory, searchQuery]);
 
   const handleSearch = () => {
-    fetchEntries();
+    setSearchQuery(search);
   };
 
   const resetForm = () => {
@@ -135,6 +149,11 @@ export function KnowledgeBasePage() {
     setIsAddingNew(false);
   };
 
+  const startAdd = () => {
+    resetForm();
+    setIsAddingNew(true);
+  };
+
   const startEdit = (entry: KnowledgeEntry) => {
     setEditingEntry(entry);
     setFormData({
@@ -145,11 +164,6 @@ export function KnowledgeBasePage() {
       priority: entry.priority,
     });
     setIsAddingNew(false);
-  };
-
-  const startAdd = () => {
-    resetForm();
-    setIsAddingNew(true);
   };
 
   const handleSave = async () => {
@@ -201,7 +215,87 @@ export function KnowledgeBasePage() {
     }
   };
 
-  const totalCount = categories.reduce((sum, c) => sum + c.count, 0);
+  const columns: Column<KnowledgeEntry>[] = [
+    {
+      key: 'category',
+      header: 'Category',
+      render: (entry) => (
+        <Badge className={categoryColors[entry.category] || categoryColors.other}>
+          {entry.category.replace(/_/g, ' ')}
+        </Badge>
+      ),
+    },
+    {
+      key: 'title',
+      header: 'Title',
+      render: (entry) => (
+        <div className="font-medium truncate max-w-[200px]" title={entry.title}>
+          {entry.title}
+        </div>
+      ),
+    },
+    {
+      key: 'content',
+      header: 'Content',
+      render: (entry) => (
+        <div className="text-sm text-gray-600 truncate max-w-[300px]" title={entry.content}>
+          {entry.content.length > 100 ? `${entry.content.substring(0, 100)}...` : entry.content}
+        </div>
+      ),
+    },
+    {
+      key: 'actions',
+      header: '',
+      className: 'w-16',
+      render: (entry) => (
+        <DropdownMenu>
+          <DropdownMenuTrigger>
+            <button className="p-1.5 rounded hover:bg-gray-100 text-gray-500">
+              <MoreHorizontal className="w-4 h-4" />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent>
+            <DropdownMenuItem onClick={() => startEdit(entry)}>
+              Edit
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={() => handleDelete(entry.id)}>
+              Delete
+            </DropdownMenuItem>
+          </DropdownMenuContent>
+        </DropdownMenu>
+      ),
+    },
+  ];
+
+  const filters = (
+    <div className="flex gap-1 flex-nowrap">
+      <button
+        onClick={() => setFilterCategory('')}
+        className={cn(
+          'px-3 py-1 text-sm rounded whitespace-nowrap',
+          filterCategory === ''
+            ? 'bg-gray-900 text-white'
+            : 'text-gray-600 hover:bg-gray-100'
+        )}
+      >
+        All
+      </button>
+      {categories.map((cat) => (
+        <button
+          key={cat.id}
+          onClick={() => setFilterCategory(cat.id)}
+          className={cn(
+            'px-3 py-1 text-sm rounded whitespace-nowrap',
+            filterCategory === cat.id
+              ? 'bg-gray-900 text-white'
+              : 'text-gray-600 hover:bg-gray-100'
+          )}
+        >
+          {cat.label}
+        </button>
+      ))}
+    </div>
+  );
 
   return (
     <PageContainer>
@@ -215,56 +309,8 @@ export function KnowledgeBasePage() {
         </div>
       )}
 
-      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
-        {/* Sidebar - Categories */}
-        <div className="lg:col-span-1">
-          <Card>
-            <CardHeader className="pb-3">
-              <CardTitle className="text-base">Categories</CardTitle>
-            </CardHeader>
-            <CardContent className="pt-0">
-              <ul className="space-y-1">
-                <li>
-                  <button
-                    onClick={() => setFilterCategory('')}
-                    className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                      filterCategory === ''
-                        ? 'bg-gray-900 text-white'
-                        : 'text-gray-600 hover:bg-gray-100'
-                    }`}
-                  >
-                    <span className="flex justify-between">
-                      <span>All</span>
-                      <span className="text-xs opacity-70">{totalCount}</span>
-                    </span>
-                  </button>
-                </li>
-                {categories.map((cat) => (
-                  <li key={cat.id}>
-                    <button
-                      onClick={() => setFilterCategory(cat.id)}
-                      className={`w-full text-left px-3 py-2 rounded-lg text-sm transition-colors ${
-                        filterCategory === cat.id
-                          ? 'bg-gray-900 text-white'
-                          : 'text-gray-600 hover:bg-gray-100'
-                      }`}
-                    >
-                      <span className="flex justify-between">
-                        <span>{cat.label}</span>
-                        <span className="text-xs opacity-70">{cat.count}</span>
-                      </span>
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Main content */}
-        <div className="lg:col-span-3 space-y-6">
-          {/* Add/Edit Form */}
-          {(isAddingNew || editingEntry) && (
+      {/* Add/Edit Form */}
+      {(isAddingNew || editingEntry) && (
             <Card>
               <CardHeader>
                 <CardTitle>{editingEntry ? 'Edit Entry' : 'Add New Entry'}</CardTitle>
@@ -341,7 +387,7 @@ export function KnowledgeBasePage() {
                   <Button variant="outline" onClick={resetForm}>
                     Cancel
                   </Button>
-                  <Button onClick={handleSave} disabled={saving}>
+                  <Button className="bg-gray-900 hover:bg-gray-800" onClick={handleSave} disabled={saving}>
                     {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     {editingEntry ? 'Update' : 'Add'} Entry
                   </Button>
@@ -350,111 +396,32 @@ export function KnowledgeBasePage() {
             </Card>
           )}
 
-          {/* Search and Actions */}
-          <div className="flex gap-4">
-            <div className="flex-1 flex gap-2">
-              <Input
-                placeholder="Search entries..."
-                value={search}
-                onChange={(e) => setSearch(e.target.value)}
-                onKeyDown={(e) => e.key === 'Enter' && handleSearch()}
-              />
-              <Button variant="outline" onClick={handleSearch}>
-                <Search className="w-4 h-4" />
-              </Button>
-            </div>
-            {!isAddingNew && !editingEntry && (
-              <Button onClick={startAdd}>
-                <Plus className="w-4 h-4 mr-2" />
-                Add Entry
-              </Button>
-            )}
-          </div>
-
-          {/* Entries Table */}
-          <Card>
-            <CardContent className="pt-6">
-              {loading ? (
-                <div className="py-12 text-center">
-                  <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
-                  <p className="text-sm text-gray-500">Loading entries...</p>
-                </div>
-              ) : entries.length === 0 ? (
-                <div className="py-12 text-center">
-                  <Book className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                  <p className="text-gray-500">No entries found</p>
-                  <p className="text-sm text-gray-400 mt-1">
-                    {filterCategory || search
-                      ? 'Try changing your filters'
-                      : 'Add your first entry or use the Site Scraper to import content'}
-                  </p>
-                </div>
-              ) : (
-                <Table>
-                  <TableHeader>
-                    <TableRow>
-                      <TableHead>Category</TableHead>
-                      <TableHead>Title</TableHead>
-                      <TableHead>Content</TableHead>
-                      <TableHead className="w-24">Actions</TableHead>
-                    </TableRow>
-                  </TableHeader>
-                  <TableBody>
-                    {entries.map((entry) => (
-                      <TableRow key={entry.id}>
-                        <TableCell>
-                          <span
-                            className={`inline-block px-2 py-1 rounded text-xs font-medium ${
-                              categoryColors[entry.category] || categoryColors.other
-                            }`}
-                          >
-                            {entry.category.replace(/_/g, ' ')}
-                          </span>
-                        </TableCell>
-                        <TableCell className="font-medium max-w-[200px]">
-                          <div className="truncate" title={entry.title}>
-                            {entry.title}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div
-                            className="max-h-20 overflow-y-auto text-sm text-gray-600 whitespace-pre-wrap"
-                            title={entry.content}
-                          >
-                            {entry.content.length > 200
-                              ? `${entry.content.substring(0, 200)}...`
-                              : entry.content}
-                          </div>
-                        </TableCell>
-                        <TableCell>
-                          <div className="flex gap-1">
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => startEdit(entry)}
-                              title="Edit"
-                            >
-                              <Pencil className="w-4 h-4" />
-                            </Button>
-                            <Button
-                              variant="ghost"
-                              size="icon"
-                              onClick={() => handleDelete(entry.id)}
-                              title="Delete"
-                            >
-                              <Trash2 className="w-4 h-4" />
-                            </Button>
-                          </div>
-                        </TableCell>
-                      </TableRow>
-                    ))}
-                  </TableBody>
-                </Table>
-              )}
-            </CardContent>
-          </Card>
-        </div>
-      </div>
+      {/* Entries Table */}
+      <DataTable
+        data={entries}
+        columns={columns}
+        keyExtractor={(entry) => entry.id}
+        filters={filters}
+        search={{
+          value: search,
+          onChange: setSearch,
+          onSearch: handleSearch,
+          onClear: () => setSearchQuery(''),
+          placeholder: 'Search entries...',
+        }}
+        loading={loading}
+        emptyState={
+          <EmptyState
+            icon={Book}
+            title="No entries found"
+            description={
+              filterCategory || searchQuery
+                ? 'Try changing your filters'
+                : 'Add your first entry or use the Site Scraper to import content'
+            }
+          />
+        }
+      />
     </PageContainer>
   );
 }
