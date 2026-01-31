@@ -12,9 +12,7 @@ import {
   Puzzle,
   Zap,
   SlidersHorizontal,
-  ChevronLeft,
-  ChevronRight,
-  ChevronDown,
+  ChevronUp,
   LogOut,
   User,
   Users,
@@ -23,6 +21,7 @@ import {
   Globe,
   Wrench,
   BookOpen,
+  PanelLeft,
 } from 'lucide-react';
 
 interface NavItem {
@@ -215,7 +214,7 @@ export function Layout() {
   };
 
   return (
-    <div className="h-screen bg-gray-100 flex overflow-hidden">
+    <div className="h-screen bg-gray-100 flex overflow-hidden relative">
       {/* Sidebar */}
       <aside
         className={`bg-white border-r flex flex-col h-screen flex-shrink-0 transition-all duration-200 ${
@@ -355,22 +354,61 @@ export function Layout() {
           })}
         </nav>
 
-        {/* Collapse toggle */}
-        <div className="border-t p-2 flex-shrink-0">
+        {/* User section */}
+        <div className="flex-shrink-0" ref={userMenuRef}>
+          <div className={`overflow-hidden transition-all duration-200 ${userMenuOpen ? 'max-h-40 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]' : 'max-h-0'}`}>
+            <button
+              onClick={() => {
+                setUserMenuOpen(false);
+                navigate('/settings');
+              }}
+              className={`flex items-center gap-2 w-full p-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors ${collapsed ? 'justify-center' : ''}`}
+            >
+              <Settings size={16} className="text-gray-400" />
+              {!collapsed && <span>Settings</span>}
+            </button>
+            <button
+              onClick={() => {
+                setUserMenuOpen(false);
+                handleLogout();
+              }}
+              className={`flex items-center gap-2 w-full p-3 text-sm text-gray-600 hover:bg-gray-50 transition-colors ${collapsed ? 'justify-center' : ''}`}
+            >
+              <LogOut size={16} className="text-gray-400" />
+              {!collapsed && <span>Logout</span>}
+            </button>
+          </div>
           <button
-            onClick={toggleCollapsed}
-            className="flex items-center justify-center w-full p-2 text-gray-500 hover:bg-gray-100 hover:text-gray-900 rounded-lg transition-colors"
-            title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+            onClick={() => setUserMenuOpen(!userMenuOpen)}
+            className={`flex items-center gap-2 w-full p-3 border-t text-gray-600 hover:bg-gray-50 transition-colors ${collapsed ? 'justify-center' : ''}`}
           >
-            {collapsed ? <ChevronRight size={18} /> : <ChevronLeft size={18} />}
+            <div className="w-8 h-8 rounded-full bg-gray-200 flex items-center justify-center flex-shrink-0">
+              <User size={14} className="text-gray-500" />
+            </div>
+            {!collapsed && (
+              <>
+                <span className="flex-1 text-left text-sm truncate">{user?.name}</span>
+                <ChevronUp size={14} className={`text-gray-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
+              </>
+            )}
           </button>
         </div>
       </aside>
 
+      {/* Sidebar toggle button - positioned on border at header level */}
+      <button
+        onClick={toggleCollapsed}
+        className="absolute w-6 h-6 flex items-center justify-center bg-white border rounded-full shadow-sm text-gray-400 hover:text-gray-900 z-10 transition-all duration-200"
+        style={{ left: collapsed ? 'calc(4rem - 12px)' : 'calc(14rem - 12px)', top: 'calc(1.75rem - 12px)' }}
+        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+      >
+        <PanelLeft size={14} className={`transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} />
+      </button>
+
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen">
         {/* Top header - fixed */}
-        <header className="bg-white border-b h-14 flex-shrink-0 flex items-center justify-between px-6">
+        <header className="bg-white border-b h-14 flex-shrink-0 flex items-center px-6">
           {(() => {
             const activeItem = navSections
               .flatMap((s) => s.items)
@@ -384,46 +422,6 @@ export function Layout() {
               </h1>
             );
           })()}
-
-          {/* User menu dropdown */}
-          <div className="relative" ref={userMenuRef}>
-            <button
-              onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className="flex items-center gap-1.5 px-2 py-1 text-xs text-gray-600 hover:bg-gray-100 rounded transition-colors"
-            >
-              <div className="w-6 h-6 rounded-full bg-gray-200 flex items-center justify-center">
-                <User size={12} className="text-gray-500" />
-              </div>
-              <span>{user?.name}</span>
-              <ChevronDown size={14} className={`text-gray-400 transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
-            </button>
-
-            {userMenuOpen && (
-              <div className="absolute right-0 mt-1 w-36 bg-white border border-gray-200 rounded shadow-lg py-1 z-50">
-                <button
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    // TODO: Navigate to settings
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
-                >
-                  <Settings size={14} className="text-gray-400" />
-                  <span>Settings</span>
-                </button>
-                <div className="border-t border-gray-100 my-0.5" />
-                <button
-                  onClick={() => {
-                    setUserMenuOpen(false);
-                    handleLogout();
-                  }}
-                  className="flex items-center gap-2 w-full px-3 py-1.5 text-xs text-gray-600 hover:bg-gray-100 transition-colors"
-                >
-                  <LogOut size={14} className="text-gray-400" />
-                  <span>Logout</span>
-                </button>
-              </div>
-            )}
-          </div>
         </header>
 
         {/* Page content */}
