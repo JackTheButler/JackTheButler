@@ -74,6 +74,7 @@ Jack is built specifically for hotels, understanding the unique workflows, termi
 
 ## Next Steps
 
+- [Business Value](business-value.md) - ROI and cost/revenue impact
 - [Goals and Non-Goals](goals-and-non-goals.md) - Detailed scope boundaries
 - [Glossary](glossary.md) - Common terminology
 - [Use Cases](../02-use-cases/) - What Jack actually does
