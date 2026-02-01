@@ -11,7 +11,6 @@ import { closeDatabase, isDatabaseHealthy } from '@/db/index.js';
 import { app, setupWebSocket } from '@/gateway/index.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/services/scheduler.js';
-import { getEmailAdapter } from '@/channels/email/index.js';
 import { extensionConfigService } from '@/services/extension-config.js';
 import { resetResponder } from '@/pipeline/responder.js';
 
@@ -110,12 +109,8 @@ async function main(): Promise<void> {
     scheduler.start();
     logger.info('Background scheduler started');
 
-    // Start email receiver if configured
-    const emailAdapter = getEmailAdapter();
-    if (emailAdapter) {
-      emailAdapter.start();
-      logger.info('Email receiver started');
-    }
+    // Note: Email is now handled via extensions (Mailgun, SendGrid, Gmail SMTP)
+    // Inbound email uses webhooks instead of IMAP polling
 
     logger.info('Ready! (Phase 8 - Polish)');
   });
@@ -127,13 +122,6 @@ async function main(): Promise<void> {
     // Stop scheduler first
     scheduler.stop();
     logger.info('Scheduler stopped');
-
-    // Stop email receiver if running
-    const email = getEmailAdapter();
-    if (email) {
-      email.stop();
-      logger.info('Email receiver stopped');
-    }
 
     server.close(() => {
       logger.info('HTTP server closed');

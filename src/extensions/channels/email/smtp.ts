@@ -198,11 +198,11 @@ export function createSMTPProvider(config: SMTPConfig): SMTPProvider {
  */
 export const manifest: ChannelExtensionManifest = {
   id: 'email-smtp',
-  name: 'SMTP Email',
+  name: 'SMTP',
   category: 'channel',
   version: '1.0.0',
-  description: 'Direct SMTP email for guest communication',
-  icon: '📧',
+  description: 'Connect to your own SMTP server (Postfix, Exchange, etc.)',
+  icon: '⚙️',
   docsUrl: 'https://nodemailer.com/smtp/',
   configSchema: [
     {
