@@ -128,7 +128,7 @@ export class ConversationService {
     const limit = options.limit ?? 50;
     const offset = options.offset ?? 0;
 
-    // Build query with dynamic filters
+    // Build query with dynamic filters, joining guests for name
     let query = db
       .select({
         id: conversations.id,
@@ -136,12 +136,15 @@ export class ConversationService {
         channelId: conversations.channelId,
         state: conversations.state,
         guestId: conversations.guestId,
+        guestFirstName: guests.firstName,
+        guestLastName: guests.lastName,
         assignedTo: conversations.assignedTo,
         currentIntent: conversations.currentIntent,
         lastMessageAt: conversations.lastMessageAt,
         createdAt: conversations.createdAt,
       })
       .from(conversations)
+      .leftJoin(guests, eq(conversations.guestId, guests.id))
       .orderBy(desc(conversations.lastMessageAt))
       .limit(limit)
       .offset(offset);
@@ -165,12 +168,30 @@ export class ConversationService {
     const conversationIds = results.map((c) => c.id);
     const counts = await this.getMessageCounts(conversationIds);
 
-    return results.map((c) => ({
-      ...c,
-      channelType: c.channelType as ChannelType,
-      state: c.state as ConversationState,
-      messageCount: counts.get(c.id) || 0,
-    }));
+    return results.map((c) => {
+      const guestName = c.guestFirstName && c.guestLastName
+        ? `${c.guestFirstName} ${c.guestLastName}`
+        : c.guestFirstName || null;
+
+      const summary: ConversationSummary = {
+        id: c.id,
+        channelType: c.channelType as ChannelType,
+        channelId: c.channelId,
+        state: c.state as ConversationState,
+        guestId: c.guestId,
+        assignedTo: c.assignedTo,
+        currentIntent: c.currentIntent,
+        lastMessageAt: c.lastMessageAt,
+        createdAt: c.createdAt,
+        messageCount: counts.get(c.id) || 0,
+      };
+
+      if (guestName) {
+        summary.guestName = guestName;
+      }
+
+      return summary;
+    });
   }
 
   /**

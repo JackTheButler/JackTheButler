@@ -5,10 +5,11 @@
  * Handles both pull (polling) and push (webhook) scenarios.
  */
 
-import { eq, and, sql } from 'drizzle-orm';
+import { eq, and, or, sql } from 'drizzle-orm';
 import { db, guests, reservations } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
+import { normalizePhone } from '@/services/guest.js';
 import { getExtensionRegistry } from '@/extensions/index.js';
 import type { NormalizedGuest, NormalizedReservation, SyncResult } from '@/core/interfaces/pms.js';
 import type { Guest, Reservation } from '@/db/schema.js';
@@ -87,7 +88,7 @@ export class PMSSyncService {
           firstName: pmsGuest.firstName,
           lastName: pmsGuest.lastName,
           email: pmsGuest.email || existingGuest.email,
-          phone: pmsGuest.phone || existingGuest.phone,
+          phone: pmsGuest.phone ? normalizePhone(pmsGuest.phone) : existingGuest.phone,
           language: pmsGuest.language || existingGuest.language,
           loyaltyTier: pmsGuest.loyaltyTier || existingGuest.loyaltyTier,
           vipStatus: pmsGuest.vipStatus || existingGuest.vipStatus,
@@ -114,7 +115,7 @@ export class PMSSyncService {
       firstName: pmsGuest.firstName,
       lastName: pmsGuest.lastName,
       email: pmsGuest.email ?? null,
-      phone: pmsGuest.phone ?? null,
+      phone: pmsGuest.phone ? normalizePhone(pmsGuest.phone) : null,
       language: pmsGuest.language ?? 'en',
       loyaltyTier: pmsGuest.loyaltyTier ?? null,
       vipStatus: pmsGuest.vipStatus ?? null,
@@ -252,15 +253,27 @@ export class PMSSyncService {
 
   /**
    * Find guest by phone
+   * Uses flexible matching to handle different phone formats
    */
   private async findGuestByPhone(phone: string): Promise<Guest | null> {
-    // Normalize phone for comparison
-    const normalized = phone.replace(/\D/g, '');
+    const normalized = normalizePhone(phone);
+    if (!normalized) return null;
+
+    // Extract digits only (without +)
+    const digitsOnly = normalized.replace(/^\+/, '');
+    // Last 9 digits for flexible matching (handles country code variations)
+    const last9Digits = digitsOnly.slice(-9);
 
     const [guest] = await db
       .select()
       .from(guests)
-      .where(sql`REPLACE(REPLACE(REPLACE(${guests.phone}, '+', ''), '-', ''), ' ', '') = ${normalized}`)
+      .where(
+        or(
+          eq(guests.phone, normalized),           // +971543219865
+          eq(guests.phone, digitsOnly),           // 971543219865
+          sql`${guests.phone} LIKE ${'%' + last9Digits}` // %543219865
+        )
+      )
       .limit(1);
 
     return guest || null;

@@ -13,6 +13,7 @@ import { db, guests, reservations, conversations } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { validateBody } from '@/gateway/middleware/index.js';
+import { normalizePhone } from '@/services/guest.js';
 
 const log = createLogger('routes:guests');
 
@@ -307,7 +308,7 @@ guestRoutes.post('/', validateBody(createGuestSchema), async (c) => {
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email || null,
-      phone: data.phone || null,
+      phone: data.phone ? normalizePhone(data.phone) : null,
       language: data.language,
       loyaltyTier: data.loyaltyTier || null,
       vipStatus: data.vipStatus || null,
@@ -359,7 +360,7 @@ guestRoutes.put('/:id', validateBody(updateGuestSchema), async (c) => {
       ...(data.firstName && { firstName: data.firstName }),
       ...(data.lastName && { lastName: data.lastName }),
       ...(data.email !== undefined && { email: data.email }),
-      ...(data.phone !== undefined && { phone: data.phone }),
+      ...(data.phone !== undefined && { phone: data.phone ? normalizePhone(data.phone) : null }),
       ...(data.language && { language: data.language }),
       ...(data.loyaltyTier !== undefined && { loyaltyTier: data.loyaltyTier }),
       ...(data.vipStatus !== undefined && { vipStatus: data.vipStatus }),

@@ -253,13 +253,16 @@ async function handleIncomingMessage(
       markAsRead: (messageId: string) => Promise<void>;
     };
 
+    // WhatsApp sends phone numbers without + prefix, add it for E.164 format
+    const phoneNumber = message.from.startsWith('+') ? message.from : `+${message.from}`;
+
     // Mark as read
     await provider.markAsRead(message.id);
 
     // Only process text messages
     if (message.type !== 'text' || !message.text?.body) {
       await provider.sendText(
-        message.from,
+        phoneNumber,
         "I can only process text messages at the moment. Please send your request as text."
       );
       return;
@@ -272,7 +275,7 @@ async function handleIncomingMessage(
     const inbound = {
       id: generateId('message'),
       channel: 'whatsapp' as const,
-      channelId: message.from,
+      channelId: phoneNumber,
       content: message.text.body,
       contentType: 'text' as const,
       timestamp: new Date(),
@@ -280,11 +283,11 @@ async function handleIncomingMessage(
 
     try {
       const response = await messageProcessor.process(inbound);
-      await provider.sendText(message.from, response.content);
+      await provider.sendText(phoneNumber, response.content);
     } catch (error) {
       log.error({ err: error, messageId: message.id }, 'Failed to process message');
       await provider.sendText(
-        message.from,
+        phoneNumber,
         "I'm sorry, I encountered an error processing your request. Please try again."
       );
     }

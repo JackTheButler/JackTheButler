@@ -1,4 +1,5 @@
 import { cn } from '@/lib/utils';
+import { ChannelIcon } from '@/components/shared/ChannelIcon';
 
 interface Conversation {
   id: string;
@@ -6,6 +7,7 @@ interface Conversation {
   channelId: string;
   state: string;
   guestId: string | null;
+  guestName?: string;
   currentIntent: string | null;
   lastMessageAt: string | null;
   messageCount: number;
@@ -25,13 +27,6 @@ const stateColors: Record<string, string> = {
   closed: 'bg-gray-100 text-gray-500',
 };
 
-const channelIcons: Record<string, string> = {
-  whatsapp: 'WA',
-  sms: 'SMS',
-  webchat: 'Web',
-  email: 'Email',
-};
-
 export function ConversationList({ conversations, selectedId, onSelect }: Props) {
   return (
     <div className="flex-1 overflow-y-auto">
@@ -44,32 +39,27 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
             selectedId === conv.id && 'bg-blue-50'
           )}
         >
+          {/* Top row: Name | Time */}
           <div className="flex items-center justify-between mb-1">
-            <div className="flex items-center gap-2">
-              <span className="text-xs font-medium text-gray-500">
-                {channelIcons[conv.channelType] || conv.channelType}
-              </span>
-              <span className={cn('text-xs px-1.5 py-0.5 rounded', stateColors[conv.state])}>
-                {conv.state}
-              </span>
+            <div className="text-sm font-medium text-gray-900 truncate">
+              {conv.guestName || formatChannelId(conv.channelType, conv.channelId)}
             </div>
-            <span className="text-xs text-gray-400">
-              {conv.messageCount} msgs
+            {conv.lastMessageAt && (
+              <span className="text-xs text-gray-400 ml-2 shrink-0">
+                {formatTime(conv.lastMessageAt)}
+              </span>
+            )}
+          </div>
+          {/* Bottom row: Icon + msgs | State */}
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-1.5 text-gray-500">
+              <ChannelIcon channel={conv.channelType} size="sm" />
+              <span className="text-xs">{conv.messageCount} msgs</span>
+            </div>
+            <span className={cn('text-xs px-1.5 py-0.5 rounded', stateColors[conv.state])}>
+              {conv.state}
             </span>
           </div>
-          <div className="text-sm font-medium text-gray-900 truncate">
-            {formatChannelId(conv.channelType, conv.channelId)}
-          </div>
-          {conv.currentIntent && (
-            <div className="text-xs text-gray-500 truncate mt-0.5">
-              {conv.currentIntent}
-            </div>
-          )}
-          {conv.lastMessageAt && (
-            <div className="text-xs text-gray-400 mt-1">
-              {formatTime(conv.lastMessageAt)}
-            </div>
-          )}
         </button>
       ))}
     </div>
@@ -78,9 +68,10 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
 
 function formatChannelId(channel: string, id: string): string {
   if (channel === 'whatsapp' || channel === 'sms') {
-    // Format phone number
+    // Format phone number (mask last 4 digits)
     if (id.length > 6) {
-      return `+${id.slice(0, -4)}****`;
+      const prefix = id.startsWith('+') ? '' : '+';
+      return `${prefix}${id.slice(0, -4)}****`;
     }
   }
   return id;

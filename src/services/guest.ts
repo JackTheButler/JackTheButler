@@ -4,7 +4,7 @@
  * Manages guest profiles and identification.
  */
 
-import { eq } from 'drizzle-orm';
+import { eq, or, sql } from 'drizzle-orm';
 import { parsePhoneNumberFromString, type CountryCode } from 'libphonenumber-js';
 import { db } from '@/db/index.js';
 import { guests, type Guest, type NewGuest } from '@/db/schema.js';
@@ -32,6 +32,11 @@ export class GuestService {
 
   /**
    * Find a guest by phone number
+   *
+   * Flexible matching to handle different phone formats:
+   * - E.164 with + (e.g., +971543219865)
+   * - Without + (e.g., 971543219865)
+   * - Last 9 digits for legacy data
    */
   async findByPhone(phone: string): Promise<Guest | null> {
     const normalized = normalizePhone(phone);
@@ -39,7 +44,24 @@ export class GuestService {
       return null;
     }
 
-    const result = await db.select().from(guests).where(eq(guests.phone, normalized)).limit(1);
+    // Extract digits only (without +)
+    const digitsOnly = normalized.replace(/^\+/, '');
+    // Last 9 digits for flexible matching (handles country code variations)
+    const last9Digits = digitsOnly.slice(-9);
+
+    // Try multiple formats: with +, without +, or ending with last 9 digits
+    const result = await db
+      .select()
+      .from(guests)
+      .where(
+        or(
+          eq(guests.phone, normalized),           // +971543219865
+          eq(guests.phone, digitsOnly),           // 971543219865
+          sql`${guests.phone} LIKE ${'%' + last9Digits}` // %543219865
+        )
+      )
+      .limit(1);
+
     return result[0] ?? null;
   }
 
