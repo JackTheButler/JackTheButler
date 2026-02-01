@@ -19,6 +19,7 @@ import { NotFoundError } from '@/errors/index.js';
 import { events, EventTypes } from '@/events/index.js';
 import { taskService, type TaskType } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
+import { getExtensionRegistry } from '@/extensions/index.js';
 
 const log = createLogger('core:approval-queue');
 
@@ -393,6 +394,54 @@ export class ApprovalQueue {
         const conversationId = actionData.conversationId as string;
         const content = actionData.content as string;
 
+        // Get conversation to find channel info
+        const [conversation] = await db
+          .select({
+            channelType: conversations.channelType,
+            channelId: conversations.channelId,
+          })
+          .from(conversations)
+          .where(eq(conversations.id, conversationId))
+          .limit(1);
+
+        if (!conversation) {
+          log.error({ conversationId, approvalId: item.id }, 'Conversation not found for approved response');
+          throw new Error(`Conversation not found: ${conversationId}`);
+        }
+
+        // Send to channel based on type
+        const registry = getExtensionRegistry();
+        let messageSent = false;
+
+        if (conversation.channelType === 'whatsapp') {
+          const ext = registry.get('whatsapp-meta');
+          if (ext?.status === 'active' && ext.instance) {
+            const provider = ext.instance as { sendText: (to: string, text: string) => Promise<unknown> };
+            await provider.sendText(conversation.channelId, content);
+            messageSent = true;
+            log.info({ approvalId: item.id, channelType: 'whatsapp', to: conversation.channelId }, 'Response sent to WhatsApp');
+          } else {
+            log.warn({ approvalId: item.id }, 'WhatsApp extension not active, message saved but not delivered');
+          }
+        } else if (conversation.channelType === 'sms') {
+          const ext = registry.get('twilio-sms');
+          if (ext?.status === 'active' && ext.instance) {
+            const provider = ext.instance as { send: (to: string, body: string) => Promise<unknown> };
+            await provider.send(conversation.channelId, content);
+            messageSent = true;
+            log.info({ approvalId: item.id, channelType: 'sms', to: conversation.channelId }, 'Response sent to SMS');
+          } else {
+            log.warn({ approvalId: item.id }, 'SMS extension not active, message saved but not delivered');
+          }
+        } else if (conversation.channelType === 'webchat') {
+          // Webchat messages are delivered via WebSocket/polling - just save to DB
+          messageSent = true;
+          log.info({ approvalId: item.id, channelType: 'webchat' }, 'Response saved for webchat (delivered via WebSocket)');
+        } else {
+          log.warn({ approvalId: item.id, channelType: conversation.channelType }, 'Unknown channel type, message saved but not delivered');
+        }
+
+        // Save to conversation history
         await conversationService.addMessage(conversationId, {
           direction: 'outbound',
           senderType: 'ai',
@@ -406,8 +455,9 @@ export class ApprovalQueue {
           {
             approvalId: item.id,
             conversationId,
+            messageSent,
           },
-          'Response sent from approval'
+          'Response processed from approval'
         );
 
         // Emit message sent event

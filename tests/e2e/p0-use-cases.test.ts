@@ -133,6 +133,7 @@ function createTestDb() {
     CREATE TABLE IF NOT EXISTS tasks (
       id TEXT PRIMARY KEY,
       conversation_id TEXT REFERENCES conversations(id),
+      message_id TEXT REFERENCES messages(id),
       type TEXT NOT NULL,
       department TEXT NOT NULL,
       room_number TEXT,

@@ -37,19 +37,21 @@ describe('Conversation Routes', () => {
 
   // Clean up before each test to ensure isolation
   // Must delete from child tables first due to foreign key constraints
+  // tasks references messages, so delete tasks first
   beforeEach(async () => {
-    await db.delete(messages);
     await db.delete(tasks);
     await db.delete(approvalQueue);
+    await db.delete(messages);
     await db.delete(conversations);
   });
 
   afterEach(async () => {
     // Clean up test conversations
     // Must delete from child tables first due to foreign key constraints
-    await db.delete(messages);
+    // tasks references messages, so delete tasks first
     await db.delete(tasks);
     await db.delete(approvalQueue);
+    await db.delete(messages);
     await db.delete(conversations);
   });
 
