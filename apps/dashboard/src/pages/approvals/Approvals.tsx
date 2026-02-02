@@ -34,6 +34,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { Tooltip } from '@/components/ui/tooltip';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
+import { FilterTabs } from '@/components/ui/filter-tabs';
 import { PageContainer, StatsBar, EmptyState, ChannelIcon } from '@/components';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
@@ -327,25 +328,6 @@ export function ApprovalsPage() {
   const items = data?.items || [];
   const stats = data?.stats || { pending: 0, approvedToday: 0, rejectedToday: 0 };
 
-  const filters = (
-    <div className="flex gap-1 flex-nowrap">
-      {statusFilters.map((s) => (
-        <button
-          key={s.value}
-          onClick={() => setFilterStatus(s.value)}
-          className={cn(
-            'px-3 py-1 text-sm rounded whitespace-nowrap',
-            filterStatus === s.value
-              ? 'bg-gray-900 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-          )}
-        >
-          {s.label}
-        </button>
-      ))}
-    </div>
-  );
-
   return (
     <PageContainer>
       <StatsBar
@@ -360,7 +342,11 @@ export function ApprovalsPage() {
         <div className="px-4 py-2 border-b flex items-center justify-between gap-4">
           <div className="overflow-x-auto flex-1 scrollbar-hide">
             <div className="min-w-fit">
-              {filters}
+              <FilterTabs
+                options={statusFilters}
+                value={filterStatus}
+                onChange={setFilterStatus}
+              />
             </div>
           </div>
         </div>
@@ -389,7 +375,7 @@ export function ApprovalsPage() {
                 <TableHead className="px-4 w-12"></TableHead>
                 <TableHead className="px-4 min-w-[140px]">Guest</TableHead>
                 <TableHead className="px-4">Preview</TableHead>
-                <TableHead className="px-4 min-w-[80px]">Time</TableHead>
+                <TableHead className="px-4 min-w-[100px]">Time</TableHead>
                 <TableHead className="px-4 min-w-[100px]">Status</TableHead>
               </TableRow>
             </TableHeader>

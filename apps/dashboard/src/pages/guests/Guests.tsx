@@ -6,15 +6,14 @@ import { usePageActions } from '@/contexts/PageActionsContext';
 import type { Column } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Plus,
-  AlertCircle,
   Users,
   Crown,
   Star,
   UserPlus,
   ChevronRight,
-  X,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 
@@ -85,8 +84,8 @@ export function GuestsPage() {
   useEffect(() => {
     setActions(
       <Link to="/guests/new">
-        <Button size="xs" className="bg-gray-900 hover:bg-gray-800">
-          <Plus className="w-3.5 h-3.5 mr-1.5" />
+        <Button size="sm">
+          <Plus className="w-4 h-4 mr-1.5" />
           Add Guest
         </Button>
       </Link>
@@ -214,13 +213,9 @@ export function GuestsPage() {
   return (
     <PageContainer>
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500" />
-          <span className="text-sm text-red-700">{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
-            <X className="w-4 h-4 text-red-500" />
-          </button>
-        </div>
+        <Alert variant="destructive" className="mb-6" onDismiss={() => setError(null)}>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {stats && (

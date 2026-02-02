@@ -5,7 +5,8 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
-import { ArrowLeft, Loader2, AlertCircle, X, Save } from 'lucide-react';
+import { Alert, AlertDescription } from '@/components/ui/alert';
+import { ArrowLeft, Loader2, Save } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const VIP_OPTIONS = ['none', 'silver', 'gold', 'platinum', 'diamond'];
@@ -64,13 +65,9 @@ export function GuestFormPage() {
   return (
     <PageContainer>
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500" />
-          <span className="text-sm text-red-700">{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
-            <X className="w-4 h-4 text-red-500" />
-          </button>
-        </div>
+        <Alert variant="destructive" className="mb-6" onDismiss={() => setError(null)}>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Back Button */}
@@ -224,7 +221,7 @@ export function GuestFormPage() {
             <Button variant="outline" onClick={() => navigate('/guests')}>
               Cancel
             </Button>
-            <Button className="bg-gray-900 hover:bg-gray-800" onClick={handleSave} disabled={saving}>
+            <Button  onClick={handleSave} disabled={saving}>
               {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
               <Save className="w-4 h-4 mr-2" />
               Create Guest

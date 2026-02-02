@@ -5,6 +5,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { DrawerRoot, DrawerContent } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
 
 interface Props {
   id: string;
@@ -277,13 +278,12 @@ export function ConversationView({ id }: Props) {
             className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={sendMutation.isPending}
           />
-          <button
+          <Button
             onClick={handleSend}
             disabled={!input.trim() || sendMutation.isPending}
-            className="px-4 py-2 bg-gray-900 text-white rounded-md hover:bg-gray-800 disabled:opacity-50"
           >
             Send
-          </button>
+          </Button>
         </div>
       </div>
 
@@ -477,13 +477,13 @@ function TaskCard({
       {/* Actions */}
       <div className="flex gap-2">
         {task.status === 'pending' && (
-          <button
+          <Button
+            size="xs"
             onClick={onClaim}
             disabled={isClaimPending}
-            className="text-xs px-3 py-1.5 rounded bg-gray-900 text-white hover:bg-gray-800 disabled:opacity-50"
           >
             {isClaimPending ? 'Claiming...' : 'Claim'}
-          </button>
+          </Button>
         )}
         {task.status === 'in_progress' && (
           <button

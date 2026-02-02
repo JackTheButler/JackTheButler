@@ -18,6 +18,7 @@ import {
   Power,
   PowerOff,
 } from 'lucide-react';
+import { InlineAlert } from '@/components/ui/inline-alert';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -239,7 +240,7 @@ function ConfigForm({
       ))}
 
       <div className="pt-4 space-y-4">
-        <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto bg-gray-900 hover:bg-gray-800">
+        <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
           {saveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
           {saveMutation.isPending ? 'Saving...' : 'Save Configuration'}
         </Button>
@@ -373,12 +374,9 @@ function ConnectionStatus({
       )}
 
       {provider.lastError && provider.status === 'error' && (
-        <div className="p-4 rounded-lg bg-red-50 border border-red-100">
-          <p className="text-sm text-red-700 flex items-start gap-2">
-            <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-            {provider.lastError}
-          </p>
-        </div>
+        <InlineAlert variant="error">
+          {provider.lastError}
+        </InlineAlert>
       )}
     </div>
   );
@@ -534,7 +532,7 @@ export function ExtensionEditPage() {
                   key={provider.id}
                   variant={effectiveProviderId === provider.id ? 'default' : 'outline'}
                   onClick={() => setSelectedProviderId(provider.id)}
-                  className={cn('gap-2', effectiveProviderId === provider.id && 'bg-gray-900 hover:bg-gray-800')}
+                  className="gap-2"
                 >
                   <ExtensionIcon id={provider.id} size="sm" />
                   {provider.name}

@@ -13,9 +13,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import {
   Plus,
-  X,
   Loader2,
-  AlertCircle,
   Book,
   MoreHorizontal,
   MessageSquare,
@@ -31,6 +29,7 @@ import {
 } from '@/components/ui/dropdown-menu';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { FilterTabs } from '@/components/ui/filter-tabs';
 
 interface KnowledgeEntry {
   id: string;
@@ -157,16 +156,16 @@ export function KnowledgeBasePage() {
       !isAddingNew && !editingEntry ? (
         <div className="flex gap-2">
           <Button
-            size="xs"
+            size="sm"
             variant="outline"
             onClick={() => providers?.embedding ? setShowReindexConfirm(true) : setShowEmbeddingWarning(true)}
             disabled={reindexing}
           >
-            <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', reindexing && 'animate-spin')} />
+            <RefreshCw className={cn('w-4 h-4 mr-1.5', reindexing && 'animate-spin')} />
             {reindexing ? 'Reindexing...' : 'Reindex'}
           </Button>
-          <Button size="xs" className="bg-gray-900 hover:bg-gray-800" onClick={startAdd}>
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
+          <Button size="sm" onClick={startAdd}>
+            <Plus className="w-4 h-4 mr-1.5" />
             Add Entry
           </Button>
         </div>
@@ -352,35 +351,10 @@ export function KnowledgeBasePage() {
     },
   ];
 
-  const filters = (
-    <div className="flex gap-1 flex-nowrap">
-      <button
-        onClick={() => setFilterCategory('')}
-        className={cn(
-          'px-3 py-1 text-sm rounded whitespace-nowrap',
-          filterCategory === ''
-            ? 'bg-gray-900 text-white'
-            : 'text-gray-600 hover:bg-gray-100'
-        )}
-      >
-        All
-      </button>
-      {categories.map((cat) => (
-        <button
-          key={cat.id}
-          onClick={() => setFilterCategory(cat.id)}
-          className={cn(
-            'px-3 py-1 text-sm rounded whitespace-nowrap',
-            filterCategory === cat.id
-              ? 'bg-gray-900 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-          )}
-        >
-          {cat.label}
-        </button>
-      ))}
-    </div>
-  );
+  const categoryOptions = [
+    { value: '', label: 'All' },
+    ...categories.map((cat) => ({ value: cat.id, label: cat.label })),
+  ];
 
   return (
     <PageContainer>
@@ -399,13 +373,9 @@ export function KnowledgeBasePage() {
 
 
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500" />
-          <span className="text-sm text-red-700">{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
-            <X className="w-4 h-4 text-red-500" />
-          </button>
-        </div>
+        <Alert variant="destructive" className="mb-6" onDismiss={() => setError(null)}>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {reindexResult && (
@@ -431,8 +401,7 @@ export function KnowledgeBasePage() {
             <Button
               onClick={handleTest}
               disabled={testLoading || !testQuery.trim()}
-              className="bg-gray-900 hover:bg-gray-800"
-            >
+                          >
               {testLoading ? (
                 <Loader2 className="w-4 h-4 animate-spin" />
               ) : (
@@ -445,9 +414,9 @@ export function KnowledgeBasePage() {
           </div>
 
           {testError && (
-            <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-lg text-sm text-red-700">
-              {testError}
-            </div>
+            <Alert variant="destructive" className="mt-3">
+              <AlertDescription>{testError}</AlertDescription>
+            </Alert>
           )}
 
           {testResult && (
@@ -569,7 +538,7 @@ export function KnowledgeBasePage() {
                   <Button variant="outline" onClick={resetForm}>
                     Cancel
                   </Button>
-                  <Button className="bg-gray-900 hover:bg-gray-800" onClick={handleSave} disabled={saving}>
+                  <Button onClick={handleSave} disabled={saving}>
                     {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                     {editingEntry ? 'Update' : 'Add'} Entry
                   </Button>
@@ -583,7 +552,13 @@ export function KnowledgeBasePage() {
         data={entries}
         columns={columns}
         keyExtractor={(entry) => entry.id}
-        filters={filters}
+        filters={
+          <FilterTabs
+            options={categoryOptions}
+            value={filterCategory}
+            onChange={setFilterCategory}
+          />
+        }
         search={{
           value: search,
           onChange: setSearch,

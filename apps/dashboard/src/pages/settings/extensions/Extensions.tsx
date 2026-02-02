@@ -10,6 +10,7 @@ import {
   Zap,
   Settings2,
 } from 'lucide-react';
+import { InlineAlert } from '@/components/ui/inline-alert';
 import { api } from '@/lib/api';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -120,12 +121,9 @@ function ExtensionCard({ integration }: { integration: Integration }) {
           </div>
 
           {integration.status === 'error' && errorProvider?.lastError && (
-            <div className="mt-3 p-2.5 rounded-lg bg-red-50 border border-red-100">
-              <p className="text-sm text-red-700 flex items-start gap-2">
-                <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-                {errorProvider.lastError}
-              </p>
-            </div>
+            <InlineAlert variant="error" className="mt-3">
+              {errorProvider.lastError}
+            </InlineAlert>
           )}
         </CardContent>
       </Card>

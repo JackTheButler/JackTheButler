@@ -247,7 +247,6 @@ export function AutonomyPage() {
         </Button>
         <Button
           size="sm"
-          className="bg-gray-900 hover:bg-gray-800"
           onClick={() => settings && saveMutation.mutate(settings)}
           disabled={!hasChanges || saveMutation.isPending}
         >

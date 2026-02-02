@@ -7,6 +7,8 @@ import { PageContainer, EmptyState } from '@/components';
 import { DataTable, Column } from '@/components/DataTable';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { FilterTabs } from '@/components/ui/filter-tabs';
 
 type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
 type TaskSource = 'manual' | 'auto' | 'automation';
@@ -153,22 +155,22 @@ export function TasksPage() {
       render: (task) => (
         <div onClick={(e) => e.stopPropagation()}>
           {task.status === 'pending' && (
-            <button
+            <Button
+              size="xs"
               onClick={() => claimMutation.mutate(task.id)}
               disabled={claimMutation.isPending}
-              className="text-xs px-2 py-1 rounded bg-gray-900 text-white hover:bg-gray-800"
             >
               {claimMutation.isPending ? 'Claiming...' : 'Claim'}
-            </button>
+            </Button>
           )}
           {task.status === 'in_progress' && (
-            <button
+            <Button
+              size="xs"
               onClick={() => completeMutation.mutate(task.id)}
               disabled={completeMutation.isPending}
-              className="text-xs px-2 py-1 rounded bg-gray-900 text-white hover:bg-gray-800"
             >
               {completeMutation.isPending ? 'Completing...' : 'Complete'}
-            </button>
+            </Button>
           )}
           {task.status === 'completed' && (
             <button
@@ -193,32 +195,19 @@ export function TasksPage() {
     },
   ];
 
-  const filters = (
-    <div className="flex gap-1 flex-nowrap">
-      {statusFilters.map((s) => (
-        <button
-          key={s.value}
-          onClick={() => setStatusFilter(s.value)}
-          className={cn(
-            'px-3 py-1 text-sm rounded whitespace-nowrap',
-            statusFilter === s.value
-              ? 'bg-gray-900 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-          )}
-        >
-          {s.label}
-        </button>
-      ))}
-    </div>
-  );
-
   return (
     <PageContainer>
       <DataTable
         data={tasks}
         columns={columns}
         keyExtractor={(task) => task.id}
-        filters={filters}
+        filters={
+          <FilterTabs
+            options={statusFilters}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          />
+        }
         loading={isLoading}
         rowClassName={(task) => task.status === 'pending' ? 'bg-yellow-50' : undefined}
         emptyState={

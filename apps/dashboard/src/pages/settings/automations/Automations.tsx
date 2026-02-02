@@ -16,6 +16,7 @@ import {
   Pause,
   ChevronRight,
 } from 'lucide-react';
+import { InlineAlert } from '@/components/ui/inline-alert';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
@@ -155,12 +156,9 @@ function RuleCard({ rule, onToggle }: { rule: AutomationRule; onToggle: (enabled
         </div>
 
         {rule.lastError && (
-          <div className="mt-3 p-2.5 rounded-lg bg-red-50 border border-red-100">
-            <p className="text-sm text-red-700 flex items-start gap-2">
-              <AlertCircle className="w-4 h-4 mt-0.5 shrink-0" />
-              {rule.lastError}
-            </p>
-          </div>
+          <InlineAlert variant="error" className="mt-3">
+            {rule.lastError}
+          </InlineAlert>
         )}
       </CardContent>
     </Card>
@@ -208,7 +206,7 @@ export function AutomationsPage() {
     <PageContainer>
       <PageHeader>
         <Link to="/settings/automations/new">
-          <Button size="sm" className="bg-gray-900 hover:bg-gray-800">
+          <Button size="sm" >
             <Plus className="w-3.5 h-3.5 mr-1.5" />
             New Rule
           </Button>
@@ -282,7 +280,7 @@ export function AutomationsPage() {
             description="Create your first rule to automate guest communication"
           >
             <Link to="/settings/automations/new">
-              <Button className="bg-gray-900 hover:bg-gray-800">
+              <Button >
                 <Plus className="w-4 h-4 mr-2" />
                 Create Rule
               </Button>

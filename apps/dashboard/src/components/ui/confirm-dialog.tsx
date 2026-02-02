@@ -67,7 +67,6 @@ export function ConfirmDialog({
               variant={variant === 'destructive' ? 'destructive' : 'default'}
               onClick={handleConfirm}
               disabled={loading}
-              className={variant === 'default' ? 'bg-gray-900 hover:bg-gray-800' : ''}
             >
               {loading ? 'Processing...' : confirmLabel}
             </Button>

@@ -15,7 +15,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Trash2, Sparkles, Download, Loader2, AlertCircle, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Download, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
 
 interface ParseResult {
@@ -236,12 +236,11 @@ export function SiteScraperPage() {
         </Alert>
       )}
 
-      {/* General error - simple alert style */}
+      {/* General error */}
       {error && errorType === 'general' && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500" />
-          <span className="text-sm text-red-700">{error}</span>
-        </div>
+        <Alert variant="destructive" className="mb-6">
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Step 1: Enter URLs */}
@@ -277,7 +276,7 @@ export function SiteScraperPage() {
             </Button>
 
             <div className="flex justify-end pt-4 border-t">
-              <Button className="bg-gray-900 hover:bg-gray-800" onClick={fetchAndProcess} disabled={validUrls.length === 0}>
+              <Button  onClick={fetchAndProcess} disabled={validUrls.length === 0}>
                 <Sparkles className="w-4 h-4 mr-2" />
                 Fetch & Process
               </Button>
@@ -399,7 +398,7 @@ export function SiteScraperPage() {
             <Button variant="outline" onClick={reset}>
               Start Over
             </Button>
-            <Button className="bg-gray-900 hover:bg-gray-800" onClick={importEntries} disabled={selectedCount === 0}>
+            <Button  onClick={importEntries} disabled={selectedCount === 0}>
               <Download className="w-4 h-4 mr-2" />
               Import {selectedCount} Entries
             </Button>
@@ -434,7 +433,7 @@ export function SiteScraperPage() {
               <Button variant="outline" onClick={reset}>
                 Import More
               </Button>
-              <Button className="bg-gray-900 hover:bg-gray-800" onClick={() => window.location.href = '/tools/knowledge-base'}>
+              <Button  onClick={() => window.location.href = '/tools/knowledge-base'}>
                 View Knowledge Base
               </Button>
             </div>

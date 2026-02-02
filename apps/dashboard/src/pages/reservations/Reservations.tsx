@@ -13,6 +13,7 @@ import {
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { Badge } from '@/components/ui/badge';
+import { FilterTabs } from '@/components/ui/filter-tabs';
 import { PageContainer, EmptyState, DataTable, StatsBar } from '@/components';
 import type { Column } from '@/components/DataTable';
 
@@ -193,25 +194,6 @@ export function ReservationsPage() {
     },
   ];
 
-  const filters = (
-    <div className="flex gap-1 flex-nowrap">
-      {statusFilters.map((s) => (
-        <button
-          key={s.value}
-          onClick={() => setStatusFilter(s.value)}
-          className={cn(
-            'px-3 py-1 text-sm rounded whitespace-nowrap',
-            statusFilter === s.value
-              ? 'bg-gray-900 text-white'
-              : 'text-gray-600 hover:bg-gray-100'
-          )}
-        >
-          {s.label}
-        </button>
-      ))}
-    </div>
-  );
-
   return (
     <PageContainer>
       {today && (
@@ -229,7 +211,13 @@ export function ReservationsPage() {
         data={reservations}
         columns={columns}
         keyExtractor={(reservation) => reservation.id}
-        filters={filters}
+        filters={
+          <FilterTabs
+            options={statusFilters}
+            value={statusFilter}
+            onChange={setStatusFilter}
+          />
+        }
         search={{
           value: search,
           onChange: setSearch,

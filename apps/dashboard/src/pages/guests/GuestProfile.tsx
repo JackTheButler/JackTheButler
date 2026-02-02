@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import { Alert, AlertDescription } from '@/components/ui/alert';
 import {
   Table,
   TableBody,
@@ -18,7 +19,6 @@ import {
   ArrowLeft,
   Loader2,
   AlertCircle,
-  X,
   Pencil,
   Save,
   Crown,
@@ -244,13 +244,9 @@ export function GuestProfilePage() {
   return (
     <PageContainer>
       {error && (
-        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg flex items-center gap-3">
-          <AlertCircle className="w-5 h-5 text-red-500" />
-          <span className="text-sm text-red-700">{error}</span>
-          <button onClick={() => setError(null)} className="ml-auto">
-            <X className="w-4 h-4 text-red-500" />
-          </button>
-        </div>
+        <Alert variant="destructive" className="mb-6" onDismiss={() => setError(null)}>
+          <AlertDescription>{error}</AlertDescription>
+        </Alert>
       )}
 
       {/* Back Button */}
@@ -309,7 +305,7 @@ export function GuestProfilePage() {
               <Button variant="outline" onClick={() => setEditing(false)}>
                 Cancel
               </Button>
-              <Button className="bg-gray-900 hover:bg-gray-800" onClick={handleSave} disabled={saving}>
+              <Button  onClick={handleSave} disabled={saving}>
                 {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                 <Save className="w-4 h-4 mr-2" />
                 Save

@@ -62,29 +62,6 @@ function FilterBar({ filters, search }: { filters?: React.ReactNode; search?: Se
   );
 }
 
-function FilterBarEmpty({ filters, search }: { filters?: React.ReactNode; search?: SearchConfig }) {
-  if (!filters && !search) return null;
-
-  return (
-    <div className="px-4 py-2 flex items-center justify-between gap-4">
-      <div className="overflow-x-auto flex-1 scrollbar-hide">
-        <div className="min-w-fit">
-          {filters}
-        </div>
-      </div>
-      {search && (
-        <ExpandableSearch
-          value={search.value}
-          onChange={search.onChange}
-          onSearch={search.onSearch}
-          onClear={search.onClear}
-          placeholder={search.placeholder}
-        />
-      )}
-    </div>
-  );
-}
-
 export function DataTable<T>({
   data,
   columns,
@@ -113,7 +90,7 @@ export function DataTable<T>({
   if (data.length === 0 && emptyState) {
     return (
       <Card>
-        <FilterBarEmpty filters={filters} search={search} />
+        <FilterBar filters={filters} search={search} />
         {emptyState}
       </Card>
     );

@@ -75,7 +75,7 @@ function PendingStepRow({ issue, step }: { issue: SystemIssue; step: number }) {
         <p className="text-sm text-muted-foreground mt-0.5">{details.description}</p>
         {issue.action && (
           <Link to={issue.action.route} className="inline-block mt-3">
-            <Button size="sm" className="bg-gray-900 hover:bg-gray-800">
+            <Button size="sm">
               {issue.action.label}
               <ArrowRight className="h-3.5 w-3.5 ml-1.5" />
             </Button>

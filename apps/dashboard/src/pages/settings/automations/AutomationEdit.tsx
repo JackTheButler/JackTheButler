@@ -303,7 +303,7 @@ export function AutomationEditPage() {
               Test
             </Button>
           )}
-          <Button className="bg-gray-900 hover:bg-gray-800" onClick={handleSave} disabled={saveMutation.isPending || !name}>
+          <Button onClick={handleSave} disabled={saveMutation.isPending || !name}>
             {saveMutation.isPending ? (
               <Loader2 className="w-4 h-4 mr-2 animate-spin" />
             ) : (
