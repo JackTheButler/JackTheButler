@@ -18,6 +18,7 @@ import {
 } from 'lucide-react';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { api } from '@/lib/api';
+import { formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -136,7 +137,7 @@ function RuleCard({ rule, onToggle }: { rule: AutomationRule; onToggle: (enabled
                   {rule.lastRunAt && (
                     <span className="flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" />
-                      Last: {new Date(rule.lastRunAt).toLocaleDateString()}
+                      Last: {formatDate(rule.lastRunAt)}
                     </span>
                   )}
                 </div>

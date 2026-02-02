@@ -16,6 +16,7 @@ import {
   ChevronRight,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { formatDate, formatCurrency } from '@/lib/formatters';
 import { BadgeVariant } from '@/components/ui/badge';
 
 const vipVariants: Record<string, BadgeVariant> = {
@@ -56,24 +57,6 @@ interface GuestStats {
   repeatGuests: number;
   newThisMonth: number;
 }
-
-const formatDate = (dateStr: string | null) => {
-  if (!dateStr) return '';
-  return new Date(dateStr).toLocaleDateString('en-US', {
-    month: 'short',
-    day: 'numeric',
-    year: 'numeric',
-  });
-};
-
-const formatCurrency = (amount: number) => {
-  return new Intl.NumberFormat('en-US', {
-    style: 'currency',
-    currency: 'USD',
-    minimumFractionDigits: 0,
-    maximumFractionDigits: 0,
-  }).format(amount);
-};
 
 export function GuestsPage() {
   const navigate = useNavigate();

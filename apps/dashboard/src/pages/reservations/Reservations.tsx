@@ -11,6 +11,7 @@ import {
   Crown,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { formatDate } from '@/lib/formatters';
 import { Badge, BadgeVariant } from '@/components/ui/badge';
 
 const reservationStatusVariants: Record<string, BadgeVariant> = {
@@ -157,7 +158,7 @@ export function ReservationsPage() {
       header: 'Arrival',
       render: (reservation) => (
         <div className="text-sm">
-          {new Date(reservation.arrivalDate).toLocaleDateString()}
+          {formatDate(reservation.arrivalDate)}
           {reservation.estimatedArrival && (
             <span className="text-muted-foreground ml-1">
               {reservation.estimatedArrival}
@@ -171,7 +172,7 @@ export function ReservationsPage() {
       header: 'Departure',
       render: (reservation) => (
         <span className="text-sm">
-          {new Date(reservation.departureDate).toLocaleDateString()}
+          {formatDate(reservation.departureDate)}
         </span>
       ),
     },

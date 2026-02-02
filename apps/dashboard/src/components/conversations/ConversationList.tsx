@@ -1,5 +1,6 @@
 import { MessageSquare, ListTodo } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { formatTimeAgo } from '@/lib/formatters';
 import { ChannelIcon } from '@/components/shared/ChannelIcon';
 import { Badge } from '@/components/ui/badge';
 
@@ -49,7 +50,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
             </div>
             {conv.lastMessageAt && (
               <span className="text-xs text-gray-400 ml-2 shrink-0">
-                {formatTime(conv.lastMessageAt)}
+                {formatTimeAgo(conv.lastMessageAt)}
               </span>
             )}
           </div>
@@ -89,14 +90,3 @@ function formatChannelId(channel: string, id: string): string {
   return id;
 }
 
-function formatTime(dateStr: string): string {
-  const date = new Date(dateStr);
-  const now = new Date();
-  const diffMs = now.getTime() - date.getTime();
-  const diffMins = Math.floor(diffMs / 60000);
-
-  if (diffMins < 1) return 'Just now';
-  if (diffMins < 60) return `${diffMins}m ago`;
-  if (diffMins < 1440) return `${Math.floor(diffMins / 60)}h ago`;
-  return date.toLocaleDateString();
-}

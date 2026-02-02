@@ -32,6 +32,7 @@ import {
   User,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { formatDate, formatCurrency } from '@/lib/formatters';
 import { BadgeVariant } from '@/components/ui/badge';
 
 const reservationStatusVariants: Record<string, BadgeVariant> = {
@@ -199,23 +200,6 @@ export function GuestProfilePage() {
     } finally {
       setSaving(false);
     }
-  };
-
-  const formatDate = (dateStr: string | null) => {
-    if (!dateStr) return '-';
-    return new Date(dateStr).toLocaleDateString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-    });
-  };
-
-  const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-    }).format(amount);
   };
 
   if (loading) {

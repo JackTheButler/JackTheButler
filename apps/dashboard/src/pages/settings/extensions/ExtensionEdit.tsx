@@ -21,6 +21,7 @@ import {
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { formatDateTime, formatTime } from '@/lib/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -312,7 +313,7 @@ function ConnectionStatus({
           {provider.lastChecked && (
             <p className="text-sm text-muted-foreground flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              Last checked: {new Date(provider.lastChecked).toLocaleString()}
+              Last checked: {formatDateTime(provider.lastChecked)}
             </p>
           )}
         </div>
@@ -414,7 +415,7 @@ function ActivityLogs({ extensionId, providerId }: { extensionId: string; provid
         <div key={log.id} className="flex items-center justify-between py-3 first:pt-0 last:pb-0">
           <div className="flex items-center gap-3">
             <span className="text-sm text-muted-foreground w-20 shrink-0 tabular-nums">
-              {new Date(log.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+              {formatTime(log.createdAt)}
             </span>
             <span className="text-sm text-foreground capitalize">
               {log.eventType.replace(/_/g, ' ')}

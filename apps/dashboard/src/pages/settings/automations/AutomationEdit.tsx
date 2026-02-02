@@ -18,6 +18,7 @@ import {
   Loader2,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { formatDate, formatDateTime } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -287,7 +288,7 @@ export function AutomationEditPage() {
             </h1>
             {!isNew && ruleData && (
               <p className="text-sm text-muted-foreground">
-                Created {new Date(ruleData.createdAt).toLocaleDateString()}
+                Created {formatDate(ruleData.createdAt)}
               </p>
             )}
           </div>
@@ -638,7 +639,7 @@ export function AutomationEditPage() {
                     </div>
                   </div>
                   <div className="text-right text-sm text-muted-foreground">
-                    <p>{new Date(log.createdAt).toLocaleString()}</p>
+                    <p>{formatDateTime(log.createdAt)}</p>
                     {log.executionTimeMs && <p className="text-xs">{log.executionTimeMs}ms</p>}
                   </div>
                 </div>

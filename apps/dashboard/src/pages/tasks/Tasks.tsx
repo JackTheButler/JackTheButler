@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ListTodo, Eye } from 'lucide-react';
 import { api } from '@/lib/api';
+import { formatDateTime } from '@/lib/formatters';
 import { PageContainer, EmptyState } from '@/components';
 import { DataTable, Column } from '@/components/DataTable';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
@@ -245,7 +246,7 @@ export function TasksPage() {
               )}
 
               <div className="text-xs text-gray-400">
-                <div>Created {new Date(selectedTask.createdAt).toLocaleString()}</div>
+                <div>Created {formatDateTime(selectedTask.createdAt)}</div>
                 <div className="capitalize">{selectedTask.department.replace('_', ' ')}</div>
               </div>
             </div>

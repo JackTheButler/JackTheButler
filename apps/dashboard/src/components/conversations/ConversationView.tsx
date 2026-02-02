@@ -3,6 +3,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ChevronDown, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
+import { formatTime, formatDateTime } from '@/lib/formatters';
 import { DrawerRoot, DrawerContent } from '@/components/ui/drawer';
 import { Badge, BadgeVariant } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -353,13 +354,6 @@ function MessageBubble({ message }: { message: Message }) {
   );
 }
 
-function formatTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleTimeString([], {
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}
-
 function TaskIndicator({
   tasks,
   isInbound,
@@ -502,11 +496,3 @@ function TaskCard({
   );
 }
 
-function formatDateTime(dateStr: string): string {
-  return new Date(dateStr).toLocaleString([], {
-    month: 'short',
-    day: 'numeric',
-    hour: '2-digit',
-    minute: '2-digit',
-  });
-}

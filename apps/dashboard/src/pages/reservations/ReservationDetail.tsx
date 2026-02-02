@@ -13,6 +13,7 @@ import {
   Star,
 } from 'lucide-react';
 import { api } from '@/lib/api';
+import { formatDate, formatDateShort, formatDateTime } from '@/lib/formatters';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge, BadgeVariant } from '@/components/ui/badge';
 
@@ -174,11 +175,7 @@ export function ReservationDetailPage() {
                 label="Check-in"
                 value={
                   <span>
-                    {new Date(reservation.arrivalDate).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
+                    {formatDateShort(reservation.arrivalDate)}
                     {reservation.estimatedArrival && (
                       <span className="text-muted-foreground ml-2">
                         @ {reservation.estimatedArrival}
@@ -191,11 +188,7 @@ export function ReservationDetailPage() {
                 label="Check-out"
                 value={
                   <span>
-                    {new Date(reservation.departureDate).toLocaleDateString('en-US', {
-                      weekday: 'short',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
+                    {formatDateShort(reservation.departureDate)}
                     {reservation.estimatedDeparture && (
                       <span className="text-muted-foreground ml-2">
                         @ {reservation.estimatedDeparture}
@@ -287,7 +280,7 @@ export function ReservationDetailPage() {
                           {conv.channelType}
                         </Badge>
                         <span className="text-sm text-muted-foreground">
-                          {new Date(conv.lastMessageAt).toLocaleString()}
+                          {formatDateTime(conv.lastMessageAt)}
                         </span>
                       </div>
                       <Badge variant={conv.state === 'active' ? 'success' : 'secondary'}>
@@ -432,7 +425,7 @@ export function ReservationDetailPage() {
               <InfoRow label="Confirmation #" value={reservation.confirmationNumber} />
               <InfoRow
                 label="Booked On"
-                value={new Date(reservation.createdAt).toLocaleDateString()}
+                value={formatDate(reservation.createdAt)}
               />
               <InfoRow label="Source" value={reservation.source} />
             </CardContent>
