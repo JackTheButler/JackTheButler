@@ -24,6 +24,7 @@ import {
   BookOpen,
   PanelLeft,
 } from 'lucide-react';
+import { Tooltip } from '@/components/ui/tooltip';
 
 interface NavItem {
   path: string;
@@ -259,17 +260,18 @@ export function Layout() {
                         <span className="text-sm font-medium">{section.title}</span>
                       </button>
                     ) : (
-                      <button
-                        onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
-                        className={`flex items-center justify-center mx-2 px-3 py-2 rounded-lg transition-colors w-[calc(100%-16px)] ${
-                          hasActiveItem && !isExpanded
-                            ? 'bg-gray-100 text-gray-900'
-                            : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                        }`}
-                        title={section.title}
-                      >
-                        <span className={isExpanded ? 'text-gray-300' : 'text-gray-500'}>{section.icon}</span>
-                      </button>
+                      <Tooltip content={section.title} side="right">
+                        <button
+                          onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
+                          className={`flex items-center justify-center mx-auto p-2 w-fit rounded-lg transition-colors ${
+                            hasActiveItem && !isExpanded
+                              ? 'bg-gray-100 text-gray-900'
+                              : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                          }`}
+                        >
+                          <span className={isExpanded ? 'text-gray-300' : 'text-gray-500'}>{section.icon}</span>
+                        </button>
+                      </Tooltip>
                     )}
                   </>
                 ) : section.title ? (
@@ -287,8 +289,14 @@ export function Layout() {
                 ) : null}
 
                 {/* Section items - show if expanded or not collapsible */}
-                {(!section.collapsible || isExpanded) && (
-                  <ul className={`space-y-1 ${section.collapsible ? 'mt-1' : ''} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}>
+                <div
+                  className={
+                    section.collapsible
+                      ? `grid transition-[grid-template-rows] duration-200 ${isExpanded ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'}`
+                      : ''
+                  }
+                >
+                  <ul className={`space-y-1 ${section.collapsible ? 'overflow-hidden mt-1' : ''} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}>
                     {(() => {
                       const activeIndex = section.items.findIndex((item) => isActive(item.path));
                       return section.items.map((item, index) => {
@@ -310,46 +318,51 @@ export function Layout() {
                             {section.collapsible && !collapsed && active && (
                               <div className="absolute left-2.5 top-1/2 -translate-y-1/2 w-5 h-px bg-gray-900" />
                             )}
-                            <Link
-                              to={item.path}
-                              className={`flex items-center gap-3 mx-2 px-3 py-2 rounded-lg transition-colors ${
-                                active
-                                  ? 'bg-gray-900 text-white'
-                                  : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
-                              } ${collapsed ? 'justify-center' : ''} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}
-                              title={collapsed ? item.label : undefined}
-                            >
-                              {(!section.collapsible || collapsed) && (
-                                <span className={`relative ${active ? 'text-white' : 'text-gray-500'}`}>
-                                  {item.icon}
-                                  {collapsed && item.badge && item.badge > 0 && (
-                                    <span className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-medium rounded-full flex items-center justify-center ${
-                                      active ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
-                                    }`}>
-                                      {item.badge > 99 ? '99+' : item.badge}
-                                    </span>
-                                  )}
-                                </span>
-                              )}
-                              {!collapsed && (
-                                <>
-                                  <span className="text-sm font-medium">{item.label}</span>
-                                  {item.badge && item.badge > 0 && (
-                                    <span className={`ml-auto min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full flex items-center justify-center ${
-                                      active ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
-                                    }`}>
-                                      {item.badge > 99 ? '99+' : item.badge}
-                                    </span>
-                                  )}
-                                </>
-                              )}
-                            </Link>
+                            <Tooltip content={collapsed ? item.label : null} side="right">
+                              <Link
+                                to={item.path}
+                                className={`flex items-center gap-3 rounded-lg transition-colors ${
+                                  active
+                                    ? 'bg-gray-900 text-white'
+                                    : 'text-gray-600 hover:bg-gray-100 hover:text-gray-900'
+                                } ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !collapsed ? 'ml-5' : ''}`}
+                              >
+                                {(!section.collapsible || collapsed) && (
+                                  <span className={`relative ${active ? 'text-white' : 'text-gray-500'}`}>
+                                    {item.icon}
+                                    {collapsed && item.badge && item.badge > 0 && (
+                                      <span className={`absolute -top-1 -right-1 min-w-[16px] h-4 px-1 text-[10px] font-medium rounded-full flex items-center justify-center ${
+                                        active ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                                      }`}>
+                                        {item.badge > 99 ? '99+' : item.badge}
+                                      </span>
+                                    )}
+                                  </span>
+                                )}
+                                {!collapsed && (
+                                  <>
+                                    <span className="text-sm font-medium">{item.label}</span>
+                                    {item.badge && item.badge > 0 && (
+                                      <span className={`ml-auto min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full flex items-center justify-center ${
+                                        active ? 'bg-white text-gray-900' : 'bg-gray-900 text-white'
+                                      }`}>
+                                        {item.badge > 99 ? '99+' : item.badge}
+                                      </span>
+                                    )}
+                                  </>
+                                )}
+                              </Link>
+                            </Tooltip>
                           </li>
                         );
                       });
                     })()}
+                    {/* Divider after submenu in collapsed mode */}
+                    {section.collapsible && collapsed && (
+                      <li className="pt-1 mt-1 border-t border-gray-200 mx-4" />
+                    )}
                   </ul>
-                )}
+                </div>
               </div>
             );
           })}
