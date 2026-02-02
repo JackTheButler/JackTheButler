@@ -13,21 +13,14 @@ import {
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatTimeAgo } from '@/lib/formatters';
+import {
+  approvalStatusFilters,
+  approvalStatusVariants,
+  priorityVariants,
+  type ApprovalStatus,
+} from '@/lib/config';
 import { Card } from '@/components/ui/card';
-import { Badge, BadgeVariant } from '@/components/ui/badge';
-
-const priorityVariants: Record<string, BadgeVariant> = {
-  urgent: 'error',
-  high: 'warning',
-  standard: 'default',
-  low: 'default',
-};
-
-const approvalStatusVariants: Record<string, BadgeVariant> = {
-  pending: 'warning',
-  approved: 'success',
-  rejected: 'error',
-};
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import {
@@ -50,7 +43,6 @@ import { FilterTabs } from '@/components/ui/filter-tabs';
 import { PageContainer, StatsBar, EmptyState, ChannelIcon } from '@/components';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
-type ApprovalStatus = 'pending' | 'approved' | 'rejected';
 
 interface ConversationMessage {
   id: string;
@@ -103,12 +95,6 @@ const typeConfig: Record<ApprovalItemType, { label: string; icon: typeof Message
   offer: { label: 'Offer', icon: Gift },
 };
 
-const statusFilters: { value: ApprovalStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'approved', label: 'Approved' },
-  { value: 'rejected', label: 'Rejected' },
-];
 
 function parseActionData(actionData: string): ActionData {
   try {
@@ -331,7 +317,7 @@ export function ApprovalsPage() {
           <div className="overflow-x-auto flex-1 scrollbar-hide">
             <div className="min-w-fit">
               <FilterTabs
-                options={statusFilters}
+                options={approvalStatusFilters}
                 value={filterStatus}
                 onChange={setFilterStatus}
               />

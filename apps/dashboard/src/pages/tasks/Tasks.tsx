@@ -3,53 +3,18 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { ListTodo, Eye } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDateTime } from '@/lib/formatters';
+import {
+  taskStatusFilters,
+  taskStatusVariants,
+  priorityVariants,
+} from '@/lib/config';
+import type { Task, TaskStatus } from '@/types/api';
 import { PageContainer, EmptyState } from '@/components';
 import { DataTable, Column } from '@/components/DataTable';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
-import { Badge, BadgeVariant } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { FilterTabs } from '@/components/ui/filter-tabs';
-
-const priorityVariants: Record<string, BadgeVariant> = {
-  urgent: 'error',
-  high: 'warning',
-  standard: 'default',
-  low: 'default',
-};
-
-const taskStatusVariants: Record<string, BadgeVariant> = {
-  pending: 'warning',
-  assigned: 'default',
-  in_progress: 'warning',
-  completed: 'success',
-  cancelled: 'default',
-};
-
-type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
-type TaskSource = 'manual' | 'auto' | 'automation';
-
-interface Task {
-  id: string;
-  conversationId: string | null;
-  source: TaskSource;
-  type: string;
-  department: string;
-  roomNumber: string | null;
-  description: string;
-  priority: string;
-  status: TaskStatus;
-  assignedTo: string | null;
-  assignedName?: string;
-  dueAt: string | null;
-  createdAt: string;
-}
-
-const statusFilters: { value: TaskStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-];
 
 export function TasksPage() {
   const queryClient = useQueryClient();
@@ -202,7 +167,7 @@ export function TasksPage() {
         keyExtractor={(task) => task.id}
         filters={
           <FilterTabs
-            options={statusFilters}
+            options={taskStatusFilters}
             value={statusFilter}
             onChange={setStatusFilter}
           />

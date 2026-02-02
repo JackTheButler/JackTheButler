@@ -33,64 +33,11 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/formatters';
-import { BadgeVariant } from '@/components/ui/badge';
-
-const reservationStatusVariants: Record<string, BadgeVariant> = {
-  confirmed: 'default',
-  checked_in: 'success',
-  checked_out: 'default',
-  cancelled: 'error',
-  no_show: 'error',
-};
-
-const conversationStateVariants: Record<string, BadgeVariant> = {
-  new: 'info',
-  active: 'success',
-  escalated: 'error',
-  resolved: 'default',
-  closed: 'default',
-};
-
-interface Guest {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-  phone: string | null;
-  language: string;
-  loyaltyTier: string | null;
-  vipStatus: string | null;
-  preferences: string[];
-  tags: string[];
-  notes: string | null;
-  stayCount: number;
-  totalRevenue: number;
-  lastStayDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-  _counts: {
-    reservations: number;
-    conversations: number;
-  };
-}
-
-interface Reservation {
-  id: string;
-  confirmationNumber: string;
-  roomNumber: string | null;
-  roomType: string;
-  arrivalDate: string;
-  departureDate: string;
-  status: string;
-}
-
-interface Conversation {
-  id: string;
-  channelType: string;
-  state: string;
-  lastMessageAt: string | null;
-  createdAt: string;
-}
+import {
+  reservationStatusVariants,
+  conversationStateVariants,
+} from '@/lib/config';
+import type { GuestWithCounts, ReservationSummary, Conversation } from '@/types/api';
 
 const VIP_OPTIONS = ['none', 'silver', 'gold', 'platinum', 'diamond'];
 const LOYALTY_OPTIONS = ['none', 'member', 'silver', 'gold', 'platinum'];
@@ -98,8 +45,8 @@ const LOYALTY_OPTIONS = ['none', 'member', 'silver', 'gold', 'platinum'];
 export function GuestProfilePage() {
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
-  const [guest, setGuest] = useState<Guest | null>(null);
-  const [reservations, setReservations] = useState<Reservation[]>([]);
+  const [guest, setGuest] = useState<GuestWithCounts | null>(null);
+  const [reservations, setReservations] = useState<ReservationSummary[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -125,7 +72,7 @@ export function GuestProfilePage() {
     if (!id) return;
     try {
       setLoading(true);
-      const data = await api.get<Guest>(`/guests/${id}`);
+      const data = await api.get<GuestWithCounts>(`/guests/${id}`);
       setGuest(data);
       setFormData({
         firstName: data.firstName,
@@ -150,7 +97,7 @@ export function GuestProfilePage() {
   const fetchReservations = async () => {
     if (!id) return;
     try {
-      const data = await api.get<{ reservations: Reservation[] }>(`/guests/${id}/reservations`);
+      const data = await api.get<{ reservations: ReservationSummary[] }>(`/guests/${id}/reservations`);
       setReservations(data.reservations);
     } catch (err) {
       // Non-critical
@@ -378,7 +325,7 @@ export function GuestProfilePage() {
                 />
               ) : guest.preferences.length > 0 ? (
                 <ul className="space-y-2">
-                  {guest.preferences.map((pref, i) => (
+                  {guest.preferences.map((pref: string, i: number) => (
                     <li key={i} className="text-sm text-gray-600 flex items-start gap-2">
                       <span className="text-gray-400">•</span>
                       {pref}
@@ -503,7 +450,7 @@ export function GuestProfilePage() {
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
-                  {guest.tags.map((tag) => (
+                  {guest.tags.map((tag: string) => (
                     <Badge key={tag} variant="secondary">
                       {tag}
                     </Badge>

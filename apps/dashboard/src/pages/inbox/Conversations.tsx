@@ -1,29 +1,9 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
+import { conversationStateFilters } from '@/lib/config';
 import { ConversationList, ConversationView } from '@/components';
-
-type ConversationState = 'new' | 'active' | 'escalated' | 'resolved' | 'closed';
-
-interface Conversation {
-  id: string;
-  channelType: string;
-  channelId: string;
-  state: ConversationState;
-  guestId: string | null;
-  assignedTo: string | null;
-  currentIntent: string | null;
-  lastMessageAt: string | null;
-  createdAt: string;
-  messageCount: number;
-}
-
-const states: { value: ConversationState | 'all'; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'active', label: 'Active' },
-  { value: 'escalated', label: 'Escalated' },
-  { value: 'resolved', label: 'Resolved' },
-];
+import type { Conversation, ConversationState } from '@/types/api';
 
 export function ConversationsPage() {
   const [filter, setFilter] = useState<ConversationState | 'all'>('all');
@@ -46,7 +26,7 @@ export function ConversationsPage() {
       <div className="w-80 border-r bg-white flex flex-col">
         {/* Filters */}
         <div className="p-3 border-b flex gap-1">
-          {states.map((s) => (
+          {conversationStateFilters.map((s) => (
             <button
               key={s.value}
               onClick={() => setFilter(s.value)}

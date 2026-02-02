@@ -446,8 +446,8 @@ apps/dashboard/src/
 ### High Priority
 - [x] ~~Create `src/lib/colors.ts`~~ - Replaced with Badge component variants
 - [x] Create `src/lib/formatters.ts` - formatDate, formatDateShort, formatTime, formatDateTime, formatTimeAgo, formatCurrency
-- [ ] Create `src/types/api.ts` - shared Guest, Reservation, Task types
-- [ ] Create `src/lib/config.ts` - status filter options, priority options
+- [x] Create `src/types/api.ts` - shared Guest, Reservation, Task, Conversation types
+- [x] Create `src/lib/config.ts` - status filter options, priority options, badge variant mappings
 
 ### Medium Priority
 - [ ] Create `<Spinner />` component - replace repeated spinner markup

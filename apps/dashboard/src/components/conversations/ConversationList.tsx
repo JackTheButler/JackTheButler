@@ -1,35 +1,16 @@
 import { MessageSquare, ListTodo } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { formatTimeAgo } from '@/lib/formatters';
+import { conversationStateVariants } from '@/lib/config';
 import { ChannelIcon } from '@/components/shared/ChannelIcon';
 import { Badge } from '@/components/ui/badge';
-
-interface Conversation {
-  id: string;
-  channelType: string;
-  channelId: string;
-  state: string;
-  guestId: string | null;
-  guestName?: string;
-  currentIntent: string | null;
-  lastMessageAt: string | null;
-  messageCount: number;
-  taskCount: number;
-}
+import type { Conversation } from '@/types/api';
 
 interface Props {
   conversations: Conversation[];
   selectedId: string | null;
   onSelect: (id: string) => void;
 }
-
-const stateVariants: Record<string, 'default' | 'success' | 'warning' | 'error' | 'info'> = {
-  new: 'info',
-  active: 'success',
-  escalated: 'error',
-  resolved: 'default',
-  closed: 'default',
-};
 
 export function ConversationList({ conversations, selectedId, onSelect }: Props) {
   return (
@@ -62,14 +43,14 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
                 <MessageSquare className="w-3 h-3" />
                 {conv.messageCount}
               </span>
-              {conv.taskCount > 0 && (
+              {(conv.taskCount ?? 0) > 0 && (
                 <span className="flex items-center gap-0.5 text-xs bg-gray-100 px-1.5 py-0.5 rounded-md">
                   <ListTodo className="w-3 h-3" />
                   {conv.taskCount}
                 </span>
               )}
             </div>
-            <Badge variant={stateVariants[conv.state] || 'default'}>
+            <Badge variant={conversationStateVariants[conv.state] || 'default'}>
               {conv.state}
             </Badge>
           </div>

@@ -17,39 +17,8 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/formatters';
-import { BadgeVariant } from '@/components/ui/badge';
-
-const vipVariants: Record<string, BadgeVariant> = {
-  diamond: 'dark',
-  platinum: 'dark',
-  gold: 'gold',
-  silver: 'dark',
-};
-
-const loyaltyVariants: Record<string, BadgeVariant> = {
-  platinum: 'default',
-  gold: 'warning',
-  silver: 'default',
-  member: 'default',
-};
-
-interface Guest {
-  id: string;
-  firstName: string;
-  lastName: string;
-  email: string | null;
-  phone: string | null;
-  language: string;
-  loyaltyTier: string | null;
-  vipStatus: string | null;
-  preferences: string[];
-  tags: string[];
-  stayCount: number;
-  totalRevenue: number;
-  lastStayDate: string | null;
-  createdAt: string;
-  updatedAt: string;
-}
+import { vipVariants, loyaltyVariants } from '@/lib/config';
+import type { Guest } from '@/types/api';
 
 interface GuestStats {
   total: number;

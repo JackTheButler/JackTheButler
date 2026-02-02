@@ -14,29 +14,16 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDate, formatDateShort, formatDateTime } from '@/lib/formatters';
+import {
+  reservationStatusVariants,
+  taskStatusVariants,
+} from '@/lib/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Badge, BadgeVariant } from '@/components/ui/badge';
-
-const reservationStatusVariants: Record<string, BadgeVariant> = {
-  confirmed: 'default',
-  checked_in: 'success',
-  checked_out: 'default',
-  cancelled: 'error',
-  no_show: 'error',
-};
-
-const taskStatusVariants: Record<string, BadgeVariant> = {
-  pending: 'warning',
-  assigned: 'default',
-  in_progress: 'warning',
-  completed: 'success',
-  cancelled: 'default',
-};
+import { Badge } from '@/components/ui/badge';
 import { PageContainer, EmptyState } from '@/components';
+import type { ReservationStatus } from '@/types/api';
 
-type ReservationStatus = 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled' | 'no_show';
-
-interface Guest {
+interface GuestDetail {
   id: string;
   firstName: string;
   lastName: string;
@@ -45,21 +32,6 @@ interface Guest {
   vipStatus: string | null;
   loyaltyTier: string | null;
   preferences: string[];
-}
-
-interface RelatedConversation {
-  id: string;
-  channelType: string;
-  state: string;
-  lastMessageAt: string;
-}
-
-interface RelatedTask {
-  id: string;
-  type: string;
-  description: string;
-  status: string;
-  priority: string;
 }
 
 interface ReservationDetail {
@@ -79,10 +51,10 @@ interface ReservationDetail {
   notes: string[];
   source: string;
   createdAt: string;
-  guest: Guest | null;
+  guest: GuestDetail | null;
   _related: {
-    conversations: RelatedConversation[];
-    tasks: RelatedTask[];
+    conversations: { id: string; channelType: string; state: string; lastMessageAt: string }[];
+    tasks: { id: string; type: string; description: string; status: string; priority: string }[];
   };
 }
 

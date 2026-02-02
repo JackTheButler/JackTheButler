@@ -12,48 +12,15 @@ import {
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/formatters';
-import { Badge, BadgeVariant } from '@/components/ui/badge';
-
-const reservationStatusVariants: Record<string, BadgeVariant> = {
-  confirmed: 'default',
-  checked_in: 'success',
-  checked_out: 'default',
-  cancelled: 'error',
-  no_show: 'error',
-};
+import {
+  reservationStatusFilters,
+  reservationStatusVariants,
+} from '@/lib/config';
+import type { Reservation, ReservationStatus } from '@/types/api';
+import { Badge } from '@/components/ui/badge';
 import { FilterTabs } from '@/components/ui/filter-tabs';
 import { PageContainer, EmptyState, DataTable, StatsBar } from '@/components';
 import type { Column } from '@/components/DataTable';
-
-type ReservationStatus = 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled' | 'no_show';
-
-interface Guest {
-  id: string;
-  firstName: string;
-  lastName: string;
-  vipStatus: string | null;
-  loyaltyTier: string | null;
-}
-
-interface Reservation {
-  id: string;
-  confirmationNumber: string;
-  guestId: string;
-  roomNumber: string | null;
-  roomType: string;
-  arrivalDate: string;
-  departureDate: string;
-  estimatedArrival: string | null;
-  estimatedDeparture: string | null;
-  status: ReservationStatus;
-  adults: number;
-  children: number;
-  specialRequests: string[];
-  notes: string[];
-  source: string;
-  createdAt: string;
-  guest: Guest | null;
-}
 
 interface TodayStats {
   date: string;
@@ -63,13 +30,6 @@ interface TodayStats {
   occupancyRate: number;
 }
 
-const statusFilters: { value: ReservationStatus | 'all'; label: string }[] = [
-  { value: 'all', label: 'All' },
-  { value: 'confirmed', label: 'Confirmed' },
-  { value: 'checked_in', label: 'Checked In' },
-  { value: 'checked_out', label: 'Checked Out' },
-  { value: 'cancelled', label: 'Cancelled' },
-];
 
 export function ReservationsPage() {
   const navigate = useNavigate();
@@ -213,7 +173,7 @@ export function ReservationsPage() {
         keyExtractor={(reservation) => reservation.id}
         filters={
           <FilterTabs
-            options={statusFilters}
+            options={reservationStatusFilters}
             value={statusFilter}
             onChange={setStatusFilter}
           />

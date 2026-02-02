@@ -4,8 +4,10 @@ import { ChevronDown, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatTime, formatDateTime } from '@/lib/formatters';
+import { priorityVariants, taskStatusVariants } from '@/lib/config';
+import type { Task } from '@/types/api';
 import { DrawerRoot, DrawerContent } from '@/components/ui/drawer';
-import { Badge, BadgeVariant } from '@/components/ui/badge';
+import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 
 interface Props {
@@ -35,20 +37,6 @@ interface Message {
   content: string;
   contentType: string;
   intent: string | null;
-  createdAt: string;
-}
-
-interface Task {
-  id: string;
-  messageId: string | null;
-  type: string;
-  status: string;
-  description: string;
-  priority: string;
-  roomNumber: string | null;
-  department: string;
-  assignedTo: string | null;
-  assignedName?: string;
   createdAt: string;
 }
 
@@ -399,21 +387,6 @@ const taskTypeIcons: Record<string, React.ComponentType<{ className?: string }>>
   concierge: ConciergeBell,
   room_service: UtensilsCrossed,
   other: HelpCircle,
-};
-
-const priorityVariants: Record<string, BadgeVariant> = {
-  urgent: 'error',
-  high: 'warning',
-  standard: 'default',
-  low: 'default',
-};
-
-const taskStatusVariants: Record<string, BadgeVariant> = {
-  pending: 'warning',
-  assigned: 'default',
-  in_progress: 'warning',
-  completed: 'success',
-  cancelled: 'default',
 };
 
 function TaskCard({
