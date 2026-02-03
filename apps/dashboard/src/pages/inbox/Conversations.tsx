@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { conversationStateFilters } from '@/lib/config';
 import { ConversationList, ConversationView } from '@/components';
+import { ConversationListSkeleton } from '@/components/skeletons';
 import { FilterTabs } from '@/components/ui/filter-tabs';
 import type { Conversation, ConversationState } from '@/types/api';
 
@@ -36,7 +37,7 @@ export function ConversationsPage() {
 
         {/* List */}
         {isLoading ? (
-          <div className="p-4 text-gray-500 text-sm">Loading...</div>
+          <ConversationListSkeleton count={6} />
         ) : conversations.length === 0 ? (
           <div className="p-4 text-gray-500 text-sm">No conversations</div>
         ) : (

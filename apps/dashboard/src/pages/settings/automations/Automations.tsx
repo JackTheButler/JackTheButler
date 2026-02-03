@@ -25,8 +25,8 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { FilterTabs } from '@/components/ui/filter-tabs';
-import { Spinner } from '@/components/ui/spinner';
 import { PageContainer, PageHeader, StatsBar, SearchInput, EmptyState } from '@/components';
+import { AutomationCardSkeleton } from '@/components/skeletons';
 
 type TriggerType = 'time_based' | 'event_based';
 type ActionType = 'send_message' | 'create_task' | 'notify_staff' | 'webhook';
@@ -252,9 +252,7 @@ export function AutomationsPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <Spinner size="lg" />
-        </div>
+        <AutomationCardSkeleton count={3} />
       ) : error ? (
         <EmptyState
           icon={AlertCircle}

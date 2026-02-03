@@ -11,6 +11,14 @@ export type { Column, DataTableProps, SearchConfig } from './DataTable';
 export { ExpandableSearch } from './ExpandableSearch';
 export { ChannelIcon } from './shared/ChannelIcon';
 
+// Skeletons
+export {
+  ConversationListSkeleton,
+  ApprovalTableSkeleton,
+  AutomationCardSkeleton,
+  ExtensionCardSkeleton,
+} from './skeletons';
+
 // Form components
 export { SearchInput } from './shared/SearchInput';
 

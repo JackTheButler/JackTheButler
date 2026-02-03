@@ -8,7 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Spinner } from '@/components/ui/spinner';
+import { Skeleton } from '@/components/ui/skeleton';
 import { ExpandableSearch } from './ExpandableSearch';
 import { cn } from '@/lib/utils';
 
@@ -35,7 +35,8 @@ export interface DataTableProps<T> {
   search?: SearchConfig;
   emptyState?: React.ReactNode;
   loading?: boolean;
-  loadingState?: React.ReactNode;
+  /** Number of skeleton rows to show when loading (default: 5) */
+  skeletonRows?: number;
   onRowClick?: (row: T) => void;
   rowClassName?: (row: T) => string | undefined;
 }
@@ -63,6 +64,41 @@ function FilterBar({ filters, search }: { filters?: React.ReactNode; search?: Se
   );
 }
 
+/** Skeleton widths to vary row appearance */
+const SKELETON_WIDTHS = ['w-3/4', 'w-1/2', 'w-2/3', 'w-4/5', 'w-1/3'];
+
+function TableSkeleton({ columns, rows }: { columns: Column<unknown>[]; rows: number }) {
+  return (
+    <Table>
+      <TableHeader>
+        <TableRow className="bg-muted/50 hover:bg-muted/50">
+          {columns.map((column) => (
+            <TableHead key={column.key} className={cn('px-4', column.className)}>
+              {column.header}
+            </TableHead>
+          ))}
+        </TableRow>
+      </TableHeader>
+      <TableBody>
+        {Array.from({ length: rows }).map((_, rowIndex) => (
+          <TableRow key={rowIndex}>
+            {columns.map((column, colIndex) => (
+              <TableCell key={column.key} className={cn('px-4', column.className)}>
+                <Skeleton
+                  className={cn(
+                    'h-4',
+                    SKELETON_WIDTHS[(rowIndex + colIndex) % SKELETON_WIDTHS.length]
+                  )}
+                />
+              </TableCell>
+            ))}
+          </TableRow>
+        ))}
+      </TableBody>
+    </Table>
+  );
+}
+
 export function DataTable<T>({
   data,
   columns,
@@ -71,7 +107,7 @@ export function DataTable<T>({
   search,
   emptyState,
   loading,
-  loadingState,
+  skeletonRows = 5,
   onRowClick,
   rowClassName,
 }: DataTableProps<T>) {
@@ -79,11 +115,7 @@ export function DataTable<T>({
     return (
       <Card>
         <FilterBar filters={filters} search={search} />
-        {loadingState || (
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
-          </div>
-        )}
+        <TableSkeleton columns={columns as Column<unknown>[]} rows={skeletonRows} />
       </Card>
     );
   }

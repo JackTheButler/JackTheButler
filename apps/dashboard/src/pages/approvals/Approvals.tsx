@@ -41,8 +41,8 @@ import {
 import { Tooltip } from '@/components/ui/tooltip';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
 import { FilterTabs } from '@/components/ui/filter-tabs';
-import { Spinner } from '@/components/ui/spinner';
 import { PageContainer, StatsBar, EmptyState, ChannelIcon } from '@/components';
+import { ApprovalTableSkeleton } from '@/components/skeletons';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
 
@@ -322,9 +322,21 @@ export function ApprovalsPage() {
         </div>
 
         {isLoading ? (
-          <div className="flex items-center justify-center py-12">
-            <Spinner size="lg" />
-          </div>
+          <Table>
+            <TableHeader>
+              <TableRow className="bg-muted/50 hover:bg-muted/50">
+                <TableHead className="px-4 w-12"></TableHead>
+                <TableHead className="px-4 w-12"></TableHead>
+                <TableHead className="px-4 min-w-[140px]">Guest</TableHead>
+                <TableHead className="px-4">Preview</TableHead>
+                <TableHead className="px-4 min-w-[100px]">Time</TableHead>
+                <TableHead className="px-4 min-w-[100px]">Status</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              <ApprovalTableSkeleton count={5} />
+            </TableBody>
+          </Table>
         ) : error ? (
           <EmptyState
             icon={AlertCircle}

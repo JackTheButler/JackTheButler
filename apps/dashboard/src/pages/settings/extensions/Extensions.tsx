@@ -16,6 +16,7 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { ExtensionIcon, CategoryIcon } from '@/components';
 import { PageContainer, StatsBar, SearchInput, EmptyState } from '@/components';
+import { ExtensionCardSkeleton } from '@/components/skeletons';
 
 type IntegrationStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disabled';
 
@@ -201,9 +202,7 @@ export function ExtensionsPage() {
 
       {/* Content */}
       {isLoading ? (
-        <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
-        </div>
+        <ExtensionCardSkeleton count={4} />
       ) : error ? (
         <EmptyState
           icon={AlertCircle}

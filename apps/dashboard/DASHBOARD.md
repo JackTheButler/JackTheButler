@@ -24,6 +24,7 @@ The dashboard uses a combination of:
 | `FilterTabs` | Tab-style filter buttons for tables |
 | `Input` | Text inputs |
 | `SectionCard` | Card with icon + title header pattern |
+| `Skeleton` | Animated loading placeholder |
 | `Spinner` | Loading spinner with size variants (xs, sm, md, lg) |
 | `Table` | Data tables (for custom layouts) |
 | `Tabs` | Tab navigation with icon support |
@@ -355,12 +356,49 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 ## Loading States
 
-Use the `Spinner` component for consistent loading indicators.
+### Skeleton Loading (Lists/Tables)
+
+Use skeleton placeholders for list and table pages - they show the expected layout structure.
+
+```tsx
+// DataTable has built-in skeleton loading
+<DataTable
+  data={items}
+  columns={columns}
+  loading={isLoading}  // Automatically shows skeleton rows
+  skeletonRows={5}     // Optional: default is 5
+/>
+
+// Custom list skeletons
+import { ConversationListSkeleton, AutomationCardSkeleton } from '@/components/skeletons';
+
+{isLoading ? <ConversationListSkeleton count={6} /> : <ConversationList ... />}
+{isLoading ? <AutomationCardSkeleton count={3} /> : <div>...</div>}
+```
+
+**Available Skeletons:**
+| Component | Use For |
+|-----------|---------|
+| `Skeleton` | Base animated placeholder (`@/components/ui/skeleton`) |
+| `ConversationListSkeleton` | Inbox conversation list |
+| `ApprovalTableSkeleton` | Approval queue table rows |
+| `AutomationCardSkeleton` | Automation rule cards |
+| `ExtensionCardSkeleton` | Extension cards grid |
+
+### Spinner Loading (Actions/Detail Pages)
+
+Use `Spinner` for button states, detail pages, and processing indicators.
 
 ```tsx
 import { Spinner } from '@/components/ui/spinner';
 
-// Full page loading
+// Button loading (replace icon with spinner)
+<Button disabled={saving}>
+  {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+  Save
+</Button>
+
+// Detail page loading
 if (loading) {
   return (
     <PageContainer>
@@ -372,18 +410,11 @@ if (loading) {
   );
 }
 
-// Button loading (replace icon with spinner)
-<Button disabled={saving}>
-  {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-  Save
-</Button>
-
-// Card loading
+// Processing state
 <Card>
   <CardContent className="py-12 text-center">
     <Spinner size="lg" className="mx-auto mb-4 text-primary" />
     <p className="text-lg font-medium">Processing...</p>
-    <p className="text-sm text-muted-foreground">Description</p>
   </CardContent>
 </Card>
 ```
