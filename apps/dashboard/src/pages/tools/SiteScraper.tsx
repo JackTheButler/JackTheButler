@@ -232,8 +232,8 @@ export function SiteScraperPage() {
           <AlertTitle>{t('siteScraper.embeddingRequired')}</AlertTitle>
           <AlertDescription className="flex items-end justify-between">
             <span>{t('siteScraper.embeddingRequiredDesc')}</span>
-            <Link to="/settings/extensions/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
-              {t('siteScraper.configure')} <ArrowRight className="h-3 w-3" />
+            <Link to="/settings/extensions/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ms-4 whitespace-nowrap">
+              {t('siteScraper.configure')} <ArrowRight className="h-3 w-3 rtl:rotate-180" />
             </Link>
           </AlertDescription>
         </Alert>
@@ -274,13 +274,13 @@ export function SiteScraperPage() {
             </div>
 
             <Button variant="outline" size="sm" onClick={addUrl}>
-              <Plus className="w-4 h-4 mr-2" />
+              <Plus className="w-4 h-4 me-2" />
               {t('siteScraper.addAnotherUrl')}
             </Button>
 
             <div className="flex justify-end pt-4 border-t">
               <Button  onClick={fetchAndProcess} disabled={validUrls.length === 0}>
-                <Sparkles className="w-4 h-4 mr-2" />
+                <Sparkles className="w-4 h-4 me-2" />
                 {t('siteScraper.fetchAndProcess')}
               </Button>
             </div>
@@ -404,7 +404,7 @@ export function SiteScraperPage() {
               {t('siteScraper.startOver')}
             </Button>
             <Button  onClick={importEntries} disabled={selectedCount === 0}>
-              <Download className="w-4 h-4 mr-2" />
+              <Download className="w-4 h-4 me-2" />
               {t('siteScraper.importEntries', { count: selectedCount })}
             </Button>
           </div>

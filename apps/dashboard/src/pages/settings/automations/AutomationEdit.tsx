@@ -288,7 +288,7 @@ export function AutomationEditPage() {
         <div className="flex items-center gap-4">
           <Link to="/settings/automations">
             <Button variant="outline" size="sm">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
               {t('automationEdit.back')}
             </Button>
           </Link>
@@ -307,18 +307,18 @@ export function AutomationEditPage() {
           {!isNew && (
             <Button variant="outline" size="sm" onClick={handleTest} disabled={isTesting}>
               {isTesting ? (
-                <Spinner size="sm" className="mr-2" />
+                <Spinner size="sm" className="me-2" />
               ) : (
-                <Play className="w-4 h-4 mr-2" />
+                <Play className="w-4 h-4 me-2" />
               )}
               {t('automationEdit.test')}
             </Button>
           )}
           <Button onClick={handleSave} disabled={saveMutation.isPending || !name}>
             {saveMutation.isPending ? (
-              <Spinner size="sm" className="mr-2" />
+              <Spinner size="sm" className="me-2" />
             ) : (
-              <Save className="w-4 h-4 mr-2" />
+              <Save className="w-4 h-4 me-2" />
             )}
             {t('common.save')}
           </Button>
@@ -396,7 +396,7 @@ export function AutomationEditPage() {
                   type="button"
                   onClick={() => setTriggerType(type.value)}
                   className={cn(
-                    'p-4 rounded-lg border-2 text-left transition-colors',
+                    'p-4 rounded-lg border-2 text-start transition-colors',
                     triggerType === type.value
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-muted-foreground/30'
@@ -479,7 +479,7 @@ export function AutomationEditPage() {
                   type="button"
                   onClick={() => setActionType(type.value)}
                   className={cn(
-                    'p-4 rounded-lg border-2 text-left transition-colors',
+                    'p-4 rounded-lg border-2 text-start transition-colors',
                     actionType === type.value
                       ? 'border-primary bg-primary/5'
                       : 'border-border hover:border-muted-foreground/30'
@@ -648,7 +648,7 @@ export function AutomationEditPage() {
                       )}
                     </div>
                   </div>
-                  <div className="text-right text-sm text-muted-foreground">
+                  <div className="text-end text-sm text-muted-foreground">
                     <p>{formatDateTime(log.createdAt)}</p>
                     {log.executionTimeMs && <p className="text-xs">{log.executionTimeMs}ms</p>}
                   </div>
@@ -679,9 +679,9 @@ export function AutomationEditPage() {
                 disabled={deleteMutation.isPending}
               >
                 {deleteMutation.isPending ? (
-                  <Spinner size="sm" className="mr-2" />
+                  <Spinner size="sm" className="me-2" />
                 ) : (
-                  <Trash2 className="w-4 h-4 mr-2" />
+                  <Trash2 className="w-4 h-4 me-2" />
                 )}
                 {t('common.delete')}
               </Button>

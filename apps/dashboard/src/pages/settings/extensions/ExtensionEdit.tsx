@@ -116,7 +116,7 @@ function Toast({
         <XCircle className="w-5 h-5 text-red-600 shrink-0" />
       )}
       <span className="text-sm font-medium">{message}</span>
-      {latency && <span className="text-xs text-muted-foreground ml-auto">{latency}ms</span>}
+      {latency && <span className="text-xs text-muted-foreground ms-auto">{latency}ms</span>}
     </div>
   );
 }
@@ -231,13 +231,13 @@ function ConfigForm({
                     onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
                     placeholder={field.placeholder}
                     required={field.required}
-                    className={field.type === 'password' ? 'pr-12' : ''}
+                    className={field.type === 'password' ? 'pe-12' : ''}
                   />
                   {field.type === 'password' && (
                     <button
                       type="button"
                       onClick={() => togglePassword(field.key)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
+                      className="absolute end-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground transition-colors"
                     >
                       {showPasswords[field.key] ? (
                         <EyeOff className="w-4 h-4" />
@@ -260,7 +260,7 @@ function ConfigForm({
 
       <div className="pt-4 space-y-4">
         <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
-          {saveMutation.isPending && <Spinner size="sm" className="mr-2" />}
+          {saveMutation.isPending && <Spinner size="sm" className="me-2" />}
           {t('extensionEdit.saveConfiguration')}
         </Button>
 
@@ -345,9 +345,9 @@ function ConnectionStatus({
             disabled={testMutation.isPending || !provider.config}
           >
             {testMutation.isPending ? (
-              <Spinner size="sm" className="mr-2" />
+              <Spinner size="sm" className="me-2" />
             ) : (
-              <Zap className="w-4 h-4 mr-2" />
+              <Zap className="w-4 h-4 me-2" />
             )}
             {t('extensionEdit.testConnection')}
           </Button>
@@ -367,12 +367,12 @@ function ConnectionStatus({
                 <Spinner size="sm" />
               ) : provider.enabled ? (
                 <>
-                  <PowerOff className="w-4 h-4 mr-2" />
+                  <PowerOff className="w-4 h-4 me-2" />
                   {t('extensionEdit.disable')}
                 </>
               ) : (
                 <>
-                  <Power className="w-4 h-4 mr-2" />
+                  <Power className="w-4 h-4 me-2" />
                   {t('extensionEdit.enable')}
                 </>
               )}
@@ -506,7 +506,7 @@ export function ExtensionEditPage() {
           <p className="text-muted-foreground mb-4">{t('extensionEdit.tryAgainLater')}</p>
           <Button variant="outline" asChild>
             <Link to="/settings/extensions">
-              <ArrowLeft className="w-4 h-4 mr-2" />
+              <ArrowLeft className="w-4 h-4 me-2 rtl:rotate-180" />
               {t('extensionEdit.backToExtensions')}
             </Link>
           </Button>
@@ -522,13 +522,13 @@ export function ExtensionEditPage() {
         to="/settings/extensions"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
         {t('extensionEdit.backToExtensions')}
       </Link>
 
       {/* Header */}
       <div className="flex items-start gap-4">
-        <div className="p-3 rounded-xl bg-muted/50">
+        <div className="p-3 rounded-xl bg-foreground/5">
           <ExtensionIcon id={integration.id} size="xl" />
         </div>
         <div className="space-y-1">
@@ -575,7 +575,7 @@ export function ExtensionEditPage() {
           <Card>
             <CardContent className="pt-6">
               <div className="flex items-start gap-4">
-                <div className="p-2.5 rounded-lg bg-muted/50">
+                <div className="p-2.5 rounded-lg bg-foreground/5">
                   <ExtensionIcon id={selectedProvider.id} size="lg" />
                 </div>
                 <div className="flex-1 space-y-1">
@@ -660,9 +660,9 @@ export function ExtensionEditPage() {
                   className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
                 >
                   {deleteMutation.isPending ? (
-                    <Spinner size="sm" className="mr-2" />
+                    <Spinner size="sm" className="me-2" />
                   ) : (
-                    <Trash2 className="w-4 h-4 mr-2" />
+                    <Trash2 className="w-4 h-4 me-2" />
                   )}
                   {t('extensionEdit.removeConfiguration')}
                 </Button>

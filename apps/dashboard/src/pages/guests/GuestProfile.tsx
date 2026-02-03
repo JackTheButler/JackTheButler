@@ -192,7 +192,7 @@ export function GuestProfilePage() {
         to="/guests"
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
       >
-        <ArrowLeft className="w-4 h-4" />
+        <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
         {t('guestProfile.backToGuests')}
       </Link>
 
@@ -209,7 +209,7 @@ export function GuestProfilePage() {
               </h1>
               {guest.vipStatus && guest.vipStatus !== 'none' && (
                 <Badge variant="gold">
-                  <Crown className="w-3 h-3 mr-1" />
+                  <Crown className="w-3 h-3 me-1" />
                   {guest.vipStatus.toUpperCase()}
                 </Badge>
               )}
@@ -244,13 +244,13 @@ export function GuestProfilePage() {
                 {t('common.cancel')}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
-                {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                {saving ? <Spinner size="sm" className="me-2" /> : <Save className="w-4 h-4 me-2" />}
                 {t('common.save')}
               </Button>
             </>
           ) : (
             <Button variant="outline" onClick={() => setEditing(true)}>
-              <Pencil className="w-4 h-4 mr-2" />
+              <Pencil className="w-4 h-4 me-2" />
               {t('common.edit')}
             </Button>
           )}

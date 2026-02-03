@@ -41,7 +41,7 @@ export function GuestsPage() {
     setActions(
       <Link to="/guests/new">
         <Button size="sm">
-          <Plus className="w-4 h-4 mr-1.5" />
+          <Plus className="w-4 h-4 me-1.5" />
           {t('guests.addGuest')}
         </Button>
       </Link>
@@ -120,7 +120,7 @@ export function GuestsPage() {
         <div className="flex gap-1.5">
           {guest.vipStatus && guest.vipStatus !== 'none' && (
             <Badge variant={vipVariants[guest.vipStatus.toLowerCase()] || 'dark'}>
-              <Crown className="w-3 h-3 mr-1" />
+              <Crown className="w-3 h-3 me-1" />
               {guest.vipStatus}
             </Badge>
           )}
@@ -157,7 +157,7 @@ export function GuestsPage() {
       key: 'actions',
       header: '',
       className: 'w-10',
-      render: () => <ChevronRight className="w-4 h-4 text-muted-foreground" />,
+      render: () => <ChevronRight className="w-4 h-4 text-muted-foreground rtl:rotate-180" />,
     },
   ];
 

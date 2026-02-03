@@ -23,7 +23,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
           key={conv.id}
           onClick={() => onSelect(conv.id)}
           className={cn(
-            'w-full p-3 text-left border-b hover:bg-muted transition-colors',
+            'w-full p-3 text-start border-b hover:bg-muted transition-colors',
             selectedId === conv.id && 'bg-accent'
           )}
         >
@@ -34,7 +34,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
               {conv.guestName || formatChannelId(conv.channelType, conv.channelId)}
             </div>
             {conv.lastMessageAt && (
-              <span className="text-xs text-muted-foreground ml-2 shrink-0">
+              <span className="text-xs text-muted-foreground ms-2 shrink-0">
                 {formatTimeAgo(conv.lastMessageAt, t)}
               </span>
             )}

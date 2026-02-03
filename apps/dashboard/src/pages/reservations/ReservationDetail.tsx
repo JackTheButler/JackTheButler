@@ -118,7 +118,7 @@ export function ReservationDetailPage() {
           to="/reservations"
           className="p-2 hover:bg-muted rounded-lg transition-colors"
         >
-          <ArrowLeft className="w-5 h-5" />
+          <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
         </Link>
         <div className="flex-1">
           <div className="flex items-center gap-3">
@@ -153,7 +153,7 @@ export function ReservationDetailPage() {
                   <span>
                     {formatDateShort(reservation.arrivalDate)}
                     {reservation.estimatedArrival && (
-                      <span className="text-muted-foreground ml-2">
+                      <span className="text-muted-foreground ms-2">
                         @ {reservation.estimatedArrival}
                       </span>
                     )}
@@ -166,7 +166,7 @@ export function ReservationDetailPage() {
                   <span>
                     {formatDateShort(reservation.departureDate)}
                     {reservation.estimatedDeparture && (
-                      <span className="text-muted-foreground ml-2">
+                      <span className="text-muted-foreground ms-2">
                         @ {reservation.estimatedDeparture}
                       </span>
                     )}
@@ -235,7 +235,7 @@ export function ReservationDetailPage() {
               <CardTitle className="text-base flex items-center gap-2">
                 <MessageSquare className="w-4 h-4" />
                 {t('reservationDetail.conversations')}
-                <Badge variant="secondary" className="ml-auto">
+                <Badge variant="secondary" className="ms-auto">
                   {reservation._related.conversations.length}
                 </Badge>
               </CardTitle>
@@ -275,7 +275,7 @@ export function ReservationDetailPage() {
               <CardTitle className="text-base flex items-center gap-2">
                 <ListTodo className="w-4 h-4" />
                 {t('reservationDetail.tasks')}
-                <Badge variant="secondary" className="ml-auto">
+                <Badge variant="secondary" className="ms-auto">
                   {reservation._related.tasks.length}
                 </Badge>
               </CardTitle>

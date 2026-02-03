@@ -162,7 +162,7 @@ function RuleCard({ rule, onToggle, t }: { rule: AutomationRule; onToggle: (enab
               aria-label={rule.enabled ? t('automations.disableRule') : t('automations.enableRule')}
             />
             <Link to={`/settings/automations/${rule.id}`}>
-              <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+              <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors rtl:rotate-180" />
             </Link>
           </div>
         </div>
@@ -227,7 +227,7 @@ export function AutomationsPage() {
       <PageHeader>
         <Link to="/settings/automations/new">
           <Button size="sm" >
-            <Plus className="w-3.5 h-3.5 mr-1.5" />
+            <Plus className="w-3.5 h-3.5 me-1.5" />
             {t('automations.newRule')}
           </Button>
         </Link>
@@ -279,7 +279,7 @@ export function AutomationsPage() {
           >
             <Link to="/settings/automations/new">
               <Button >
-                <Plus className="w-4 h-4 mr-2" />
+                <Plus className="w-4 h-4 me-2" />
                 {t('automations.createRule')}
               </Button>
             </Link>

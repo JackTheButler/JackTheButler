@@ -85,8 +85,8 @@ export function ReservationsPage() {
               {reservation.guest.firstName} {reservation.guest.lastName}
             </Link>
             {reservation.guest.vipStatus && (
-              <Badge variant="dark" className="ml-2">
-                <Crown className="w-3 h-3 mr-1" />
+              <Badge variant="dark" className="ms-2">
+                <Crown className="w-3 h-3 me-1" />
                 {t('common.vip')}
               </Badge>
             )}
@@ -102,7 +102,7 @@ export function ReservationsPage() {
       render: (reservation) => (
         <div className="text-sm">
           {reservation.roomNumber || '-'}
-          <span className="text-muted-foreground ml-1">
+          <span className="text-muted-foreground ms-1">
             ({reservation.roomType})
           </span>
         </div>
@@ -115,7 +115,7 @@ export function ReservationsPage() {
         <div className="text-sm">
           {formatDate(reservation.arrivalDate)}
           {reservation.estimatedArrival && (
-            <span className="text-muted-foreground ml-1">
+            <span className="text-muted-foreground ms-1">
               {reservation.estimatedArrival}
             </span>
           )}
@@ -144,7 +144,7 @@ export function ReservationsPage() {
       key: 'actions',
       header: '',
       render: () => (
-        <ChevronRight className="w-5 h-5 text-muted-foreground" />
+        <ChevronRight className="w-5 h-5 text-muted-foreground rtl:rotate-180" />
       ),
     },
   ];

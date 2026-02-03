@@ -203,8 +203,8 @@ function ExpandedRow({
                     className={cn(
                       'p-2 rounded text-sm',
                       msg.direction === 'inbound'
-                        ? 'bg-muted mr-8'
-                        : 'bg-info ml-8'
+                        ? 'bg-muted me-8'
+                        : 'bg-info ms-8'
                     )}
                   >
                     <span className="text-xs text-muted-foreground">

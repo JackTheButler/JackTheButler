@@ -151,11 +151,11 @@ export function KnowledgeBasePage() {
             onClick={() => providers?.embedding ? setShowReindexConfirm(true) : setShowEmbeddingWarning(true)}
             disabled={reindexing}
           >
-            <RefreshCw className={cn('w-4 h-4 mr-1.5', reindexing && 'animate-spin')} />
+            <RefreshCw className={cn('w-4 h-4 me-1.5', reindexing && 'animate-spin')} />
             {t('knowledge.reindex')}
           </Button>
           <Button size="sm" onClick={startAdd}>
-            <Plus className="w-4 h-4 mr-1.5" />
+            <Plus className="w-4 h-4 me-1.5" />
             {t('knowledge.addEntry')}
           </Button>
         </div>
@@ -354,8 +354,8 @@ export function KnowledgeBasePage() {
           <AlertTitle>{t('knowledge.embeddingRequired')}</AlertTitle>
           <AlertDescription className="flex items-end justify-between">
             <span>{t('knowledge.embeddingRequiredDesc')}</span>
-            <Link to="/settings/extensions/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
-              {t('common.configure')} <ArrowRight className="h-3 w-3" />
+            <Link to="/settings/extensions/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ms-4 whitespace-nowrap">
+              {t('common.configure')} <ArrowRight className="h-3 w-3 rtl:rotate-180" />
             </Link>
           </AlertDescription>
         </Alert>
@@ -379,13 +379,13 @@ export function KnowledgeBasePage() {
         <CardContent className="pt-4">
           <div className="flex gap-2">
             <div className="relative flex-1">
-              <MessageSquare className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <MessageSquare className="absolute start-3 top-1/2 -translate-y-1/2 w-4 h-4 text-muted-foreground" />
               <Input
                 value={testQuery}
                 onChange={(e) => setTestQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !testLoading && handleTest()}
                 placeholder={t('knowledge.askQuestion')}
-                className="pl-10"
+                className="ps-10"
               />
             </div>
             <Button
@@ -396,7 +396,7 @@ export function KnowledgeBasePage() {
                 <Spinner size="sm" />
               ) : (
                 <>
-                  <Send className="w-4 h-4 mr-1.5" />
+                  <Send className="w-4 h-4 me-1.5" />
                   {t('knowledge.ask')}
                 </>
               )}

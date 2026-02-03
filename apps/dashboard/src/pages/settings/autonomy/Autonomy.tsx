@@ -93,7 +93,7 @@ function LevelSelector({
             key={level}
             onClick={() => onChange(level)}
             className={cn(
-              'flex-1 p-4 rounded-lg border-2 transition-all text-left',
+              'flex-1 p-4 rounded-lg border-2 transition-all text-start',
               isActive
                 ? level === 'L1'
                   ? 'border-warning-border bg-warning'
@@ -104,7 +104,7 @@ function LevelSelector({
             <div className="flex items-center gap-2 mb-1">
               <Icon className={cn('w-5 h-5', isActive ? 'text-current' : 'text-muted-foreground')} />
               <span className="font-semibold">{level}</span>
-              {isActive && <Check className="w-4 h-4 ml-auto" />}
+              {isActive && <Check className="w-4 h-4 ms-auto" />}
             </div>
             <div className="text-sm font-medium">{t(`autonomy.levels.${level}.label`)}</div>
             <div className="text-xs text-muted-foreground mt-1">{t(`autonomy.levels.${level}.description`)}</div>
@@ -239,7 +239,7 @@ export function AutonomyPage() {
           onClick={() => resetMutation.mutate()}
           disabled={resetMutation.isPending}
         >
-          <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', resetMutation.isPending && 'animate-spin')} />
+          <RefreshCw className={cn('w-3.5 h-3.5 me-1.5', resetMutation.isPending && 'animate-spin')} />
           {t('autonomy.resetToDefaults')}
         </Button>
         <Button
@@ -359,7 +359,7 @@ export function AutonomyPage() {
           <div className="flex items-center gap-2 mb-4">
             <Shield className="w-5 h-5 text-primary" />
             <h2 className="text-lg font-semibold">{t('autonomy.financialLimits')}</h2>
-            <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded ml-auto">
+            <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded ms-auto">
               {t('autonomy.comingSoon')}
             </span>
           </div>

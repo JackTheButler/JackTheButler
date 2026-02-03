@@ -91,7 +91,7 @@ function ExtensionCard({ integration, t }: { integration: Integration; t: (key: 
       <Card className="card-hover cursor-pointer group">
         <CardContent className="p-5">
           <div className="flex items-start gap-4">
-            <div className="p-2.5 rounded-xl bg-muted/50 group-hover:bg-muted transition-colors">
+            <div className="p-2.5 rounded-xl bg-foreground/5 group-hover:bg-muted transition-colors">
               <ExtensionIcon id={integration.id} size="lg" />
             </div>
             <div className="flex-1 space-y-1">
@@ -104,7 +104,7 @@ function ExtensionCard({ integration, t }: { integration: Integration; t: (key: 
                 </div>
                 <div className="flex items-center gap-3">
                   <StatusIndicator status={integration.status} t={t} />
-                  <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
+                  <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors rtl:rotate-180" />
                 </div>
               </div>
               {activeProviders.length > 0 ? (
@@ -226,7 +226,7 @@ export function ExtensionsPage() {
               <div className="flex items-center gap-3">
                 <CategoryIcon category={category} size="md" className="text-muted-foreground" />
                 <h2 className="text-lg font-semibold">{categoryLabels[category] || category}</h2>
-                <Badge variant="secondary" className="ml-auto">
+                <Badge variant="secondary" className="ms-auto">
                   {grouped[category].length}
                 </Badge>
               </div>
