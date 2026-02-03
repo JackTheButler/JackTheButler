@@ -2,7 +2,6 @@ import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import {
-  Search,
   Plus,
   AlertCircle,
   Clock,
@@ -15,6 +14,7 @@ import {
   Play,
   Pause,
   ChevronRight,
+  Search,
 } from 'lucide-react';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { api } from '@/lib/api';
@@ -24,6 +24,8 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
+import { FilterTabs } from '@/components/ui/filter-tabs';
+import { Spinner } from '@/components/ui/spinner';
 import { PageContainer, PageHeader, StatsBar, SearchInput, EmptyState } from '@/components';
 
 type TriggerType = 'time_based' | 'event_based';
@@ -166,6 +168,12 @@ function RuleCard({ rule, onToggle }: { rule: AutomationRule; onToggle: (enabled
   );
 }
 
+const triggerTypeFilters: { value: 'all' | TriggerType; label: string; icon?: typeof Calendar }[] = [
+  { value: 'all', label: 'All' },
+  { value: 'time_based', label: 'Scheduled', icon: Calendar },
+  { value: 'event_based', label: 'Events', icon: Zap },
+];
+
 export function AutomationsPage() {
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | TriggerType>('all');
@@ -235,37 +243,17 @@ export function AutomationsPage() {
             placeholder="Search automations..."
           />
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant={filterType === 'all' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterType('all')}
-          >
-            All
-          </Button>
-          <Button
-            variant={filterType === 'time_based' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterType('time_based')}
-          >
-            <Calendar className="w-4 h-4 mr-1" />
-            Scheduled
-          </Button>
-          <Button
-            variant={filterType === 'event_based' ? 'default' : 'outline'}
-            size="sm"
-            onClick={() => setFilterType('event_based')}
-          >
-            <Zap className="w-4 h-4 mr-1" />
-            Events
-          </Button>
-        </div>
+        <FilterTabs
+          options={triggerTypeFilters}
+          value={filterType}
+          onChange={setFilterType}
+        />
       </div>
 
       {/* Content */}
       {isLoading ? (
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <Spinner size="lg" />
         </div>
       ) : error ? (
         <EmptyState

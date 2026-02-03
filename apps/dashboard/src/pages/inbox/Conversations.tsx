@@ -3,6 +3,7 @@ import { useQuery } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { conversationStateFilters } from '@/lib/config';
 import { ConversationList, ConversationView } from '@/components';
+import { FilterTabs } from '@/components/ui/filter-tabs';
 import type { Conversation, ConversationState } from '@/types/api';
 
 export function ConversationsPage() {
@@ -25,20 +26,12 @@ export function ConversationsPage() {
       {/* Sidebar */}
       <div className="w-80 border-r bg-white flex flex-col">
         {/* Filters */}
-        <div className="p-3 border-b flex gap-1">
-          {conversationStateFilters.map((s) => (
-            <button
-              key={s.value}
-              onClick={() => setFilter(s.value)}
-              className={`px-3 py-1 text-sm rounded ${
-                filter === s.value
-                  ? 'bg-gray-900 text-white'
-                  : 'text-gray-600 hover:bg-gray-100'
-              }`}
-            >
-              {s.label}
-            </button>
-          ))}
+        <div className="p-3 border-b">
+          <FilterTabs
+            options={conversationStateFilters}
+            value={filter}
+            onChange={setFilter}
+          />
         </div>
 
         {/* List */}

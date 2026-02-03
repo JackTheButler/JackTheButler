@@ -136,23 +136,15 @@ export function TasksPage() {
               {completeMutation.isPending ? 'Completing...' : 'Complete'}
             </Button>
           )}
-          {task.status === 'completed' && (
-            <button
+          {(task.status === 'completed' || task.status === 'cancelled') && (
+            <Button
+              variant="outline"
+              size="xs"
               onClick={() => reopenMutation.mutate(task.id)}
               disabled={reopenMutation.isPending}
-              className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-600 hover:bg-gray-200"
             >
               {reopenMutation.isPending ? 'Reopening...' : 'Reopen'}
-            </button>
-          )}
-          {task.status === 'cancelled' && (
-            <button
-              onClick={() => reopenMutation.mutate(task.id)}
-              disabled={reopenMutation.isPending}
-              className="text-xs px-2 py-1 rounded bg-gray-100 text-gray-500 hover:bg-gray-200"
-            >
-              {reopenMutation.isPending ? 'Reopening...' : 'Reopen'}
-            </button>
+            </Button>
           )}
         </div>
       ),

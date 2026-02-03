@@ -452,8 +452,8 @@ apps/dashboard/src/
 ### Medium Priority
 - [x] Create `<Spinner />` component - replace repeated spinner markup
 - [x] Create `<Tabs />` component - standardize tab navigation (GuestProfile)
-- [ ] Use `FilterTabs` consistently (fix Conversations, Automations pages)
-- [ ] Use `Button` component everywhere (fix plain `<button>` in Tasks reopen)
+- [x] Use `FilterTabs` consistently (fix Conversations, Automations pages)
+- [x] Use `Button` component everywhere (fix plain `<button>` in Tasks reopen)
 - [ ] Create `useFilteredQuery()` hook - query + URLSearchParams pattern
 - [ ] Create `buildQueryString()` utility - reduce URLSearchParams duplication
 
