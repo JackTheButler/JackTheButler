@@ -235,9 +235,10 @@ function ExpandedRow({
             variant="destructive"
             size="sm"
             onClick={handleReject}
-            disabled={!rejectReason.trim() || isRejecting}
+            disabled={!rejectReason.trim()}
+            loading={isRejecting}
           >
-            {isRejecting ? 'Rejecting...' : 'Reject'}
+            Reject
           </Button>
           <Button
             variant="ghost"

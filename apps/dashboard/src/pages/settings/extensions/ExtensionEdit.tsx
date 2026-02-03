@@ -243,7 +243,7 @@ function ConfigForm({
       <div className="pt-4 space-y-4">
         <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
           {saveMutation.isPending && <Spinner size="sm" className="mr-2" />}
-          {saveMutation.isPending ? 'Saving...' : 'Save Configuration'}
+          Save Configuration
         </Button>
 
         {saveMutation.isError && (
@@ -325,16 +325,11 @@ function ConnectionStatus({
             disabled={testMutation.isPending || !provider.config}
           >
             {testMutation.isPending ? (
-              <>
-                <Spinner size="sm" className="mr-2" />
-                Testing...
-              </>
+              <Spinner size="sm" className="mr-2" />
             ) : (
-              <>
-                <Zap className="w-4 h-4 mr-2" />
-                Test Connection
-              </>
+              <Zap className="w-4 h-4 mr-2" />
             )}
+            Test Connection
           </Button>
           {provider.config && (
             <Button
@@ -642,7 +637,7 @@ export function ExtensionEditPage() {
                   ) : (
                     <Trash2 className="w-4 h-4 mr-2" />
                   )}
-                  {deleteMutation.isPending ? 'Removing...' : 'Remove Configuration'}
+                  Remove Configuration
                 </Button>
               </CardContent>
             </Card>

@@ -248,9 +248,10 @@ export function AutonomyPage() {
         <Button
           size="sm"
           onClick={() => settings && saveMutation.mutate(settings)}
-          disabled={!hasChanges || saveMutation.isPending}
+          disabled={!hasChanges}
+          loading={saveMutation.isPending}
         >
-          {saveMutation.isPending ? 'Saving...' : 'Save Changes'}
+          Save Changes
         </Button>
       </PageHeader>
 

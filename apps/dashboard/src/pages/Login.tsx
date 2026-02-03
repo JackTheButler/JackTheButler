@@ -82,8 +82,8 @@ export function LoginPage() {
               </label>
             </div>
 
-            <Button type="submit" disabled={loading} className="w-full">
-              {loading ? 'Signing in...' : 'Sign In'}
+            <Button type="submit" loading={loading} className="w-full">
+              Sign In
             </Button>
           </form>
         </div>

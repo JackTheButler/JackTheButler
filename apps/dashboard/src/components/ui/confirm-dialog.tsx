@@ -65,9 +65,9 @@ export function ConfirmDialog({
             <Button
               variant={variant === 'destructive' ? 'destructive' : 'default'}
               onClick={handleConfirm}
-              disabled={loading}
+              loading={loading}
             >
-              {loading ? 'Processing...' : confirmLabel}
+              {confirmLabel}
             </Button>
           </div>
         </div>

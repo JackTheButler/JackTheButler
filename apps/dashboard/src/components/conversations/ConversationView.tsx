@@ -447,19 +447,20 @@ function TaskCard({
           <Button
             size="xs"
             onClick={onClaim}
-            disabled={isClaimPending}
+            loading={isClaimPending}
           >
-            {isClaimPending ? 'Claiming...' : 'Claim'}
+            Claim
           </Button>
         )}
         {task.status === 'in_progress' && (
-          <button
+          <Button
+            size="xs"
             onClick={onComplete}
-            disabled={isCompletePending}
-            className="text-xs px-3 py-1.5 rounded bg-green-600 text-white hover:bg-green-700 disabled:opacity-50"
+            loading={isCompletePending}
+            className="bg-green-600 hover:bg-green-700"
           >
-            {isCompletePending ? 'Completing...' : 'Complete'}
-          </button>
+            Complete
+          </Button>
         )}
         {(task.status === 'completed' || task.status === 'cancelled') && (
           <span className="text-xs text-gray-400 italic">No actions available</span>

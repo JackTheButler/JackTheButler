@@ -119,18 +119,18 @@ export function TasksPage() {
             <Button
               size="xs"
               onClick={() => claimMutation.mutate(task.id)}
-              disabled={claimMutation.isPending}
+              loading={claimMutation.isPending}
             >
-              {claimMutation.isPending ? 'Claiming...' : 'Claim'}
+              Claim
             </Button>
           )}
           {task.status === 'in_progress' && (
             <Button
               size="xs"
               onClick={() => completeMutation.mutate(task.id)}
-              disabled={completeMutation.isPending}
+              loading={completeMutation.isPending}
             >
-              {completeMutation.isPending ? 'Completing...' : 'Complete'}
+              Complete
             </Button>
           )}
           {(task.status === 'completed' || task.status === 'cancelled') && (
@@ -138,9 +138,9 @@ export function TasksPage() {
               variant="outline"
               size="xs"
               onClick={() => reopenMutation.mutate(task.id)}
-              disabled={reopenMutation.isPending}
+              loading={reopenMutation.isPending}
             >
-              {reopenMutation.isPending ? 'Reopening...' : 'Reopen'}
+              Reopen
             </Button>
           )}
         </div>

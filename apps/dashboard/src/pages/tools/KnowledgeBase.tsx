@@ -150,7 +150,7 @@ export function KnowledgeBasePage() {
             disabled={reindexing}
           >
             <RefreshCw className={cn('w-4 h-4 mr-1.5', reindexing && 'animate-spin')} />
-            {reindexing ? 'Reindexing...' : 'Reindex'}
+            Reindex
           </Button>
           <Button size="sm" onClick={startAdd}>
             <Plus className="w-4 h-4 mr-1.5" />
@@ -526,8 +526,7 @@ export function KnowledgeBasePage() {
                   <Button variant="outline" onClick={resetForm}>
                     Cancel
                   </Button>
-                  <Button onClick={handleSave} disabled={saving}>
-                    {saving && <Spinner size="sm" className="mr-2" />}
+                  <Button onClick={handleSave} loading={saving}>
                     {editingEntry ? 'Update' : 'Add'} Entry
                   </Button>
                 </div>
