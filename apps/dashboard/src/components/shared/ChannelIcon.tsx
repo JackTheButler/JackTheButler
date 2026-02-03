@@ -44,5 +44,9 @@ export function ChannelIcon({ channel, className, showLabel = false, size = 'sm'
     );
   }
 
-  return <Icon className={cn(sizeClass, 'text-gray-500', className)} title={config.label} />;
+  return (
+    <span title={config.label}>
+      <Icon className={cn(sizeClass, 'text-gray-500', className)} />
+    </span>
+  );
 }

@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { AlertTriangle } from 'lucide-react';
 import { DialogRoot, DialogContent } from './dialog';
 import { Button } from './button';

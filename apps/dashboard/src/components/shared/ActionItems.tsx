@@ -1,9 +1,21 @@
 import { Link } from 'react-router-dom';
-import { ArrowRight, Check } from 'lucide-react';
+import { AlertCircle, ArrowRight, Check } from 'lucide-react';
 import { useSystemStatus, type SystemIssue, type CompletedStep } from '@/hooks/useSystemStatus';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+
+/**
+ * Severity styling config
+ */
+const severityConfig = {
+  critical: {
+    icon: AlertCircle,
+    containerClass: 'bg-red-50 border-red-200',
+    iconClass: 'text-red-600',
+    descClass: 'text-red-800',
+  },
+};
 
 /**
  * Extended information for each issue type
