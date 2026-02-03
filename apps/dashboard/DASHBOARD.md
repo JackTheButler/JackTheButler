@@ -1,6 +1,6 @@
 # Dashboard Guidelines
 
-> UI patterns and component usage for the Butler dashboard.
+> **Before editing this document:** This file documents the Dashboard architecture, UI patterns, component structure, and core principles for contributors. Any changes should remain within this scope-focusing on how the dashboard is built and the standards developers must follow to contribute effectively.
 
 ## Component Library
 
@@ -71,7 +71,7 @@ import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
   <AlertTitle>Configuration Required</AlertTitle>
   <AlertDescription className="flex items-end justify-between">
     <span>Description text here.</span>
-    <Link to="/settings" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
+    <Link to="/settings" className="flex items-center gap-1 font-medium hover:underline ms-4 whitespace-nowrap">
       Configure <ArrowRight className="h-3 w-3" />
     </Link>
   </AlertDescription>
@@ -149,7 +149,7 @@ import { Button } from '@/components/ui/button';
 
 // Primary action
 <Button>
-  <Plus className="w-4 h-4 mr-1.5" />
+  <Plus className="w-4 h-4 me-1.5" />
   Add Item
 </Button>
 
@@ -160,13 +160,7 @@ import { Button } from '@/components/ui/button';
 // Loading state (built-in) - auto-adds spinner & disables
 <Button loading={isPending}>Save</Button>
 <Button loading={isPending}>
-  <Save className="w-4 h-4 mr-1.5" />
-  Save
-</Button>
-
-// Loading with icon replacement (when spinner should replace icon)
-<Button disabled={saving}>
-  {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+  <Save className="w-4 h-4 me-1.5" />
   Save
 </Button>
 ```
@@ -196,7 +190,7 @@ export function MyPage() {
   useEffect(() => {
     setActions(
       <Button size="sm">
-        <Plus className="w-4 h-4 mr-1.5" />
+        <Plus className="w-4 h-4 me-1.5" />
         Add New
       </Button>
     );
@@ -301,7 +295,7 @@ const columns: Column<Item>[] = [
     render: (item) => (
       <DropdownMenu>
         <DropdownMenuTrigger>
-          <button className="p-1.5 rounded hover:bg-gray-100">
+          <button className="p-1.5 rounded hover:bg-muted text-muted-foreground">
             <MoreHorizontal className="w-4 h-4" />
           </button>
         </DropdownMenuTrigger>
@@ -379,12 +373,11 @@ import { ConversationListSkeleton, AutomationCardSkeleton } from '@/components';
 Use the `loading` prop on Button - it automatically shows a spinner and disables the button.
 
 ```tsx
-// Simple loading (adds spinner before text)
 <Button loading={isPending}>Save</Button>
 
-// Icon replacement pattern (when spinner should replace icon)
-<Button disabled={saving}>
-  {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+// With icon - spinner appears before the icon
+<Button loading={isPending}>
+  <Save className="w-4 h-4 me-1.5" />
   Save
 </Button>
 ```
@@ -400,7 +393,7 @@ if (loading) {
     <PageContainer>
       <div className="py-12 text-center">
         <Spinner size="lg" className="mx-auto mb-4" />
-        <p className="text-sm text-gray-500">Loading...</p>
+        <p className="text-sm text-muted-foreground">Loading...</p>
       </div>
     </PageContainer>
   );
@@ -411,21 +404,112 @@ if (loading) {
 
 ---
 
+## RTL (Right-to-Left) Support
+
+The dashboard supports RTL languages (Arabic, Hebrew, etc.). Always use **logical CSS properties** instead of physical directional properties.
+
+### Margin & Padding
+
+| Physical (Don't Use) | Logical (Use This) | RTL Behavior |
+|----------------------|-------------------|--------------|
+| `ml-*` | `ms-*` | margin-start |
+| `mr-*` | `me-*` | margin-end |
+| `pl-*` | `ps-*` | padding-start |
+| `pr-*` | `pe-*` | padding-end |
+
+```tsx
+// ❌ Wrong - breaks in RTL
+<Icon className="w-4 h-4 mr-1.5" />
+
+// ✅ Correct - works in both LTR and RTL
+<Icon className="w-4 h-4 me-1.5" />
+```
+
+### Positioning & Borders
+
+| Physical (Don't Use) | Logical (Use This) |
+|----------------------|-------------------|
+| `left-*` | `start-*` |
+| `right-*` | `end-*` |
+| `border-l` | `border-s` |
+| `border-r` | `border-e` |
+| `text-left` | `text-start` |
+| `text-right` | `text-end` |
+
+### Directional Icons
+
+Icons that indicate direction (arrows, chevrons) need rotation in RTL:
+
+```tsx
+// Chevrons in list items
+<ChevronRight className="w-5 h-5 rtl:rotate-180" />
+
+// Back arrows
+<ArrowLeft className="w-4 h-4 rtl:rotate-180" />
+
+// Forward arrows
+<ArrowRight className="w-3 h-3 rtl:rotate-180" />
+```
+
+---
+
+## Internationalization (i18n)
+
+The dashboard uses `react-i18next` for translations. Translation files are in `src/locales/{lang}/common.json`.
+
+### Using Translations
+
+```tsx
+import { useTranslation } from 'react-i18next';
+
+function MyComponent() {
+  const { t } = useTranslation();
+
+  return (
+    <div>
+      <h1>{t('page.title')}</h1>
+      <p>{t('page.description')}</p>
+      <Button>{t('common.save')}</Button>
+    </div>
+  );
+}
+```
+
+### Translation Keys Convention
+
+- Use dot notation for nested keys: `page.section.label`
+- Common actions go in `common.*`: `common.save`, `common.cancel`, `common.delete`
+- Page-specific keys: `guests.title`, `inbox.noConversations`
+
+### Dynamic Values
+
+```tsx
+// With interpolation
+{t('guests.count', { count: guests.length })}
+
+// In JSON: "guests.count": "{{count}} guests"
+```
+
+---
+
 ## Color Conventions
+
+Use semantic color classes for dark mode support:
 
 | Usage | How to Apply |
 |-------|--------------|
-| Primary buttons | Use `<Button>` default variant (uses `--primary` CSS variable) |
+| Primary buttons | Use `<Button>` default variant |
 | Secondary buttons | `<Button variant="outline">` |
-| Error/destructive | `variant="destructive"` or `bg-red-50 text-red-700` |
-| Success | `variant="success"` or `bg-green-50 text-green-700` |
-| Warning | `variant="warning"` or `bg-yellow-50 text-yellow-700` |
-| Info | `variant="info"` or `bg-blue-50 text-blue-700` |
-| Muted text | `text-gray-500` or `text-muted-foreground` |
+| Error/destructive | `variant="destructive"` or `bg-destructive text-destructive-foreground` |
+| Success | `variant="success"` or `bg-success text-success-foreground` |
+| Warning | `variant="warning"` or `bg-warning text-warning-foreground` |
+| Info | `variant="info"` or `bg-info text-info-foreground` |
+| Muted text | `text-muted-foreground` |
+| Muted backgrounds | `bg-muted` |
+| Borders | `border-border` |
+| Hover states | `hover:bg-muted` or `hover:bg-accent` |
 
-**CSS Variables (defined in `index.css`):**
-- `--primary: 0 0% 0%` - True black for primary actions
-- `--primary-foreground: 0 0% 100%` - White text on primary
+**Avoid hardcoded colors** like `text-gray-500` or `bg-red-50` - they don't adapt to dark mode.
 
 ---
 
