@@ -450,8 +450,8 @@ apps/dashboard/src/
 - [x] Create `src/lib/config.ts` - status filter options, priority options, badge variant mappings
 
 ### Medium Priority
-- [ ] Create `<Spinner />` component - replace repeated spinner markup
-- [ ] Create `<Tabs />` component - standardize tab navigation (GuestProfile)
+- [x] Create `<Spinner />` component - replace repeated spinner markup
+- [x] Create `<Tabs />` component - standardize tab navigation (GuestProfile)
 - [ ] Use `FilterTabs` consistently (fix Conversations, Automations pages)
 - [ ] Use `Button` component everywhere (fix plain `<button>` in Tasks reopen)
 - [ ] Create `useFilteredQuery()` hook - query + URLSearchParams pattern

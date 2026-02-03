@@ -8,6 +8,7 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
+import { Spinner } from '@/components/ui/spinner';
 import { ExpandableSearch } from './ExpandableSearch';
 import { cn } from '@/lib/utils';
 
@@ -80,7 +81,7 @@ export function DataTable<T>({
         <FilterBar filters={filters} search={search} />
         {loadingState || (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <Spinner size="lg" />
           </div>
         )}
       </Card>

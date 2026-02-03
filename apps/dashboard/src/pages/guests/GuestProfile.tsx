@@ -7,6 +7,8 @@ import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
+import { Spinner } from '@/components/ui/spinner';
+import { Tabs } from '@/components/ui/tabs';
 import {
   Table,
   TableBody,
@@ -17,7 +19,6 @@ import {
 } from '@/components/ui/table';
 import {
   ArrowLeft,
-  Loader2,
   AlertCircle,
   Pencil,
   Save,
@@ -153,7 +154,7 @@ export function GuestProfilePage() {
     return (
       <PageContainer>
         <div className="py-12 text-center">
-          <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-gray-400" />
+          <Spinner size="lg" className="mx-auto mb-4" />
           <p className="text-sm text-gray-500">Loading guest...</p>
         </div>
       </PageContainer>
@@ -238,9 +239,8 @@ export function GuestProfilePage() {
               <Button variant="outline" onClick={() => setEditing(false)}>
                 Cancel
               </Button>
-              <Button  onClick={handleSave} disabled={saving}>
-                {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-                <Save className="w-4 h-4 mr-2" />
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
                 Save
               </Button>
             </>
@@ -254,28 +254,16 @@ export function GuestProfilePage() {
       </div>
 
       {/* Tabs */}
-      <div className="border-b mb-6">
-        <nav className="flex gap-6">
-          {[
-            { id: 'overview', label: 'Overview', icon: User },
-            { id: 'reservations', label: `Reservations (${guest._counts.reservations})`, icon: Hotel },
-            { id: 'conversations', label: `Conversations (${guest._counts.conversations})`, icon: MessageSquare },
-          ].map((tab) => (
-            <button
-              key={tab.id}
-              onClick={() => setActiveTab(tab.id as typeof activeTab)}
-              className={`flex items-center gap-2 pb-3 border-b-2 text-sm font-medium transition-colors ${
-                activeTab === tab.id
-                  ? 'border-gray-900 text-gray-900'
-                  : 'border-transparent text-gray-500 hover:text-gray-700'
-              }`}
-            >
-              <tab.icon className="w-4 h-4" />
-              {tab.label}
-            </button>
-          ))}
-        </nav>
-      </div>
+      <Tabs
+        tabs={[
+          { id: 'overview', label: 'Overview', icon: User },
+          { id: 'reservations', label: `Reservations (${guest._counts.reservations})`, icon: Hotel },
+          { id: 'conversations', label: `Conversations (${guest._counts.conversations})`, icon: MessageSquare },
+        ]}
+        value={activeTab}
+        onChange={setActiveTab}
+        className="mb-6"
+      />
 
       {/* Tab Content */}
       {activeTab === 'overview' && (

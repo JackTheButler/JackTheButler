@@ -20,6 +20,7 @@ import {
 } from '@/lib/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
+import { Spinner } from '@/components/ui/spinner';
 import { PageContainer, EmptyState } from '@/components';
 import type { ReservationStatus } from '@/types/api';
 
@@ -83,7 +84,7 @@ export function ReservationDetailPage() {
     return (
       <PageContainer>
         <div className="flex items-center justify-center py-12">
-          <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+          <Spinner size="lg" />
         </div>
       </PageContainer>
     );

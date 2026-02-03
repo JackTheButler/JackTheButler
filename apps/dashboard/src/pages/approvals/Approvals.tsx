@@ -40,6 +40,7 @@ import {
 import { Tooltip } from '@/components/ui/tooltip';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
 import { FilterTabs } from '@/components/ui/filter-tabs';
+import { Spinner } from '@/components/ui/spinner';
 import { PageContainer, StatsBar, EmptyState, ChannelIcon } from '@/components';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
@@ -327,7 +328,7 @@ export function ApprovalsPage() {
 
         {isLoading ? (
           <div className="flex items-center justify-center py-12">
-            <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary" />
+            <Spinner size="lg" />
           </div>
         ) : error ? (
           <EmptyState
