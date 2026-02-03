@@ -1,12 +1,12 @@
 import { useState } from 'react';
 import { useParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Spinner } from '@/components/ui/spinner';
 import {
   ArrowLeft,
   CheckCircle2,
   AlertCircle,
   XCircle,
-  Loader2,
   ExternalLink,
   Eye,
   EyeOff,
@@ -242,7 +242,7 @@ function ConfigForm({
 
       <div className="pt-4 space-y-4">
         <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
-          {saveMutation.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+          {saveMutation.isPending && <Spinner size="sm" className="mr-2" />}
           {saveMutation.isPending ? 'Saving...' : 'Save Configuration'}
         </Button>
 
@@ -326,7 +326,7 @@ function ConnectionStatus({
           >
             {testMutation.isPending ? (
               <>
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Spinner size="sm" className="mr-2" />
                 Testing...
               </>
             ) : (
@@ -349,7 +349,7 @@ function ConnectionStatus({
               )}
             >
               {toggleMutation.isPending ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Spinner size="sm" />
               ) : provider.enabled ? (
                 <>
                   <PowerOff className="w-4 h-4 mr-2" />
@@ -395,7 +395,7 @@ function ActivityLogs({ extensionId, providerId }: { extensionId: string; provid
   if (isLoading) {
     return (
       <div className="flex items-center justify-center py-8">
-        <Loader2 className="w-6 h-6 animate-spin text-muted-foreground" />
+        <Spinner size="md" />
       </div>
     );
   }
@@ -470,7 +470,7 @@ export function ExtensionEditPage() {
   if (isLoading) {
     return (
       <div className="p-6 flex items-center justify-center min-h-[400px]">
-        <Loader2 className="w-8 h-8 animate-spin text-muted-foreground" />
+        <Spinner size="lg" />
       </div>
     );
   }
@@ -638,7 +638,7 @@ export function ExtensionEditPage() {
                   className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
                 >
                   {deleteMutation.isPending ? (
-                    <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                    <Spinner size="sm" className="mr-2" />
                   ) : (
                     <Trash2 className="w-4 h-4 mr-2" />
                   )}

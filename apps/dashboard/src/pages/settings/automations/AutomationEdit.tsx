@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { Spinner } from '@/components/ui/spinner';
 import {
   ArrowLeft,
   Save,
@@ -15,7 +16,6 @@ import {
   Bell,
   Webhook,
   Calendar,
-  Loader2,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDate, formatDateTime } from '@/lib/formatters';
@@ -297,7 +297,7 @@ export function AutomationEditPage() {
           {!isNew && (
             <Button variant="outline" size="sm" onClick={handleTest} disabled={isTesting}>
               {isTesting ? (
-                <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                <Spinner size="sm" className="mr-2" />
               ) : (
                 <Play className="w-4 h-4 mr-2" />
               )}
@@ -306,7 +306,7 @@ export function AutomationEditPage() {
           )}
           <Button onClick={handleSave} disabled={saveMutation.isPending || !name}>
             {saveMutation.isPending ? (
-              <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+              <Spinner size="sm" className="mr-2" />
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
@@ -669,7 +669,7 @@ export function AutomationEditPage() {
                 disabled={deleteMutation.isPending}
               >
                 {deleteMutation.isPending ? (
-                  <Loader2 className="w-4 h-4 mr-2 animate-spin" />
+                  <Spinner size="sm" className="mr-2" />
                 ) : (
                   <Trash2 className="w-4 h-4 mr-2" />
                 )}

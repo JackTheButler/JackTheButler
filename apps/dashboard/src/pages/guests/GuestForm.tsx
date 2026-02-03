@@ -6,7 +6,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription } from '@/components/ui/alert';
-import { ArrowLeft, Loader2, Save } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { ArrowLeft, Save } from 'lucide-react';
 import { api } from '@/lib/api';
 
 const VIP_OPTIONS = ['none', 'silver', 'gold', 'platinum', 'diamond'];
@@ -221,9 +222,8 @@ export function GuestFormPage() {
             <Button variant="outline" onClick={() => navigate('/guests')}>
               Cancel
             </Button>
-            <Button  onClick={handleSave} disabled={saving}>
-              {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
-              <Save className="w-4 h-4 mr-2" />
+            <Button onClick={handleSave} disabled={saving}>
+              {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
               Create Guest
             </Button>
           </div>

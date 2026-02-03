@@ -15,7 +15,8 @@ import {
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
-import { Plus, Trash2, Sparkles, Download, Loader2, CheckCircle2, ArrowRight } from 'lucide-react';
+import { Spinner } from '@/components/ui/spinner';
+import { Plus, Trash2, Sparkles, Download, CheckCircle2, ArrowRight } from 'lucide-react';
 import { api } from '@/lib/api';
 
 interface ParseResult {
@@ -289,7 +290,7 @@ export function SiteScraperPage() {
       {step === 'fetching' && (
         <Card>
           <CardContent className="py-12 text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+            <Spinner size="lg" className="mx-auto mb-4 text-primary" />
             <p className="text-lg font-medium">Fetching content...</p>
             <p className="text-sm text-muted-foreground">
               Scraping {validUrls.length} URL{validUrls.length > 1 ? 's' : ''}
@@ -302,7 +303,7 @@ export function SiteScraperPage() {
       {step === 'processing' && (
         <Card>
           <CardContent className="py-12 text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+            <Spinner size="lg" className="mx-auto mb-4 text-primary" />
             <p className="text-lg font-medium">Processing with AI...</p>
             <p className="text-sm text-muted-foreground">Categorizing and structuring content</p>
           </CardContent>
@@ -410,7 +411,7 @@ export function SiteScraperPage() {
       {step === 'importing' && (
         <Card>
           <CardContent className="py-12 text-center">
-            <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+            <Spinner size="lg" className="mx-auto mb-4 text-primary" />
             <p className="text-lg font-medium">Importing entries...</p>
             <p className="text-sm text-muted-foreground">
               Saving to knowledge base and generating embeddings

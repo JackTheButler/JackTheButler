@@ -11,9 +11,9 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { ConfirmDialog } from '@/components/ui/confirm-dialog';
+import { Spinner } from '@/components/ui/spinner';
 import {
   Plus,
-  Loader2,
   Book,
   MoreHorizontal,
   MessageSquare,
@@ -391,7 +391,7 @@ export function KnowledgeBasePage() {
               disabled={testLoading || !testQuery.trim()}
                           >
               {testLoading ? (
-                <Loader2 className="w-4 h-4 animate-spin" />
+                <Spinner size="sm" />
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-1.5" />
@@ -527,7 +527,7 @@ export function KnowledgeBasePage() {
                     Cancel
                   </Button>
                   <Button onClick={handleSave} disabled={saving}>
-                    {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                    {saving && <Spinner size="sm" className="mr-2" />}
                     {editingEntry ? 'Update' : 'Add'} Entry
                   </Button>
                 </div>

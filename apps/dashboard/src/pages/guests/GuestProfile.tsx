@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
-import { PageContainer } from '@/components';
+import { PageContainer, EmptyState } from '@/components';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -164,13 +164,15 @@ export function GuestProfilePage() {
   if (!guest) {
     return (
       <PageContainer>
-        <div className="py-12 text-center">
-          <AlertCircle className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-          <p className="text-gray-500">Guest not found</p>
-          <Button variant="outline" className="mt-4" onClick={() => navigate('/guests')}>
+        <EmptyState
+          icon={AlertCircle}
+          title="Guest not found"
+          description="The guest you're looking for doesn't exist or has been removed."
+        >
+          <Button variant="outline" onClick={() => navigate('/guests')}>
             Back to Guests
           </Button>
-        </div>
+        </EmptyState>
       </PageContainer>
     );
   }
@@ -454,10 +456,11 @@ export function GuestProfilePage() {
         <Card>
           <CardContent className="pt-6">
             {reservations.length === 0 ? (
-              <div className="py-8 text-center">
-                <Hotel className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-500">No reservations found</p>
-              </div>
+              <EmptyState
+                icon={Hotel}
+                title="No reservations found"
+                description="This guest has no reservation history."
+              />
             ) : (
               <Table>
                 <TableHeader>
@@ -502,10 +505,11 @@ export function GuestProfilePage() {
         <Card>
           <CardContent className="pt-6">
             {conversations.length === 0 ? (
-              <div className="py-8 text-center">
-                <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <p className="text-gray-500">No conversations found</p>
-              </div>
+              <EmptyState
+                icon={MessageSquare}
+                title="No conversations found"
+                description="This guest hasn't started any conversations yet."
+              />
             ) : (
               <Table>
                 <TableHeader>

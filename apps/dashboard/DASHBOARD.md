@@ -20,9 +20,13 @@ The dashboard uses a combination of:
 | `Checkbox` | Form checkboxes |
 | `ConfirmDialog` | Confirmation modals for destructive actions |
 | `DropdownMenu` | Action menus, context menus |
+| `ErrorAlert` | Error display with optional title and dismiss |
 | `FilterTabs` | Tab-style filter buttons for tables |
 | `Input` | Text inputs |
+| `SectionCard` | Card with icon + title header pattern |
+| `Spinner` | Loading spinner with size variants (xs, sm, md, lg) |
 | `Table` | Data tables (for custom layouts) |
+| `Tabs` | Tab navigation with icon support |
 | `Textarea` | Multi-line text inputs |
 | `Tooltip` | Hover tooltips (portal-based, works with overflow) |
 
@@ -165,9 +169,9 @@ import { Button } from '@/components/ui/button';
   Add
 </Button>
 
-// Loading state
+// Loading state (use Spinner component)
 <Button disabled={loading}>
-  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+  {loading ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
   Save
 </Button>
 ```
@@ -271,7 +275,7 @@ export function MyPage() {
     <div className="flex justify-end gap-2 pt-4 border-t">
       <Button variant="outline" onClick={onCancel}>Cancel</Button>
       <Button onClick={onSave} disabled={saving}>
-        {saving && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+        {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
         Save
       </Button>
     </div>
@@ -351,33 +355,46 @@ import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 
 ## Loading States
 
+Use the `Spinner` component for consistent loading indicators.
+
 ```tsx
+import { Spinner } from '@/components/ui/spinner';
+
 // Full page loading
 if (loading) {
   return (
     <PageContainer>
-      <div className="flex items-center justify-center py-12">
-        <Loader2 className="w-8 h-8 animate-spin text-gray-400" />
+      <div className="py-12 text-center">
+        <Spinner size="lg" className="mx-auto mb-4" />
+        <p className="text-sm text-gray-500">Loading...</p>
       </div>
     </PageContainer>
   );
 }
 
-// Button loading
-<Button disabled={loading}>
-  {loading && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+// Button loading (replace icon with spinner)
+<Button disabled={saving}>
+  {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
   Save
 </Button>
 
 // Card loading
 <Card>
   <CardContent className="py-12 text-center">
-    <Loader2 className="w-8 h-8 animate-spin mx-auto mb-4 text-primary" />
+    <Spinner size="lg" className="mx-auto mb-4 text-primary" />
     <p className="text-lg font-medium">Processing...</p>
     <p className="text-sm text-muted-foreground">Description</p>
   </CardContent>
 </Card>
 ```
+
+**Spinner Sizes:**
+| Size | Use For |
+|------|---------|
+| `xs` | Tiny inline spinners |
+| `sm` | Button loading states |
+| `md` | Card/section loading |
+| `lg` | Full page loading |
 
 ---
 
@@ -404,16 +421,27 @@ if (loading) {
 Import from `lucide-react`:
 
 ```tsx
-import { Plus, Loader2, AlertCircle, Check, X, MoreHorizontal } from 'lucide-react';
+import { Plus, AlertCircle, Check, X, MoreHorizontal } from 'lucide-react';
 ```
 
-| Context | Size |
-|---------|------|
-| Button icons (default/sm) | `w-4 h-4` with `mr-1.5` |
-| Button icons (xs) | `w-3.5 h-3.5` with `mr-1.5` |
-| Table action icons | `w-4 h-4` |
-| Empty state icons | `w-12 h-12` |
-| Inline with text | `w-4 h-4` or `w-5 h-5` |
+Use the `iconSize` constants from `@/lib/icons` for consistent sizing:
+
+```tsx
+import { iconSize } from '@/lib/icons';
+
+<Plus className={iconSize.sm} />  // 16px - standard button/inline
+<AlertCircle className={iconSize.xl} />  // 32px - feature icons
+```
+
+| Size | Class | Pixels | Use For |
+|------|-------|--------|---------|
+| `xs` | `w-3 h-3` | 12px | Tiny icons in compact badges |
+| `xs-button` | `w-3.5 h-3.5` | 14px | Button icons (size="xs") |
+| `sm` | `w-4 h-4` | 16px | Standard buttons and inline text |
+| `md` | `w-5 h-5` | 20px | Medium icons |
+| `lg` | `w-6 h-6` | 24px | Large icons |
+| `xl` | `w-8 h-8` | 32px | Spinners, feature icons |
+| `2xl` | `w-12 h-12` | 48px | Empty state icons |
 
 ---
 
@@ -459,10 +487,10 @@ apps/dashboard/src/
 
 ### Lower Priority
 - [x] ~~Create Badge variants for status types~~ - Done: default, success, warning, error, info, dark, gold
-- [ ] Define icon size constants (xs, sm, md, lg, xl)
-- [ ] Extract `<GuestFormFields />` - shared between GuestForm and GuestProfile
-- [ ] Create column factory functions for DataTable (createStatusColumn, createDateColumn)
-- [ ] Extract `<SectionCard />` - Card with icon + title pattern
-- [ ] Standardize empty states - all pages use EmptyState component
-- [ ] Standardize loading states - consistent spinner/skeleton patterns
-- [ ] Create `<ErrorAlert />` wrapper - handles error state + dismissal
+- [x] Define icon size constants (xs, sm, md, lg, xl) - `src/lib/icons.ts`
+- [x] Extract `<GuestFormFields />` - `src/components/shared/GuestFormFields.tsx`
+- [x] Create column factory functions for DataTable - `src/components/DataTable/columns.tsx` (createStatusColumn, createDateColumn, createTextColumn, createActionsColumn)
+- [x] Extract `<SectionCard />` - `src/components/ui/section-card.tsx`
+- [x] Standardize empty states - all pages use EmptyState component
+- [x] Standardize loading states - all pages use Spinner component
+- [x] Create `<ErrorAlert />` wrapper - `src/components/ui/error-alert.tsx`
