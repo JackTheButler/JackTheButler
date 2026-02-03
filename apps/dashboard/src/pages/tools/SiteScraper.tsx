@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageContainer } from '@/components';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
@@ -60,6 +61,7 @@ const CATEGORIES = [
 ];
 
 export function SiteScraperPage() {
+  const { t } = useTranslation();
   const [urls, setUrls] = useState<string[]>(['']);
   const [step, setStep] = useState<Step>('urls');
   const [entries, setEntries] = useState<ProcessedEntry[]>([]);
@@ -227,11 +229,11 @@ export function SiteScraperPage() {
       {/* Embedding provider error */}
       {error && errorType === 'embedding' && (
         <Alert variant="destructive" className="mb-6">
-          <AlertTitle>Embedding Required</AlertTitle>
+          <AlertTitle>{t('siteScraper.embeddingRequired')}</AlertTitle>
           <AlertDescription className="flex items-end justify-between">
-            <span>Set up embeddings to save scraped content to your knowledge base. Use Local AI (free & private) or OpenAI for faster performance.</span>
+            <span>{t('siteScraper.embeddingRequiredDesc')}</span>
             <Link to="/settings/extensions/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
-              Configure <ArrowRight className="h-3 w-3" />
+              {t('siteScraper.configure')} <ArrowRight className="h-3 w-3" />
             </Link>
           </AlertDescription>
         </Alert>
@@ -248,9 +250,9 @@ export function SiteScraperPage() {
       {step === 'urls' && (
         <Card>
           <CardHeader>
-            <CardTitle>Enter Website URLs</CardTitle>
+            <CardTitle>{t('siteScraper.enterUrls')}</CardTitle>
             <CardDescription>
-              Add URLs from your hotel website to import (FAQ, amenities, policies, etc.)
+              {t('siteScraper.enterUrlsDesc')}
             </CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
@@ -258,7 +260,7 @@ export function SiteScraperPage() {
               {urls.map((url, index) => (
                 <div key={index} className="flex gap-2">
                   <Input
-                    placeholder="https://example-hotel.com/faq"
+                    placeholder={t('siteScraper.urlPlaceholder')}
                     value={url}
                     onChange={(e) => updateUrl(index, e.target.value)}
                   />
@@ -273,13 +275,13 @@ export function SiteScraperPage() {
 
             <Button variant="outline" size="sm" onClick={addUrl}>
               <Plus className="w-4 h-4 mr-2" />
-              Add Another URL
+              {t('siteScraper.addAnotherUrl')}
             </Button>
 
             <div className="flex justify-end pt-4 border-t">
               <Button  onClick={fetchAndProcess} disabled={validUrls.length === 0}>
                 <Sparkles className="w-4 h-4 mr-2" />
-                Fetch & Process
+                {t('siteScraper.fetchAndProcess')}
               </Button>
             </div>
           </CardContent>
@@ -291,9 +293,11 @@ export function SiteScraperPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Spinner size="lg" className="mx-auto mb-4 text-primary" />
-            <p className="text-lg font-medium">Fetching content...</p>
+            <p className="text-lg font-medium">{t('siteScraper.fetchingContent')}</p>
             <p className="text-sm text-muted-foreground">
-              Scraping {validUrls.length} URL{validUrls.length > 1 ? 's' : ''}
+              {validUrls.length > 1
+                ? t('siteScraper.scrapingUrlsPlural', { count: validUrls.length })
+                : t('siteScraper.scrapingUrls', { count: validUrls.length })}
             </p>
           </CardContent>
         </Card>
@@ -304,8 +308,8 @@ export function SiteScraperPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Spinner size="lg" className="mx-auto mb-4 text-primary" />
-            <p className="text-lg font-medium">Processing with AI...</p>
-            <p className="text-sm text-muted-foreground">Categorizing and structuring content</p>
+            <p className="text-lg font-medium">{t('siteScraper.processingWithAi')}</p>
+            <p className="text-sm text-muted-foreground">{t('siteScraper.categorizingContent')}</p>
           </CardContent>
         </Card>
       )}
@@ -317,17 +321,17 @@ export function SiteScraperPage() {
             <CardHeader>
               <div className="flex items-center justify-between">
                 <div>
-                  <CardTitle>Review Entries</CardTitle>
+                  <CardTitle>{t('siteScraper.reviewEntries')}</CardTitle>
                   <CardDescription>
-                    {entries.length} entries found. Select which ones to import.
+                    {t('siteScraper.entriesFound', { count: entries.length })}
                   </CardDescription>
                 </div>
                 <div className="flex gap-2">
                   <Button variant="outline" size="sm" onClick={() => toggleAll(true)}>
-                    Select All
+                    {t('siteScraper.selectAll')}
                   </Button>
                   <Button variant="outline" size="sm" onClick={() => toggleAll(false)}>
-                    Deselect All
+                    {t('siteScraper.deselectAll')}
                   </Button>
                 </div>
               </div>
@@ -397,11 +401,11 @@ export function SiteScraperPage() {
 
           <div className="flex justify-between">
             <Button variant="outline" onClick={reset}>
-              Start Over
+              {t('siteScraper.startOver')}
             </Button>
             <Button  onClick={importEntries} disabled={selectedCount === 0}>
               <Download className="w-4 h-4 mr-2" />
-              Import {selectedCount} Entries
+              {t('siteScraper.importEntries', { count: selectedCount })}
             </Button>
           </div>
         </div>
@@ -412,9 +416,9 @@ export function SiteScraperPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <Spinner size="lg" className="mx-auto mb-4 text-primary" />
-            <p className="text-lg font-medium">Importing entries...</p>
+            <p className="text-lg font-medium">{t('siteScraper.importingEntries')}</p>
             <p className="text-sm text-muted-foreground">
-              Saving to knowledge base and generating embeddings
+              {t('siteScraper.savingToKnowledge')}
             </p>
           </CardContent>
         </Card>
@@ -425,17 +429,17 @@ export function SiteScraperPage() {
         <Card>
           <CardContent className="py-12 text-center">
             <CheckCircle2 className="w-12 h-12 mx-auto mb-4 text-green-500" />
-            <p className="text-lg font-medium">Import Complete!</p>
+            <p className="text-lg font-medium">{t('siteScraper.importComplete')}</p>
             <p className="text-sm text-muted-foreground mt-2">
-              Successfully imported {importResult.imported} entries to your knowledge base.
-              {importResult.skipped > 0 && ` ${importResult.skipped} duplicates were skipped.`}
+              {t('siteScraper.importedEntries', { count: importResult.imported })}
+              {importResult.skipped > 0 && ` ${t('siteScraper.duplicatesSkipped', { count: importResult.skipped })}`}
             </p>
             <div className="mt-6 flex gap-3 justify-center">
               <Button variant="outline" onClick={reset}>
-                Import More
+                {t('siteScraper.importMore')}
               </Button>
               <Button  onClick={() => window.location.href = '/tools/knowledge-base'}>
-                View Knowledge Base
+                {t('siteScraper.viewKnowledgeBase')}
               </Button>
             </div>
           </CardContent>

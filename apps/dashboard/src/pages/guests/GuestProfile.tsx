@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageContainer, EmptyState } from '@/components';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -44,6 +45,7 @@ const VIP_OPTIONS = ['none', 'silver', 'gold', 'platinum', 'diamond'];
 const LOYALTY_OPTIONS = ['none', 'member', 'silver', 'gold', 'platinum'];
 
 export function GuestProfilePage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
   const [guest, setGuest] = useState<GuestWithCounts | null>(null);
@@ -89,7 +91,7 @@ export function GuestProfilePage() {
       });
       setError(null);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to load guest');
+      setError(err instanceof Error ? err.message : t('guestProfile.failedToLoad'));
     } finally {
       setLoading(false);
     }
@@ -144,7 +146,7 @@ export function GuestProfilePage() {
       await fetchGuest();
       setEditing(false);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to save guest');
+      setError(err instanceof Error ? err.message : t('guestProfile.failedToSave'));
     } finally {
       setSaving(false);
     }
@@ -155,7 +157,7 @@ export function GuestProfilePage() {
       <PageContainer>
         <div className="py-12 text-center">
           <Spinner size="lg" className="mx-auto mb-4" />
-          <p className="text-sm text-muted-foreground">Loading guest...</p>
+          <p className="text-sm text-muted-foreground">{t('guestProfile.loadingGuest')}</p>
         </div>
       </PageContainer>
     );
@@ -166,11 +168,11 @@ export function GuestProfilePage() {
       <PageContainer>
         <EmptyState
           icon={AlertCircle}
-          title="Guest not found"
-          description="The guest you're looking for doesn't exist or has been removed."
+          title={t('guestProfile.guestNotFound')}
+          description={t('guestProfile.guestNotFoundDesc')}
         >
           <Button variant="outline" onClick={() => navigate('/guests')}>
-            Back to Guests
+            {t('guestProfile.backToGuests')}
           </Button>
         </EmptyState>
       </PageContainer>
@@ -191,7 +193,7 @@ export function GuestProfilePage() {
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Guests
+        {t('guestProfile.backToGuests')}
       </Link>
 
       {/* Header */}
@@ -239,17 +241,17 @@ export function GuestProfilePage() {
           {editing ? (
             <>
               <Button variant="outline" onClick={() => setEditing(false)}>
-                Cancel
+                {t('common.cancel')}
               </Button>
               <Button onClick={handleSave} disabled={saving}>
                 {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-                Save
+                {t('common.save')}
               </Button>
             </>
           ) : (
             <Button variant="outline" onClick={() => setEditing(true)}>
               <Pencil className="w-4 h-4 mr-2" />
-              Edit
+              {t('common.edit')}
             </Button>
           )}
         </div>
@@ -258,9 +260,9 @@ export function GuestProfilePage() {
       {/* Tabs */}
       <Tabs
         tabs={[
-          { id: 'overview', label: 'Overview', icon: User },
-          { id: 'reservations', label: `Reservations (${guest._counts.reservations})`, icon: Hotel },
-          { id: 'conversations', label: `Conversations (${guest._counts.conversations})`, icon: MessageSquare },
+          { id: 'overview', label: t('guestProfile.overview'), icon: User },
+          { id: 'reservations', label: `${t('nav.reservations')} (${guest._counts.reservations})`, icon: Hotel },
+          { id: 'conversations', label: `${t('reservationDetail.conversations')} (${guest._counts.conversations})`, icon: MessageSquare },
         ]}
         value={activeTab}
         onChange={setActiveTab}
@@ -273,27 +275,27 @@ export function GuestProfilePage() {
           {/* Stats */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Stay Statistics</CardTitle>
+              <CardTitle className="text-base">{t('guestProfile.stayStatistics')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground flex items-center gap-2">
                   <Hotel className="w-4 h-4" />
-                  Total Stays
+                  {t('guestProfile.totalStays')}
                 </span>
                 <span className="font-semibold">{guest.stayCount}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  Total Revenue
+                  {t('guestProfile.totalRevenue')}
                 </span>
                 <span className="font-semibold">{formatCurrency(guest.totalRevenue)}</span>
               </div>
               <div className="flex items-center justify-between">
                 <span className="text-sm text-muted-foreground flex items-center gap-2">
                   <Calendar className="w-4 h-4" />
-                  Last Stay
+                  {t('guestProfile.lastStay')}
                 </span>
                 <span className="font-semibold">{formatDate(guest.lastStayDate)}</span>
               </div>
@@ -303,14 +305,14 @@ export function GuestProfilePage() {
           {/* Preferences */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Preferences</CardTitle>
+              <CardTitle className="text-base">{t('guestProfile.preferences')}</CardTitle>
             </CardHeader>
             <CardContent>
               {editing ? (
                 <Textarea
                   value={formData.preferences}
                   onChange={(e) => setFormData({ ...formData, preferences: e.target.value })}
-                  placeholder="Enter preferences (one per line)"
+                  placeholder={t('guestProfile.preferencesPlaceholder')}
                   className="min-h-[120px]"
                 />
               ) : guest.preferences.length > 0 ? (
@@ -323,7 +325,7 @@ export function GuestProfilePage() {
                   ))}
                 </ul>
               ) : (
-                <p className="text-sm text-muted-foreground/70">No preferences recorded</p>
+                <p className="text-sm text-muted-foreground/70">{t('guestProfile.noPreferences')}</p>
               )}
             </CardContent>
           </Card>
@@ -331,20 +333,20 @@ export function GuestProfilePage() {
           {/* Notes */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Notes</CardTitle>
+              <CardTitle className="text-base">{t('guestProfile.notes')}</CardTitle>
             </CardHeader>
             <CardContent>
               {editing ? (
                 <Textarea
                   value={formData.notes}
                   onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-                  placeholder="Add notes about this guest..."
+                  placeholder={t('guestProfile.notesPlaceholder')}
                   className="min-h-[120px]"
                 />
               ) : guest.notes ? (
                 <p className="text-sm text-muted-foreground whitespace-pre-wrap">{guest.notes}</p>
               ) : (
-                <p className="text-sm text-muted-foreground/70">No notes</p>
+                <p className="text-sm text-muted-foreground/70">{t('guestProfile.noNotes')}</p>
               )}
             </CardContent>
           </Card>
@@ -353,12 +355,12 @@ export function GuestProfilePage() {
           {editing && (
             <Card className="lg:col-span-3">
               <CardHeader>
-                <CardTitle className="text-base">Edit Guest Details</CardTitle>
+                <CardTitle className="text-base">{t('guestProfile.editDetails')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
                   <div>
-                    <label className="text-sm font-medium">First Name</label>
+                    <label className="text-sm font-medium">{t('guestProfile.firstName')}</label>
                     <Input
                       value={formData.firstName}
                       onChange={(e) => setFormData({ ...formData, firstName: e.target.value })}
@@ -366,7 +368,7 @@ export function GuestProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Last Name</label>
+                    <label className="text-sm font-medium">{t('guestProfile.lastName')}</label>
                     <Input
                       value={formData.lastName}
                       onChange={(e) => setFormData({ ...formData, lastName: e.target.value })}
@@ -374,7 +376,7 @@ export function GuestProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Email</label>
+                    <label className="text-sm font-medium">{t('guestProfile.email')}</label>
                     <Input
                       type="email"
                       value={formData.email}
@@ -383,7 +385,7 @@ export function GuestProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Phone</label>
+                    <label className="text-sm font-medium">{t('guestProfile.phone')}</label>
                     <Input
                       value={formData.phone}
                       onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -391,7 +393,7 @@ export function GuestProfilePage() {
                     />
                   </div>
                   <div>
-                    <label className="text-sm font-medium">VIP Status</label>
+                    <label className="text-sm font-medium">{t('guestProfile.vipStatus')}</label>
                     <select
                       value={formData.vipStatus}
                       onChange={(e) => setFormData({ ...formData, vipStatus: e.target.value })}
@@ -399,13 +401,13 @@ export function GuestProfilePage() {
                     >
                       {VIP_OPTIONS.map((opt) => (
                         <option key={opt} value={opt}>
-                          {opt === 'none' ? 'None' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                          {opt === 'none' ? t('common.none') : opt.charAt(0).toUpperCase() + opt.slice(1)}
                         </option>
                       ))}
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Loyalty Tier</label>
+                    <label className="text-sm font-medium">{t('guestProfile.loyaltyTier')}</label>
                     <select
                       value={formData.loyaltyTier}
                       onChange={(e) => setFormData({ ...formData, loyaltyTier: e.target.value })}
@@ -413,17 +415,17 @@ export function GuestProfilePage() {
                     >
                       {LOYALTY_OPTIONS.map((opt) => (
                         <option key={opt} value={opt}>
-                          {opt === 'none' ? 'None' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                          {opt === 'none' ? t('common.none') : opt.charAt(0).toUpperCase() + opt.slice(1)}
                         </option>
                       ))}
                     </select>
                   </div>
                   <div className="md:col-span-2 lg:col-span-3">
-                    <label className="text-sm font-medium">Tags (comma-separated)</label>
+                    <label className="text-sm font-medium">{t('guestProfile.tagsHint')}</label>
                     <Input
                       value={formData.tags}
                       onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-                      placeholder="business, frequent, noise-sensitive"
+                      placeholder={t('guestProfile.tagsPlaceholder')}
                       className="mt-1"
                     />
                   </div>
@@ -436,7 +438,7 @@ export function GuestProfilePage() {
           {!editing && guest.tags.length > 0 && (
             <Card className="lg:col-span-3">
               <CardHeader>
-                <CardTitle className="text-base">Tags</CardTitle>
+                <CardTitle className="text-base">{t('guestProfile.tags')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex flex-wrap gap-2">
@@ -458,18 +460,18 @@ export function GuestProfilePage() {
             {reservations.length === 0 ? (
               <EmptyState
                 icon={Hotel}
-                title="No reservations found"
-                description="This guest has no reservation history."
+                title={t('guestProfile.noReservations')}
+                description={t('guestProfile.noReservationsDesc')}
               />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Confirmation #</TableHead>
-                    <TableHead>Room</TableHead>
-                    <TableHead>Arrival</TableHead>
-                    <TableHead>Departure</TableHead>
-                    <TableHead>Status</TableHead>
+                    <TableHead>{t('guestProfile.confirmation')}</TableHead>
+                    <TableHead>{t('common.room')}</TableHead>
+                    <TableHead>{t('reservations.arrival')}</TableHead>
+                    <TableHead>{t('reservations.departure')}</TableHead>
+                    <TableHead>{t('common.status')}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -507,17 +509,17 @@ export function GuestProfilePage() {
             {conversations.length === 0 ? (
               <EmptyState
                 icon={MessageSquare}
-                title="No conversations found"
-                description="This guest hasn't started any conversations yet."
+                title={t('guestProfile.noConversations')}
+                description={t('guestProfile.noConversationsDesc')}
               />
             ) : (
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Channel</TableHead>
-                    <TableHead>Status</TableHead>
-                    <TableHead>Last Message</TableHead>
-                    <TableHead>Created</TableHead>
+                    <TableHead>{t('guestProfile.channel')}</TableHead>
+                    <TableHead>{t('common.status')}</TableHead>
+                    <TableHead>{t('guestProfile.lastMessage')}</TableHead>
+                    <TableHead>{t('common.created')}</TableHead>
                     <TableHead></TableHead>
                   </TableRow>
                 </TableHeader>
@@ -535,7 +537,7 @@ export function GuestProfilePage() {
                       <TableCell>
                         <Link to={`/inbox/${conv.id}`}>
                           <Button variant="ghost" size="sm">
-                            View
+                            {t('guestProfile.view')}
                           </Button>
                         </Link>
                       </TableCell>

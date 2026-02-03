@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Search,
   CheckCircle2,
@@ -42,25 +43,26 @@ interface Integration {
   status: IntegrationStatus;
 }
 
-const statusConfig: Record<
+const getStatusConfig = (t: (key: string) => string): Record<
   IntegrationStatus,
   { label: string; variant: 'success' | 'warning' | 'error' | 'secondary'; icon: typeof CheckCircle2 }
-> = {
-  connected: { label: 'Connected', variant: 'success', icon: CheckCircle2 },
-  configured: { label: 'Ready', variant: 'warning', icon: Zap },
-  error: { label: 'Error', variant: 'error', icon: AlertCircle },
-  disabled: { label: 'Disabled', variant: 'secondary', icon: XCircle },
-  not_configured: { label: 'Not Set Up', variant: 'secondary', icon: Settings2 },
-};
+> => ({
+  connected: { label: t('extensions.connected'), variant: 'success', icon: CheckCircle2 },
+  configured: { label: t('extensions.ready'), variant: 'warning', icon: Zap },
+  error: { label: t('extensions.error'), variant: 'error', icon: AlertCircle },
+  disabled: { label: t('extensions.disabled'), variant: 'secondary', icon: XCircle },
+  not_configured: { label: t('extensions.notSetUp'), variant: 'secondary', icon: Settings2 },
+});
 
-const categoryLabels: Record<string, string> = {
-  ai: 'AI Provider',
-  channels: 'Communication Channels',
-  pms: 'Hotel Systems',
-  operations: 'Operations',
-};
+const getCategoryLabels = (t: (key: string) => string): Record<string, string> => ({
+  ai: t('extensions.aiProvider'),
+  channels: t('extensions.communicationChannels'),
+  pms: t('extensions.hotelSystems'),
+  operations: t('extensions.operations'),
+});
 
-function StatusIndicator({ status }: { status: IntegrationStatus }) {
+function StatusIndicator({ status, t }: { status: IntegrationStatus; t: (key: string) => string }) {
+  const statusConfig = getStatusConfig(t);
   const config = statusConfig[status] || statusConfig.not_configured;
   const Icon = config.icon;
 
@@ -80,7 +82,7 @@ function StatusIndicator({ status }: { status: IntegrationStatus }) {
   );
 }
 
-function ExtensionCard({ integration }: { integration: Integration }) {
+function ExtensionCard({ integration, t }: { integration: Integration; t: (key: string) => string }) {
   const activeProviders = integration.providers.filter((p) => p.enabled);
   const errorProvider = activeProviders.find((p) => p.lastError);
 
@@ -97,11 +99,11 @@ function ExtensionCard({ integration }: { integration: Integration }) {
                 <div className="flex items-center gap-2">
                   <h3 className="font-semibold text-foreground">{integration.name}</h3>
                   {integration.required && (
-                    <Badge variant="outline" className="text-xs">Required</Badge>
+                    <Badge variant="outline" className="text-xs">{t('common.required')}</Badge>
                   )}
                 </div>
                 <div className="flex items-center gap-3">
-                  <StatusIndicator status={integration.status} />
+                  <StatusIndicator status={integration.status} t={t} />
                   <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors" />
                 </div>
               </div>
@@ -116,7 +118,7 @@ function ExtensionCard({ integration }: { integration: Integration }) {
                   ))}
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">No provider configured</p>
+                <p className="text-sm text-muted-foreground">{t('extensions.noProviderConfigured')}</p>
               )}
             </div>
           </div>
@@ -133,7 +135,9 @@ function ExtensionCard({ integration }: { integration: Integration }) {
 }
 
 export function ExtensionsPage() {
+  const { t } = useTranslation();
   const [search, setSearch] = useState('');
+  const categoryLabels = getCategoryLabels(t);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['integrations'],
@@ -183,10 +187,10 @@ export function ExtensionsPage() {
       {!isLoading && !error && (
         <StatsBar
           items={[
-            { label: 'Connected', value: stats.connected, icon: CheckCircle2, variant: 'success' },
-            { label: 'Ready to Test', value: stats.configured, icon: Zap, variant: 'warning' },
-            { label: 'Errors', value: stats.errors, icon: AlertCircle, variant: 'error' },
-            { label: 'Total', value: stats.total, icon: Settings2, variant: 'default' },
+            { label: t('extensions.connected'), value: stats.connected, icon: CheckCircle2, variant: 'success' },
+            { label: t('extensions.readyToTest'), value: stats.configured, icon: Zap, variant: 'warning' },
+            { label: t('extensions.errors'), value: stats.errors, icon: AlertCircle, variant: 'error' },
+            { label: t('extensions.total'), value: stats.total, icon: Settings2, variant: 'default' },
           ]}
         />
       )}
@@ -196,7 +200,7 @@ export function ExtensionsPage() {
         <SearchInput
           value={search}
           onChange={setSearch}
-          placeholder="Search extensions..."
+          placeholder={t('extensions.searchExtensions')}
         />
       </div>
 
@@ -206,14 +210,14 @@ export function ExtensionsPage() {
       ) : error ? (
         <EmptyState
           icon={AlertCircle}
-          title="Failed to load extensions"
-          description="Please try again later"
+          title={t('extensions.failedToLoad')}
+          description={t('approvals.tryAgainLater')}
         />
       ) : filteredIntegrations.length === 0 ? (
         <EmptyState
           icon={Search}
-          title="No extensions found"
-          description="Try a different search term"
+          title={t('extensions.noExtensions')}
+          description={t('extensions.noExtensionsSearch')}
         />
       ) : (
         <div className="space-y-10">
@@ -228,7 +232,7 @@ export function ExtensionsPage() {
               </div>
               <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
                 {grouped[category].map((integration) => (
-                  <ExtensionCard key={integration.id} integration={integration} />
+                  <ExtensionCard key={integration.id} integration={integration} t={t} />
                 ))}
               </div>
             </div>

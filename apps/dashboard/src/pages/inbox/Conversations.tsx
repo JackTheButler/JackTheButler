@@ -1,13 +1,15 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
-import { conversationStateFilters } from '@/lib/config';
+import { getConversationStateFilters } from '@/lib/config';
 import { ConversationList, ConversationView } from '@/components';
 import { ConversationListSkeleton } from '@/components';
 import { FilterTabs } from '@/components/ui/filter-tabs';
 import type { Conversation, ConversationState } from '@/types/api';
 
 export function ConversationsPage() {
+  const { t } = useTranslation();
   const [filter, setFilter] = useState<ConversationState | 'all'>('all');
   const [selectedId, setSelectedId] = useState<string | null>(null);
 
@@ -21,6 +23,8 @@ export function ConversationsPage() {
   });
 
   const conversations = data?.conversations || [];
+
+  const conversationStateFilters = getConversationStateFilters(t);
 
   return (
     <div className="flex h-[calc(100vh-56px)]">
@@ -39,7 +43,7 @@ export function ConversationsPage() {
         {isLoading ? (
           <ConversationListSkeleton count={6} />
         ) : conversations.length === 0 ? (
-          <div className="p-4 text-muted-foreground text-sm">No conversations</div>
+          <div className="p-4 text-muted-foreground text-sm">{t('inbox.noConversations')}</div>
         ) : (
           <ConversationList
             conversations={conversations}
@@ -55,7 +59,7 @@ export function ConversationsPage() {
           <ConversationView id={selectedId} />
         ) : (
           <div className="h-full flex items-center justify-center text-muted-foreground">
-            Select a conversation
+            {t('inbox.selectConversation')}
           </div>
         )}
       </div>

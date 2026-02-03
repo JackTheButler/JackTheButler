@@ -1,5 +1,6 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageContainer, DataTable, EmptyState } from '@/components';
 import { usePageActions } from '@/contexts/PageActionsContext';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
@@ -74,6 +75,7 @@ const CATEGORIES = [
 ];
 
 export function KnowledgeBasePage() {
+  const { t } = useTranslation();
   const { setActions } = usePageActions();
   const { providers } = useSystemStatus();
   const navigate = useNavigate();
@@ -150,17 +152,17 @@ export function KnowledgeBasePage() {
             disabled={reindexing}
           >
             <RefreshCw className={cn('w-4 h-4 mr-1.5', reindexing && 'animate-spin')} />
-            Reindex
+            {t('knowledge.reindex')}
           </Button>
           <Button size="sm" onClick={startAdd}>
             <Plus className="w-4 h-4 mr-1.5" />
-            Add Entry
+            {t('knowledge.addEntry')}
           </Button>
         </div>
       ) : null
     );
     return () => setActions(null);
-  }, [setActions, isAddingNew, editingEntry, reindexing]);
+  }, [setActions, isAddingNew, editingEntry, reindexing, t]);
 
   useEffect(() => {
     fetchEntries();
@@ -202,7 +204,7 @@ export function KnowledgeBasePage() {
 
   const handleSave = async () => {
     if (!formData.title.trim() || !formData.content.trim()) {
-      setError('Title and content are required');
+      setError(t('knowledge.titleContentRequired'));
       return;
     }
 
@@ -290,7 +292,7 @@ export function KnowledgeBasePage() {
   const columns: Column<KnowledgeEntry>[] = [
     {
       key: 'category',
-      header: 'Category',
+      header: t('knowledge.category'),
       render: (entry) => (
         <Badge>
           {entry.category.replace(/_/g, ' ')}
@@ -299,7 +301,7 @@ export function KnowledgeBasePage() {
     },
     {
       key: 'title',
-      header: 'Title',
+      header: t('knowledge.title'),
       render: (entry) => (
         <div className="font-medium truncate max-w-[200px]" title={entry.title}>
           {entry.title}
@@ -308,7 +310,7 @@ export function KnowledgeBasePage() {
     },
     {
       key: 'content',
-      header: 'Content',
+      header: t('knowledge.content'),
       render: (entry) => (
         <div className="text-sm text-muted-foreground truncate max-w-[300px]" title={entry.content}>
           {entry.content.length > 100 ? `${entry.content.substring(0, 100)}...` : entry.content}
@@ -328,10 +330,10 @@ export function KnowledgeBasePage() {
           </DropdownMenuTrigger>
           <DropdownMenuContent>
             <DropdownMenuItem onClick={() => startEdit(entry)}>
-              Edit
+              {t('common.edit')}
             </DropdownMenuItem>
             <DropdownMenuItem onClick={() => setDeleteEntryId(entry.id)}>
-              Delete
+              {t('common.delete')}
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
@@ -340,7 +342,7 @@ export function KnowledgeBasePage() {
   ];
 
   const categoryOptions = [
-    { value: '', label: 'All' },
+    { value: '', label: t('common.all') },
     ...categories.map((cat) => ({ value: cat.id, label: cat.label })),
   ];
 
@@ -349,11 +351,11 @@ export function KnowledgeBasePage() {
       {/* Embedding provider warnings */}
       {!providers?.embedding && (
         <Alert variant="destructive" className="mb-6">
-          <AlertTitle>Embedding Required</AlertTitle>
+          <AlertTitle>{t('knowledge.embeddingRequired')}</AlertTitle>
           <AlertDescription className="flex items-end justify-between">
-            <span>Knowledge base requires embeddings. Select an embedding provider: Local AI (free & private) or OpenAI, then re-index the knowledge base.</span>
+            <span>{t('knowledge.embeddingRequiredDesc')}</span>
             <Link to="/settings/extensions/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
-              Configure <ArrowRight className="h-3 w-3" />
+              {t('common.configure')} <ArrowRight className="h-3 w-3" />
             </Link>
           </AlertDescription>
         </Alert>
@@ -382,7 +384,7 @@ export function KnowledgeBasePage() {
                 value={testQuery}
                 onChange={(e) => setTestQuery(e.target.value)}
                 onKeyDown={(e) => e.key === 'Enter' && !testLoading && handleTest()}
-                placeholder="Ask a question to test your knowledge base..."
+                placeholder={t('knowledge.askQuestion')}
                 className="pl-10"
               />
             </div>
@@ -395,7 +397,7 @@ export function KnowledgeBasePage() {
               ) : (
                 <>
                   <Send className="w-4 h-4 mr-1.5" />
-                  Ask
+                  {t('knowledge.ask')}
                 </>
               )}
             </Button>
@@ -410,14 +412,14 @@ export function KnowledgeBasePage() {
           {testResult && (
             <div className="mt-4 space-y-4">
               <div className="p-4 bg-muted/50 rounded-lg">
-                <div className="text-xs font-medium text-muted-foreground mb-2">AI Response</div>
+                <div className="text-xs font-medium text-muted-foreground mb-2">{t('knowledge.aiResponse')}</div>
                 <div className="text-sm text-foreground">{testResult.response}</div>
               </div>
 
               {testResult.matches.length > 0 && (
                 <div>
                   <div className="text-xs font-medium text-muted-foreground mb-2">
-                    Matched Entries ({testResult.matches.length})
+                    {t('knowledge.matchedEntries')} ({testResult.matches.length})
                   </div>
                   <div className="space-y-2">
                     {testResult.matches.map((match) => (
@@ -431,7 +433,7 @@ export function KnowledgeBasePage() {
                           </Badge>
                           <span className="font-medium">{match.title}</span>
                         </div>
-                        <span className="text-xs text-muted-foreground">{match.similarity}% match</span>
+                        <span className="text-xs text-muted-foreground">{match.similarity}% {t('knowledge.match')}</span>
                       </div>
                     ))}
                   </div>
@@ -440,7 +442,7 @@ export function KnowledgeBasePage() {
 
               {testResult.matches.length === 0 && (
                 <div className="text-sm text-muted-foreground">
-                  No matching entries found. The AI provided a general response.
+                  {t('knowledge.noMatches')}
                 </div>
               )}
             </div>
@@ -452,17 +454,17 @@ export function KnowledgeBasePage() {
       {(isAddingNew || editingEntry) && (
             <Card>
               <CardHeader>
-                <CardTitle>{editingEntry ? 'Edit Entry' : 'Add New Entry'}</CardTitle>
+                <CardTitle>{editingEntry ? t('knowledge.editEntry') : t('knowledge.addNewEntry')}</CardTitle>
                 <CardDescription>
                   {editingEntry
-                    ? 'Update the knowledge base entry'
-                    : 'Add a new entry to the knowledge base'}
+                    ? t('knowledge.updateEntry')
+                    : t('knowledge.addNewEntryDesc')}
                 </CardDescription>
               </CardHeader>
               <CardContent className="space-y-4">
                 <div className="grid grid-cols-2 gap-4">
                   <div>
-                    <label className="text-sm font-medium">Category</label>
+                    <label className="text-sm font-medium">{t('knowledge.category')}</label>
                     <select
                       value={formData.category}
                       onChange={(e) =>
@@ -478,7 +480,7 @@ export function KnowledgeBasePage() {
                     </select>
                   </div>
                   <div>
-                    <label className="text-sm font-medium">Priority (0-10)</label>
+                    <label className="text-sm font-medium">{t('knowledge.priority')} (0-10)</label>
                     <Input
                       type="number"
                       min={0}
@@ -493,27 +495,27 @@ export function KnowledgeBasePage() {
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">Title</label>
+                  <label className="text-sm font-medium">{t('knowledge.title')}</label>
                   <Input
                     value={formData.title}
                     onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                    placeholder="Entry title"
+                    placeholder={t('knowledge.entryTitle')}
                     className="mt-1"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">Content</label>
+                  <label className="text-sm font-medium">{t('knowledge.content')}</label>
                   <Textarea
                     value={formData.content}
                     onChange={(e) => setFormData({ ...formData, content: e.target.value })}
-                    placeholder="Entry content..."
+                    placeholder={t('knowledge.content')}
                     className="mt-1 min-h-[150px]"
                   />
                 </div>
 
                 <div>
-                  <label className="text-sm font-medium">Keywords (comma-separated)</label>
+                  <label className="text-sm font-medium">{t('knowledge.keywordsHint')}</label>
                   <Input
                     value={formData.keywords}
                     onChange={(e) => setFormData({ ...formData, keywords: e.target.value })}
@@ -524,10 +526,10 @@ export function KnowledgeBasePage() {
 
                 <div className="flex justify-end gap-2 pt-4 border-t">
                   <Button variant="outline" onClick={resetForm}>
-                    Cancel
+                    {t('common.cancel')}
                   </Button>
                   <Button onClick={handleSave} loading={saving}>
-                    {editingEntry ? 'Update' : 'Add'} Entry
+                    {editingEntry ? t('common.update') : t('common.add')} {t('knowledge.addEntry').split(' ')[1]}
                   </Button>
                 </div>
               </CardContent>
@@ -551,17 +553,17 @@ export function KnowledgeBasePage() {
           onChange: setSearch,
           onSearch: handleSearch,
           onClear: () => setSearchQuery(''),
-          placeholder: 'Search entries...',
+          placeholder: t('knowledge.searchEntries'),
         }}
         loading={loading}
         emptyState={
           <EmptyState
             icon={Book}
-            title="No entries found"
+            title={t('knowledge.noEntries')}
             description={
               filterCategory || searchQuery
-                ? 'Try changing your filters'
-                : 'Add your first entry or use the Site Scraper to import content'
+                ? t('knowledge.noEntriesFilter')
+                : t('knowledge.noEntriesEmpty')
             }
           />
         }
@@ -571,9 +573,9 @@ export function KnowledgeBasePage() {
       <ConfirmDialog
         open={showReindexConfirm}
         onOpenChange={setShowReindexConfirm}
-        title="Reindex Knowledge Base"
-        description="This will regenerate embeddings for all entries. This may take a while depending on the number of entries and your embedding provider."
-        confirmLabel="Reindex"
+        title={t('knowledge.reindexTitle')}
+        description={t('knowledge.reindexDesc')}
+        confirmLabel={t('knowledge.reindex')}
         onConfirm={handleReindex}
       />
 
@@ -581,9 +583,9 @@ export function KnowledgeBasePage() {
       <ConfirmDialog
         open={!!deleteEntryId}
         onOpenChange={(open) => !open && setDeleteEntryId(null)}
-        title="Delete Entry"
-        description="Are you sure you want to delete this entry? This action cannot be undone."
-        confirmLabel="Delete"
+        title={t('knowledge.deleteEntry')}
+        description={t('knowledge.deleteEntryDesc')}
+        confirmLabel={t('common.delete')}
         variant="destructive"
         onConfirm={() => deleteEntryId && handleDelete(deleteEntryId)}
       />
@@ -592,9 +594,9 @@ export function KnowledgeBasePage() {
       <ConfirmDialog
         open={showEmbeddingWarning}
         onOpenChange={setShowEmbeddingWarning}
-        title="Embedding Required"
-        description="Please configure an embedding provider first. Enable Local AI (free & private) or OpenAI in the AI settings, then try again."
-        confirmLabel="Go to Settings"
+        title={t('knowledge.embeddingRequired')}
+        description={t('knowledge.embeddingNotConfigured')}
+        confirmLabel={t('knowledge.goToSettings')}
         onConfirm={() => {
           setShowEmbeddingWarning(false);
           navigate('/settings/extensions/ai?provider=local');

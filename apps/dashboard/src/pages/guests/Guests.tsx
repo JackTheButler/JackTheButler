@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { PageContainer, StatsBar, EmptyState, DataTable } from '@/components';
 import { usePageActions } from '@/contexts/PageActionsContext';
 import type { Column } from '@/components/DataTable';
@@ -29,6 +30,7 @@ interface GuestStats {
 }
 
 export function GuestsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const { setActions } = usePageActions();
   const [search, setSearch] = useState('');
@@ -40,12 +42,12 @@ export function GuestsPage() {
       <Link to="/guests/new">
         <Button size="sm">
           <Plus className="w-4 h-4 mr-1.5" />
-          Add Guest
+          {t('guests.addGuest')}
         </Button>
       </Link>
     );
     return () => setActions(null);
-  }, [setActions]);
+  }, [setActions, t]);
 
   const { data: stats } = useQuery({
     queryKey: ['guestStats'],
@@ -67,7 +69,7 @@ export function GuestsPage() {
   const columns: Column<Guest>[] = [
     {
       key: 'name',
-      header: 'Name',
+      header: t('common.name'),
       render: (guest) => (
         <div>
           <Link
@@ -99,11 +101,11 @@ export function GuestsPage() {
     },
     {
       key: 'contact',
-      header: 'Contact',
+      header: t('common.contact'),
       render: (guest) => (
         <div className="text-sm">
           <div className="text-muted-foreground truncate max-w-[200px]">
-            {guest.email || <span className="text-muted-foreground/70 italic">No email</span>}
+            {guest.email || <span className="text-muted-foreground/70 italic">{t('common.noEmail')}</span>}
           </div>
           {guest.phone && (
             <div className="text-muted-foreground text-xs">{guest.phone}</div>
@@ -113,7 +115,7 @@ export function GuestsPage() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (guest) => (
         <div className="flex gap-1.5">
           {guest.vipStatus && guest.vipStatus !== 'none' && (
@@ -132,13 +134,13 @@ export function GuestsPage() {
     },
     {
       key: 'stayCount',
-      header: 'Stays',
+      header: t('guests.stays'),
       className: 'text-right',
       render: (guest) => <span className="font-medium">{guest.stayCount}</span>,
     },
     {
       key: 'totalRevenue',
-      header: 'Revenue',
+      header: t('guests.revenue'),
       className: 'text-right',
       render: (guest) => (
         <span className="text-muted-foreground">{formatCurrency(guest.totalRevenue)}</span>
@@ -146,7 +148,7 @@ export function GuestsPage() {
     },
     {
       key: 'lastStayDate',
-      header: 'Last Stay',
+      header: t('guests.lastStay'),
       render: (guest) => (
         <span className="text-muted-foreground text-sm">{formatDate(guest.lastStayDate)}</span>
       ),
@@ -171,10 +173,10 @@ export function GuestsPage() {
       {stats && (
         <StatsBar
           items={[
-            { label: 'Total Guests', value: stats.total, icon: Users, variant: 'default' },
-            { label: 'VIP Guests', value: stats.vip, icon: Crown, variant: 'warning' },
-            { label: 'Repeat Guests', value: stats.repeatGuests, icon: Star, variant: 'success' },
-            { label: 'New This Month', value: stats.newThisMonth, icon: UserPlus, variant: 'default' },
+            { label: t('guests.totalGuests'), value: stats.total, icon: Users, variant: 'default' },
+            { label: t('guests.vipGuests'), value: stats.vip, icon: Crown, variant: 'warning' },
+            { label: t('guests.repeatGuests'), value: stats.repeatGuests, icon: Star, variant: 'success' },
+            { label: t('guests.newThisMonth'), value: stats.newThisMonth, icon: UserPlus, variant: 'default' },
           ]}
         />
       )}
@@ -188,18 +190,18 @@ export function GuestsPage() {
           onChange: setSearch,
           onSearch: handleSearch,
           onClear: () => setSearchQuery(''),
-          placeholder: 'Search guests...',
+          placeholder: t('guests.searchGuests'),
         }}
         loading={isLoading}
         onRowClick={(guest) => navigate(`/guests/${guest.id}`)}
         emptyState={
           <EmptyState
             icon={Users}
-            title="No guests found"
+            title={t('guests.noGuests')}
             description={
               searchQuery
-                ? 'Try changing your search'
-                : 'Add your first guest to get started'
+                ? t('guests.noGuestsSearch')
+                : t('guests.noGuestsEmpty')
             }
           />
         }

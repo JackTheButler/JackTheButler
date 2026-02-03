@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Clock,
   CheckCircle2,
@@ -14,7 +15,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatTimeAgo } from '@/lib/formatters';
 import {
-  approvalStatusFilters,
+  getApprovalStatusFilters,
   approvalStatusVariants,
   priorityVariants,
   type ApprovalStatus,
@@ -91,10 +92,10 @@ interface ActionData {
   [key: string]: unknown;
 }
 
-const typeConfig: Record<ApprovalItemType, { label: string; icon: typeof MessageSquare }> = {
-  response: { label: 'Response', icon: MessageSquare },
-  task: { label: 'Task', icon: ListTodo },
-  offer: { label: 'Offer', icon: Gift },
+const typeIcons: Record<ApprovalItemType, typeof MessageSquare> = {
+  response: MessageSquare,
+  task: ListTodo,
+  offer: Gift,
 };
 
 
@@ -131,6 +132,7 @@ function ExpandedRow({
   showRejectForm: boolean;
   setShowRejectForm: (show: boolean) => void;
 }) {
+  const { t } = useTranslation();
   const [rejectReason, setRejectReason] = useState('');
   const [showConversation, setShowConversation] = useState(false);
 
@@ -145,7 +147,7 @@ function ExpandedRow({
       {/* Content Preview */}
       {item.type === 'response' && actionData.content && (
         <div className="space-y-2">
-          <div className="text-xs text-muted-foreground uppercase font-medium">Proposed Response</div>
+          <div className="text-xs text-muted-foreground uppercase font-medium">{t('approvals.proposedResponse')}</div>
           <p className="text-sm whitespace-pre-wrap">{String(actionData.content)}</p>
           {(actionData.intent || actionData.confidence) && (
             <div className="flex items-center gap-2">
@@ -153,7 +155,7 @@ function ExpandedRow({
                 <Badge className="bg-primary text-white capitalize">{String(actionData.intent)}</Badge>
               )}
               {actionData.confidence && (
-                <Badge className="bg-primary text-white">{((actionData.confidence as number) * 100).toFixed(0)}% confident</Badge>
+                <Badge className="bg-primary text-white">{((actionData.confidence as number) * 100).toFixed(0)}% {t('approvals.confident')}</Badge>
               )}
             </div>
           )}
@@ -162,7 +164,7 @@ function ExpandedRow({
 
       {item.type === 'task' && actionData.description && (
         <div className="space-y-2">
-          <div className="text-xs text-muted-foreground uppercase font-medium">Task Details</div>
+          <div className="text-xs text-muted-foreground uppercase font-medium">{t('approvals.taskDetails')}</div>
           <p className="text-sm">{String(actionData.description)}</p>
           <div className="flex items-center gap-2">
             {actionData.department && (
@@ -177,7 +179,7 @@ function ExpandedRow({
 
       {item.type === 'offer' && (
         <div className="space-y-1">
-          <div className="text-xs text-muted-foreground uppercase font-medium">Proposed Offer</div>
+          <div className="text-xs text-muted-foreground uppercase font-medium">{t('approvals.proposedOffer')}</div>
           <pre className="text-xs overflow-auto">{JSON.stringify(actionData, null, 2)}</pre>
         </div>
       )}
@@ -190,10 +192,10 @@ function ExpandedRow({
             className="text-xs text-muted-foreground hover:text-foreground flex items-center gap-1"
           >
             <MessageSquare className="w-3 h-3" />
-            View conversation ({item.conversationMessages.length} messages)
+            {t('approvals.viewConversation')} ({item.conversationMessages.length} {t('common.messages')})
           </button>
           <DialogRoot open={showConversation} onOpenChange={setShowConversation}>
-            <DialogContent title="Conversation" className="max-w-xl">
+            <DialogContent title={t('approvals.conversation')} className="max-w-xl">
               <div className="p-4 space-y-2 max-h-96 overflow-y-auto">
                 {item.conversationMessages.map((msg) => (
                   <div
@@ -206,7 +208,7 @@ function ExpandedRow({
                     )}
                   >
                     <span className="text-xs text-muted-foreground">
-                      {msg.direction === 'inbound' ? 'Guest' : msg.senderType === 'ai' ? 'Jack' : 'Staff'}:
+                      {msg.direction === 'inbound' ? t('common.guest') : msg.senderType === 'ai' ? t('approvals.jack') : t('common.staff')}:
                     </span>{' '}
                     <span className="whitespace-pre-wrap">{msg.content}</span>
                   </div>
@@ -221,7 +223,7 @@ function ExpandedRow({
       {item.status === 'pending' && showRejectForm && (
         <div className="flex items-center gap-2 pt-2 border-t">
           <Input
-            placeholder="Rejection reason..."
+            placeholder={t('approvals.rejectionReason')}
             value={rejectReason}
             onChange={(e) => setRejectReason(e.target.value)}
             className="flex-1 h-8 text-sm"
@@ -238,14 +240,14 @@ function ExpandedRow({
             disabled={!rejectReason.trim()}
             loading={isRejecting}
           >
-            Reject
+            {t('common.reject')}
           </Button>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setShowRejectForm(false)}
           >
-            Cancel
+            {t('common.cancel')}
           </Button>
         </div>
       )}
@@ -255,6 +257,7 @@ function ExpandedRow({
 }
 
 export function ApprovalsPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [filterStatus, setFilterStatus] = useState<ApprovalStatus | 'all'>('pending');
   const [expandedId, setExpandedId] = useState<string | null>(null);
@@ -298,14 +301,21 @@ export function ApprovalsPage() {
 
   const items = data?.items || [];
   const stats = data?.stats || { pending: 0, approvedToday: 0, rejectedToday: 0 };
+  const approvalStatusFilters = getApprovalStatusFilters(t);
+
+  const typeLabels: Record<ApprovalItemType, string> = {
+    response: t('approvals.response'),
+    task: t('approvals.task'),
+    offer: t('approvals.offer'),
+  };
 
   return (
     <PageContainer>
       <StatsBar
         items={[
-          { label: 'Pending', value: stats.pending, icon: Clock },
-          { label: 'Approved Today', value: stats.approvedToday, icon: CheckCircle2 },
-          { label: 'Rejected Today', value: stats.rejectedToday, icon: XCircle },
+          { label: t('approvals.pending'), value: stats.pending, icon: Clock },
+          { label: t('approvals.approvedToday'), value: stats.approvedToday, icon: CheckCircle2 },
+          { label: t('approvals.rejectedToday'), value: stats.rejectedToday, icon: XCircle },
         ]}
       />
 
@@ -328,10 +338,10 @@ export function ApprovalsPage() {
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead className="px-4 w-12"></TableHead>
                 <TableHead className="px-4 w-12"></TableHead>
-                <TableHead className="px-4 min-w-[140px]">Guest</TableHead>
-                <TableHead className="px-4">Preview</TableHead>
-                <TableHead className="px-4 min-w-[100px]">Time</TableHead>
-                <TableHead className="px-4 min-w-[100px]">Status</TableHead>
+                <TableHead className="px-4 min-w-[140px]">{t('common.guest')}</TableHead>
+                <TableHead className="px-4">{t('common.preview')}</TableHead>
+                <TableHead className="px-4 min-w-[100px]">{t('common.time')}</TableHead>
+                <TableHead className="px-4 min-w-[100px]">{t('common.status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -341,14 +351,14 @@ export function ApprovalsPage() {
         ) : error ? (
           <EmptyState
             icon={AlertCircle}
-            title="Failed to load approvals"
-            description="Please try again later"
+            title={t('approvals.failedToLoad')}
+            description={t('approvals.tryAgainLater')}
           />
         ) : items.length === 0 ? (
           <EmptyState
             icon={CheckCircle2}
-            title={filterStatus === 'pending' ? 'No pending approvals' : 'No items found'}
-            description={filterStatus === 'pending' ? 'All caught up!' : 'Try changing your filters.'}
+            title={filterStatus === 'pending' ? t('approvals.noPending') : t('approvals.noItems')}
+            description={filterStatus === 'pending' ? t('approvals.allCaughtUp') : t('common.tryChangingFilters')}
           />
         ) : (
           <Table>
@@ -356,17 +366,16 @@ export function ApprovalsPage() {
               <TableRow className="bg-muted/50 hover:bg-muted/50">
                 <TableHead className="px-4 w-12"></TableHead>
                 <TableHead className="px-4 w-12"></TableHead>
-                <TableHead className="px-4 min-w-[140px]">Guest</TableHead>
-                <TableHead className="px-4">Preview</TableHead>
-                <TableHead className="px-4 min-w-[100px]">Time</TableHead>
-                <TableHead className="px-4 min-w-[100px]">Status</TableHead>
+                <TableHead className="px-4 min-w-[140px]">{t('common.guest')}</TableHead>
+                <TableHead className="px-4">{t('common.preview')}</TableHead>
+                <TableHead className="px-4 min-w-[100px]">{t('common.time')}</TableHead>
+                <TableHead className="px-4 min-w-[100px]">{t('common.status')}</TableHead>
               </TableRow>
             </TableHeader>
             <TableBody>
               {items.map((item) => {
                 const actionData = parseActionData(item.actionData);
-                const typeInfo = typeConfig[item.type];
-                const Icon = typeInfo?.icon || MessageSquare;
+                const Icon = typeIcons[item.type] || MessageSquare;
                 const isExpanded = expandedId === item.id;
                 const preview = getPreviewText(item, actionData);
 
@@ -382,7 +391,7 @@ export function ApprovalsPage() {
                       onClick={() => setExpandedId(isExpanded ? null : item.id)}
                     >
                       <TableCell className="px-4">
-                        <Tooltip content={typeInfo?.label}>
+                        <Tooltip content={typeLabels[item.type]}>
                           <Icon className="w-4 h-4 text-muted-foreground" />
                         </Tooltip>
                       </TableCell>
@@ -395,14 +404,14 @@ export function ApprovalsPage() {
                       </TableCell>
                       <TableCell className="px-4">
                         <div className="text-sm">
-                          <div className="font-medium">{item.guestName || <span className="text-muted-foreground italic">Unknown</span>}</div>
+                          <div className="font-medium">{item.guestName || <span className="text-muted-foreground italic">{t('common.unknown')}</span>}</div>
                           <div className="flex items-center gap-1.5 mt-0.5">
                             {item.conversationChannel && (
                               <ChannelIcon channel={item.conversationChannel} />
                             )}
                             {(item.roomNumber || actionData.roomNumber) && (
                               <span className="text-xs text-muted-foreground">
-                                Room {item.roomNumber || actionData.roomNumber}
+                                {t('common.room')} {item.roomNumber || actionData.roomNumber}
                               </span>
                             )}
                           </div>
@@ -430,7 +439,7 @@ export function ApprovalsPage() {
                                   onClick={() => handleApprove(item.id)}
                                   disabled={approvingId === item.id}
                                 >
-                                  {approvingId === item.id ? 'Approving...' : 'Approve'}
+                                  {approvingId === item.id ? t('common.approving') : t('common.approve')}
                                 </DropdownMenuItem>
                                 <DropdownMenuItem
                                   onClick={() => {
@@ -438,7 +447,7 @@ export function ApprovalsPage() {
                                     setRejectFormId(item.id);
                                   }}
                                 >
-                                  Reject
+                                  {t('common.reject')}
                                 </DropdownMenuItem>
                               </DropdownMenuContent>
                             </DropdownMenu>

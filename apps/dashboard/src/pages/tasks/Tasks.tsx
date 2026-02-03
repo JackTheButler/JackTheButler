@@ -1,10 +1,11 @@
 import { useState } from 'react';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ListTodo, Eye } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDateTime } from '@/lib/formatters';
 import {
-  taskStatusFilters,
+  getTaskStatusFilters,
   taskStatusVariants,
   priorityVariants,
 } from '@/lib/config';
@@ -18,6 +19,7 @@ import { Button } from '@/components/ui/button';
 import { FilterTabs } from '@/components/ui/filter-tabs';
 
 export function TasksPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
@@ -51,6 +53,7 @@ export function TasksPage() {
   });
 
   const tasks = data?.tasks || [];
+  const taskStatusFilters = getTaskStatusFilters(t);
 
   const columns: Column<Task>[] = [
     {
@@ -64,21 +67,21 @@ export function TasksPage() {
     },
     {
       key: 'type',
-      header: 'Type',
+      header: t('tasks.type'),
       render: (task) => (
         <span className="text-sm font-medium capitalize">{task.type.replace('_', ' ')}</span>
       ),
     },
     {
       key: 'roomNumber',
-      header: 'Room',
+      header: t('common.room'),
       render: (task) => (
         <span className="text-sm text-muted-foreground">{task.roomNumber || '-'}</span>
       ),
     },
     {
       key: 'description',
-      header: 'Task',
+      header: t('tasks.task'),
       className: 'max-w-md',
       render: (task) => {
         const isLong = task.description.length > 50;
@@ -91,7 +94,7 @@ export function TasksPage() {
                   setSelectedTask(task);
                 }}
                 className="text-muted-foreground hover:text-primary shrink-0"
-                title="View details"
+                title={t('common.viewDetails')}
               >
                 <Eye className="w-4 h-4" />
               </button>
@@ -105,14 +108,14 @@ export function TasksPage() {
     },
     {
       key: 'assignedName',
-      header: 'Assigned',
+      header: t('tasks.assigned'),
       render: (task) => (
         <span className="text-sm text-muted-foreground">{task.assignedName || '-'}</span>
       ),
     },
     {
       key: 'status',
-      header: 'Action',
+      header: t('tasks.action'),
       className: 'w-36',
       render: (task) => (
         <div onClick={(e) => e.stopPropagation()}>
@@ -122,7 +125,7 @@ export function TasksPage() {
               onClick={() => claimMutation.mutate(task.id)}
               loading={claimMutation.isPending}
             >
-              Claim
+              {t('tasks.claim')}
             </Button>
           )}
           {task.status === 'in_progress' && (
@@ -131,7 +134,7 @@ export function TasksPage() {
               onClick={() => completeMutation.mutate(task.id)}
               loading={completeMutation.isPending}
             >
-              Complete
+              {t('tasks.complete')}
             </Button>
           )}
           {(task.status === 'completed' || task.status === 'cancelled') && (
@@ -141,7 +144,7 @@ export function TasksPage() {
               onClick={() => reopenMutation.mutate(task.id)}
               loading={reopenMutation.isPending}
             >
-              Reopen
+              {t('tasks.reopen')}
             </Button>
           )}
         </div>
@@ -167,22 +170,22 @@ export function TasksPage() {
         emptyState={
           <EmptyState
             icon={ListTodo}
-            title="No tasks found"
-            description="Tasks will appear here when created by guests or staff"
+            title={t('tasks.noTasks')}
+            description={t('tasks.noTasksDescription')}
           />
         }
       />
 
       {/* Task Details Dialog */}
       <DialogRoot open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
-        <DialogContent title="Task Details" className="max-w-lg">
+        <DialogContent title={t('tasks.details')} className="max-w-lg">
           {selectedTask && (
             <div className="p-4 space-y-4">
               <p className="text-sm whitespace-pre-wrap">{selectedTask.description}</p>
 
               <div className="flex flex-wrap gap-2">
                 {selectedTask.roomNumber && (
-                  <Badge>Room {selectedTask.roomNumber}</Badge>
+                  <Badge>{t('common.room')} {selectedTask.roomNumber}</Badge>
                 )}
                 <Badge className="capitalize">{selectedTask.type.replace('_', ' ')}</Badge>
                 <Badge variant={priorityVariants[selectedTask.priority]} className="capitalize">
@@ -195,13 +198,13 @@ export function TasksPage() {
 
               {selectedTask.assignedName && (
                 <div>
-                  <div className="text-xs text-muted-foreground uppercase font-medium mb-1">Assigned To</div>
+                  <div className="text-xs text-muted-foreground uppercase font-medium mb-1">{t('tasks.assignedTo')}</div>
                   <p className="text-sm">{selectedTask.assignedName}</p>
                 </div>
               )}
 
               <div className="text-xs text-muted-foreground">
-                <div>Created {formatDateTime(selectedTask.createdAt)}</div>
+                <div>{t('common.created')} {formatDateTime(selectedTask.createdAt)}</div>
                 <div className="capitalize">{selectedTask.department.replace('_', ' ')}</div>
               </div>
             </div>

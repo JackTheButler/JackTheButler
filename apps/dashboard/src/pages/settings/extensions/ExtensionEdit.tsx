@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Spinner } from '@/components/ui/spinner';
 import {
   ArrowLeft,
@@ -79,16 +80,16 @@ interface LogEntry {
   createdAt: string;
 }
 
-const statusConfig: Record<
+const getStatusConfig = (t: (key: string) => string): Record<
   IntegrationStatus,
   { label: string; variant: 'success' | 'warning' | 'error' | 'secondary'; icon: typeof CheckCircle2 }
-> = {
-  connected: { label: 'Connected', variant: 'success', icon: CheckCircle2 },
-  configured: { label: 'Ready', variant: 'warning', icon: Zap },
-  error: { label: 'Error', variant: 'error', icon: AlertCircle },
-  disabled: { label: 'Disabled', variant: 'secondary', icon: PowerOff },
-  not_configured: { label: 'Not Set Up', variant: 'secondary', icon: Settings2 },
-};
+> => ({
+  connected: { label: t('extensionEdit.status.connected'), variant: 'success', icon: CheckCircle2 },
+  configured: { label: t('extensionEdit.status.ready'), variant: 'warning', icon: Zap },
+  error: { label: t('extensionEdit.status.error'), variant: 'error', icon: AlertCircle },
+  disabled: { label: t('extensionEdit.status.disabled'), variant: 'secondary', icon: PowerOff },
+  not_configured: { label: t('extensionEdit.status.notSetUp'), variant: 'secondary', icon: Settings2 },
+});
 
 function Toast({
   type,
@@ -128,6 +129,7 @@ function ConfigForm({
   extensionId: string;
   onSaved: () => void;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [formData, setFormData] = useState<Record<string, string | boolean>>(() => {
     const initial: Record<string, string | boolean> = {};
@@ -198,7 +200,7 @@ function ConfigForm({
                   className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm ring-offset-background focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
                   required={field.required}
                 >
-                  <option value="">Select...</option>
+                  <option value="">{t('extensionEdit.select')}</option>
                   {field.options.map((opt) => (
                     <option key={opt.value} value={opt.value}>
                       {opt.label}
@@ -243,14 +245,14 @@ function ConfigForm({
       <div className="pt-4 space-y-4">
         <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
           {saveMutation.isPending && <Spinner size="sm" className="mr-2" />}
-          Save Configuration
+          {t('extensionEdit.saveConfiguration')}
         </Button>
 
         {saveMutation.isError && (
           <Toast type="error" message={(saveMutation.error as Error).message} />
         )}
         {saveMutation.isSuccess && (
-          <Toast type="success" message="Configuration saved successfully" />
+          <Toast type="success" message={t('extensionEdit.configSaved')} />
         )}
       </div>
     </form>
@@ -264,7 +266,9 @@ function ConnectionStatus({
   provider: Provider;
   extensionId: string;
 }) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const statusConfig = getStatusConfig(t);
   const config = statusConfig[provider.status] || statusConfig.not_configured;
   const StatusIcon = config.icon;
 
@@ -306,14 +310,14 @@ function ConnectionStatus({
             </Badge>
             {provider.enabled && (
               <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-                Active
+                {t('extensionEdit.active')}
               </Badge>
             )}
           </div>
           {provider.lastChecked && (
             <p className="text-sm text-muted-foreground flex items-center gap-1.5">
               <Clock className="w-3.5 h-3.5" />
-              Last checked: {formatDateTime(provider.lastChecked)}
+              {t('extensionEdit.lastChecked')}: {formatDateTime(provider.lastChecked)}
             </p>
           )}
         </div>
@@ -329,7 +333,7 @@ function ConnectionStatus({
             ) : (
               <Zap className="w-4 h-4 mr-2" />
             )}
-            Test Connection
+            {t('extensionEdit.testConnection')}
           </Button>
           {provider.config && (
             <Button
@@ -348,12 +352,12 @@ function ConnectionStatus({
               ) : provider.enabled ? (
                 <>
                   <PowerOff className="w-4 h-4 mr-2" />
-                  Disable
+                  {t('extensionEdit.disable')}
                 </>
               ) : (
                 <>
                   <Power className="w-4 h-4 mr-2" />
-                  Enable
+                  {t('extensionEdit.enable')}
                 </>
               )}
             </Button>
@@ -379,6 +383,7 @@ function ConnectionStatus({
 }
 
 function ActivityLogs({ extensionId, providerId }: { extensionId: string; providerId: string }) {
+  const { t } = useTranslation();
   const { data, isLoading } = useQuery({
     queryKey: ['integration-logs', extensionId, providerId],
     queryFn: () =>
@@ -399,7 +404,7 @@ function ActivityLogs({ extensionId, providerId }: { extensionId: string; provid
     return (
       <div className="text-center py-8">
         <Activity className="w-8 h-8 text-muted-foreground/50 mx-auto mb-2" />
-        <p className="text-sm text-muted-foreground">No activity logs yet</p>
+        <p className="text-sm text-muted-foreground">{t('extensionEdit.noActivityLogs')}</p>
       </div>
     );
   }
@@ -431,6 +436,7 @@ function ActivityLogs({ extensionId, providerId }: { extensionId: string; provid
 }
 
 export function ExtensionEditPage() {
+  const { t } = useTranslation();
   const { extensionId } = useParams<{ extensionId: string }>();
   const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
@@ -480,12 +486,12 @@ export function ExtensionEditPage() {
       <div className="p-6 ">
         <Card className="p-8 text-center">
           <AlertCircle className="w-12 h-12 text-destructive mx-auto mb-4" />
-          <p className="text-lg font-medium">Failed to load extension</p>
-          <p className="text-muted-foreground mb-4">Please try again later</p>
+          <p className="text-lg font-medium">{t('extensionEdit.failedToLoad')}</p>
+          <p className="text-muted-foreground mb-4">{t('extensionEdit.tryAgainLater')}</p>
           <Button variant="outline" asChild>
             <Link to="/settings/extensions">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back to Extensions
+              {t('extensionEdit.backToExtensions')}
             </Link>
           </Button>
         </Card>
@@ -501,7 +507,7 @@ export function ExtensionEditPage() {
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground transition-colors"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Extensions
+        {t('extensionEdit.backToExtensions')}
       </Link>
 
       {/* Header */}
@@ -513,7 +519,7 @@ export function ExtensionEditPage() {
           <div className="flex items-center gap-2">
             <h1 className="text-2xl font-bold tracking-tight">{integration.name}</h1>
             {integration.required && (
-              <Badge variant="outline" className="text-xs">Required</Badge>
+              <Badge variant="outline" className="text-xs">{t('common.required')}</Badge>
             )}
           </div>
           <p className="text-muted-foreground">{integration.description}</p>
@@ -524,7 +530,7 @@ export function ExtensionEditPage() {
       {providers.length > 1 && (
         <Card>
           <CardHeader className="pb-3">
-            <CardTitle className="text-base">Select Provider</CardTitle>
+            <CardTitle className="text-base">{t('extensionEdit.selectProvider')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex gap-2 flex-wrap">
@@ -566,7 +572,7 @@ export function ExtensionEditPage() {
                       rel="noopener noreferrer"
                       className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline mt-2"
                     >
-                      View Documentation
+                      {t('extensionEdit.viewDocumentation')}
                       <ExternalLink className="w-3.5 h-3.5" />
                     </a>
                   )}
@@ -579,7 +585,7 @@ export function ExtensionEditPage() {
           {selectedProvider.config && (
             <Card>
               <CardHeader>
-                <CardTitle className="text-base">Connection Status</CardTitle>
+                <CardTitle className="text-base">{t('extensionEdit.connectionStatus')}</CardTitle>
               </CardHeader>
               <CardContent>
                 <ConnectionStatus provider={selectedProvider} extensionId={extensionId!} />
@@ -590,7 +596,7 @@ export function ExtensionEditPage() {
           {/* Configuration Form */}
           <Card>
             <CardHeader>
-              <CardTitle className="text-base">Configuration</CardTitle>
+              <CardTitle className="text-base">{t('extensionEdit.configuration')}</CardTitle>
             </CardHeader>
             <CardContent>
               <ConfigForm
@@ -608,7 +614,7 @@ export function ExtensionEditPage() {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Activity className="w-4 h-4" />
-                  Recent Activity
+                  {t('extensionEdit.recentActivity')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -621,16 +627,16 @@ export function ExtensionEditPage() {
           {selectedProvider.config && (
             <Card className="border-red-200">
               <CardHeader>
-                <CardTitle className="text-base text-red-600">Danger Zone</CardTitle>
+                <CardTitle className="text-base text-red-600">{t('extensionEdit.dangerZone')}</CardTitle>
               </CardHeader>
               <CardContent className="space-y-4">
                 <p className="text-sm text-muted-foreground">
-                  Remove this provider configuration. This will disable the integration and delete all stored credentials.
+                  {t('extensionEdit.removeConfig')}
                 </p>
                 <Button
                   variant="outline"
                   onClick={() => {
-                    if (confirm('Are you sure you want to remove this configuration?')) {
+                    if (confirm(t('extensionEdit.removeConfirm'))) {
                       deleteMutation.mutate(selectedProvider.id);
                     }
                   }}
@@ -642,7 +648,7 @@ export function ExtensionEditPage() {
                   ) : (
                     <Trash2 className="w-4 h-4 mr-2" />
                   )}
-                  Remove Configuration
+                  {t('extensionEdit.removeConfiguration')}
                 </Button>
               </CardContent>
             </Card>

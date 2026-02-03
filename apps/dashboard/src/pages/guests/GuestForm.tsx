@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useNavigate, Link } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import { PageContainer } from '@/components';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -14,6 +15,7 @@ const VIP_OPTIONS = ['none', 'silver', 'gold', 'platinum', 'diamond'];
 const LOYALTY_OPTIONS = ['none', 'member', 'silver', 'gold', 'platinum'];
 
 export function GuestFormPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [error, setError] = useState<string | null>(null);
   const [saving, setSaving] = useState(false);
@@ -33,7 +35,7 @@ export function GuestFormPage() {
 
   const handleSave = async () => {
     if (!formData.firstName.trim() || !formData.lastName.trim()) {
-      setError('First name and last name are required');
+      setError(t('guestForm.firstNameRequired'));
       return;
     }
 
@@ -57,7 +59,7 @@ export function GuestFormPage() {
       const guest = await api.post<{ id: string }>('/guests', payload);
       navigate(`/guests/${guest.id}`);
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Failed to create guest');
+      setError(err instanceof Error ? err.message : t('guestForm.failedToCreate'));
     } finally {
       setSaving(false);
     }
@@ -77,20 +79,20 @@ export function GuestFormPage() {
         className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
       >
         <ArrowLeft className="w-4 h-4" />
-        Back to Guests
+        {t('guestForm.backToGuests')}
       </Link>
 
       <Card className="max-w-2xl">
         <CardHeader>
-          <CardTitle>Add New Guest</CardTitle>
-          <CardDescription>Create a new guest profile</CardDescription>
+          <CardTitle>{t('guestForm.addNewGuest')}</CardTitle>
+          <CardDescription>{t('guestForm.createGuestProfile')}</CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
           {/* Basic Info */}
           <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="text-sm font-medium">
-                First Name <span className="text-red-500">*</span>
+                {t('guestForm.firstName')} <span className="text-red-500">*</span>
               </label>
               <Input
                 value={formData.firstName}
@@ -101,7 +103,7 @@ export function GuestFormPage() {
             </div>
             <div>
               <label className="text-sm font-medium">
-                Last Name <span className="text-red-500">*</span>
+                {t('guestForm.lastName')} <span className="text-red-500">*</span>
               </label>
               <Input
                 value={formData.lastName}
@@ -115,7 +117,7 @@ export function GuestFormPage() {
           {/* Contact */}
           <div className="grid grid-cols-2 gap-4">
             <div>
-              <label className="text-sm font-medium">Email</label>
+              <label className="text-sm font-medium">{t('guestForm.email')}</label>
               <Input
                 type="email"
                 value={formData.email}
@@ -125,7 +127,7 @@ export function GuestFormPage() {
               />
             </div>
             <div>
-              <label className="text-sm font-medium">Phone</label>
+              <label className="text-sm font-medium">{t('guestForm.phone')}</label>
               <Input
                 value={formData.phone}
                 onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
@@ -138,22 +140,22 @@ export function GuestFormPage() {
           {/* Status */}
           <div className="grid grid-cols-3 gap-4">
             <div>
-              <label className="text-sm font-medium">Language</label>
+              <label className="text-sm font-medium">{t('guestForm.language')}</label>
               <select
                 value={formData.language}
                 onChange={(e) => setFormData({ ...formData, language: e.target.value })}
                 className="mt-1 w-full border rounded-md px-3 py-2 text-sm"
               >
                 <option value="en">English</option>
-                <option value="es">Spanish</option>
-                <option value="fr">French</option>
-                <option value="de">German</option>
-                <option value="zh">Chinese</option>
-                <option value="ja">Japanese</option>
+                <option value="es">Español</option>
+                <option value="fr">Français</option>
+                <option value="de">Deutsch</option>
+                <option value="zh">中文</option>
+                <option value="ja">日本語</option>
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">VIP Status</label>
+              <label className="text-sm font-medium">{t('guestForm.vipStatus')}</label>
               <select
                 value={formData.vipStatus}
                 onChange={(e) => setFormData({ ...formData, vipStatus: e.target.value })}
@@ -161,13 +163,13 @@ export function GuestFormPage() {
               >
                 {VIP_OPTIONS.map((opt) => (
                   <option key={opt} value={opt}>
-                    {opt === 'none' ? 'None' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                    {opt === 'none' ? t('common.none') : opt.charAt(0).toUpperCase() + opt.slice(1)}
                   </option>
                 ))}
               </select>
             </div>
             <div>
-              <label className="text-sm font-medium">Loyalty Tier</label>
+              <label className="text-sm font-medium">{t('guestForm.loyaltyTier')}</label>
               <select
                 value={formData.loyaltyTier}
                 onChange={(e) => setFormData({ ...formData, loyaltyTier: e.target.value })}
@@ -175,7 +177,7 @@ export function GuestFormPage() {
               >
                 {LOYALTY_OPTIONS.map((opt) => (
                   <option key={opt} value={opt}>
-                    {opt === 'none' ? 'None' : opt.charAt(0).toUpperCase() + opt.slice(1)}
+                    {opt === 'none' ? t('common.none') : opt.charAt(0).toUpperCase() + opt.slice(1)}
                   </option>
                 ))}
               </select>
@@ -184,35 +186,35 @@ export function GuestFormPage() {
 
           {/* Preferences */}
           <div>
-            <label className="text-sm font-medium">Preferences</label>
-            <p className="text-xs text-muted-foreground mb-1">Enter one preference per line</p>
+            <label className="text-sm font-medium">{t('guestForm.preferences')}</label>
+            <p className="text-xs text-muted-foreground mb-1">{t('guestForm.preferencesHint')}</p>
             <Textarea
               value={formData.preferences}
               onChange={(e) => setFormData({ ...formData, preferences: e.target.value })}
-              placeholder="High floor preferred&#10;Feather pillows&#10;Late checkout when available"
+              placeholder={t('guestForm.preferencesPlaceholder')}
               className="mt-1 min-h-[100px]"
             />
           </div>
 
           {/* Tags */}
           <div>
-            <label className="text-sm font-medium">Tags</label>
-            <p className="text-xs text-muted-foreground mb-1">Comma-separated</p>
+            <label className="text-sm font-medium">{t('guestForm.tags')}</label>
+            <p className="text-xs text-muted-foreground mb-1">{t('guestForm.tagsHint')}</p>
             <Input
               value={formData.tags}
               onChange={(e) => setFormData({ ...formData, tags: e.target.value })}
-              placeholder="business, frequent, noise-sensitive"
+              placeholder={t('guestForm.tagsPlaceholder')}
               className="mt-1"
             />
           </div>
 
           {/* Notes */}
           <div>
-            <label className="text-sm font-medium">Notes</label>
+            <label className="text-sm font-medium">{t('guestForm.notes')}</label>
             <Textarea
               value={formData.notes}
               onChange={(e) => setFormData({ ...formData, notes: e.target.value })}
-              placeholder="Additional notes about this guest..."
+              placeholder={t('guestForm.notesPlaceholder')}
               className="mt-1 min-h-[80px]"
             />
           </div>
@@ -220,11 +222,11 @@ export function GuestFormPage() {
           {/* Actions */}
           <div className="flex justify-end gap-3 pt-4 border-t">
             <Button variant="outline" onClick={() => navigate('/guests')}>
-              Cancel
+              {t('common.cancel')}
             </Button>
             <Button onClick={handleSave} disabled={saving}>
               {saving ? <Spinner size="sm" className="mr-2" /> : <Save className="w-4 h-4 mr-2" />}
-              Create Guest
+              {t('guestForm.createGuest')}
             </Button>
           </div>
         </CardContent>

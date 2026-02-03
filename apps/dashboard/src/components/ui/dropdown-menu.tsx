@@ -13,7 +13,7 @@ interface DropdownMenuTriggerProps {
 
 interface DropdownMenuContentProps {
   children: React.ReactNode;
-  align?: 'start' | 'end';
+  align?: 'start' | 'center' | 'end';
   className?: string;
 }
 
@@ -117,9 +117,15 @@ export function DropdownMenuContent({ children, align = 'end', className }: Drop
   React.useEffect(() => {
     if (open && triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
+      let left = rect.left + window.scrollX;
+      if (align === 'end') {
+        left = rect.right + window.scrollX;
+      } else if (align === 'center') {
+        left = rect.left + rect.width / 2 + window.scrollX;
+      }
       setPosition({
         top: rect.bottom + window.scrollY,
-        left: align === 'end' ? rect.right + window.scrollX : rect.left + window.scrollX,
+        left,
       });
     }
   }, [open, align, triggerRef]);
@@ -137,7 +143,7 @@ export function DropdownMenuContent({ children, align = 'end', className }: Drop
       style={{
         top: position.top,
         left: position.left,
-        transform: align === 'end' ? 'translateX(-100%)' : undefined,
+        transform: align === 'end' ? 'translateX(-100%)' : align === 'center' ? 'translateX(-50%)' : undefined,
       }}
     >
       {children}

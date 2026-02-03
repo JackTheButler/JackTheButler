@@ -65,6 +65,8 @@ This roadmap defines a **phased, incremental build approach** where each release
 | **14** | **1.5.0** | **Pulse** | Real-time WebSocket dashboard updates | **Instant updates** |
 | **15** | **1.6.0** | **Clean Slate** | Orchestrator/Provider simplification | **No duplication** |
 | **16** | **1.7.0** | **Easy Mail** | Gmail OAuth, Mailgun/SendGrid | **One-click email** |
+| **17** | **1.8.0** | **Smart Embed** | Local embeddings, capability fallback | **Offline-first AI** |
+| **18** | **1.9.0** | **Polyglot** | Dashboard internationalization (i18n) | **Multi-language UI** |
 
 ---
 
@@ -92,6 +94,8 @@ Phase 13 (Bookings)    → Today's arrivals/departures visible
 Phase 14 (Pulse)       → Dashboard updates instantly via WebSocket
 Phase 15 (Clean Slate) → No duplicate code, clear orchestrator/provider separation
 Phase 16 (Easy Mail)   → Gmail connected with one click, email works
+Phase 17 (Smart Embed) → Knowledge base search works without OpenAI
+Phase 18 (Polyglot)    → Dashboard displays in user's language
 ```
 
 ### Implementation Rules
@@ -124,6 +128,8 @@ Phase 16 (Easy Mail)   → Gmail connected with one click, email works
 | [Phase 14: Real-Time Dashboard](phase-14-realtime.md) | WebSocket push updates |
 | [Phase 15: Architecture Simplification](phase-15-simplification.md) | Orchestrator/Provider cleanup |
 | [Phase 16: Email Providers](phase-16-email-providers.md) | Gmail OAuth, Mailgun/SendGrid |
+| [Phase 17: Local Embeddings](phase-17-local-embeddings.md) | Local AI for embeddings |
+| [Phase 18: Internationalization](phase-18-i18n.md) | Multi-language dashboard |
 
 ### Phase 15 Sub-Phases
 
@@ -233,6 +239,16 @@ Phase 16 (Easy Mail)   → Gmail connected with one click, email works
                     ┌────────────────▼──────────────┐
                     │    Phase 16: Easy Mail        │
                     │  Gmail OAuth, Mailgun/SendGrid│
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │    Phase 17: Smart Embed      │
+                    │  Local embeddings, fallback   │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │     Phase 18: Polyglot        │
+                    │   Dashboard i18n support      │
                     └───────────────────────────────┘
 ```
 
@@ -261,6 +277,8 @@ Phase 16 (Easy Mail)   → Gmail connected with one click, email works
 | 1.5.0 | "Badge counts update instantly, no refresh" | **Real-time UX** |
 | 1.6.0 | "No duplicate code, clear separation" | **Clean architecture** |
 | 1.7.0 | "Connect Gmail with one click, email works" | **Easy email setup** |
+| 1.8.0 | "Knowledge base works without external AI" | **Self-contained AI** |
+| 1.9.0 | "Dashboard displays in Spanish/French/etc" | **Global accessibility** |
 
 ---
 

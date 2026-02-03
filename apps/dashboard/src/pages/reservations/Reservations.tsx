@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Link, useNavigate } from 'react-router-dom';
+import { useTranslation } from 'react-i18next';
 import {
   Calendar,
   LogIn,
@@ -13,7 +14,7 @@ import {
 import { api } from '@/lib/api';
 import { formatDate } from '@/lib/formatters';
 import {
-  reservationStatusFilters,
+  getReservationStatusFilters,
   reservationStatusVariants,
 } from '@/lib/config';
 import { useFilteredQuery } from '@/hooks/useFilteredQuery';
@@ -32,6 +33,7 @@ interface TodayStats {
 }
 
 export function ReservationsPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
@@ -57,11 +59,12 @@ export function ReservationsPage() {
 
   const reservations = data?.reservations || [];
   const today = todayData;
+  const reservationStatusFilters = getReservationStatusFilters(t);
 
   const columns: Column<Reservation>[] = [
     {
       key: 'confirmationNumber',
-      header: 'Confirmation',
+      header: t('reservations.confirmation'),
       render: (reservation) => (
         <span className="text-sm font-mono font-medium">
           {reservation.confirmationNumber}
@@ -70,7 +73,7 @@ export function ReservationsPage() {
     },
     {
       key: 'guest',
-      header: 'Guest',
+      header: t('common.guest'),
       render: (reservation) => (
         reservation.guest ? (
           <div>
@@ -84,18 +87,18 @@ export function ReservationsPage() {
             {reservation.guest.vipStatus && (
               <Badge variant="dark" className="ml-2">
                 <Crown className="w-3 h-3 mr-1" />
-                VIP
+                {t('common.vip')}
               </Badge>
             )}
           </div>
         ) : (
-          <span className="text-sm text-muted-foreground">Unknown guest</span>
+          <span className="text-sm text-muted-foreground">{t('reservations.unknownGuest')}</span>
         )
       ),
     },
     {
       key: 'room',
-      header: 'Room',
+      header: t('common.room'),
       render: (reservation) => (
         <div className="text-sm">
           {reservation.roomNumber || '-'}
@@ -107,7 +110,7 @@ export function ReservationsPage() {
     },
     {
       key: 'arrivalDate',
-      header: 'Arrival',
+      header: t('reservations.arrival'),
       render: (reservation) => (
         <div className="text-sm">
           {formatDate(reservation.arrivalDate)}
@@ -121,7 +124,7 @@ export function ReservationsPage() {
     },
     {
       key: 'departureDate',
-      header: 'Departure',
+      header: t('reservations.departure'),
       render: (reservation) => (
         <span className="text-sm">
           {formatDate(reservation.departureDate)}
@@ -130,7 +133,7 @@ export function ReservationsPage() {
     },
     {
       key: 'status',
-      header: 'Status',
+      header: t('common.status'),
       render: (reservation) => (
         <Badge variant={reservationStatusVariants[reservation.status]} className="capitalize">
           {reservation.status.replace('_', ' ')}
@@ -151,10 +154,10 @@ export function ReservationsPage() {
       {today && (
         <StatsBar
           items={[
-            { label: 'Arrivals', value: today.arrivals.count, icon: LogIn, variant: 'success', subtitle: today.arrivals.pending > 0 ? `${today.arrivals.pending} pending` : undefined },
-            { label: 'Departures', value: today.departures.count, icon: LogOut, variant: 'warning', subtitle: today.departures.late > 0 ? `${today.departures.late} late` : undefined },
-            { label: 'In-House', value: today.inHouse, icon: Home },
-            { label: 'Occupancy', value: `${today.occupancyRate}%`, icon: Users },
+            { label: t('reservations.arrivals'), value: today.arrivals.count, icon: LogIn, variant: 'success', subtitle: today.arrivals.pending > 0 ? `${today.arrivals.pending} ${t('reservations.pending')}` : undefined },
+            { label: t('reservations.departures'), value: today.departures.count, icon: LogOut, variant: 'warning', subtitle: today.departures.late > 0 ? `${today.departures.late} ${t('reservations.late')}` : undefined },
+            { label: t('reservations.inHouse'), value: today.inHouse, icon: Home },
+            { label: t('reservations.occupancy'), value: `${today.occupancyRate}%`, icon: Users },
           ]}
         />
       )}
@@ -175,15 +178,15 @@ export function ReservationsPage() {
           onChange: setSearch,
           onSearch: handleSearch,
           onClear: () => setSearchQuery(''),
-          placeholder: 'Search reservations...',
+          placeholder: t('reservations.searchReservations'),
         }}
         loading={isLoading}
         onRowClick={(reservation) => navigate(`/reservations/${reservation.id}`)}
         emptyState={
           <EmptyState
             icon={Calendar}
-            title="No reservations found"
-            description={searchQuery ? 'Try a different search term' : 'Reservations will appear here'}
+            title={t('reservations.noReservations')}
+            description={searchQuery ? t('reservations.noReservationsSearch') : t('reservations.noReservationsEmpty')}
           />
         }
       />

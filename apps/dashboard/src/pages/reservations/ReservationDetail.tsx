@@ -1,5 +1,6 @@
 import { useParams, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   ArrowLeft,
   Calendar,
@@ -72,6 +73,7 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value: React.Rea
 }
 
 export function ReservationDetailPage() {
+  const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
 
   const { data: reservation, isLoading, error } = useQuery({
@@ -95,8 +97,8 @@ export function ReservationDetailPage() {
       <PageContainer>
         <EmptyState
           icon={Calendar}
-          title="Reservation not found"
-          description="The reservation you're looking for doesn't exist"
+          title={t('reservationDetail.notFound')}
+          description={t('reservationDetail.notFoundDesc')}
         />
       </PageContainer>
     );
@@ -106,6 +108,7 @@ export function ReservationDetailPage() {
     (new Date(reservation.departureDate).getTime() - new Date(reservation.arrivalDate).getTime()) /
     (1000 * 60 * 60 * 24)
   );
+  const nightsLabel = nights !== 1 ? t('reservationDetail.nights') : t('reservationDetail.night');
 
   return (
     <PageContainer>
@@ -120,14 +123,14 @@ export function ReservationDetailPage() {
         <div className="flex-1">
           <div className="flex items-center gap-3">
             <h1 className="text-2xl font-semibold">
-              Reservation #{reservation.confirmationNumber}
+              {t('reservationDetail.reservation')} #{reservation.confirmationNumber}
             </h1>
             <Badge variant={reservationStatusVariants[reservation.status]} className="capitalize">
               {reservation.status.replace('_', ' ')}
             </Badge>
           </div>
           <p className="text-muted-foreground">
-            {reservation.roomType} • {nights} night{nights !== 1 ? 's' : ''}
+            {reservation.roomType} • {nights} {nightsLabel}
           </p>
         </div>
       </div>
@@ -140,12 +143,12 @@ export function ReservationDetailPage() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Calendar className="w-4 h-4" />
-                Stay Details
+                {t('reservationDetail.stayDetails')}
               </CardTitle>
             </CardHeader>
             <CardContent className="grid grid-cols-2 gap-4">
               <InfoRow
-                label="Check-in"
+                label={t('reservationDetail.checkIn')}
                 value={
                   <span>
                     {formatDateShort(reservation.arrivalDate)}
@@ -158,7 +161,7 @@ export function ReservationDetailPage() {
                 }
               />
               <InfoRow
-                label="Check-out"
+                label={t('reservationDetail.checkOut')}
                 value={
                   <span>
                     {formatDateShort(reservation.departureDate)}
@@ -170,16 +173,16 @@ export function ReservationDetailPage() {
                   </span>
                 }
               />
-              <InfoRow label="Room Number" value={reservation.roomNumber || 'Not assigned'} icon={Bed} />
-              <InfoRow label="Room Type" value={reservation.roomType} />
+              <InfoRow label={t('reservationDetail.roomNumber')} value={reservation.roomNumber || t('reservationDetail.notAssigned')} icon={Bed} />
+              <InfoRow label={t('reservationDetail.roomType')} value={reservation.roomType} />
               <InfoRow
-                label="Guests"
-                value={`${reservation.adults} adult${reservation.adults !== 1 ? 's' : ''}${
-                  reservation.children > 0 ? `, ${reservation.children} child${reservation.children !== 1 ? 'ren' : ''}` : ''
+                label={t('reservationDetail.guests')}
+                value={`${reservation.adults} ${reservation.adults !== 1 ? t('reservationDetail.adults') : t('reservationDetail.adult')}${
+                  reservation.children > 0 ? `, ${reservation.children} ${reservation.children !== 1 ? t('reservationDetail.children') : t('reservationDetail.child')}` : ''
                 }`}
                 icon={Users}
               />
-              <InfoRow label="Booking Source" value={reservation.source} />
+              <InfoRow label={t('reservationDetail.bookingSource')} value={reservation.source} />
             </CardContent>
           </Card>
 
@@ -189,7 +192,7 @@ export function ReservationDetailPage() {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <Star className="w-4 h-4" />
-                  Special Requests
+                  {t('reservationDetail.specialRequests')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -211,7 +214,7 @@ export function ReservationDetailPage() {
               <CardHeader>
                 <CardTitle className="text-base flex items-center gap-2">
                   <FileText className="w-4 h-4" />
-                  Notes
+                  {t('guestProfile.notes')}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -231,7 +234,7 @@ export function ReservationDetailPage() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <MessageSquare className="w-4 h-4" />
-                Conversations
+                {t('reservationDetail.conversations')}
                 <Badge variant="secondary" className="ml-auto">
                   {reservation._related.conversations.length}
                 </Badge>
@@ -239,7 +242,7 @@ export function ReservationDetailPage() {
             </CardHeader>
             <CardContent>
               {reservation._related.conversations.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No conversations for this reservation</p>
+                <p className="text-sm text-muted-foreground">{t('reservationDetail.noConversations')}</p>
               ) : (
                 <div className="space-y-2">
                   {reservation._related.conversations.map((conv) => (
@@ -271,7 +274,7 @@ export function ReservationDetailPage() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <ListTodo className="w-4 h-4" />
-                Tasks
+                {t('reservationDetail.tasks')}
                 <Badge variant="secondary" className="ml-auto">
                   {reservation._related.tasks.length}
                 </Badge>
@@ -279,7 +282,7 @@ export function ReservationDetailPage() {
             </CardHeader>
             <CardContent>
               {reservation._related.tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">No tasks for this reservation</p>
+                <p className="text-sm text-muted-foreground">{t('reservationDetail.noTasks')}</p>
               ) : (
                 <div className="space-y-2">
                   {reservation._related.tasks.map((task) => (
@@ -313,7 +316,7 @@ export function ReservationDetailPage() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <User className="w-4 h-4" />
-                Guest
+                {t('reservationDetail.guestInfo')}
               </CardTitle>
             </CardHeader>
             <CardContent>
@@ -328,7 +331,7 @@ export function ReservationDetailPage() {
                     </Link>
                     <div className="flex items-center gap-2 mt-1">
                       {reservation.guest.vipStatus && (
-                        <Badge variant="warning">VIP</Badge>
+                        <Badge variant="warning">{t('common.vip')}</Badge>
                       )}
                       {reservation.guest.loyaltyTier && (
                         <Badge variant="secondary">{reservation.guest.loyaltyTier}</Badge>
@@ -338,7 +341,7 @@ export function ReservationDetailPage() {
 
                   {reservation.guest.email && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Email</p>
+                      <p className="text-sm text-muted-foreground">{t('guestProfile.email')}</p>
                       <a
                         href={`mailto:${reservation.guest.email}`}
                         className="text-sm hover:text-primary"
@@ -350,7 +353,7 @@ export function ReservationDetailPage() {
 
                   {reservation.guest.phone && (
                     <div>
-                      <p className="text-sm text-muted-foreground">Phone</p>
+                      <p className="text-sm text-muted-foreground">{t('guestProfile.phone')}</p>
                       <a
                         href={`tel:${reservation.guest.phone}`}
                         className="text-sm hover:text-primary"
@@ -362,7 +365,7 @@ export function ReservationDetailPage() {
 
                   {reservation.guest.preferences && reservation.guest.preferences.length > 0 && (
                     <div>
-                      <p className="text-sm text-muted-foreground mb-2">Preferences</p>
+                      <p className="text-sm text-muted-foreground mb-2">{t('guestProfile.preferences')}</p>
                       <div className="flex flex-wrap gap-1">
                         {reservation.guest.preferences.map((pref, i) => (
                           <Badge key={i} variant="outline" className="text-xs">
@@ -377,11 +380,11 @@ export function ReservationDetailPage() {
                     to={`/guests/${reservation.guest.id}`}
                     className="block text-sm text-primary hover:underline"
                   >
-                    View full profile →
+                    {t('reservationDetail.viewFullProfile')}
                   </Link>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Guest information not available</p>
+                <p className="text-sm text-muted-foreground">{t('reservationDetail.guestNotAvailable')}</p>
               )}
             </CardContent>
           </Card>
@@ -391,16 +394,16 @@ export function ReservationDetailPage() {
             <CardHeader>
               <CardTitle className="text-base flex items-center gap-2">
                 <Clock className="w-4 h-4" />
-                Booking Info
+                {t('reservationDetail.bookingInfo')}
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-2">
-              <InfoRow label="Confirmation #" value={reservation.confirmationNumber} />
+              <InfoRow label={t('guestProfile.confirmation')} value={reservation.confirmationNumber} />
               <InfoRow
-                label="Booked On"
+                label={t('reservationDetail.bookedOn')}
                 value={formatDate(reservation.createdAt)}
               />
-              <InfoRow label="Source" value={reservation.source} />
+              <InfoRow label={t('reservationDetail.source')} value={reservation.source} />
             </CardContent>
           </Card>
         </div>

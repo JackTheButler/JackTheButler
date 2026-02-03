@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import {
   Shield,
   Zap,
@@ -46,46 +47,30 @@ interface AutonomySettings {
   confidenceThresholds: ConfidenceThresholds;
 }
 
-const levelInfo: Record<AutonomyLevel, { label: string; description: string; icon: typeof Shield }> = {
-  L1: {
-    label: 'Approval Required',
-    description: 'All actions require staff approval before execution',
-    icon: Shield,
-  },
-  L2: {
-    label: 'Auto-Execute',
-    description: 'Actions run automatically without approval',
-    icon: Zap,
-  },
+const levelIcons: Record<AutonomyLevel, typeof Shield> = {
+  L1: Shield,
+  L2: Zap,
 };
 
-const actionLabels: Record<ActionType, { label: string; description: string; disabled?: boolean }> = {
-  respondToGuest: { label: 'Respond to Guest', description: 'Send AI-generated messages' },
-  createHousekeepingTask: { label: 'Housekeeping Tasks', description: 'Create cleaning requests' },
-  createMaintenanceTask: { label: 'Maintenance Tasks', description: 'Create repair requests' },
-  createConciergeTask: { label: 'Concierge Tasks', description: 'Create service requests' },
-  createRoomServiceTask: { label: 'Room Service Tasks', description: 'Create room service orders' },
-  issueRefund: { label: 'Issue Refunds', description: 'Process guest refunds', disabled: true },
-  offerDiscount: { label: 'Offer Discounts', description: 'Send promotional offers', disabled: true },
-  sendMarketingMessage: { label: 'Marketing Messages', description: 'Send marketing communications', disabled: true },
-};
+const disabledActions: ActionType[] = ['issueRefund', 'offerDiscount', 'sendMarketingMessage'];
 
 function LevelSelector({
   value,
   onChange,
   compact = false,
+  t,
 }: {
   value: AutonomyLevel;
   onChange: (level: AutonomyLevel) => void;
   compact?: boolean;
+  t: (key: string) => string;
 }) {
   const levels: AutonomyLevel[] = ['L1', 'L2'];
 
   return (
     <div className={cn('flex gap-2', compact && 'gap-1')}>
       {levels.map((level) => {
-        const info = levelInfo[level];
-        const Icon = info.icon;
+        const Icon = levelIcons[level];
         const isActive = value === level;
 
         return compact ? (
@@ -121,8 +106,8 @@ function LevelSelector({
               <span className="font-semibold">{level}</span>
               {isActive && <Check className="w-4 h-4 ml-auto" />}
             </div>
-            <div className="text-sm font-medium">{info.label}</div>
-            <div className="text-xs text-muted-foreground mt-1">{info.description}</div>
+            <div className="text-sm font-medium">{t(`autonomy.levels.${level}.label`)}</div>
+            <div className="text-xs text-muted-foreground mt-1">{t(`autonomy.levels.${level}.description`)}</div>
           </button>
         );
       })}
@@ -163,6 +148,7 @@ function ThresholdSlider({
 }
 
 export function AutonomyPage() {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [hasChanges, setHasChanges] = useState(false);
 
@@ -226,12 +212,23 @@ export function AutonomyPage() {
       <PageContainer>
         <EmptyState
           icon={AlertCircle}
-          title="Failed to load autonomy settings"
-          description="Please try again later"
+          title={t('autonomy.failedToLoad')}
+          description={t('autonomy.tryAgainLater')}
         />
       </PageContainer>
     );
   }
+
+  const actionTypes: ActionType[] = [
+    'respondToGuest',
+    'createHousekeepingTask',
+    'createMaintenanceTask',
+    'createConciergeTask',
+    'createRoomServiceTask',
+    'issueRefund',
+    'offerDiscount',
+    'sendMarketingMessage',
+  ];
 
   return (
     <PageContainer>
@@ -243,7 +240,7 @@ export function AutonomyPage() {
           disabled={resetMutation.isPending}
         >
           <RefreshCw className={cn('w-3.5 h-3.5 mr-1.5', resetMutation.isPending && 'animate-spin')} />
-          Reset to Defaults
+          {t('autonomy.resetToDefaults')}
         </Button>
         <Button
           size="sm"
@@ -251,7 +248,7 @@ export function AutonomyPage() {
           disabled={!hasChanges}
           loading={saveMutation.isPending}
         >
-          Save Changes
+          {t('autonomy.saveChanges')}
         </Button>
       </PageHeader>
 
@@ -260,14 +257,15 @@ export function AutonomyPage() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Settings2 className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Global Autonomy Level</h2>
+            <h2 className="text-lg font-semibold">{t('autonomy.globalLevel')}</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Set the default behavior for all actions. Individual actions can override this.
+            {t('autonomy.globalLevelDesc')}
           </p>
           <LevelSelector
             value={settings.defaultLevel}
             onChange={(level) => updateSettings({ defaultLevel: level })}
+            t={t}
           />
         </CardContent>
       </Card>
@@ -277,14 +275,14 @@ export function AutonomyPage() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Zap className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Action-Specific Settings</h2>
+            <h2 className="text-lg font-semibold">{t('autonomy.actionSettings')}</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Configure autonomy levels for each action type.
+            {t('autonomy.actionSettingsDesc')}
           </p>
           <div className="space-y-4">
-            {(Object.keys(actionLabels) as ActionType[]).map((actionType) => {
-              const action = actionLabels[actionType];
+            {actionTypes.map((actionType) => {
+              const isDisabled = disabledActions.includes(actionType);
               const config = settings.actions[actionType];
 
               return (
@@ -292,23 +290,24 @@ export function AutonomyPage() {
                   key={actionType}
                   className={cn(
                     'flex items-center justify-between p-4 rounded-lg border',
-                    action.disabled ? 'opacity-50' : 'hover:bg-muted/50'
+                    isDisabled ? 'opacity-50' : 'hover:bg-muted/50'
                   )}
                 >
                   <div className="flex-1 min-w-0">
-                    <div className="font-medium">{action.label}</div>
-                    <div className="text-sm text-muted-foreground">{action.description}</div>
+                    <div className="font-medium">{t(`autonomy.actions.${actionType}.label`)}</div>
+                    <div className="text-sm text-muted-foreground">{t(`autonomy.actions.${actionType}.description`)}</div>
                   </div>
                   <div className="shrink-0">
-                    {action.disabled ? (
+                    {isDisabled ? (
                       <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded">
-                        Coming Soon
+                        {t('autonomy.comingSoon')}
                       </span>
                     ) : (
                       <LevelSelector
                         value={config.level}
                         onChange={(level) => updateAction(actionType, { level })}
                         compact
+                        t={t}
                       />
                     )}
                   </div>
@@ -324,31 +323,31 @@ export function AutonomyPage() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Eye className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">AI Confidence Thresholds</h2>
+            <h2 className="text-lg font-semibold">{t('autonomy.confidenceThresholds')}</h2>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Control how AI confidence affects responses in Auto-Execute mode (L2).
+            {t('autonomy.confidenceThresholdsDesc')}
           </p>
           <div className="space-y-6">
             <ThresholdSlider
-              label="Approval Threshold"
+              label={t('autonomy.approvalThreshold')}
               value={settings.confidenceThresholds.approval}
               onChange={(value) =>
                 updateSettings({
                   confidenceThresholds: { ...settings.confidenceThresholds, approval: value },
                 })
               }
-              description="Below this confidence, responses are queued for staff approval instead of being sent automatically."
+              description={t('autonomy.approvalThresholdDesc')}
             />
             <ThresholdSlider
-              label="Urgent Flag Threshold"
+              label={t('autonomy.urgentThreshold')}
               value={settings.confidenceThresholds.urgent}
               onChange={(value) =>
                 updateSettings({
                   confidenceThresholds: { ...settings.confidenceThresholds, urgent: value },
                 })
               }
-              description="Below this confidence, conversations are flagged as urgent requiring immediate staff attention."
+              description={t('autonomy.urgentThresholdDesc')}
             />
           </div>
         </CardContent>
@@ -359,17 +358,17 @@ export function AutonomyPage() {
         <CardContent className="p-6">
           <div className="flex items-center gap-2 mb-4">
             <Shield className="w-5 h-5 text-primary" />
-            <h2 className="text-lg font-semibold">Financial Action Limits</h2>
+            <h2 className="text-lg font-semibold">{t('autonomy.financialLimits')}</h2>
             <span className="text-xs px-2 py-1 bg-muted text-muted-foreground rounded ml-auto">
-              Coming Soon
+              {t('autonomy.comingSoon')}
             </span>
           </div>
           <p className="text-sm text-muted-foreground mb-4">
-            Set maximum amounts that can be auto-approved without staff review.
+            {t('autonomy.financialLimitsDesc')}
           </p>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="space-y-2">
-              <Label>Max Auto-Refund Amount ($)</Label>
+              <Label>{t('autonomy.maxRefund')}</Label>
               <Input
                 type="number"
                 min="0"
@@ -377,11 +376,11 @@ export function AutonomyPage() {
                 disabled
               />
               <p className="text-xs text-muted-foreground">
-                Refunds above this amount require approval
+                {t('autonomy.maxRefundDesc')}
               </p>
             </div>
             <div className="space-y-2">
-              <Label>Max Auto-Discount (%)</Label>
+              <Label>{t('autonomy.maxDiscount')}</Label>
               <Input
                 type="number"
                 min="0"
@@ -390,7 +389,7 @@ export function AutonomyPage() {
                 disabled
               />
               <p className="text-xs text-muted-foreground">
-                Discounts above this percentage require approval
+                {t('autonomy.maxDiscountDesc')}
               </p>
             </div>
           </div>

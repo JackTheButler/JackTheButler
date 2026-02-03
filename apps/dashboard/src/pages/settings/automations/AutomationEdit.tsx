@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { useParams, useNavigate, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { Spinner } from '@/components/ui/spinner';
 import {
   ArrowLeft,
@@ -60,60 +61,61 @@ interface Template {
   name: string;
 }
 
-const triggerTypes: { value: TriggerType; label: string; icon: typeof Clock }[] = [
-  { value: 'time_based', label: 'Scheduled', icon: Calendar },
-  { value: 'event_based', label: 'Event-Based', icon: Zap },
+const getTriggerTypes = (t: (key: string) => string): { value: TriggerType; label: string; icon: typeof Clock }[] => [
+  { value: 'time_based', label: t('automationEdit.triggerTypes.scheduled'), icon: Calendar },
+  { value: 'event_based', label: t('automationEdit.triggerTypes.eventBased'), icon: Zap },
 ];
 
-const actionTypes: { value: ActionType; label: string; icon: typeof MessageSquare; description: string }[] = [
-  { value: 'send_message', label: 'Send Message', icon: MessageSquare, description: 'Send a message to the guest' },
-  { value: 'create_task', label: 'Create Task', icon: ListTodo, description: 'Create a task for staff' },
-  { value: 'notify_staff', label: 'Notify Staff', icon: Bell, description: 'Send a notification to staff' },
-  { value: 'webhook', label: 'Webhook', icon: Webhook, description: 'Call an external URL' },
+const getActionTypes = (t: (key: string) => string): { value: ActionType; label: string; icon: typeof MessageSquare; description: string }[] => [
+  { value: 'send_message', label: t('automationEdit.actionTypes.sendMessage'), icon: MessageSquare, description: t('automationEdit.actionTypes.sendMessageDesc') },
+  { value: 'create_task', label: t('automationEdit.actionTypes.createTask'), icon: ListTodo, description: t('automationEdit.actionTypes.createTaskDesc') },
+  { value: 'notify_staff', label: t('automationEdit.actionTypes.notifyStaff'), icon: Bell, description: t('automationEdit.actionTypes.notifyStaffDesc') },
+  { value: 'webhook', label: t('automationEdit.actionTypes.webhook'), icon: Webhook, description: t('automationEdit.actionTypes.webhookDesc') },
 ];
 
-const timeBasedTypes = [
-  { value: 'before_arrival', label: 'Before Arrival' },
-  { value: 'after_arrival', label: 'After Arrival' },
-  { value: 'before_departure', label: 'Before Departure' },
-  { value: 'after_departure', label: 'After Departure' },
+const getTimeBasedTypes = (t: (key: string) => string) => [
+  { value: 'before_arrival', label: t('automations.triggers.beforeArrival') },
+  { value: 'after_arrival', label: t('automations.triggers.afterArrival') },
+  { value: 'before_departure', label: t('automations.triggers.beforeDeparture') },
+  { value: 'after_departure', label: t('automations.triggers.afterDeparture') },
 ];
 
-const eventTypes = [
-  { value: 'reservation.created', label: 'Reservation Created' },
-  { value: 'reservation.updated', label: 'Reservation Updated' },
-  { value: 'reservation.checked_in', label: 'Guest Checked In' },
-  { value: 'reservation.checked_out', label: 'Guest Checked Out' },
-  { value: 'reservation.cancelled', label: 'Reservation Cancelled' },
-  { value: 'conversation.started', label: 'Conversation Started' },
-  { value: 'conversation.escalated', label: 'Conversation Escalated' },
-  { value: 'task.created', label: 'Task Created' },
-  { value: 'task.completed', label: 'Task Completed' },
+const getEventTypes = (t: (key: string) => string) => [
+  { value: 'reservation.created', label: t('automations.events.reservationCreated') },
+  { value: 'reservation.updated', label: t('automations.events.reservationUpdated') },
+  { value: 'reservation.checked_in', label: t('automations.events.checkedIn') },
+  { value: 'reservation.checked_out', label: t('automations.events.checkedOut') },
+  { value: 'reservation.cancelled', label: t('automations.events.reservationCancelled') },
+  { value: 'conversation.started', label: t('automations.events.conversationStarted') },
+  { value: 'conversation.escalated', label: t('automations.events.conversationEscalated') },
+  { value: 'task.created', label: t('automations.events.taskCreated') },
+  { value: 'task.completed', label: t('automations.events.taskCompleted') },
 ];
 
-const channels = [
-  { value: 'preferred', label: 'Guest Preferred' },
-  { value: 'sms', label: 'SMS' },
-  { value: 'whatsapp', label: 'WhatsApp' },
-  { value: 'email', label: 'Email' },
+const getChannels = (t: (key: string) => string) => [
+  { value: 'preferred', label: t('automationEdit.channels.preferred') },
+  { value: 'sms', label: t('automationEdit.channels.sms') },
+  { value: 'whatsapp', label: t('automationEdit.channels.whatsapp') },
+  { value: 'email', label: t('automationEdit.channels.email') },
 ];
 
-const departments = [
-  { value: 'front_desk', label: 'Front Desk' },
-  { value: 'housekeeping', label: 'Housekeeping' },
-  { value: 'maintenance', label: 'Maintenance' },
-  { value: 'concierge', label: 'Concierge' },
-  { value: 'f_and_b', label: 'Food & Beverage' },
+const getDepartments = (t: (key: string) => string) => [
+  { value: 'front_desk', label: t('automationEdit.departments.frontDesk') },
+  { value: 'housekeeping', label: t('automationEdit.departments.housekeeping') },
+  { value: 'maintenance', label: t('automationEdit.departments.maintenance') },
+  { value: 'concierge', label: t('automationEdit.departments.concierge') },
+  { value: 'f_and_b', label: t('automationEdit.departments.fAndB') },
 ];
 
-const priorities = [
-  { value: 'low', label: 'Low' },
-  { value: 'standard', label: 'Standard' },
-  { value: 'high', label: 'High' },
-  { value: 'urgent', label: 'Urgent' },
+const getPriorities = (t: (key: string) => string) => [
+  { value: 'low', label: t('automationEdit.priorities.low') },
+  { value: 'standard', label: t('automationEdit.priorities.standard') },
+  { value: 'high', label: t('automationEdit.priorities.high') },
+  { value: 'urgent', label: t('automationEdit.priorities.urgent') },
 ];
 
 export function AutomationEditPage() {
+  const { t } = useTranslation();
   const { ruleId } = useParams();
   const navigate = useNavigate();
   const queryClient = useQueryClient();
@@ -218,17 +220,25 @@ export function AutomationEditPage() {
       );
       setTestResult(result);
     } catch (err) {
-      setTestResult({ success: false, message: 'Test failed' });
+      setTestResult({ success: false, message: t('automationEdit.testFailed') });
     } finally {
       setIsTesting(false);
     }
   };
 
   const handleDelete = () => {
-    if (window.confirm('Are you sure you want to delete this automation rule?')) {
+    if (window.confirm(t('automationEdit.deleteConfirm'))) {
       deleteMutation.mutate();
     }
   };
+
+  const triggerTypes = getTriggerTypes(t);
+  const actionTypes = getActionTypes(t);
+  const timeBasedTypes = getTimeBasedTypes(t);
+  const eventTypes = getEventTypes(t);
+  const channels = getChannels(t);
+  const departments = getDepartments(t);
+  const priorities = getPriorities(t);
 
   const updateTriggerConfig = (key: string, value: unknown) => {
     setTriggerConfig((prev) => ({ ...prev, [key]: value }));
@@ -279,12 +289,12 @@ export function AutomationEditPage() {
           <Link to="/settings/automations">
             <Button variant="outline" size="sm">
               <ArrowLeft className="w-4 h-4 mr-2" />
-              Back
+              {t('automationEdit.back')}
             </Button>
           </Link>
           <div>
             <h1 className="text-2xl font-bold tracking-tight">
-              {isNew ? 'New Automation' : name || 'Edit Automation'}
+              {isNew ? t('automationEdit.newAutomation') : name || t('automationEdit.editAutomation')}
             </h1>
             {!isNew && ruleData && (
               <p className="text-sm text-muted-foreground">
@@ -301,7 +311,7 @@ export function AutomationEditPage() {
               ) : (
                 <Play className="w-4 h-4 mr-2" />
               )}
-              Test
+              {t('automationEdit.test')}
             </Button>
           )}
           <Button onClick={handleSave} disabled={saveMutation.isPending || !name}>
@@ -310,7 +320,7 @@ export function AutomationEditPage() {
             ) : (
               <Save className="w-4 h-4 mr-2" />
             )}
-            Save
+            {t('common.save')}
           </Button>
         </div>
       </div>
@@ -337,34 +347,34 @@ export function AutomationEditPage() {
       {/* Basic Info */}
       <Card>
         <CardHeader>
-          <CardTitle>Basic Information</CardTitle>
+          <CardTitle>{t('automationEdit.basicInfo')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div className="space-y-2">
-              <Label htmlFor="name">Name *</Label>
+              <Label htmlFor="name">{t('automationEdit.nameRequired')}</Label>
               <Input
                 id="name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Pre-Arrival Welcome"
+                placeholder={t('automationEdit.namePlaceholder')}
               />
             </div>
             <div className="flex items-center justify-between p-4 rounded-lg border">
               <div>
-                <Label>Enabled</Label>
-                <p className="text-sm text-muted-foreground">Rule will run when enabled</p>
+                <Label>{t('automationEdit.enabled')}</Label>
+                <p className="text-sm text-muted-foreground">{t('automationEdit.enabledDesc')}</p>
               </div>
               <Switch checked={enabled} onCheckedChange={setEnabled} />
             </div>
           </div>
           <div className="space-y-2">
-            <Label htmlFor="description">Description</Label>
+            <Label htmlFor="description">{t('automationEdit.description')}</Label>
             <Input
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="Describe what this automation does"
+              placeholder={t('automationEdit.descriptionPlaceholder')}
             />
           </div>
         </CardContent>
@@ -373,7 +383,7 @@ export function AutomationEditPage() {
       {/* Trigger Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle>Trigger</CardTitle>
+          <CardTitle>{t('automationEdit.trigger')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Trigger Type Selection */}
@@ -403,7 +413,7 @@ export function AutomationEditPage() {
           {triggerType === 'time_based' ? (
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-4">
               <div className="space-y-2">
-                <Label>Timing</Label>
+                <Label>{t('automationEdit.timing')}</Label>
                 <select
                   className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                   value={(triggerConfig.type as string) || 'before_arrival'}
@@ -417,7 +427,7 @@ export function AutomationEditPage() {
                 </select>
               </div>
               <div className="space-y-2">
-                <Label>Days Offset</Label>
+                <Label>{t('automationEdit.daysOffset')}</Label>
                 <Input
                   type="number"
                   min={0}
@@ -426,7 +436,7 @@ export function AutomationEditPage() {
                 />
               </div>
               <div className="space-y-2">
-                <Label>Time</Label>
+                <Label>{t('common.time')}</Label>
                 <Input
                   type="time"
                   value={(triggerConfig.time as string) || '09:00'}
@@ -436,7 +446,7 @@ export function AutomationEditPage() {
             </div>
           ) : (
             <div className="space-y-2 pt-4">
-              <Label>Event</Label>
+              <Label>{t('automationEdit.event')}</Label>
               <select
                 className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                 value={(triggerConfig.eventType as string) || 'reservation.checked_in'}
@@ -456,7 +466,7 @@ export function AutomationEditPage() {
       {/* Action Configuration */}
       <Card>
         <CardHeader>
-          <CardTitle>Action</CardTitle>
+          <CardTitle>{t('automationEdit.action')}</CardTitle>
         </CardHeader>
         <CardContent className="space-y-4">
           {/* Action Type Selection */}
@@ -487,7 +497,7 @@ export function AutomationEditPage() {
             {actionType === 'send_message' && (
               <>
                 <div className="space-y-2">
-                  <Label>Template</Label>
+                  <Label>{t('automationEdit.template')}</Label>
                   <select
                     className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={(actionConfig.template as string) || ''}
@@ -501,7 +511,7 @@ export function AutomationEditPage() {
                   </select>
                 </div>
                 <div className="space-y-2">
-                  <Label>Channel</Label>
+                  <Label>{t('automationEdit.channel')}</Label>
                   <select
                     className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={(actionConfig.channel as string) || 'preferred'}
@@ -521,7 +531,7 @@ export function AutomationEditPage() {
               <>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="space-y-2">
-                    <Label>Department</Label>
+                    <Label>{t('automationEdit.department')}</Label>
                     <select
                       className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={(actionConfig.department as string) || 'front_desk'}
@@ -535,7 +545,7 @@ export function AutomationEditPage() {
                     </select>
                   </div>
                   <div className="space-y-2">
-                    <Label>Priority</Label>
+                    <Label>{t('automationEdit.priority')}</Label>
                     <select
                       className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                       value={(actionConfig.priority as string) || 'standard'}
@@ -550,11 +560,11 @@ export function AutomationEditPage() {
                   </div>
                 </div>
                 <div className="space-y-2">
-                  <Label>Task Description</Label>
+                  <Label>{t('automationEdit.taskDescription')}</Label>
                   <Input
                     value={(actionConfig.description as string) || ''}
                     onChange={(e) => updateActionConfig('description', e.target.value)}
-                    placeholder="e.g., Follow up with guest {{firstName}}"
+                    placeholder={t('automationEdit.taskDescPlaceholder')}
                   />
                 </div>
               </>
@@ -563,19 +573,19 @@ export function AutomationEditPage() {
             {actionType === 'notify_staff' && (
               <>
                 <div className="space-y-2">
-                  <Label>Staff Role</Label>
+                  <Label>{t('automationEdit.staffRole')}</Label>
                   <Input
                     value={(actionConfig.role as string) || ''}
                     onChange={(e) => updateActionConfig('role', e.target.value)}
-                    placeholder="e.g., manager, front_desk"
+                    placeholder={t('automationEdit.staffRolePlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Message</Label>
+                  <Label>{t('automationEdit.message')}</Label>
                   <Input
                     value={(actionConfig.message as string) || ''}
                     onChange={(e) => updateActionConfig('message', e.target.value)}
-                    placeholder="e.g., VIP guest {{firstName}} has checked in"
+                    placeholder={t('automationEdit.messagePlaceholder')}
                   />
                 </div>
               </>
@@ -584,16 +594,16 @@ export function AutomationEditPage() {
             {actionType === 'webhook' && (
               <>
                 <div className="space-y-2">
-                  <Label>URL</Label>
+                  <Label>{t('automationEdit.url')}</Label>
                   <Input
                     type="url"
                     value={(actionConfig.url as string) || ''}
                     onChange={(e) => updateActionConfig('url', e.target.value)}
-                    placeholder="https://example.com/webhook"
+                    placeholder={t('automationEdit.urlPlaceholder')}
                   />
                 </div>
                 <div className="space-y-2">
-                  <Label>Method</Label>
+                  <Label>{t('automationEdit.method')}</Label>
                   <select
                     className="w-full h-10 rounded-md border border-input bg-background px-3 py-2 text-sm"
                     value={(actionConfig.method as string) || 'POST'}
@@ -614,7 +624,7 @@ export function AutomationEditPage() {
       {!isNew && logs.length > 0 && (
         <Card>
           <CardHeader>
-            <CardTitle>Recent Activity</CardTitle>
+            <CardTitle>{t('automationEdit.recentActivity')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="space-y-3">
@@ -631,7 +641,7 @@ export function AutomationEditPage() {
                     )}
                     <div>
                       <p className="text-sm font-medium">
-                        {log.status === 'success' ? 'Executed successfully' : 'Execution failed'}
+                        {log.status === 'success' ? t('automationEdit.executedSuccess') : t('automationEdit.executionFailed')}
                       </p>
                       {log.errorMessage && (
                         <p className="text-xs text-red-600">{log.errorMessage}</p>
@@ -653,14 +663,14 @@ export function AutomationEditPage() {
       {!isNew && (
         <Card className="border-red-200">
           <CardHeader>
-            <CardTitle className="text-red-600">Danger Zone</CardTitle>
+            <CardTitle className="text-red-600">{t('automationEdit.dangerZone')}</CardTitle>
           </CardHeader>
           <CardContent>
             <div className="flex items-center justify-between">
               <div>
-                <p className="font-medium">Delete this automation</p>
+                <p className="font-medium">{t('automationEdit.deleteAutomation')}</p>
                 <p className="text-sm text-muted-foreground">
-                  This action cannot be undone
+                  {t('automationEdit.cannotBeUndone')}
                 </p>
               </div>
               <Button
@@ -673,7 +683,7 @@ export function AutomationEditPage() {
                 ) : (
                   <Trash2 className="w-4 h-4 mr-2" />
                 )}
-                Delete
+                {t('common.delete')}
               </Button>
             </div>
           </CardContent>

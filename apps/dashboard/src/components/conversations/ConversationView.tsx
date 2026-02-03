@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { ChevronDown, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
@@ -41,6 +42,7 @@ interface Message {
 }
 
 export function ConversationView({ id }: Props) {
+  const { t } = useTranslation();
   const queryClient = useQueryClient();
   const [input, setInput] = useState('');
   const [stateMenuOpen, setStateMenuOpen] = useState(false);
@@ -148,7 +150,7 @@ export function ConversationView({ id }: Props) {
   if (!conv) {
     return (
       <div className="h-full flex items-center justify-center text-muted-foreground">
-        Loading...
+        {t('conversations.loading')}
       </div>
     );
   }
@@ -193,7 +195,7 @@ export function ConversationView({ id }: Props) {
                     disabled={updateStateMutation.isPending}
                     className="w-full px-3 py-2 text-left text-sm text-orange-700 hover:bg-orange-50 disabled:opacity-50"
                   >
-                    Escalate
+                    {t('conversations.escalate')}
                   </button>
                 )}
                 {conv.state === 'escalated' && (
@@ -202,7 +204,7 @@ export function ConversationView({ id }: Props) {
                     disabled={updateStateMutation.isPending}
                     className="w-full px-3 py-2 text-left text-sm text-blue-700 hover:bg-blue-50 disabled:opacity-50"
                   >
-                    De-escalate
+                    {t('conversations.deEscalate')}
                   </button>
                 )}
                 {conv.state !== 'resolved' && conv.state !== 'closed' && (
@@ -211,7 +213,7 @@ export function ConversationView({ id }: Props) {
                     disabled={updateStateMutation.isPending}
                     className="w-full px-3 py-2 text-left text-sm text-green-700 hover:bg-green-50 disabled:opacity-50"
                   >
-                    Resolve
+                    {t('conversations.resolve')}
                   </button>
                 )}
                 {(conv.state === 'resolved' || conv.state === 'closed') && (
@@ -220,7 +222,7 @@ export function ConversationView({ id }: Props) {
                     disabled={updateStateMutation.isPending}
                     className="w-full px-3 py-2 text-left text-sm text-foreground hover:bg-muted disabled:opacity-50"
                   >
-                    Reopen
+                    {t('conversations.reopen')}
                   </button>
                 )}
               </div>
@@ -232,20 +234,21 @@ export function ConversationView({ id }: Props) {
       {/* Messages */}
       <div className="flex-1 overflow-y-auto p-4 space-y-3">
         {loadingMessages ? (
-          <div className="text-center text-muted-foreground">Loading messages...</div>
+          <div className="text-center text-muted-foreground">{t('conversations.loadingMessages')}</div>
         ) : messages.length === 0 ? (
-          <div className="text-center text-muted-foreground">No messages yet</div>
+          <div className="text-center text-muted-foreground">{t('conversations.noMessages')}</div>
         ) : (
           messages.map((msg) => {
             const messageTasks = tasksByMessageId.get(msg.id) || [];
             return (
               <div key={msg.id}>
-                <MessageBubble message={msg} />
+                <MessageBubble message={msg} t={t} />
                 {messageTasks.length > 0 && (
                   <TaskIndicator
                     tasks={messageTasks}
                     isInbound={msg.direction === 'inbound'}
                     onClick={() => setTaskDrawerOpen(true)}
+                    t={t}
                   />
                 )}
               </div>
@@ -263,7 +266,7 @@ export function ConversationView({ id }: Props) {
             value={input}
             onChange={(e) => setInput(e.target.value)}
             onKeyDown={handleKeyDown}
-            placeholder="Type a message..."
+            placeholder={t('conversations.typeMessage')}
             className="flex-1 px-3 py-2 border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
             disabled={sendMutation.isPending}
           />
@@ -271,22 +274,23 @@ export function ConversationView({ id }: Props) {
             onClick={handleSend}
             disabled={!input.trim() || sendMutation.isPending}
           >
-            Send
+            {t('conversations.send')}
           </Button>
         </div>
       </div>
 
       {/* Tasks Drawer */}
       <DrawerRoot open={taskDrawerOpen} onOpenChange={setTaskDrawerOpen}>
-        <DrawerContent title={`Tasks (${tasks.length})`}>
+        <DrawerContent title={t('conversations.tasksTitle', { count: tasks.length })}>
           <div className="p-4 space-y-3">
             {tasks.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">No tasks for this conversation</p>
+              <p className="text-center text-muted-foreground py-8">{t('conversations.noTasksConversation')}</p>
             ) : (
               tasks.map((task) => (
                 <TaskCard
                   key={task.id}
                   task={task}
+                  t={t}
                   onClaim={() => claimTaskMutation.mutate(task.id)}
                   onComplete={() => completeTaskMutation.mutate(task.id)}
                   isClaimPending={claimTaskMutation.isPending}
@@ -301,15 +305,10 @@ export function ConversationView({ id }: Props) {
   );
 }
 
-function MessageBubble({ message }: { message: Message }) {
+function MessageBubble({ message, t }: { message: Message; t: (key: string) => string }) {
   const isInbound = message.direction === 'inbound';
 
-  const senderLabel = {
-    guest: 'Guest',
-    ai: 'Jack (AI)',
-    staff: 'Staff',
-    system: 'System',
-  }[message.senderType];
+  const senderLabel = t(`conversations.senderTypes.${message.senderType}`);
 
   return (
     <div className={cn('flex', isInbound ? 'justify-start' : 'justify-end')}>
@@ -346,10 +345,12 @@ function TaskIndicator({
   tasks,
   isInbound,
   onClick,
+  t,
 }: {
   tasks: Task[];
   isInbound: boolean;
   onClick: () => void;
+  t: (key: string, options?: Record<string, unknown>) => string;
 }) {
   const statusTextColors: Record<string, string> = {
     pending: 'text-yellow-600',
@@ -366,7 +367,9 @@ function TaskIndicator({
       >
         <ListTodo className="w-3 h-3" />
         <span>
-          {tasks.length} task{tasks.length > 1 ? 's' : ''} created
+          {tasks.length > 1
+            ? t('conversations.tasksCreated', { count: tasks.length })
+            : t('conversations.taskCreated', { count: tasks.length })}
         </span>
         {tasks.map((task) => (
           <span
@@ -391,12 +394,14 @@ const taskTypeIcons: Record<string, React.ComponentType<{ className?: string }>>
 
 function TaskCard({
   task,
+  t,
   onClaim,
   onComplete,
   isClaimPending,
   isCompletePending,
 }: {
   task: Task;
+  t: (key: string, options?: Record<string, unknown>) => string;
   onClaim: () => void;
   onComplete: () => void;
   isClaimPending: boolean;
@@ -427,7 +432,7 @@ function TaskCard({
       {/* Meta row: Room + Department + Time */}
       <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
         {task.roomNumber && (
-          <Badge className="bg-muted text-muted-foreground">Room {task.roomNumber}</Badge>
+          <Badge className="bg-muted text-muted-foreground">{t('conversations.room', { number: task.roomNumber })}</Badge>
         )}
         <span className="capitalize">{task.department.replace('_', ' ')}</span>
         <span>·</span>
@@ -437,7 +442,7 @@ function TaskCard({
       {/* Assigned */}
       {task.assignedName && (
         <p className="text-xs text-muted-foreground mb-3">
-          Assigned to: <span className="font-medium text-foreground">{task.assignedName}</span>
+          {t('conversations.assignedTo')} <span className="font-medium text-foreground">{task.assignedName}</span>
         </p>
       )}
 
@@ -449,7 +454,7 @@ function TaskCard({
             onClick={onClaim}
             loading={isClaimPending}
           >
-            Claim
+            {t('conversations.claim')}
           </Button>
         )}
         {task.status === 'in_progress' && (
@@ -459,11 +464,11 @@ function TaskCard({
             loading={isCompletePending}
             className="bg-green-600 hover:bg-green-700"
           >
-            Complete
+            {t('conversations.complete')}
           </Button>
         )}
         {(task.status === 'completed' || task.status === 'cancelled') && (
-          <span className="text-xs text-muted-foreground/70 italic">No actions available</span>
+          <span className="text-xs text-muted-foreground/70 italic">{t('conversations.noActionsAvailable')}</span>
         )}
       </div>
     </div>

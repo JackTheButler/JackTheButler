@@ -1,6 +1,7 @@
 import { useEffect, useState, useRef } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { PageActionsProvider, usePageActions } from '@/contexts/PageActionsContext';
@@ -26,6 +27,7 @@ import {
 } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
+import { LanguageToggle } from '@/components/ui/language-toggle';
 
 interface NavItem {
   path: string;
@@ -149,10 +151,12 @@ export function Layout() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [location.pathname]);
 
+  const { t } = useTranslation();
+
   if (isLoading) {
     return (
       <div className="min-h-screen bg-muted flex items-center justify-center">
-        <div className="text-muted-foreground">Loading...</div>
+        <div className="text-muted-foreground">{t('common.loading')}</div>
       </div>
     );
   }
@@ -173,38 +177,38 @@ export function Layout() {
   const navSections: NavSection[] = [
     {
       items: [
-        { path: '/', label: 'Home', icon: <Home size={20} /> },
-        { path: '/inbox', label: 'Inbox', icon: <MessageSquare size={20} />, badge: escalatedConversations },
-        { path: '/tasks', label: 'Tasks', icon: <ClipboardList size={20} />, badge: pendingTasks },
-        { path: '/approvals', label: 'Approvals', icon: <Bell size={20} />, badge: pendingApprovals },
+        { path: '/', label: t('nav.home'), icon: <Home size={20} /> },
+        { path: '/inbox', label: t('nav.inbox'), icon: <MessageSquare size={20} />, badge: escalatedConversations },
+        { path: '/tasks', label: t('nav.tasks'), icon: <ClipboardList size={20} />, badge: pendingTasks },
+        { path: '/approvals', label: t('nav.approvals'), icon: <Bell size={20} />, badge: pendingApprovals },
       ],
     },
     {
-      title: 'Operations',
+      title: t('nav.operations'),
       items: [
-        { path: '/guests', label: 'Guests', icon: <Users size={20} /> },
-        { path: '/reservations', label: 'Reservations', icon: <CalendarDays size={20} /> },
+        { path: '/guests', label: t('nav.guests'), icon: <Users size={20} /> },
+        { path: '/reservations', label: t('nav.reservations'), icon: <CalendarDays size={20} /> },
       ],
     },
     {
       id: 'tools',
-      title: 'Tools',
+      title: t('nav.tools'),
       icon: <Wrench size={20} />,
       collapsible: true,
       items: [
-        { path: '/tools/knowledge-base', label: 'Knowledge Base', icon: <BookOpen size={20} /> },
-        { path: '/tools/site-scraper', label: 'Site Scraper', icon: <Globe size={20} /> },
+        { path: '/tools/knowledge-base', label: t('nav.knowledgeBase'), icon: <BookOpen size={20} /> },
+        { path: '/tools/site-scraper', label: t('nav.siteScraper'), icon: <Globe size={20} /> },
       ],
     },
     {
       id: 'settings',
-      title: 'Settings',
+      title: t('nav.settings'),
       icon: <Settings size={20} />,
       collapsible: true,
       items: [
-        { path: '/settings/extensions', label: 'Extensions', icon: <Puzzle size={20} /> },
-        { path: '/settings/automations', label: 'Automations', icon: <Zap size={20} /> },
-        { path: '/settings/autonomy', label: 'Autonomy', icon: <SlidersHorizontal size={20} /> },
+        { path: '/settings/extensions', label: t('nav.extensions'), icon: <Puzzle size={20} /> },
+        { path: '/settings/automations', label: t('nav.automations'), icon: <Zap size={20} /> },
+        { path: '/settings/autonomy', label: t('nav.autonomy'), icon: <SlidersHorizontal size={20} /> },
       ],
     },
   ];
@@ -228,11 +232,11 @@ export function Layout() {
         <div className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b">
           {!collapsed ? (
             <div className="flex items-center gap-2">
-              <img src="/logo.svg" alt="Butler" className="w-6 h-6 dark:invert" />
-              <span className="font-semibold text-foreground">Butler</span>
+              <img src="/logo.svg" alt={t('layout.butler')} className="w-6 h-6 dark:invert" />
+              <span className="font-semibold text-foreground">{t('layout.butler')}</span>
             </div>
           ) : (
-            <img src="/logo.svg" alt="Butler" className="w-6 h-6 mx-auto dark:invert" />
+            <img src="/logo.svg" alt={t('layout.butler')} className="w-6 h-6 mx-auto dark:invert" />
           )}
         </div>
 
@@ -380,7 +384,7 @@ export function Layout() {
               className={`flex items-center gap-2 w-full p-3 text-sm text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
             >
               <Settings size={16} className="text-muted-foreground" />
-              {!collapsed && <span>Settings</span>}
+              {!collapsed && <span>{t('common.settings')}</span>}
             </button>
             <button
               onClick={() => {
@@ -390,7 +394,7 @@ export function Layout() {
               className={`flex items-center gap-2 w-full p-3 text-sm text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
             >
               <LogOut size={16} className="text-muted-foreground" />
-              {!collapsed && <span>Logout</span>}
+              {!collapsed && <span>{t('common.logout')}</span>}
             </button>
           </div>
           <button
@@ -415,7 +419,7 @@ export function Layout() {
         onClick={toggleCollapsed}
         className="absolute w-6 h-6 flex items-center justify-center bg-card border rounded-full shadow-sm text-muted-foreground hover:text-foreground z-10 transition-all duration-200"
         style={{ left: collapsed ? 'calc(4rem - 12px)' : 'calc(14rem - 12px)', top: 'calc(1.75rem - 12px)' }}
-        title={collapsed ? 'Expand sidebar' : 'Collapse sidebar'}
+        title={collapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')}
       >
         <PanelLeft size={14} className={`transition-transform duration-200 ${collapsed ? 'rotate-180' : ''}`} />
       </button>
@@ -423,7 +427,7 @@ export function Layout() {
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen">
         <PageActionsProvider>
-          <HeaderBar navSections={navSections} isActive={isActive} />
+          <HeaderBar navSections={navSections} isActive={isActive} t={t} />
           {/* Page content */}
           <main className="flex-1 overflow-auto">
             <Outlet />
@@ -436,10 +440,12 @@ export function Layout() {
 
 function HeaderBar({
   navSections,
-  isActive
+  isActive,
+  t
 }: {
   navSections: NavSection[];
   isActive: (path: string) => boolean;
+  t: (key: string) => string;
 }) {
   const { actions } = usePageActions();
   const location = useLocation();
@@ -454,10 +460,15 @@ function HeaderBar({
         {activeItem && (
           <span className="text-muted-foreground">{activeItem.icon}</span>
         )}
-        {activeItem?.label || 'Dashboard'}
+        {activeItem?.label || t('layout.dashboard')}
       </h1>
       <div className="flex items-center gap-2">
-        {isHomePage && <ThemeToggle />}
+        {isHomePage && (
+          <>
+            <LanguageToggle />
+            <ThemeToggle />
+          </>
+        )}
         {actions}
       </div>
     </header>
