@@ -230,7 +230,7 @@ export function SiteScraperPage() {
           <AlertTitle>Embedding Required</AlertTitle>
           <AlertDescription className="flex items-end justify-between">
             <span>Set up embeddings to save scraped content to your knowledge base. Use Local AI (free & private) or OpenAI for faster performance.</span>
-            <Link to="/settings/extensions/ai" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
+            <Link to="/settings/extensions/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
               Configure <ArrowRight className="h-3 w-3" />
             </Link>
           </AlertDescription>

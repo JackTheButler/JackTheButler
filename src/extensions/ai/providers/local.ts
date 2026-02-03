@@ -426,7 +426,7 @@ export function createLocalProvider(config: LocalConfig = {}): LocalAIProvider {
  */
 export const manifest: AIExtensionManifest = {
   id: 'local',
-  name: 'Local AI (Built-in)',
+  name: 'Local AI',
   category: 'ai',
   version: '2.0.0',
   description:

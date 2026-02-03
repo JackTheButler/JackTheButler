@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useSearchParams, Link } from 'react-router-dom';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Spinner } from '@/components/ui/spinner';
 import {
@@ -417,12 +417,12 @@ function ActivityLogs({ extensionId, providerId }: { extensionId: string; provid
             </span>
           </div>
           <div className="flex items-center gap-3">
-            <Badge variant={log.status === 'success' ? 'success' : 'error'} className="text-xs">
-              {log.status}
-            </Badge>
             {log.latencyMs && (
               <span className="text-xs text-muted-foreground tabular-nums">{log.latencyMs}ms</span>
             )}
+            <Badge variant={log.status === 'success' ? 'success' : 'error'} className="text-xs">
+              {log.status}
+            </Badge>
           </div>
         </div>
       ))}
@@ -432,8 +432,8 @@ function ActivityLogs({ extensionId, providerId }: { extensionId: string; provid
 
 export function ExtensionEditPage() {
   const { extensionId } = useParams<{ extensionId: string }>();
+  const [searchParams, setSearchParams] = useSearchParams();
   const queryClient = useQueryClient();
-  const [selectedProviderId, setSelectedProviderId] = useState<string | null>(null);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['integration', extensionId],
@@ -453,12 +453,17 @@ export function ExtensionEditPage() {
   const integration = data;
   const providers = integration?.providers || [];
 
-  // Select first configured provider or first provider
+  // Get provider from URL query param, or fall back to first enabled/configured/available
+  const providerParam = searchParams.get('provider');
   const effectiveProviderId =
-    selectedProviderId ||
+    (providerParam && providers.find((p) => p.id === providerParam)?.id) ||
     providers.find((p) => p.enabled)?.id ||
     providers.find((p) => p.config)?.id ||
     providers[0]?.id;
+
+  const setSelectedProviderId = (providerId: string) => {
+    setSearchParams({ provider: providerId }, { replace: true });
+  };
 
   const selectedProvider = providers.find((p) => p.id === effectiveProviderId);
 

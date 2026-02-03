@@ -227,7 +227,7 @@ export function createOllamaProvider(config: OllamaConfig = {}): OllamaProvider 
  */
 export const manifest: AIExtensionManifest = {
   id: 'ollama',
-  name: 'Ollama (Local)',
+  name: 'Ollama',
   category: 'ai',
   version: '1.0.0',
   description: 'Run AI models locally with Ollama - full privacy, no API costs',

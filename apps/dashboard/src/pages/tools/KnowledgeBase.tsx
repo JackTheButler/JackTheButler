@@ -352,7 +352,7 @@ export function KnowledgeBasePage() {
           <AlertTitle>Embedding Required</AlertTitle>
           <AlertDescription className="flex items-end justify-between">
             <span>Knowledge base requires embeddings. Select an embedding provider: Local AI (free & private) or OpenAI, then re-index the knowledge base.</span>
-            <Link to="/settings/extensions/ai" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
+            <Link to="/settings/extensions/ai?provider=local" className="flex items-center gap-1 font-medium hover:underline ml-4 whitespace-nowrap">
               Configure <ArrowRight className="h-3 w-3" />
             </Link>
           </AlertDescription>
@@ -597,7 +597,7 @@ export function KnowledgeBasePage() {
         confirmLabel="Go to Settings"
         onConfirm={() => {
           setShowEmbeddingWarning(false);
-          navigate('/settings/extensions/ai');
+          navigate('/settings/extensions/ai?provider=local');
         }}
       />
 
