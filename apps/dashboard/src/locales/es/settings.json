@@ -1,0 +1,175 @@
+{
+  "extensions": {
+    "connected": "Conectado",
+    "readyToTest": "Listo para Probar",
+    "errors": "Errores",
+    "total": "Total",
+    "searchExtensions": "Buscar extensiones...",
+    "noExtensions": "No se encontraron extensiones",
+    "noExtensionsSearch": "Intenta un término diferente",
+    "failedToLoad": "Error al cargar extensiones",
+    "noProviderConfigured": "Sin proveedor configurado",
+    "aiProvider": "Proveedor de IA",
+    "communicationChannels": "Canales de Comunicación",
+    "hotelSystems": "Sistemas de Hotel",
+    "operations": "Operaciones",
+    "notSetUp": "No Configurado",
+    "ready": "Listo",
+    "disabled": "Desactivado",
+    "error": "Error"
+  },
+  "autonomy": {
+    "failedToLoad": "Error al cargar configuración de autonomía",
+    "tryAgainLater": "Por favor, inténtalo más tarde",
+    "resetToDefaults": "Restablecer valores",
+    "saveChanges": "Guardar cambios",
+    "globalLevel": "Nivel de Autonomía Global",
+    "globalLevelDesc": "Establece el comportamiento predeterminado para todas las acciones. Acciones individuales pueden anular esto.",
+    "actionSettings": "Configuración por Acción",
+    "actionSettingsDesc": "Configura niveles de autonomía para cada tipo de acción.",
+    "comingSoon": "Próximamente",
+    "confidenceThresholds": "Umbrales de Confianza de IA",
+    "confidenceThresholdsDesc": "Controla cómo la confianza de IA afecta las respuestas en modo Auto-Ejecutar (L2).",
+    "approvalThreshold": "Umbral de Aprobación",
+    "approvalThresholdDesc": "Por debajo de esta confianza, las respuestas se ponen en cola para aprobación del personal.",
+    "urgentThreshold": "Umbral de Urgencia",
+    "urgentThresholdDesc": "Por debajo de esta confianza, las conversaciones se marcan como urgentes.",
+    "financialLimits": "Límites de Acciones Financieras",
+    "financialLimitsDesc": "Establece montos máximos que pueden auto-aprobarse sin revisión del personal.",
+    "maxRefund": "Monto Máximo de Reembolso ($)",
+    "maxRefundDesc": "Reembolsos por encima de este monto requieren aprobación",
+    "maxDiscount": "Descuento Máximo (%)",
+    "maxDiscountDesc": "Descuentos por encima de este porcentaje requieren aprobación",
+    "levels": {
+      "L1": {
+        "label": "Requiere Aprobación",
+        "description": "Todas las acciones requieren aprobación del personal"
+      },
+      "L2": {
+        "label": "Auto-Ejecutar",
+        "description": "Las acciones se ejecutan automáticamente sin aprobación"
+      }
+    },
+    "actions": {
+      "respondToGuest": {
+        "label": "Responder al Huésped",
+        "description": "Enviar mensajes generados por IA"
+      },
+      "createHousekeepingTask": {
+        "label": "Tareas de Limpieza",
+        "description": "Crear solicitudes de limpieza"
+      },
+      "createMaintenanceTask": {
+        "label": "Tareas de Mantenimiento",
+        "description": "Crear solicitudes de reparación"
+      },
+      "createConciergeTask": {
+        "label": "Tareas de Conserjería",
+        "description": "Crear solicitudes de servicio"
+      },
+      "createRoomServiceTask": {
+        "label": "Servicio a Habitación",
+        "description": "Crear pedidos de servicio a habitación"
+      },
+      "issueRefund": {
+        "label": "Emitir Reembolsos",
+        "description": "Procesar reembolsos de huéspedes"
+      },
+      "offerDiscount": {
+        "label": "Ofrecer Descuentos",
+        "description": "Enviar ofertas promocionales"
+      },
+      "sendMarketingMessage": {
+        "label": "Mensajes de Marketing",
+        "description": "Enviar comunicaciones de marketing"
+      }
+    }
+  },
+  "extensionEdit": {
+    "backToExtensions": "Volver a Extensiones",
+    "selectProvider": "Seleccionar Proveedor",
+    "viewDocumentation": "Ver Documentación",
+    "connectionStatus": "Estado de Conexión",
+    "lastChecked": "Última verificación",
+    "testConnection": "Probar Conexión",
+    "enable": "Activar",
+    "disable": "Desactivar",
+    "active": "Activo",
+    "configuration": "Configuración",
+    "saveConfiguration": "Guardar Configuración",
+    "configSaved": "Configuración guardada exitosamente",
+    "recentActivity": "Actividad Reciente",
+    "noActivityLogs": "Sin registros de actividad",
+    "dangerZone": "Zona de Peligro",
+    "removeConfig": "Eliminar la configuración de este proveedor. Esto desactivará la integración y eliminará todas las credenciales almacenadas.",
+    "removeConfiguration": "Eliminar Configuración",
+    "removeConfirm": "¿Estás seguro de que quieres eliminar esta configuración?",
+    "failedToLoad": "Error al cargar extensión",
+    "tryAgainLater": "Por favor, inténtalo más tarde",
+    "select": "Seleccionar...",
+    "status": {
+      "connected": "Conectado",
+      "ready": "Listo",
+      "disabled": "Desactivado",
+      "error": "Error",
+      "notSetUp": "No Configurado"
+    },
+    "fields": {
+      "embeddingModel": "Modelo de Embedding",
+      "completionModel": "Modelo de Completado",
+      "enableEmbedding": "Habilitar Embedding",
+      "enableCompletion": "Habilitar Completado"
+    }
+  },
+  "settings": {
+    "hotelProfile": {
+      "title": "Perfil del Hotel",
+      "description": "Configura la información básica de tu hotel. El asistente de IA usa estos datos para dar respuestas precisas.",
+      "basicInfo": "Información Básica",
+      "hotelName": "Nombre del Hotel",
+      "hotelNamePlaceholder": "ej., Hotel Gran Plaza",
+      "address": "Dirección",
+      "addressPlaceholder": "Dirección",
+      "city": "Ciudad",
+      "country": "País",
+      "selectCountry": "Seleccionar país...",
+      "searchCountry": "Buscar países...",
+      "noCountryFound": "País no encontrado.",
+      "regionalSettings": "Configuración Regional",
+      "timezone": "Zona Horaria",
+      "selectTimezone": "Seleccionar zona horaria...",
+      "searchTimezone": "Buscar zonas horarias...",
+      "noTimezoneFound": "Zona horaria no encontrada.",
+      "currency": "Moneda",
+      "selectCurrency": "Seleccionar moneda...",
+      "searchCurrency": "Buscar monedas...",
+      "noCurrencyFound": "Moneda no encontrada.",
+      "checkInTime": "Hora de Entrada",
+      "checkOutTime": "Hora de Salida",
+      "selectTime": "Seleccionar hora...",
+      "contactInfo": "Información de Contacto",
+      "phone": "Teléfono",
+      "email": "Correo Electrónico",
+      "website": "Sitio Web",
+      "saved": "Perfil guardado correctamente",
+      "saveError": "Error al guardar el perfil"
+    },
+    "quickSetup": {
+      "title": "Configuración Rápida",
+      "description": "Asistentes de configuración para ayudarte a configurar tu sistema. Siempre están disponibles aquí incluso si los cerraste en la página de inicio."
+    },
+    "dangerZone": {
+      "title": "Zona de Peligro",
+      "description": "Acciones destructivas que no se pueden deshacer",
+      "resetDatabase": "Restablecer Base de Datos",
+      "resetDescription": "Esto eliminará permanentemente todos los datos incluyendo huéspedes, reservaciones, conversaciones, tareas y entradas de la base de conocimiento. Esta acción no se puede deshacer.",
+      "resetButton": "Restablecer Base de Datos",
+      "resetConfirmTitle": "Restablecer Base de Datos",
+      "resetConfirmDescription": "Esto eliminará permanentemente TODOS los datos. Esta acción no se puede deshacer.",
+      "typeToConfirm": "Escribe RESET para confirmar:",
+      "confirmReset": "Restablecer Todo",
+      "resetSuccess": "La base de datos se ha restablecido correctamente. Todos los datos han sido eliminados.",
+      "resetError": "Error al restablecer la base de datos. Por favor, inténtalo de nuevo."
+    }
+  }
+}

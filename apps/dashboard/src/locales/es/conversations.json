@@ -1,0 +1,39 @@
+{
+  "inbox": {
+    "noConversations": "Sin conversaciones",
+    "selectConversation": "Selecciona una conversación"
+  },
+  "conversations": {
+    "loading": "Cargando...",
+    "loadingMessages": "Cargando mensajes...",
+    "noMessages": "Sin mensajes aún",
+    "typeMessage": "Escribe un mensaje...",
+    "send": "Enviar",
+    "escalate": "Escalar",
+    "deEscalate": "Desescalar",
+    "resolve": "Resolver",
+    "reopen": "Reabrir",
+    "tasksTitle": "Tareas ({{count}})",
+    "noTasksConversation": "Sin tareas para esta conversación",
+    "taskCreated": "{{count}} tarea creada",
+    "tasksCreated": "{{count}} tareas creadas",
+    "room": "Habitación {{number}}",
+    "assignedTo": "Asignado a:",
+    "claim": "Reclamar",
+    "complete": "Completar",
+    "noActionsAvailable": "Sin acciones disponibles",
+    "senderTypes": {
+      "guest": "Huésped",
+      "ai": "Jack (IA)",
+      "staff": "Personal",
+      "system": "Sistema"
+    },
+    "states": {
+      "new": "Nuevo",
+      "active": "Activo",
+      "escalated": "Escalado",
+      "resolved": "Resuelto",
+      "closed": "Cerrado"
+    }
+  }
+}

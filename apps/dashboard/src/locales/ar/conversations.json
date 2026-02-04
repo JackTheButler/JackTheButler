@@ -1,0 +1,39 @@
+{
+  "inbox": {
+    "noConversations": "لا توجد محادثات",
+    "selectConversation": "اختر محادثة"
+  },
+  "conversations": {
+    "loading": "جاري التحميل...",
+    "loadingMessages": "جاري تحميل الرسائل...",
+    "noMessages": "لا توجد رسائل بعد",
+    "typeMessage": "اكتب رسالة...",
+    "send": "إرسال",
+    "escalate": "تصعيد",
+    "deEscalate": "إلغاء التصعيد",
+    "resolve": "حل",
+    "reopen": "إعادة فتح",
+    "tasksTitle": "المهام ({{count}})",
+    "noTasksConversation": "لا توجد مهام لهذه المحادثة",
+    "taskCreated": "تم إنشاء {{count}} مهمة",
+    "tasksCreated": "تم إنشاء {{count}} مهام",
+    "room": "غرفة {{number}}",
+    "assignedTo": "مُسند إلى:",
+    "claim": "استلام",
+    "complete": "إكمال",
+    "noActionsAvailable": "لا توجد إجراءات متاحة",
+    "senderTypes": {
+      "guest": "ضيف",
+      "ai": "جاك (ذكاء اصطناعي)",
+      "staff": "موظف",
+      "system": "نظام"
+    },
+    "states": {
+      "new": "جديد",
+      "active": "نشط",
+      "escalated": "متصاعد",
+      "resolved": "تم الحل",
+      "closed": "مغلق"
+    }
+  }
+}

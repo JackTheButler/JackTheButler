@@ -1,0 +1,39 @@
+{
+  "inbox": {
+    "noConversations": "कोई वार्तालाप नहीं",
+    "selectConversation": "एक वार्तालाप चुनें"
+  },
+  "conversations": {
+    "loading": "लोड हो रहा है...",
+    "loadingMessages": "संदेश लोड हो रहे हैं...",
+    "noMessages": "अभी तक कोई संदेश नहीं",
+    "typeMessage": "संदेश टाइप करें...",
+    "send": "भेजें",
+    "escalate": "बढ़ाएं",
+    "deEscalate": "वापस लाएं",
+    "resolve": "हल करें",
+    "reopen": "फिर से खोलें",
+    "tasksTitle": "कार्य ({{count}})",
+    "noTasksConversation": "इस वार्तालाप के लिए कोई कार्य नहीं",
+    "taskCreated": "{{count}} कार्य बनाया गया",
+    "tasksCreated": "{{count}} कार्य बनाए गए",
+    "room": "कमरा {{number}}",
+    "assignedTo": "को सौंपा गया:",
+    "claim": "दावा करें",
+    "complete": "पूर्ण करें",
+    "noActionsAvailable": "कोई क्रियाएं उपलब्ध नहीं",
+    "senderTypes": {
+      "guest": "अतिथि",
+      "ai": "जैक (AI)",
+      "staff": "कर्मचारी",
+      "system": "सिस्टम"
+    },
+    "states": {
+      "new": "नया",
+      "active": "सक्रिय",
+      "escalated": "बढ़ाया गया",
+      "resolved": "हल किया गया",
+      "closed": "बंद"
+    }
+  }
+}

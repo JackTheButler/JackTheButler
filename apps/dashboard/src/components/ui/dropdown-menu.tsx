@@ -115,7 +115,6 @@ export function DropdownMenuTrigger({ children, asChild }: DropdownMenuTriggerPr
 export function DropdownMenuContent({ children, align = 'end', side = 'bottom', className }: DropdownMenuContentProps) {
   const { open, triggerRef, dropdownId } = React.useContext(DropdownMenuContext);
   const [position, setPosition] = React.useState({ top: 0, left: 0, transform: '' });
-  const contentRef = React.useRef<HTMLDivElement>(null);
 
   React.useEffect(() => {
     if (open && triggerRef.current) {

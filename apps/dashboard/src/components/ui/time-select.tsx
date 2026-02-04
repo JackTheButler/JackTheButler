@@ -1,4 +1,3 @@
-import * as React from 'react';
 import { Combobox, type ComboboxOption } from './combobox';
 
 // Generate time options in 30-minute intervals

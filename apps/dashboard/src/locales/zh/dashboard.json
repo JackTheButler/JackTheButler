@@ -1,0 +1,64 @@
+{
+  "home": {
+    "aiProvider": "AI 提供商",
+    "embeddings": "嵌入向量",
+    "channels": "渠道",
+    "knowledge": "知识库",
+    "extensions": "扩展",
+    "gettingStarted": "开始使用",
+    "stepsCompleted": "已完成 {{completed}}/{{total}} 步",
+    "issues": {
+      "no_completion_provider": {
+        "title": "配置 AI 提供商",
+        "description": "连接 AI 提供商以启用客人对话。选择 Anthropic Claude、OpenAI 或本地运行。"
+      },
+      "no_embedding_provider": {
+        "title": "启用知识搜索",
+        "description": "设置嵌入向量以支持智能知识库搜索。使用 Local AI（免费且私密）或 OpenAI 以获得更快性能。"
+      },
+      "using_local_completion": {
+        "title": "升级 AI 提供商",
+        "description": "Local AI 已激活，但云提供商提供更快的响应和更好的质量。考虑添加 Anthropic 或 OpenAI。"
+      },
+      "no_channels": {
+        "title": "连接消息渠道",
+        "description": "设置 WhatsApp、短信或电子邮件以开始接收和回复客人消息。"
+      },
+      "empty_knowledge_base": {
+        "title": "构建知识库",
+        "description": "从您的酒店网站抓取内容，自动导入常见问题、设施、政策和其他帮助 AI 回答客人问题的信息。"
+      },
+      "needs_reindex": {
+        "title": "重新索引知识库",
+        "description": "部分知识库条目缺少嵌入向量。重新索引以启用所有内容的搜索。"
+      }
+    },
+    "completed": {
+      "completion_provider_configured": "AI 提供商已配置",
+      "embedding_provider_configured": "知识搜索已启用",
+      "channels_configured": "消息渠道已连接",
+      "knowledge_base_populated": "知识库已就绪"
+    },
+    "actions": {
+      "no_completion_provider": "设置 AI",
+      "no_embedding_provider": "启用嵌入",
+      "using_local_completion": "升级 AI",
+      "no_channels": "添加渠道",
+      "empty_knowledge_base": "导入内容",
+      "needs_reindex": "立即重新索引"
+    },
+    "demoData": {
+      "title": "使用示例数据体验",
+      "description": "添加演示客人、预订和知识库来探索系统。准备正式使用时，可以在设置中重置所有数据。",
+      "createAll": "加载示例数据",
+      "confirmTitle": "加载示例数据？",
+      "confirmDescription": "这将添加演示客人、预订、对话、任务和知识库条目到您的数据库。现有数据不会受到影响。",
+      "confirm": "加载数据",
+      "success": "示例数据加载成功！",
+      "error": "加载示例数据失败。请重试。",
+      "nextStepLabel": "下一步：",
+      "nextStepText": "重新索引知识库以启用 AI 搜索。",
+      "reindexAction": "重新索引知识库"
+    }
+  }
+}

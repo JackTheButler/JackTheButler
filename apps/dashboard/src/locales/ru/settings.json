@@ -1,0 +1,175 @@
+{
+  "extensions": {
+    "connected": "Подключено",
+    "readyToTest": "Готово к тесту",
+    "errors": "Ошибки",
+    "total": "Всего",
+    "searchExtensions": "Поиск расширений...",
+    "noExtensions": "Расширения не найдены",
+    "noExtensionsSearch": "Попробуйте другой запрос",
+    "failedToLoad": "Ошибка загрузки расширений",
+    "noProviderConfigured": "Провайдер не настроен",
+    "aiProvider": "AI провайдер",
+    "communicationChannels": "Каналы связи",
+    "hotelSystems": "Системы отеля",
+    "operations": "Операции",
+    "notSetUp": "Не настроено",
+    "ready": "Готово",
+    "disabled": "Отключено",
+    "error": "Ошибка"
+  },
+  "autonomy": {
+    "failedToLoad": "Ошибка загрузки настроек автономности",
+    "tryAgainLater": "Попробуйте позже",
+    "resetToDefaults": "Сбросить по умолчанию",
+    "saveChanges": "Сохранить изменения",
+    "globalLevel": "Глобальный уровень автономности",
+    "globalLevelDesc": "Установите поведение по умолчанию для всех действий. Отдельные действия могут переопределять это.",
+    "actionSettings": "Настройки действий",
+    "actionSettingsDesc": "Настройте уровни автономности для каждого типа действия.",
+    "comingSoon": "Скоро",
+    "confidenceThresholds": "Пороги уверенности AI",
+    "confidenceThresholdsDesc": "Управляйте влиянием уверенности AI на ответы в режиме автовыполнения (L2).",
+    "approvalThreshold": "Порог одобрения",
+    "approvalThresholdDesc": "Ниже этой уверенности ответы ставятся в очередь на одобрение персоналом.",
+    "urgentThreshold": "Порог срочности",
+    "urgentThresholdDesc": "Ниже этой уверенности диалоги помечаются как срочные.",
+    "financialLimits": "Лимиты финансовых действий",
+    "financialLimitsDesc": "Установите максимальные суммы для автоматического одобрения без проверки персоналом.",
+    "maxRefund": "Макс. авто-возврат ($)",
+    "maxRefundDesc": "Возвраты выше этой суммы требуют одобрения",
+    "maxDiscount": "Макс. авто-скидка (%)",
+    "maxDiscountDesc": "Скидки выше этого процента требуют одобрения",
+    "levels": {
+      "L1": {
+        "label": "Требуется одобрение",
+        "description": "Все действия требуют одобрения персонала"
+      },
+      "L2": {
+        "label": "Автовыполнение",
+        "description": "Действия выполняются автоматически без одобрения"
+      }
+    },
+    "actions": {
+      "respondToGuest": {
+        "label": "Ответить гостю",
+        "description": "Отправить AI-сообщения"
+      },
+      "createHousekeepingTask": {
+        "label": "Задачи уборки",
+        "description": "Создать запросы на уборку"
+      },
+      "createMaintenanceTask": {
+        "label": "Задачи обслуживания",
+        "description": "Создать запросы на ремонт"
+      },
+      "createConciergeTask": {
+        "label": "Задачи консьержа",
+        "description": "Создать сервисные запросы"
+      },
+      "createRoomServiceTask": {
+        "label": "Обслуживание номеров",
+        "description": "Создать заказы в номер"
+      },
+      "issueRefund": {
+        "label": "Оформить возврат",
+        "description": "Обработать возвраты гостям"
+      },
+      "offerDiscount": {
+        "label": "Предложить скидку",
+        "description": "Отправить промо-предложения"
+      },
+      "sendMarketingMessage": {
+        "label": "Маркетинговые сообщения",
+        "description": "Отправить маркетинговые рассылки"
+      }
+    }
+  },
+  "extensionEdit": {
+    "backToExtensions": "Назад к расширениям",
+    "selectProvider": "Выберите провайдера",
+    "viewDocumentation": "Смотреть документацию",
+    "connectionStatus": "Статус подключения",
+    "lastChecked": "Последняя проверка",
+    "testConnection": "Проверить подключение",
+    "enable": "Включить",
+    "disable": "Отключить",
+    "active": "Активно",
+    "configuration": "Конфигурация",
+    "saveConfiguration": "Сохранить конфигурацию",
+    "configSaved": "Конфигурация успешно сохранена",
+    "recentActivity": "Недавняя активность",
+    "noActivityLogs": "Пока нет логов активности",
+    "dangerZone": "Опасная зона",
+    "removeConfig": "Удалить конфигурацию провайдера. Это отключит интеграцию и удалит все сохранённые учётные данные.",
+    "removeConfiguration": "Удалить конфигурацию",
+    "removeConfirm": "Вы уверены, что хотите удалить эту конфигурацию?",
+    "failedToLoad": "Ошибка загрузки расширения",
+    "tryAgainLater": "Попробуйте позже",
+    "select": "Выберите...",
+    "status": {
+      "connected": "Подключено",
+      "ready": "Готово",
+      "disabled": "Отключено",
+      "error": "Ошибка",
+      "notSetUp": "Не настроено"
+    },
+    "fields": {
+      "embeddingModel": "Модель эмбеддингов",
+      "completionModel": "Модель завершения",
+      "enableEmbedding": "Включить эмбеддинги",
+      "enableCompletion": "Включить завершение"
+    }
+  },
+  "settings": {
+    "hotelProfile": {
+      "title": "Профиль отеля",
+      "description": "Настройте основную информацию об отеле. AI-помощник использует эти данные для точных ответов.",
+      "basicInfo": "Основная информация",
+      "hotelName": "Название отеля",
+      "hotelNamePlaceholder": "напр., Гранд Плаза Отель",
+      "address": "Адрес",
+      "addressPlaceholder": "Улица и номер дома",
+      "city": "Город",
+      "country": "Страна",
+      "selectCountry": "Выберите страну...",
+      "searchCountry": "Поиск стран...",
+      "noCountryFound": "Страна не найдена.",
+      "regionalSettings": "Региональные настройки",
+      "timezone": "Часовой пояс",
+      "selectTimezone": "Выберите часовой пояс...",
+      "searchTimezone": "Поиск часовых поясов...",
+      "noTimezoneFound": "Часовой пояс не найден.",
+      "currency": "Валюта",
+      "selectCurrency": "Выберите валюту...",
+      "searchCurrency": "Поиск валют...",
+      "noCurrencyFound": "Валюта не найдена.",
+      "checkInTime": "Время заезда",
+      "checkOutTime": "Время выезда",
+      "selectTime": "Выберите время...",
+      "contactInfo": "Контактная информация",
+      "phone": "Телефон",
+      "email": "Email",
+      "website": "Веб-сайт",
+      "saved": "Профиль успешно сохранён",
+      "saveError": "Не удалось сохранить профиль"
+    },
+    "quickSetup": {
+      "title": "Быстрая настройка",
+      "description": "Мастера настройки для помощи в конфигурации системы. Всегда доступны здесь, даже если закрыты на главной странице."
+    },
+    "dangerZone": {
+      "title": "Опасная зона",
+      "description": "Необратимые действия",
+      "resetDatabase": "Сбросить базу данных",
+      "resetDescription": "Это навсегда удалит все данные, включая гостей, бронирования, переписки, задачи и записи базы знаний. Это действие нельзя отменить.",
+      "resetButton": "Сбросить базу данных",
+      "resetConfirmTitle": "Сбросить базу данных",
+      "resetConfirmDescription": "Это навсегда удалит ВСЕ данные. Это действие нельзя отменить.",
+      "typeToConfirm": "Введите RESET для подтверждения:",
+      "confirmReset": "Сбросить всё",
+      "resetSuccess": "База данных успешно сброшена. Все данные очищены.",
+      "resetError": "Не удалось сбросить базу данных. Пожалуйста, попробуйте снова."
+    }
+  }
+}

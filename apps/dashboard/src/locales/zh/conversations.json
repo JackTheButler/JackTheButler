@@ -1,0 +1,39 @@
+{
+  "inbox": {
+    "noConversations": "没有对话",
+    "selectConversation": "选择一个对话"
+  },
+  "conversations": {
+    "loading": "加载中...",
+    "loadingMessages": "加载消息中...",
+    "noMessages": "暂无消息",
+    "typeMessage": "输入消息...",
+    "send": "发送",
+    "escalate": "升级",
+    "deEscalate": "取消升级",
+    "resolve": "解决",
+    "reopen": "重新打开",
+    "tasksTitle": "任务 ({{count}})",
+    "noTasksConversation": "此对话没有任务",
+    "taskCreated": "已创建 {{count}} 个任务",
+    "tasksCreated": "已创建 {{count}} 个任务",
+    "room": "房间 {{number}}",
+    "assignedTo": "分配给：",
+    "claim": "认领",
+    "complete": "完成",
+    "noActionsAvailable": "无可用操作",
+    "senderTypes": {
+      "guest": "客人",
+      "ai": "杰克 (AI)",
+      "staff": "员工",
+      "system": "系统"
+    },
+    "states": {
+      "new": "新建",
+      "active": "进行中",
+      "escalated": "已升级",
+      "resolved": "已解决",
+      "closed": "已关闭"
+    }
+  }
+}

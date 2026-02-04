@@ -1,0 +1,175 @@
+{
+  "extensions": {
+    "connected": "已连接",
+    "readyToTest": "准备测试",
+    "errors": "错误",
+    "total": "总计",
+    "searchExtensions": "搜索扩展...",
+    "noExtensions": "未找到扩展",
+    "noExtensionsSearch": "尝试不同的搜索词",
+    "failedToLoad": "加载扩展失败",
+    "noProviderConfigured": "未配置提供商",
+    "aiProvider": "AI 提供商",
+    "communicationChannels": "通信渠道",
+    "hotelSystems": "酒店系统",
+    "operations": "运营",
+    "notSetUp": "未设置",
+    "ready": "就绪",
+    "disabled": "已禁用",
+    "error": "错误"
+  },
+  "autonomy": {
+    "failedToLoad": "加载自主性设置失败",
+    "tryAgainLater": "请稍后重试",
+    "resetToDefaults": "重置为默认",
+    "saveChanges": "保存更改",
+    "globalLevel": "全局自主性级别",
+    "globalLevelDesc": "设置所有操作的默认行为。单个操作可以覆盖此设置。",
+    "actionSettings": "操作特定设置",
+    "actionSettingsDesc": "为每种操作类型配置自主性级别。",
+    "comingSoon": "即将推出",
+    "confidenceThresholds": "AI 置信度阈值",
+    "confidenceThresholdsDesc": "控制 AI 置信度如何影响自动执行模式 (L2) 中的响应。",
+    "approvalThreshold": "审批阈值",
+    "approvalThresholdDesc": "低于此置信度，响应将排队等待员工审批而不是自动发送。",
+    "urgentThreshold": "紧急标记阈值",
+    "urgentThresholdDesc": "低于此置信度，对话将被标记为需要员工立即关注。",
+    "financialLimits": "财务操作限制",
+    "financialLimitsDesc": "设置无需员工审核即可自动批准的最大金额。",
+    "maxRefund": "最大自动退款金额 ($)",
+    "maxRefundDesc": "超过此金额的退款需要审批",
+    "maxDiscount": "最大自动折扣 (%)",
+    "maxDiscountDesc": "超过此百分比的折扣需要审批",
+    "levels": {
+      "L1": {
+        "label": "需要审批",
+        "description": "所有操作都需要员工审批"
+      },
+      "L2": {
+        "label": "自动执行",
+        "description": "操作自动运行无需审批"
+      }
+    },
+    "actions": {
+      "respondToGuest": {
+        "label": "回复客人",
+        "description": "发送 AI 生成的消息"
+      },
+      "createHousekeepingTask": {
+        "label": "客房服务任务",
+        "description": "创建清洁请求"
+      },
+      "createMaintenanceTask": {
+        "label": "维护任务",
+        "description": "创建维修请求"
+      },
+      "createConciergeTask": {
+        "label": "礼宾任务",
+        "description": "创建服务请求"
+      },
+      "createRoomServiceTask": {
+        "label": "客房送餐任务",
+        "description": "创建客房送餐订单"
+      },
+      "issueRefund": {
+        "label": "发起退款",
+        "description": "处理客人退款"
+      },
+      "offerDiscount": {
+        "label": "提供折扣",
+        "description": "发送促销优惠"
+      },
+      "sendMarketingMessage": {
+        "label": "营销消息",
+        "description": "发送营销通信"
+      }
+    }
+  },
+  "extensionEdit": {
+    "backToExtensions": "返回扩展",
+    "selectProvider": "选择提供商",
+    "viewDocumentation": "查看文档",
+    "connectionStatus": "连接状态",
+    "lastChecked": "最近检查",
+    "testConnection": "测试连接",
+    "enable": "启用",
+    "disable": "禁用",
+    "active": "活跃",
+    "configuration": "配置",
+    "saveConfiguration": "保存配置",
+    "configSaved": "配置保存成功",
+    "recentActivity": "近期活动",
+    "noActivityLogs": "暂无活动日志",
+    "dangerZone": "危险区域",
+    "removeConfig": "移除此提供商配置。这将禁用集成并删除所有存储的凭据。",
+    "removeConfiguration": "移除配置",
+    "removeConfirm": "确定要移除此配置吗？",
+    "failedToLoad": "加载扩展失败",
+    "tryAgainLater": "请稍后重试",
+    "select": "选择...",
+    "status": {
+      "connected": "已连接",
+      "ready": "就绪",
+      "disabled": "已禁用",
+      "error": "错误",
+      "notSetUp": "未设置"
+    },
+    "fields": {
+      "embeddingModel": "嵌入模型",
+      "completionModel": "补全模型",
+      "enableEmbedding": "启用嵌入",
+      "enableCompletion": "启用补全"
+    }
+  },
+  "settings": {
+    "hotelProfile": {
+      "title": "酒店资料",
+      "description": "配置您酒店的基本信息。AI 助手使用这些数据提供准确的回复。",
+      "basicInfo": "基本信息",
+      "hotelName": "酒店名称",
+      "hotelNamePlaceholder": "例如：格兰广场酒店",
+      "address": "地址",
+      "addressPlaceholder": "街道地址",
+      "city": "城市",
+      "country": "国家",
+      "selectCountry": "选择国家...",
+      "searchCountry": "搜索国家...",
+      "noCountryFound": "未找到国家。",
+      "regionalSettings": "区域设置",
+      "timezone": "时区",
+      "selectTimezone": "选择时区...",
+      "searchTimezone": "搜索时区...",
+      "noTimezoneFound": "未找到时区。",
+      "currency": "货币",
+      "selectCurrency": "选择货币...",
+      "searchCurrency": "搜索货币...",
+      "noCurrencyFound": "未找到货币。",
+      "checkInTime": "入住时间",
+      "checkOutTime": "退房时间",
+      "selectTime": "选择时间...",
+      "contactInfo": "联系信息",
+      "phone": "电话",
+      "email": "邮箱",
+      "website": "网站",
+      "saved": "资料保存成功",
+      "saveError": "保存资料失败"
+    },
+    "quickSetup": {
+      "title": "快速设置",
+      "description": "帮助您配置系统的设置向导。即使在主页关闭后，这些向导也始终在此可用。"
+    },
+    "dangerZone": {
+      "title": "危险区域",
+      "description": "无法撤销的破坏性操作",
+      "resetDatabase": "重置数据库",
+      "resetDescription": "这将永久删除所有数据，包括客人、预订、对话、任务和知识库条目。此操作无法撤销。",
+      "resetButton": "重置数据库",
+      "resetConfirmTitle": "重置数据库",
+      "resetConfirmDescription": "这将永久删除所有数据。此操作无法撤销。",
+      "typeToConfirm": "输入 RESET 确认：",
+      "confirmReset": "重置所有内容",
+      "resetSuccess": "数据库已成功重置。所有数据已清除。",
+      "resetError": "重置数据库失败。请重试。"
+    }
+  }
+}

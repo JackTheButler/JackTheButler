@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { usePageActions } from '@/contexts/PageActionsContext';
 import {
   Plus,
   AlertCircle,
@@ -185,10 +186,23 @@ const getTriggerTypeFilters = (t: (key: string) => string): { value: 'all' | Tri
 
 export function AutomationsPage() {
   const { t } = useTranslation();
+  const { setActions } = usePageActions();
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | TriggerType>('all');
   const queryClient = useQueryClient();
   const triggerTypeFilters = getTriggerTypeFilters(t);
+
+  useEffect(() => {
+    setActions(
+      <Link to="/settings/automations/new">
+        <Button size="sm">
+          <Plus className="w-4 h-4 me-1.5" />
+          {t('automations.newRule')}
+        </Button>
+      </Link>
+    );
+    return () => setActions(null);
+  }, [setActions, t]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['automation-rules'],
@@ -224,14 +238,7 @@ export function AutomationsPage() {
 
   return (
     <PageContainer>
-      <PageHeader>
-        <Link to="/settings/automations/new">
-          <Button size="sm" >
-            <Plus className="w-3.5 h-3.5 me-1.5" />
-            {t('automations.newRule')}
-          </Button>
-        </Link>
-      </PageHeader>
+      <PageHeader />
 
       {/* Stats */}
       {!isLoading && !error && (

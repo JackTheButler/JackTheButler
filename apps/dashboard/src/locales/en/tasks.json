@@ -1,0 +1,42 @@
+{
+  "tasks": {
+    "type": "Type",
+    "task": "Task",
+    "assigned": "Assigned",
+    "action": "Action",
+    "claim": "Claim",
+    "complete": "Complete",
+    "reopen": "Reopen",
+    "details": "Task Details",
+    "assignedTo": "Assigned To",
+    "noTasks": "No tasks found",
+    "noTasksDescription": "Tasks will appear here when created by guests or staff",
+    "statuses": {
+      "pending": "Pending",
+      "in_progress": "In Progress",
+      "completed": "Completed",
+      "cancelled": "Cancelled"
+    }
+  },
+  "approvals": {
+    "pending": "Pending",
+    "approvedToday": "Approved Today",
+    "rejectedToday": "Rejected Today",
+    "response": "Response",
+    "task": "Task",
+    "offer": "Offer",
+    "proposedResponse": "Proposed Response",
+    "taskDetails": "Task Details",
+    "proposedOffer": "Proposed Offer",
+    "confident": "confident",
+    "viewConversation": "View conversation",
+    "conversation": "Conversation",
+    "jack": "Jack",
+    "rejectionReason": "Rejection reason...",
+    "failedToLoad": "Failed to load approvals",
+    "tryAgainLater": "Please try again later",
+    "noPending": "No pending approvals",
+    "noItems": "No items found",
+    "allCaughtUp": "All caught up!"
+  }
+}

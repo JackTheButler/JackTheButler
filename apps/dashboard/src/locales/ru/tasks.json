@@ -1,0 +1,42 @@
+{
+  "tasks": {
+    "type": "Тип",
+    "task": "Задача",
+    "assigned": "Назначено",
+    "action": "Действие",
+    "claim": "Взять",
+    "complete": "Завершить",
+    "reopen": "Открыть снова",
+    "details": "Детали задачи",
+    "assignedTo": "Назначено",
+    "noTasks": "Задачи не найдены",
+    "noTasksDescription": "Задачи появятся здесь при создании",
+    "statuses": {
+      "pending": "Ожидает",
+      "in_progress": "В работе",
+      "completed": "Завершено",
+      "cancelled": "Отменено"
+    }
+  },
+  "approvals": {
+    "pending": "Ожидает",
+    "approvedToday": "Одобрено сегодня",
+    "rejectedToday": "Отклонено сегодня",
+    "response": "Ответ",
+    "task": "Задача",
+    "offer": "Предложение",
+    "proposedResponse": "Предложенный ответ",
+    "taskDetails": "Детали задачи",
+    "proposedOffer": "Предложенное предложение",
+    "confident": "уверенность",
+    "viewConversation": "Смотреть диалог",
+    "conversation": "Диалог",
+    "jack": "Джек",
+    "rejectionReason": "Причина отклонения...",
+    "failedToLoad": "Ошибка загрузки согласований",
+    "tryAgainLater": "Попробуйте позже",
+    "noPending": "Нет ожидающих согласований",
+    "noItems": "Элементы не найдены",
+    "allCaughtUp": "Всё обработано!"
+  }
+}

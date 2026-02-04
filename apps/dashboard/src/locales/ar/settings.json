@@ -1,0 +1,175 @@
+{
+  "extensions": {
+    "connected": "متصل",
+    "readyToTest": "جاهز للاختبار",
+    "errors": "أخطاء",
+    "total": "المجموع",
+    "searchExtensions": "البحث عن إضافات...",
+    "noExtensions": "لم يتم العثور على إضافات",
+    "noExtensionsSearch": "جرب مصطلح بحث مختلف",
+    "failedToLoad": "فشل تحميل الإضافات",
+    "noProviderConfigured": "لا يوجد مزود مُعد",
+    "aiProvider": "مزود الذكاء الاصطناعي",
+    "communicationChannels": "قنوات الاتصال",
+    "hotelSystems": "أنظمة الفندق",
+    "operations": "العمليات",
+    "notSetUp": "غير مُعد",
+    "ready": "جاهز",
+    "disabled": "معطل",
+    "error": "خطأ"
+  },
+  "autonomy": {
+    "failedToLoad": "فشل تحميل إعدادات الاستقلالية",
+    "tryAgainLater": "يرجى المحاولة لاحقاً",
+    "resetToDefaults": "استعادة الافتراضي",
+    "saveChanges": "حفظ التغييرات",
+    "globalLevel": "مستوى الاستقلالية العام",
+    "globalLevelDesc": "تعيين السلوك الافتراضي لجميع الإجراءات. يمكن للإجراءات الفردية تجاوز هذا.",
+    "actionSettings": "إعدادات الإجراءات",
+    "actionSettingsDesc": "تكوين مستويات الاستقلالية لكل نوع إجراء.",
+    "comingSoon": "قريباً",
+    "confidenceThresholds": "عتبات ثقة الذكاء الاصطناعي",
+    "confidenceThresholdsDesc": "التحكم في كيفية تأثير ثقة الذكاء الاصطناعي على الردود في وضع التنفيذ التلقائي (L2).",
+    "approvalThreshold": "عتبة الموافقة",
+    "approvalThresholdDesc": "أقل من هذه الثقة، يتم وضع الردود في قائمة انتظار لموافقة الموظفين.",
+    "urgentThreshold": "عتبة الاستعجال",
+    "urgentThresholdDesc": "أقل من هذه الثقة، يتم تمييز المحادثات على أنها عاجلة.",
+    "financialLimits": "حدود الإجراءات المالية",
+    "financialLimitsDesc": "تعيين الحد الأقصى للمبالغ التي يمكن الموافقة عليها تلقائياً.",
+    "maxRefund": "الحد الأقصى للاسترداد ($)",
+    "maxRefundDesc": "المبالغ المستردة فوق هذا المبلغ تتطلب موافقة",
+    "maxDiscount": "الحد الأقصى للخصم (%)",
+    "maxDiscountDesc": "الخصومات فوق هذه النسبة تتطلب موافقة",
+    "levels": {
+      "L1": {
+        "label": "يتطلب موافقة",
+        "description": "جميع الإجراءات تتطلب موافقة الموظفين"
+      },
+      "L2": {
+        "label": "تنفيذ تلقائي",
+        "description": "تعمل الإجراءات تلقائياً بدون موافقة"
+      }
+    },
+    "actions": {
+      "respondToGuest": {
+        "label": "الرد على الضيف",
+        "description": "إرسال رسائل يولدها الذكاء الاصطناعي"
+      },
+      "createHousekeepingTask": {
+        "label": "مهام التنظيف",
+        "description": "إنشاء طلبات التنظيف"
+      },
+      "createMaintenanceTask": {
+        "label": "مهام الصيانة",
+        "description": "إنشاء طلبات الإصلاح"
+      },
+      "createConciergeTask": {
+        "label": "مهام الكونسيرج",
+        "description": "إنشاء طلبات الخدمة"
+      },
+      "createRoomServiceTask": {
+        "label": "خدمة الغرف",
+        "description": "إنشاء طلبات خدمة الغرف"
+      },
+      "issueRefund": {
+        "label": "إصدار المبالغ المستردة",
+        "description": "معالجة استرداد أموال الضيوف"
+      },
+      "offerDiscount": {
+        "label": "تقديم الخصومات",
+        "description": "إرسال العروض الترويجية"
+      },
+      "sendMarketingMessage": {
+        "label": "رسائل التسويق",
+        "description": "إرسال الاتصالات التسويقية"
+      }
+    }
+  },
+  "extensionEdit": {
+    "backToExtensions": "العودة للإضافات",
+    "selectProvider": "اختيار المزود",
+    "viewDocumentation": "عرض التوثيق",
+    "connectionStatus": "حالة الاتصال",
+    "lastChecked": "آخر فحص",
+    "testConnection": "اختبار الاتصال",
+    "enable": "تفعيل",
+    "disable": "تعطيل",
+    "active": "نشط",
+    "configuration": "الإعدادات",
+    "saveConfiguration": "حفظ الإعدادات",
+    "configSaved": "تم حفظ الإعدادات بنجاح",
+    "recentActivity": "النشاط الأخير",
+    "noActivityLogs": "لا توجد سجلات نشاط",
+    "dangerZone": "منطقة الخطر",
+    "removeConfig": "إزالة إعدادات هذا المزود. سيؤدي هذا إلى تعطيل التكامل وحذف جميع بيانات الاعتماد المخزنة.",
+    "removeConfiguration": "إزالة الإعدادات",
+    "removeConfirm": "هل أنت متأكد من إزالة هذه الإعدادات؟",
+    "failedToLoad": "فشل تحميل الإضافة",
+    "tryAgainLater": "يرجى المحاولة لاحقاً",
+    "select": "اختر...",
+    "status": {
+      "connected": "متصل",
+      "ready": "جاهز",
+      "disabled": "معطل",
+      "error": "خطأ",
+      "notSetUp": "غير مُعد"
+    },
+    "fields": {
+      "embeddingModel": "نموذج التضمين",
+      "completionModel": "نموذج الإكمال",
+      "enableEmbedding": "تفعيل التضمين",
+      "enableCompletion": "تفعيل الإكمال"
+    }
+  },
+  "settings": {
+    "hotelProfile": {
+      "title": "ملف الفندق",
+      "description": "قم بتكوين المعلومات الأساسية لفندقك. يستخدم مساعد الذكاء الاصطناعي هذه البيانات لتقديم ردود دقيقة.",
+      "basicInfo": "المعلومات الأساسية",
+      "hotelName": "اسم الفندق",
+      "hotelNamePlaceholder": "مثال: فندق جراند بلازا",
+      "address": "العنوان",
+      "addressPlaceholder": "عنوان الشارع",
+      "city": "المدينة",
+      "country": "البلد",
+      "selectCountry": "اختر البلد...",
+      "searchCountry": "ابحث عن البلدان...",
+      "noCountryFound": "لم يتم العثور على البلد.",
+      "regionalSettings": "الإعدادات الإقليمية",
+      "timezone": "المنطقة الزمنية",
+      "selectTimezone": "اختر المنطقة الزمنية...",
+      "searchTimezone": "ابحث عن المناطق الزمنية...",
+      "noTimezoneFound": "لم يتم العثور على المنطقة الزمنية.",
+      "currency": "العملة",
+      "selectCurrency": "اختر العملة...",
+      "searchCurrency": "ابحث عن العملات...",
+      "noCurrencyFound": "لم يتم العثور على العملة.",
+      "checkInTime": "وقت تسجيل الدخول",
+      "checkOutTime": "وقت تسجيل الخروج",
+      "selectTime": "اختر الوقت...",
+      "contactInfo": "معلومات الاتصال",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "website": "الموقع الإلكتروني",
+      "saved": "تم حفظ الملف بنجاح",
+      "saveError": "فشل في حفظ الملف"
+    },
+    "quickSetup": {
+      "title": "الإعداد السريع",
+      "description": "معالجات الإعداد لمساعدتك في تكوين نظامك. متاحة دائماً هنا حتى لو تم إغلاقها من الصفحة الرئيسية."
+    },
+    "dangerZone": {
+      "title": "منطقة الخطر",
+      "description": "إجراءات تدميرية لا يمكن التراجع عنها",
+      "resetDatabase": "إعادة تعيين قاعدة البيانات",
+      "resetDescription": "سيؤدي هذا إلى حذف جميع البيانات نهائياً بما في ذلك الضيوف والحجوزات والمحادثات والمهام وإدخالات قاعدة المعرفة. لا يمكن التراجع عن هذا الإجراء.",
+      "resetButton": "إعادة تعيين قاعدة البيانات",
+      "resetConfirmTitle": "إعادة تعيين قاعدة البيانات",
+      "resetConfirmDescription": "سيؤدي هذا إلى حذف جميع البيانات نهائياً. لا يمكن التراجع عن هذا الإجراء.",
+      "typeToConfirm": "اكتب RESET للتأكيد:",
+      "confirmReset": "إعادة تعيين كل شيء",
+      "resetSuccess": "تم إعادة تعيين قاعدة البيانات بنجاح. تم مسح جميع البيانات.",
+      "resetError": "فشل في إعادة تعيين قاعدة البيانات. يرجى المحاولة مرة أخرى."
+    }
+  }
+}

@@ -1,0 +1,39 @@
+{
+  "inbox": {
+    "noConversations": "Нет диалогов",
+    "selectConversation": "Выберите диалог"
+  },
+  "conversations": {
+    "loading": "Загрузка...",
+    "loadingMessages": "Загрузка сообщений...",
+    "noMessages": "Сообщений пока нет",
+    "typeMessage": "Введите сообщение...",
+    "send": "Отправить",
+    "escalate": "Эскалировать",
+    "deEscalate": "Снять эскалацию",
+    "resolve": "Решить",
+    "reopen": "Открыть снова",
+    "tasksTitle": "Задачи ({{count}})",
+    "noTasksConversation": "Нет задач для этого диалога",
+    "taskCreated": "{{count}} задача создана",
+    "tasksCreated": "{{count}} задач создано",
+    "room": "Номер {{number}}",
+    "assignedTo": "Назначено:",
+    "claim": "Взять",
+    "complete": "Завершить",
+    "noActionsAvailable": "Нет доступных действий",
+    "senderTypes": {
+      "guest": "Гость",
+      "ai": "Джек (AI)",
+      "staff": "Персонал",
+      "system": "Система"
+    },
+    "states": {
+      "new": "Новый",
+      "active": "Активный",
+      "escalated": "Эскалирован",
+      "resolved": "Решён",
+      "closed": "Закрыт"
+    }
+  }
+}

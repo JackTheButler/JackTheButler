@@ -1,0 +1,42 @@
+{
+  "tasks": {
+    "type": "类型",
+    "task": "任务",
+    "assigned": "已分配",
+    "action": "操作",
+    "claim": "认领",
+    "complete": "完成",
+    "reopen": "重新打开",
+    "details": "任务详情",
+    "assignedTo": "分配给",
+    "noTasks": "未找到任务",
+    "noTasksDescription": "创建任务后将显示在这里",
+    "statuses": {
+      "pending": "待处理",
+      "in_progress": "进行中",
+      "completed": "已完成",
+      "cancelled": "已取消"
+    }
+  },
+  "approvals": {
+    "pending": "待处理",
+    "approvedToday": "今日已批准",
+    "rejectedToday": "今日已拒绝",
+    "response": "回复",
+    "task": "任务",
+    "offer": "优惠",
+    "proposedResponse": "建议回复",
+    "taskDetails": "任务详情",
+    "proposedOffer": "建议优惠",
+    "confident": "置信度",
+    "viewConversation": "查看对话",
+    "conversation": "对话",
+    "jack": "杰克",
+    "rejectionReason": "拒绝原因...",
+    "failedToLoad": "加载审批失败",
+    "tryAgainLater": "请稍后重试",
+    "noPending": "没有待处理的审批",
+    "noItems": "未找到项目",
+    "allCaughtUp": "全部处理完毕！"
+  }
+}

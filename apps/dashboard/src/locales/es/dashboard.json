@@ -1,0 +1,64 @@
+{
+  "home": {
+    "aiProvider": "Proveedor de IA",
+    "embeddings": "Embeddings",
+    "channels": "Canales",
+    "knowledge": "Conocimiento",
+    "extensions": "Extensiones",
+    "gettingStarted": "Primeros Pasos",
+    "stepsCompleted": "{{completed}} de {{total}} pasos completados",
+    "issues": {
+      "no_completion_provider": {
+        "title": "Configurar Proveedor de IA",
+        "description": "Conecta un proveedor de IA para habilitar conversaciones con huéspedes. Elige entre Anthropic Claude, OpenAI o ejecución local."
+      },
+      "no_embedding_provider": {
+        "title": "Habilitar Búsqueda de Conocimiento",
+        "description": "Configura embeddings para potenciar la búsqueda inteligente en la base de conocimiento. Usa Local AI (gratis y privado) u OpenAI para mayor rendimiento."
+      },
+      "using_local_completion": {
+        "title": "Actualizar Proveedor de IA",
+        "description": "Local AI está activo pero los proveedores en la nube ofrecen respuestas más rápidas y mejor calidad. Considera agregar Anthropic u OpenAI."
+      },
+      "no_channels": {
+        "title": "Conectar Canales de Mensajería",
+        "description": "Configura WhatsApp, SMS o Email para comenzar a recibir y responder mensajes de huéspedes."
+      },
+      "empty_knowledge_base": {
+        "title": "Construir Base de Conocimiento",
+        "description": "Extrae de tu sitio web del hotel para importar automáticamente FAQs, amenidades, políticas y otra información que ayude a la IA a responder preguntas de los huéspedes."
+      },
+      "needs_reindex": {
+        "title": "Reindexar Base de Conocimiento",
+        "description": "Algunas entradas de la base de conocimiento no tienen embeddings. Reindexa para habilitar la búsqueda de todo el contenido."
+      }
+    },
+    "completed": {
+      "completion_provider_configured": "Proveedor de IA Configurado",
+      "embedding_provider_configured": "Búsqueda de Conocimiento Habilitada",
+      "channels_configured": "Canales de Mensajería Conectados",
+      "knowledge_base_populated": "Base de Conocimiento Lista"
+    },
+    "actions": {
+      "no_completion_provider": "Configurar IA",
+      "no_embedding_provider": "Habilitar Embeddings",
+      "using_local_completion": "Actualizar IA",
+      "no_channels": "Agregar Canal",
+      "empty_knowledge_base": "Importar Contenido",
+      "needs_reindex": "Reindexar Ahora"
+    },
+    "demoData": {
+      "title": "Probar con datos de ejemplo",
+      "description": "Agrega huéspedes, reservas y base de conocimientos de demostración para explorar el sistema. Puedes restablecer todo en Configuración cuando estés listo para el uso real.",
+      "createAll": "Cargar datos de ejemplo",
+      "confirmTitle": "¿Cargar datos de ejemplo?",
+      "confirmDescription": "Esto agregará huéspedes, reservas, conversaciones, tareas y entradas de base de conocimiento de demostración. Los datos existentes no se verán afectados.",
+      "confirm": "Cargar datos",
+      "success": "¡Datos de ejemplo cargados correctamente!",
+      "error": "Error al cargar los datos de ejemplo. Por favor, inténtalo de nuevo.",
+      "nextStepLabel": "Siguiente paso:",
+      "nextStepText": "Reindexa la base de conocimiento para habilitar la búsqueda con IA.",
+      "reindexAction": "Reindexar Base de Conocimiento"
+    }
+  }
+}

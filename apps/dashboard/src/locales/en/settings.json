@@ -1,0 +1,175 @@
+{
+  "extensions": {
+    "connected": "Connected",
+    "readyToTest": "Ready to Test",
+    "errors": "Errors",
+    "total": "Total",
+    "searchExtensions": "Search extensions...",
+    "noExtensions": "No extensions found",
+    "noExtensionsSearch": "Try a different search term",
+    "failedToLoad": "Failed to load extensions",
+    "noProviderConfigured": "No provider configured",
+    "aiProvider": "AI Provider",
+    "communicationChannels": "Communication Channels",
+    "hotelSystems": "Hotel Systems",
+    "operations": "Operations",
+    "notSetUp": "Not Set Up",
+    "ready": "Ready",
+    "disabled": "Disabled",
+    "error": "Error"
+  },
+  "autonomy": {
+    "failedToLoad": "Failed to load autonomy settings",
+    "tryAgainLater": "Please try again later",
+    "resetToDefaults": "Reset to Defaults",
+    "saveChanges": "Save Changes",
+    "globalLevel": "Global Autonomy Level",
+    "globalLevelDesc": "Set the default behavior for all actions. Individual actions can override this.",
+    "actionSettings": "Action-Specific Settings",
+    "actionSettingsDesc": "Configure autonomy levels for each action type.",
+    "comingSoon": "Coming Soon",
+    "confidenceThresholds": "AI Confidence Thresholds",
+    "confidenceThresholdsDesc": "Control how AI confidence affects responses in Auto-Execute mode (L2).",
+    "approvalThreshold": "Approval Threshold",
+    "approvalThresholdDesc": "Below this confidence, responses are queued for staff approval instead of being sent automatically.",
+    "urgentThreshold": "Urgent Flag Threshold",
+    "urgentThresholdDesc": "Below this confidence, conversations are flagged as urgent requiring immediate staff attention.",
+    "financialLimits": "Financial Action Limits",
+    "financialLimitsDesc": "Set maximum amounts that can be auto-approved without staff review.",
+    "maxRefund": "Max Auto-Refund Amount ($)",
+    "maxRefundDesc": "Refunds above this amount require approval",
+    "maxDiscount": "Max Auto-Discount (%)",
+    "maxDiscountDesc": "Discounts above this percentage require approval",
+    "levels": {
+      "L1": {
+        "label": "Approval Required",
+        "description": "All actions require staff approval before execution"
+      },
+      "L2": {
+        "label": "Auto-Execute",
+        "description": "Actions run automatically without approval"
+      }
+    },
+    "actions": {
+      "respondToGuest": {
+        "label": "Respond to Guest",
+        "description": "Send AI-generated messages"
+      },
+      "createHousekeepingTask": {
+        "label": "Housekeeping Tasks",
+        "description": "Create cleaning requests"
+      },
+      "createMaintenanceTask": {
+        "label": "Maintenance Tasks",
+        "description": "Create repair requests"
+      },
+      "createConciergeTask": {
+        "label": "Concierge Tasks",
+        "description": "Create service requests"
+      },
+      "createRoomServiceTask": {
+        "label": "Room Service Tasks",
+        "description": "Create room service orders"
+      },
+      "issueRefund": {
+        "label": "Issue Refunds",
+        "description": "Process guest refunds"
+      },
+      "offerDiscount": {
+        "label": "Offer Discounts",
+        "description": "Send promotional offers"
+      },
+      "sendMarketingMessage": {
+        "label": "Marketing Messages",
+        "description": "Send marketing communications"
+      }
+    }
+  },
+  "extensionEdit": {
+    "backToExtensions": "Back to Extensions",
+    "selectProvider": "Select Provider",
+    "viewDocumentation": "View Documentation",
+    "connectionStatus": "Connection Status",
+    "lastChecked": "Last checked",
+    "testConnection": "Test Connection",
+    "enable": "Enable",
+    "disable": "Disable",
+    "active": "Active",
+    "configuration": "Configuration",
+    "saveConfiguration": "Save Configuration",
+    "configSaved": "Configuration saved successfully",
+    "recentActivity": "Recent Activity",
+    "noActivityLogs": "No activity logs yet",
+    "dangerZone": "Danger Zone",
+    "removeConfig": "Remove this provider configuration. This will disable the integration and delete all stored credentials.",
+    "removeConfiguration": "Remove Configuration",
+    "removeConfirm": "Are you sure you want to remove this configuration?",
+    "failedToLoad": "Failed to load extension",
+    "tryAgainLater": "Please try again later",
+    "select": "Select...",
+    "status": {
+      "connected": "Connected",
+      "ready": "Ready",
+      "disabled": "Disabled",
+      "error": "Error",
+      "notSetUp": "Not Set Up"
+    },
+    "fields": {
+      "embeddingModel": "Embedding Model",
+      "completionModel": "Completion Model",
+      "enableEmbedding": "Enable Embedding",
+      "enableCompletion": "Enable Completion"
+    }
+  },
+  "settings": {
+    "hotelProfile": {
+      "title": "Hotel Profile",
+      "description": "Configure your hotel's basic information. This data is used by the AI assistant to provide accurate responses.",
+      "basicInfo": "Basic Information",
+      "hotelName": "Hotel Name",
+      "hotelNamePlaceholder": "e.g., Grand Plaza Hotel",
+      "address": "Address",
+      "addressPlaceholder": "Street address",
+      "city": "City",
+      "country": "Country",
+      "selectCountry": "Select country...",
+      "searchCountry": "Search countries...",
+      "noCountryFound": "No country found.",
+      "regionalSettings": "Regional Settings",
+      "timezone": "Timezone",
+      "selectTimezone": "Select timezone...",
+      "searchTimezone": "Search timezones...",
+      "noTimezoneFound": "No timezone found.",
+      "currency": "Currency",
+      "selectCurrency": "Select currency...",
+      "searchCurrency": "Search currencies...",
+      "noCurrencyFound": "No currency found.",
+      "checkInTime": "Check-in Time",
+      "checkOutTime": "Check-out Time",
+      "selectTime": "Select time...",
+      "contactInfo": "Contact Information",
+      "phone": "Phone",
+      "email": "Email",
+      "website": "Website",
+      "saved": "Profile saved successfully",
+      "saveError": "Failed to save profile"
+    },
+    "quickSetup": {
+      "title": "Quick Setup",
+      "description": "Setup wizards to help you configure your system. These are always available here even if dismissed from the home page."
+    },
+    "dangerZone": {
+      "title": "Danger Zone",
+      "description": "Destructive actions that cannot be undone",
+      "resetDatabase": "Reset Database",
+      "resetDescription": "This will permanently delete all data including guests, reservations, conversations, tasks, and knowledge base entries. This action cannot be undone.",
+      "resetButton": "Reset Database",
+      "resetConfirmTitle": "Reset Database",
+      "resetConfirmDescription": "This will permanently delete ALL data. This action cannot be undone.",
+      "typeToConfirm": "Type RESET to confirm:",
+      "confirmReset": "Reset Everything",
+      "resetSuccess": "Database has been reset successfully. All data has been cleared.",
+      "resetError": "Failed to reset database. Please try again."
+    }
+  }
+}

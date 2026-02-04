@@ -22,7 +22,7 @@ import {
   CalendarDays,
   Settings,
   Globe,
-  Wrench,
+  FileText,
   BookOpen,
   PanelLeft,
 } from 'lucide-react';
@@ -218,9 +218,9 @@ export function Layout() {
       ],
     },
     {
-      id: 'tools',
-      title: t('nav.tools'),
-      icon: <Wrench size={20} />,
+      id: 'content',
+      title: t('nav.content'),
+      icon: <FileText size={20} />,
       collapsible: true,
       items: [
         { path: '/tools/knowledge-base', label: t('nav.knowledgeBase'), icon: <BookOpen size={20} /> },

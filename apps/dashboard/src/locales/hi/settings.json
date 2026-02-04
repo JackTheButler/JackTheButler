@@ -1,0 +1,175 @@
+{
+  "extensions": {
+    "connected": "कनेक्टेड",
+    "readyToTest": "परीक्षण के लिए तैयार",
+    "errors": "त्रुटियां",
+    "total": "कुल",
+    "searchExtensions": "एक्सटेंशन खोजें...",
+    "noExtensions": "कोई एक्सटेंशन नहीं मिला",
+    "noExtensionsSearch": "कोई अलग खोज शब्द आज़माएं",
+    "failedToLoad": "एक्सटेंशन लोड करने में विफल",
+    "noProviderConfigured": "कोई प्रदाता कॉन्फ़िगर नहीं",
+    "aiProvider": "AI प्रदाता",
+    "communicationChannels": "संचार चैनल",
+    "hotelSystems": "होटल सिस्टम",
+    "operations": "संचालन",
+    "notSetUp": "सेटअप नहीं",
+    "ready": "तैयार",
+    "disabled": "अक्षम",
+    "error": "त्रुटि"
+  },
+  "autonomy": {
+    "failedToLoad": "स्वायत्तता सेटिंग्स लोड करने में विफल",
+    "tryAgainLater": "कृपया बाद में पुनः प्रयास करें",
+    "resetToDefaults": "डिफ़ॉल्ट पर रीसेट करें",
+    "saveChanges": "परिवर्तन सहेजें",
+    "globalLevel": "वैश्विक स्वायत्तता स्तर",
+    "globalLevelDesc": "सभी क्रियाओं के लिए डिफ़ॉल्ट व्यवहार सेट करें। व्यक्तिगत क्रियाएं इसे ओवरराइड कर सकती हैं।",
+    "actionSettings": "क्रिया-विशिष्ट सेटिंग्स",
+    "actionSettingsDesc": "प्रत्येक क्रिया प्रकार के लिए स्वायत्तता स्तर कॉन्फ़िगर करें।",
+    "comingSoon": "जल्द आ रहा है",
+    "confidenceThresholds": "AI विश्वास सीमाएं",
+    "confidenceThresholdsDesc": "ऑटो-एक्ज़ीक्यूट मोड (L2) में AI विश्वास प्रतिक्रियाओं को कैसे प्रभावित करता है, नियंत्रित करें।",
+    "approvalThreshold": "स्वीकृति सीमा",
+    "approvalThresholdDesc": "इस विश्वास से नीचे, प्रतिक्रियाएं स्वचालित रूप से भेजने के बजाय कर्मचारी स्वीकृति के लिए कतारबद्ध होती हैं।",
+    "urgentThreshold": "तत्काल ध्वज सीमा",
+    "urgentThresholdDesc": "इस विश्वास से नीचे, वार्तालाप तत्काल कर्मचारी ध्यान की आवश्यकता के रूप में चिह्नित होते हैं।",
+    "financialLimits": "वित्तीय क्रिया सीमाएं",
+    "financialLimitsDesc": "अधिकतम राशि सेट करें जो कर्मचारी समीक्षा के बिना स्वतः स्वीकृत हो सकती है।",
+    "maxRefund": "अधिकतम स्वतः-रिफंड राशि ($)",
+    "maxRefundDesc": "इस राशि से ऊपर के रिफंड के लिए स्वीकृति आवश्यक",
+    "maxDiscount": "अधिकतम स्वतः-छूट (%)",
+    "maxDiscountDesc": "इस प्रतिशत से ऊपर की छूट के लिए स्वीकृति आवश्यक",
+    "levels": {
+      "L1": {
+        "label": "स्वीकृति आवश्यक",
+        "description": "सभी क्रियाओं के लिए कर्मचारी स्वीकृति आवश्यक"
+      },
+      "L2": {
+        "label": "स्वतः-निष्पादन",
+        "description": "क्रियाएं स्वचालित रूप से बिना स्वीकृति के चलती हैं"
+      }
+    },
+    "actions": {
+      "respondToGuest": {
+        "label": "अतिथि को जवाब दें",
+        "description": "AI-जनित संदेश भेजें"
+      },
+      "createHousekeepingTask": {
+        "label": "हाउसकीपिंग कार्य",
+        "description": "सफाई अनुरोध बनाएं"
+      },
+      "createMaintenanceTask": {
+        "label": "रखरखाव कार्य",
+        "description": "मरम्मत अनुरोध बनाएं"
+      },
+      "createConciergeTask": {
+        "label": "कंसीयज कार्य",
+        "description": "सेवा अनुरोध बनाएं"
+      },
+      "createRoomServiceTask": {
+        "label": "रूम सर्विस कार्य",
+        "description": "रूम सर्विस ऑर्डर बनाएं"
+      },
+      "issueRefund": {
+        "label": "रिफंड जारी करें",
+        "description": "अतिथि रिफंड प्रोसेस करें"
+      },
+      "offerDiscount": {
+        "label": "छूट प्रस्ताव",
+        "description": "प्रचार प्रस्ताव भेजें"
+      },
+      "sendMarketingMessage": {
+        "label": "मार्केटिंग संदेश",
+        "description": "मार्केटिंग संचार भेजें"
+      }
+    }
+  },
+  "extensionEdit": {
+    "backToExtensions": "एक्सटेंशन पर वापस जाएं",
+    "selectProvider": "प्रदाता चुनें",
+    "viewDocumentation": "दस्तावेज़ देखें",
+    "connectionStatus": "कनेक्शन स्थिति",
+    "lastChecked": "अंतिम जांच",
+    "testConnection": "कनेक्शन परीक्षण",
+    "enable": "सक्षम करें",
+    "disable": "अक्षम करें",
+    "active": "सक्रिय",
+    "configuration": "कॉन्फ़िगरेशन",
+    "saveConfiguration": "कॉन्फ़िगरेशन सहेजें",
+    "configSaved": "कॉन्फ़िगरेशन सफलतापूर्वक सहेजा गया",
+    "recentActivity": "हाल की गतिविधि",
+    "noActivityLogs": "अभी तक कोई गतिविधि लॉग नहीं",
+    "dangerZone": "खतरे का क्षेत्र",
+    "removeConfig": "इस प्रदाता कॉन्फ़िगरेशन को हटाएं। यह एकीकरण को अक्षम करेगा और सभी संग्रहीत क्रेडेंशियल्स हटा देगा।",
+    "removeConfiguration": "कॉन्फ़िगरेशन हटाएं",
+    "removeConfirm": "क्या आप वाकई इस कॉन्फ़िगरेशन को हटाना चाहते हैं?",
+    "failedToLoad": "एक्सटेंशन लोड करने में विफल",
+    "tryAgainLater": "कृपया बाद में पुनः प्रयास करें",
+    "select": "चुनें...",
+    "status": {
+      "connected": "कनेक्टेड",
+      "ready": "तैयार",
+      "disabled": "अक्षम",
+      "error": "त्रुटि",
+      "notSetUp": "सेटअप नहीं"
+    },
+    "fields": {
+      "embeddingModel": "एम्बेडिंग मॉडल",
+      "completionModel": "कम्प्लीशन मॉडल",
+      "enableEmbedding": "एम्बेडिंग सक्षम करें",
+      "enableCompletion": "कम्प्लीशन सक्षम करें"
+    }
+  },
+  "settings": {
+    "hotelProfile": {
+      "title": "होटल प्रोफ़ाइल",
+      "description": "अपने होटल की बुनियादी जानकारी कॉन्फ़िगर करें। AI सहायक सटीक प्रतिक्रियाएं देने के लिए इस डेटा का उपयोग करता है।",
+      "basicInfo": "बुनियादी जानकारी",
+      "hotelName": "होटल का नाम",
+      "hotelNamePlaceholder": "उदा., ग्रैंड प्लाज़ा होटल",
+      "address": "पता",
+      "addressPlaceholder": "सड़क का पता",
+      "city": "शहर",
+      "country": "देश",
+      "selectCountry": "देश चुनें...",
+      "searchCountry": "देश खोजें...",
+      "noCountryFound": "कोई देश नहीं मिला।",
+      "regionalSettings": "क्षेत्रीय सेटिंग्स",
+      "timezone": "समय क्षेत्र",
+      "selectTimezone": "समय क्षेत्र चुनें...",
+      "searchTimezone": "समय क्षेत्र खोजें...",
+      "noTimezoneFound": "कोई समय क्षेत्र नहीं मिला।",
+      "currency": "मुद्रा",
+      "selectCurrency": "मुद्रा चुनें...",
+      "searchCurrency": "मुद्राएं खोजें...",
+      "noCurrencyFound": "कोई मुद्रा नहीं मिली।",
+      "checkInTime": "चेक-इन समय",
+      "checkOutTime": "चेक-आउट समय",
+      "selectTime": "समय चुनें...",
+      "contactInfo": "संपर्क जानकारी",
+      "phone": "फ़ोन",
+      "email": "ईमेल",
+      "website": "वेबसाइट",
+      "saved": "प्रोफ़ाइल सफलतापूर्वक सहेजी गई",
+      "saveError": "प्रोफ़ाइल सहेजने में विफल"
+    },
+    "quickSetup": {
+      "title": "त्वरित सेटअप",
+      "description": "आपके सिस्टम को कॉन्फ़िगर करने में मदद के लिए सेटअप विज़ार्ड। होम पेज से बंद करने के बाद भी ये यहाँ हमेशा उपलब्ध हैं।"
+    },
+    "dangerZone": {
+      "title": "खतरनाक क्षेत्र",
+      "description": "विनाशकारी कार्य जिन्हें पूर्ववत नहीं किया जा सकता",
+      "resetDatabase": "डेटाबेस रीसेट करें",
+      "resetDescription": "यह अतिथियों, आरक्षणों, वार्तालापों, कार्यों और ज्ञान आधार प्रविष्टियों सहित सभी डेटा को स्थायी रूप से हटा देगा। यह क्रिया पूर्ववत नहीं की जा सकती।",
+      "resetButton": "डेटाबेस रीसेट करें",
+      "resetConfirmTitle": "डेटाबेस रीसेट करें",
+      "resetConfirmDescription": "यह सभी डेटा को स्थायी रूप से हटा देगा। यह क्रिया पूर्ववत नहीं की जा सकती।",
+      "typeToConfirm": "पुष्टि करने के लिए RESET टाइप करें:",
+      "confirmReset": "सब कुछ रीसेट करें",
+      "resetSuccess": "डेटाबेस सफलतापूर्वक रीसेट हो गया। सभी डेटा साफ़ कर दिया गया है।",
+      "resetError": "डेटाबेस रीसेट करने में विफल। कृपया पुनः प्रयास करें।"
+    }
+  }
+}

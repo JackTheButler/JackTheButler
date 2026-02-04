@@ -1,0 +1,42 @@
+{
+  "tasks": {
+    "type": "Tipo",
+    "task": "Tarea",
+    "assigned": "Asignado",
+    "action": "Acción",
+    "claim": "Reclamar",
+    "complete": "Completar",
+    "reopen": "Reabrir",
+    "details": "Detalles de la tarea",
+    "assignedTo": "Asignado a",
+    "noTasks": "No se encontraron tareas",
+    "noTasksDescription": "Las tareas aparecerán aquí cuando sean creadas",
+    "statuses": {
+      "pending": "Pendiente",
+      "in_progress": "En Progreso",
+      "completed": "Completado",
+      "cancelled": "Cancelado"
+    }
+  },
+  "approvals": {
+    "pending": "Pendiente",
+    "approvedToday": "Aprobados hoy",
+    "rejectedToday": "Rechazados hoy",
+    "response": "Respuesta",
+    "task": "Tarea",
+    "offer": "Oferta",
+    "proposedResponse": "Respuesta propuesta",
+    "taskDetails": "Detalles de la tarea",
+    "proposedOffer": "Oferta propuesta",
+    "confident": "confianza",
+    "viewConversation": "Ver conversación",
+    "conversation": "Conversación",
+    "jack": "Jack",
+    "rejectionReason": "Motivo del rechazo...",
+    "failedToLoad": "Error al cargar aprobaciones",
+    "tryAgainLater": "Por favor, inténtalo más tarde",
+    "noPending": "No hay aprobaciones pendientes",
+    "noItems": "No se encontraron elementos",
+    "allCaughtUp": "¡Todo al día!"
+  }
+}

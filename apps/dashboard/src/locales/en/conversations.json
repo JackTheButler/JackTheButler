@@ -1,0 +1,39 @@
+{
+  "inbox": {
+    "noConversations": "No conversations",
+    "selectConversation": "Select a conversation"
+  },
+  "conversations": {
+    "loading": "Loading...",
+    "loadingMessages": "Loading messages...",
+    "noMessages": "No messages yet",
+    "typeMessage": "Type a message...",
+    "send": "Send",
+    "escalate": "Escalate",
+    "deEscalate": "De-escalate",
+    "resolve": "Resolve",
+    "reopen": "Reopen",
+    "tasksTitle": "Tasks ({{count}})",
+    "noTasksConversation": "No tasks for this conversation",
+    "taskCreated": "{{count}} task created",
+    "tasksCreated": "{{count}} tasks created",
+    "room": "Room {{number}}",
+    "assignedTo": "Assigned to:",
+    "claim": "Claim",
+    "complete": "Complete",
+    "noActionsAvailable": "No actions available",
+    "senderTypes": {
+      "guest": "Guest",
+      "ai": "Jack (AI)",
+      "staff": "Staff",
+      "system": "System"
+    },
+    "states": {
+      "new": "New",
+      "active": "Active",
+      "escalated": "Escalated",
+      "resolved": "Resolved",
+      "closed": "Closed"
+    }
+  }
+}

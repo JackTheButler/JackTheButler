@@ -1,0 +1,42 @@
+{
+  "tasks": {
+    "type": "النوع",
+    "task": "المهمة",
+    "assigned": "مُسند إلى",
+    "action": "الإجراء",
+    "claim": "استلام",
+    "complete": "إكمال",
+    "reopen": "إعادة فتح",
+    "details": "تفاصيل المهمة",
+    "assignedTo": "مُسند إلى",
+    "noTasks": "لا توجد مهام",
+    "noTasksDescription": "ستظهر المهام هنا عند إنشائها",
+    "statuses": {
+      "pending": "قيد الانتظار",
+      "in_progress": "قيد التنفيذ",
+      "completed": "مكتمل",
+      "cancelled": "ملغي"
+    }
+  },
+  "approvals": {
+    "pending": "قيد الانتظار",
+    "approvedToday": "تمت الموافقة اليوم",
+    "rejectedToday": "تم الرفض اليوم",
+    "response": "رد",
+    "task": "مهمة",
+    "offer": "عرض",
+    "proposedResponse": "الرد المقترح",
+    "taskDetails": "تفاصيل المهمة",
+    "proposedOffer": "العرض المقترح",
+    "confident": "ثقة",
+    "viewConversation": "عرض المحادثة",
+    "conversation": "المحادثة",
+    "jack": "جاك",
+    "rejectionReason": "سبب الرفض...",
+    "failedToLoad": "فشل تحميل الموافقات",
+    "tryAgainLater": "يرجى المحاولة لاحقاً",
+    "noPending": "لا توجد موافقات معلقة",
+    "noItems": "لم يتم العثور على عناصر",
+    "allCaughtUp": "كل شيء محدث!"
+  }
+}
