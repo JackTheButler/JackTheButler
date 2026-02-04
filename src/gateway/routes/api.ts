@@ -13,6 +13,7 @@ import { adminRouter } from './admin.js';
 import { extensionRoutes, legacyIntegrationRoutes } from './extensions.js';
 import { automationRoutes } from './automation.js';
 import { autonomySettingsRoutes, approvalsRoutes } from './autonomy.js';
+import { hotelProfileRoutes } from './hotel-profile.js';
 import { knowledgeRoutes } from './knowledge.js';
 import { guestRoutes } from './guests.js';
 import { reservationRoutes } from './reservations.js';
@@ -45,6 +46,9 @@ api.route('/automation', automationRoutes);
 
 // Autonomy settings routes
 api.route('/settings/autonomy', autonomySettingsRoutes);
+
+// Hotel profile settings routes
+api.route('/settings/hotel', hotelProfileRoutes);
 
 // Approval queue routes
 api.route('/approvals', approvalsRoutes);

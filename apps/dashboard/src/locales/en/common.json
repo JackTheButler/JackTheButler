@@ -624,6 +624,38 @@
     }
   },
   "settings": {
+    "hotelProfile": {
+      "title": "Hotel Profile",
+      "description": "Configure your hotel's basic information. This data is used by the AI assistant to provide accurate responses.",
+      "basicInfo": "Basic Information",
+      "hotelName": "Hotel Name",
+      "hotelNamePlaceholder": "e.g., Grand Plaza Hotel",
+      "address": "Address",
+      "addressPlaceholder": "Street address",
+      "city": "City",
+      "country": "Country",
+      "selectCountry": "Select country...",
+      "searchCountry": "Search countries...",
+      "noCountryFound": "No country found.",
+      "regionalSettings": "Regional Settings",
+      "timezone": "Timezone",
+      "selectTimezone": "Select timezone...",
+      "searchTimezone": "Search timezones...",
+      "noTimezoneFound": "No timezone found.",
+      "currency": "Currency",
+      "selectCurrency": "Select currency...",
+      "searchCurrency": "Search currencies...",
+      "noCurrencyFound": "No currency found.",
+      "checkInTime": "Check-in Time",
+      "checkOutTime": "Check-out Time",
+      "selectTime": "Select time...",
+      "contactInfo": "Contact Information",
+      "phone": "Phone",
+      "email": "Email",
+      "website": "Website",
+      "saved": "Profile saved successfully",
+      "saveError": "Failed to save profile"
+    },
     "quickSetup": {
       "title": "Quick Setup",
       "description": "Setup wizards to help you configure your system. These are always available here even if dismissed from the home page."

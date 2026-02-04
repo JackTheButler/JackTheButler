@@ -624,6 +624,38 @@
     }
   },
   "settings": {
+    "hotelProfile": {
+      "title": "होटल प्रोफ़ाइल",
+      "description": "अपने होटल की बुनियादी जानकारी कॉन्फ़िगर करें। AI सहायक सटीक प्रतिक्रियाएं देने के लिए इस डेटा का उपयोग करता है।",
+      "basicInfo": "बुनियादी जानकारी",
+      "hotelName": "होटल का नाम",
+      "hotelNamePlaceholder": "उदा., ग्रैंड प्लाज़ा होटल",
+      "address": "पता",
+      "addressPlaceholder": "सड़क का पता",
+      "city": "शहर",
+      "country": "देश",
+      "selectCountry": "देश चुनें...",
+      "searchCountry": "देश खोजें...",
+      "noCountryFound": "कोई देश नहीं मिला।",
+      "regionalSettings": "क्षेत्रीय सेटिंग्स",
+      "timezone": "समय क्षेत्र",
+      "selectTimezone": "समय क्षेत्र चुनें...",
+      "searchTimezone": "समय क्षेत्र खोजें...",
+      "noTimezoneFound": "कोई समय क्षेत्र नहीं मिला।",
+      "currency": "मुद्रा",
+      "selectCurrency": "मुद्रा चुनें...",
+      "searchCurrency": "मुद्राएं खोजें...",
+      "noCurrencyFound": "कोई मुद्रा नहीं मिली।",
+      "checkInTime": "चेक-इन समय",
+      "checkOutTime": "चेक-आउट समय",
+      "selectTime": "समय चुनें...",
+      "contactInfo": "संपर्क जानकारी",
+      "phone": "फ़ोन",
+      "email": "ईमेल",
+      "website": "वेबसाइट",
+      "saved": "प्रोफ़ाइल सफलतापूर्वक सहेजी गई",
+      "saveError": "प्रोफ़ाइल सहेजने में विफल"
+    },
     "quickSetup": {
       "title": "त्वरित सेटअप",
       "description": "आपके सिस्टम को कॉन्फ़िगर करने में मदद के लिए सेटअप विज़ार्ड। होम पेज से बंद करने के बाद भी ये यहाँ हमेशा उपलब्ध हैं।"

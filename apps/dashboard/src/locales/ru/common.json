@@ -624,6 +624,38 @@
     }
   },
   "settings": {
+    "hotelProfile": {
+      "title": "Профиль отеля",
+      "description": "Настройте основную информацию об отеле. AI-помощник использует эти данные для точных ответов.",
+      "basicInfo": "Основная информация",
+      "hotelName": "Название отеля",
+      "hotelNamePlaceholder": "напр., Гранд Плаза Отель",
+      "address": "Адрес",
+      "addressPlaceholder": "Улица и номер дома",
+      "city": "Город",
+      "country": "Страна",
+      "selectCountry": "Выберите страну...",
+      "searchCountry": "Поиск стран...",
+      "noCountryFound": "Страна не найдена.",
+      "regionalSettings": "Региональные настройки",
+      "timezone": "Часовой пояс",
+      "selectTimezone": "Выберите часовой пояс...",
+      "searchTimezone": "Поиск часовых поясов...",
+      "noTimezoneFound": "Часовой пояс не найден.",
+      "currency": "Валюта",
+      "selectCurrency": "Выберите валюту...",
+      "searchCurrency": "Поиск валют...",
+      "noCurrencyFound": "Валюта не найдена.",
+      "checkInTime": "Время заезда",
+      "checkOutTime": "Время выезда",
+      "selectTime": "Выберите время...",
+      "contactInfo": "Контактная информация",
+      "phone": "Телефон",
+      "email": "Email",
+      "website": "Веб-сайт",
+      "saved": "Профиль успешно сохранён",
+      "saveError": "Не удалось сохранить профиль"
+    },
     "quickSetup": {
       "title": "Быстрая настройка",
       "description": "Мастера настройки для помощи в конфигурации системы. Всегда доступны здесь, даже если закрыты на главной странице."

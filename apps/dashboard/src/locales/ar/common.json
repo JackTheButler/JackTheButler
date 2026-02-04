@@ -624,6 +624,38 @@
     }
   },
   "settings": {
+    "hotelProfile": {
+      "title": "ملف الفندق",
+      "description": "قم بتكوين المعلومات الأساسية لفندقك. يستخدم مساعد الذكاء الاصطناعي هذه البيانات لتقديم ردود دقيقة.",
+      "basicInfo": "المعلومات الأساسية",
+      "hotelName": "اسم الفندق",
+      "hotelNamePlaceholder": "مثال: فندق جراند بلازا",
+      "address": "العنوان",
+      "addressPlaceholder": "عنوان الشارع",
+      "city": "المدينة",
+      "country": "البلد",
+      "selectCountry": "اختر البلد...",
+      "searchCountry": "ابحث عن البلدان...",
+      "noCountryFound": "لم يتم العثور على البلد.",
+      "regionalSettings": "الإعدادات الإقليمية",
+      "timezone": "المنطقة الزمنية",
+      "selectTimezone": "اختر المنطقة الزمنية...",
+      "searchTimezone": "ابحث عن المناطق الزمنية...",
+      "noTimezoneFound": "لم يتم العثور على المنطقة الزمنية.",
+      "currency": "العملة",
+      "selectCurrency": "اختر العملة...",
+      "searchCurrency": "ابحث عن العملات...",
+      "noCurrencyFound": "لم يتم العثور على العملة.",
+      "checkInTime": "وقت تسجيل الدخول",
+      "checkOutTime": "وقت تسجيل الخروج",
+      "selectTime": "اختر الوقت...",
+      "contactInfo": "معلومات الاتصال",
+      "phone": "الهاتف",
+      "email": "البريد الإلكتروني",
+      "website": "الموقع الإلكتروني",
+      "saved": "تم حفظ الملف بنجاح",
+      "saveError": "فشل في حفظ الملف"
+    },
     "quickSetup": {
       "title": "الإعداد السريع",
       "description": "معالجات الإعداد لمساعدتك في تكوين نظامك. متاحة دائماً هنا حتى لو تم إغلاقها من الصفحة الرئيسية."

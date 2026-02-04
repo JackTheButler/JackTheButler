@@ -5,7 +5,9 @@
  * and intent classification.
  */
 
+import { eq } from 'drizzle-orm';
 import type { Conversation, Message } from '@/db/schema.js';
+import { db, settings } from '@/db/index.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/services/guest-context.js';
 import type { LLMProvider, Response, Responder } from './types.js';
@@ -15,6 +17,23 @@ import { ConversationService } from '@/services/conversation.js';
 import { createLogger } from '@/utils/logger.js';
 import { getResponseCache, type ResponseCacheService } from './cache.js';
 import { metrics } from '@/monitoring/index.js';
+
+/**
+ * Hotel profile from settings
+ */
+interface HotelProfile {
+  name?: string;
+  address?: string;
+  city?: string;
+  country?: string;
+  timezone?: string;
+  currency?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  website?: string;
+}
 
 const log = createLogger('ai:responder');
 
@@ -144,10 +163,13 @@ export class AIResponder implements Responder {
     // 3. Get conversation history
     const history = await this.getConversationHistory(conversation.id);
 
-    // 4. Build the prompt
-    const messages = this.buildPromptMessages(message.content, classification, knowledgeContext, history, guestContext);
+    // 4. Get hotel profile
+    const hotelProfile = await this.getHotelProfile();
 
-    // 5. Generate response
+    // 5. Build the prompt
+    const messages = this.buildPromptMessages(message.content, classification, knowledgeContext, history, guestContext, hotelProfile);
+
+    // 6. Generate response
     metrics.aiRequests.inc();
     const response = await this.provider.complete({
       messages,
@@ -208,6 +230,25 @@ export class AIResponder implements Responder {
   }
 
   /**
+   * Get hotel profile from settings
+   */
+  private async getHotelProfile(): Promise<HotelProfile | null> {
+    try {
+      const row = await db
+        .select()
+        .from(settings)
+        .where(eq(settings.key, 'hotel_profile'))
+        .get();
+
+      if (!row) return null;
+      return JSON.parse(row.value) as HotelProfile;
+    } catch {
+      log.warn('Failed to load hotel profile');
+      return null;
+    }
+  }
+
+  /**
    * Build the prompt messages for the LLM
    */
   private buildPromptMessages(
@@ -215,12 +256,47 @@ export class AIResponder implements Responder {
     classification: ClassificationResult,
     knowledgeContext: KnowledgeSearchResult[],
     history: Message[],
-    guestContext?: GuestContext
+    guestContext?: GuestContext,
+    hotelProfile?: HotelProfile | null
   ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
 
     // System prompt with context
     let systemContent = BUTLER_SYSTEM_PROMPT;
+
+    // Add hotel profile if available
+    if (hotelProfile) {
+      const hotelInfo: string[] = [];
+
+      if (hotelProfile.name) {
+        hotelInfo.push(`Hotel Name: ${hotelProfile.name}`);
+      }
+      if (hotelProfile.address || hotelProfile.city || hotelProfile.country) {
+        const location = [hotelProfile.address, hotelProfile.city, hotelProfile.country]
+          .filter(Boolean)
+          .join(', ');
+        if (location) hotelInfo.push(`Location: ${location}`);
+      }
+      if (hotelProfile.checkInTime) {
+        hotelInfo.push(`Check-in Time: ${hotelProfile.checkInTime}`);
+      }
+      if (hotelProfile.checkOutTime) {
+        hotelInfo.push(`Check-out Time: ${hotelProfile.checkOutTime}`);
+      }
+      if (hotelProfile.contactPhone) {
+        hotelInfo.push(`Phone: ${hotelProfile.contactPhone}`);
+      }
+      if (hotelProfile.contactEmail) {
+        hotelInfo.push(`Email: ${hotelProfile.contactEmail}`);
+      }
+      if (hotelProfile.timezone) {
+        hotelInfo.push(`Timezone: ${hotelProfile.timezone}`);
+      }
+
+      if (hotelInfo.length > 0) {
+        systemContent += '\n\n## Hotel Information:\n- ' + hotelInfo.join('\n- ');
+      }
+    }
 
     // Add guest context if available
     if (guestContext?.guest) {

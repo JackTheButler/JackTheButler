@@ -4,3 +4,8 @@ export { Badge, badgeVariants } from './badge';
 export { Input } from './input';
 export { Label } from './label';
 export { Switch } from './switch';
+export { Popover, PopoverTrigger, PopoverContent, PopoverAnchor } from './popover';
+export { Command, CommandInput, CommandList, CommandEmpty, CommandGroup, CommandItem, CommandSeparator } from './command';
+export { Combobox } from './combobox';
+export type { ComboboxOption } from './combobox';
+export { TimeSelect } from './time-select';

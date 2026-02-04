@@ -624,6 +624,38 @@
     }
   },
   "settings": {
+    "hotelProfile": {
+      "title": "酒店资料",
+      "description": "配置您酒店的基本信息。AI 助手使用这些数据提供准确的回复。",
+      "basicInfo": "基本信息",
+      "hotelName": "酒店名称",
+      "hotelNamePlaceholder": "例如：格兰广场酒店",
+      "address": "地址",
+      "addressPlaceholder": "街道地址",
+      "city": "城市",
+      "country": "国家",
+      "selectCountry": "选择国家...",
+      "searchCountry": "搜索国家...",
+      "noCountryFound": "未找到国家。",
+      "regionalSettings": "区域设置",
+      "timezone": "时区",
+      "selectTimezone": "选择时区...",
+      "searchTimezone": "搜索时区...",
+      "noTimezoneFound": "未找到时区。",
+      "currency": "货币",
+      "selectCurrency": "选择货币...",
+      "searchCurrency": "搜索货币...",
+      "noCurrencyFound": "未找到货币。",
+      "checkInTime": "入住时间",
+      "checkOutTime": "退房时间",
+      "selectTime": "选择时间...",
+      "contactInfo": "联系信息",
+      "phone": "电话",
+      "email": "邮箱",
+      "website": "网站",
+      "saved": "资料保存成功",
+      "saveError": "保存资料失败"
+    },
     "quickSetup": {
       "title": "快速设置",
       "description": "帮助您配置系统的设置向导。即使在主页关闭后，这些向导也始终在此可用。"

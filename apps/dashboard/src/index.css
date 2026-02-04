@@ -170,3 +170,21 @@ button, a, input, select, textarea {
     transform: translateY(0);
   }
 }
+
+/* Time input styling to match shadcn design */
+input[type="time"] {
+  color-scheme: light;
+}
+
+.dark input[type="time"] {
+  color-scheme: dark;
+}
+
+input[type="time"]::-webkit-calendar-picker-indicator {
+  @apply cursor-pointer opacity-50 hover:opacity-100 transition-opacity;
+  filter: var(--time-picker-filter, none);
+}
+
+.dark input[type="time"]::-webkit-calendar-picker-indicator {
+  filter: invert(1);
+}

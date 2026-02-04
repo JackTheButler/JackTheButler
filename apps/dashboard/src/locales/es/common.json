@@ -624,6 +624,38 @@
     }
   },
   "settings": {
+    "hotelProfile": {
+      "title": "Perfil del Hotel",
+      "description": "Configura la información básica de tu hotel. El asistente de IA usa estos datos para dar respuestas precisas.",
+      "basicInfo": "Información Básica",
+      "hotelName": "Nombre del Hotel",
+      "hotelNamePlaceholder": "ej., Hotel Gran Plaza",
+      "address": "Dirección",
+      "addressPlaceholder": "Dirección",
+      "city": "Ciudad",
+      "country": "País",
+      "selectCountry": "Seleccionar país...",
+      "searchCountry": "Buscar países...",
+      "noCountryFound": "País no encontrado.",
+      "regionalSettings": "Configuración Regional",
+      "timezone": "Zona Horaria",
+      "selectTimezone": "Seleccionar zona horaria...",
+      "searchTimezone": "Buscar zonas horarias...",
+      "noTimezoneFound": "Zona horaria no encontrada.",
+      "currency": "Moneda",
+      "selectCurrency": "Seleccionar moneda...",
+      "searchCurrency": "Buscar monedas...",
+      "noCurrencyFound": "Moneda no encontrada.",
+      "checkInTime": "Hora de Entrada",
+      "checkOutTime": "Hora de Salida",
+      "selectTime": "Seleccionar hora...",
+      "contactInfo": "Información de Contacto",
+      "phone": "Teléfono",
+      "email": "Correo Electrónico",
+      "website": "Sitio Web",
+      "saved": "Perfil guardado correctamente",
+      "saveError": "Error al guardar el perfil"
+    },
     "quickSetup": {
       "title": "Configuración Rápida",
       "description": "Asistentes de configuración para ayudarte a configurar tu sistema. Siempre están disponibles aquí incluso si los cerraste en la página de inicio."
