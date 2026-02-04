@@ -9,8 +9,8 @@
 import { Hono } from 'hono';
 import { getExtensionRegistry } from '@/extensions/index.js';
 import type { AIExtensionManifest } from '@/extensions/types.js';
-import { db, knowledgeBase } from '@/db/index.js';
-import { count } from 'drizzle-orm';
+import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
+import { count, isNull, eq } from 'drizzle-orm';
 
 /**
  * System issue severity levels
@@ -56,6 +56,11 @@ interface SystemStatus {
     channel: number;
     pms: number;
     tool: number;
+  };
+  knowledgeBase: {
+    total: number;
+    withoutEmbeddings: number;
+    needsReindex: boolean;
   };
 }
 
@@ -147,12 +152,26 @@ systemRoutes.get('/status', async (c) => {
     });
   }
 
+  // Check knowledge base status
+  let knowledgeBaseTotal = 0;
+  let knowledgeBaseWithoutEmbeddings = 0;
+
+  const [totalResult] = await db.select({ count: count() }).from(knowledgeBase);
+  knowledgeBaseTotal = totalResult?.count ?? 0;
+
+  if (knowledgeBaseTotal > 0) {
+    // Count entries without embeddings using left join
+    const withoutEmbeddings = await db
+      .select({ count: count() })
+      .from(knowledgeBase)
+      .leftJoin(knowledgeEmbeddings, eq(knowledgeBase.id, knowledgeEmbeddings.id))
+      .where(isNull(knowledgeEmbeddings.id));
+    knowledgeBaseWithoutEmbeddings = withoutEmbeddings[0]?.count ?? 0;
+  }
+
   // Check for empty knowledge base (only if embeddings are available)
-  let knowledgeBaseEmpty = true;
   if (embeddingProvider) {
-    const [result] = await db.select({ count: count() }).from(knowledgeBase);
-    knowledgeBaseEmpty = !result || result.count === 0;
-    if (knowledgeBaseEmpty) {
+    if (knowledgeBaseTotal === 0) {
       issues.push({
         type: 'empty_knowledge_base',
         severity: 'warning',
@@ -164,6 +183,16 @@ systemRoutes.get('/status', async (c) => {
         type: 'knowledge_base_populated',
         message: 'Knowledge base populated',
       });
+
+      // Check if reindex is needed
+      if (knowledgeBaseWithoutEmbeddings > 0) {
+        issues.push({
+          type: 'needs_reindex',
+          severity: 'warning',
+          message: `${knowledgeBaseWithoutEmbeddings} entries need reindexing`,
+          action: { label: 'Reindex', route: '/tools/knowledge-base' },
+        });
+      }
     }
   }
 
@@ -178,6 +207,11 @@ systemRoutes.get('/status', async (c) => {
       embeddingIsLocal: embeddingProvider?.name === 'local',
     },
     extensions: activeByCategory,
+    knowledgeBase: {
+      total: knowledgeBaseTotal,
+      withoutEmbeddings: knowledgeBaseWithoutEmbeddings,
+      needsReindex: knowledgeBaseWithoutEmbeddings > 0,
+    },
   };
 
   return c.json(status);

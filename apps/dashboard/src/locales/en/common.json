@@ -62,7 +62,8 @@
     "settings": "Settings",
     "extensions": "Extensions",
     "automations": "Automations",
-    "autonomy": "Autonomy"
+    "autonomy": "Autonomy",
+    "dangerZone": "Danger Zone"
   },
   "filters": {
     "all": "All",
@@ -89,6 +90,7 @@
     "aiProvider": "AI Provider",
     "embeddings": "Embeddings",
     "channels": "Channels",
+    "knowledge": "Knowledge",
     "extensions": "Extensions",
     "gettingStarted": "Getting Started",
     "stepsCompleted": "{{completed}} of {{total}} steps completed",
@@ -112,6 +114,10 @@
       "empty_knowledge_base": {
         "title": "Build Your Knowledge Base",
         "description": "Scrape your hotel website to automatically import FAQs, amenities, policies, and other information that helps the AI answer guest questions."
+      },
+      "needs_reindex": {
+        "title": "Reindex Knowledge Base",
+        "description": "Some knowledge base entries are missing embeddings. Reindex to enable search for all content."
       }
     },
     "completed": {
@@ -125,12 +131,21 @@
       "no_embedding_provider": "Enable Embeddings",
       "using_local_completion": "Upgrade AI",
       "no_channels": "Add Channel",
-      "empty_knowledge_base": "Import Content"
+      "empty_knowledge_base": "Import Content",
+      "needs_reindex": "Reindex Now"
     },
     "demoData": {
       "title": "Try with Sample Data",
       "description": "Add demo guests, reservations, and knowledge base entries to explore the system. You can reset everything in Settings when ready for real use.",
-      "createAll": "Load Sample Data"
+      "createAll": "Load Sample Data",
+      "confirmTitle": "Load Sample Data?",
+      "confirmDescription": "This will add demo guests, reservations, conversations, tasks, and knowledge base entries to your database. Existing data will not be affected.",
+      "confirm": "Load Data",
+      "success": "Sample data loaded successfully!",
+      "nextStepLabel": "Next step:",
+      "nextStepText": "Reindex the knowledge base to enable AI search.",
+      "reindexAction": "Reindex Knowledge Base",
+      "error": "Failed to load sample data. Please try again."
     }
   },
   "tasks": {
@@ -239,7 +254,9 @@
     "goToSettings": "Go to Settings",
     "titleContentRequired": "Title and content are required",
     "keywordsHint": "Keywords (comma-separated)",
-    "entryTitle": "Entry title"
+    "entryTitle": "Entry title",
+    "reindexNeeded": "Reindex Needed",
+    "indexedStats": "{{indexed}} of {{total}} entries indexed"
   },
   "extensions": {
     "connected": "Connected",
@@ -599,6 +616,21 @@
       "escalated": "Escalated",
       "resolved": "Resolved",
       "closed": "Closed"
+    }
+  },
+  "settings": {
+    "dangerZone": {
+      "title": "Danger Zone",
+      "description": "Destructive actions that cannot be undone",
+      "resetDatabase": "Reset Database",
+      "resetDescription": "This will permanently delete all data including guests, reservations, conversations, tasks, and knowledge base entries. This action cannot be undone.",
+      "resetButton": "Reset Database",
+      "resetConfirmTitle": "Reset Database",
+      "resetConfirmDescription": "This will permanently delete ALL data. This action cannot be undone.",
+      "typeToConfirm": "Type RESET to confirm:",
+      "confirmReset": "Reset Everything",
+      "resetSuccess": "Database has been reset successfully. All data has been cleared.",
+      "resetError": "Failed to reset database. Please try again."
     }
   },
   "reservationDetail": {

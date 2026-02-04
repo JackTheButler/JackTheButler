@@ -25,6 +25,7 @@ import {
   Wrench,
   BookOpen,
   PanelLeft,
+  AlertTriangle,
 } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -156,7 +157,7 @@ export function Layout() {
   useEffect(() => {
     const collapsibleSections = [
       { id: 'tools', paths: ['/tools/knowledge-base', '/tools/site-scraper'] },
-      { id: 'settings', paths: ['/settings/extensions', '/settings/automations', '/settings/autonomy'] },
+      { id: 'settings', paths: ['/settings/extensions', '/settings/automations', '/settings/autonomy', '/settings/danger-zone'] },
     ];
 
     const newExpandedState: Record<string, boolean> = {};
@@ -236,6 +237,7 @@ export function Layout() {
         { path: '/settings/extensions', label: t('nav.extensions'), icon: <Puzzle size={20} /> },
         { path: '/settings/automations', label: t('nav.automations'), icon: <Zap size={20} /> },
         { path: '/settings/autonomy', label: t('nav.autonomy'), icon: <SlidersHorizontal size={20} /> },
+        { path: '/settings/danger-zone', label: t('nav.dangerZone'), icon: <AlertTriangle size={20} /> },
       ],
     },
   ];

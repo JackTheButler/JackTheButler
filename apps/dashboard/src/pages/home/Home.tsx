@@ -1,11 +1,14 @@
-import { Bot, MessageSquare, Cpu, Plug } from 'lucide-react';
+import { Bot, MessageSquare, Cpu, Plug, Book } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageContainer, PageHeader, StatsBar, ActionItems, DemoDataCard } from '@/components';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
 
 export function HomePage() {
   const { t } = useTranslation();
-  const { providers, extensions, isLoading } = useSystemStatus();
+  const { providers, extensions, knowledgeBase, isLoading } = useSystemStatus();
+
+  const kbIndexed = (knowledgeBase?.total ?? 0) - (knowledgeBase?.withoutEmbeddings ?? 0);
+  const kbTotal = knowledgeBase?.total ?? 0;
 
   const stats = [
     {
@@ -25,6 +28,12 @@ export function HomePage() {
       value: extensions?.channel ?? 0,
       icon: MessageSquare,
       variant: (extensions?.channel ?? 0) > 0 ? 'success' : 'warning',
+    },
+    {
+      label: t('home.knowledge'),
+      value: `${kbIndexed}/${kbTotal}`,
+      icon: Book,
+      variant: kbTotal === 0 ? 'warning' : knowledgeBase?.needsReindex ? 'warning' : 'success',
     },
     {
       label: t('home.extensions'),

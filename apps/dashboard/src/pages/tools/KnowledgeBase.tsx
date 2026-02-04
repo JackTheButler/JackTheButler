@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageContainer, DataTable, EmptyState } from '@/components';
 import { usePageActions } from '@/contexts/PageActionsContext';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
@@ -21,6 +22,7 @@ import {
   Send,
   RefreshCw,
   ArrowRight,
+  AlertTriangle,
 } from 'lucide-react';
 import {
   DropdownMenu,
@@ -77,7 +79,8 @@ const CATEGORIES = [
 export function KnowledgeBasePage() {
   const { t } = useTranslation();
   const { setActions } = usePageActions();
-  const { providers } = useSystemStatus();
+  const { providers, knowledgeBase: kbStatus } = useSystemStatus();
+  const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [entries, setEntries] = useState<KnowledgeEntry[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
@@ -279,6 +282,8 @@ export function KnowledgeBasePage() {
         {}
       );
       setReindexResult(`Reindex complete: ${result.success}/${result.total} entries processed`);
+      // Refresh system status to update the warning banner
+      queryClient.invalidateQueries({ queryKey: ['system-status'] });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to reindex knowledge base');
     } finally {
@@ -361,6 +366,31 @@ export function KnowledgeBasePage() {
         </Alert>
       )}
 
+      {/* Reindex needed warning */}
+      {providers?.embedding && kbStatus?.needsReindex && (
+        <Alert variant="warning" className="mb-6">
+          <AlertTriangle className="h-4 w-4" />
+          <AlertTitle>{t('knowledge.reindexNeeded')}</AlertTitle>
+          <AlertDescription className="flex items-end justify-between">
+            <span>
+              {t('knowledge.indexedStats', {
+                indexed: kbStatus.total - kbStatus.withoutEmbeddings,
+                total: kbStatus.total,
+              })}
+            </span>
+            <Button
+              size="sm"
+              variant="outline"
+              onClick={() => setShowReindexConfirm(true)}
+              disabled={reindexing}
+              className="ms-4"
+            >
+              <RefreshCw className={cn('w-4 h-4 me-1.5', reindexing && 'animate-spin')} />
+              {t('knowledge.reindex')}
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
 
       {error && (
         <Alert variant="destructive" className="mb-6" onDismiss={() => setError(null)}>

@@ -18,6 +18,7 @@ import { guestRoutes } from './guests.js';
 import { reservationRoutes } from './reservations.js';
 import { siteScraperRoutes } from '@/extensions/tools/site-scraper/routes.js';
 import { systemRoutes } from './system.js';
+import { seedRoutes } from './seed.js';
 
 const api = new Hono();
 
@@ -62,6 +63,9 @@ api.route('/tools/site-scraper', siteScraperRoutes);
 
 // System status routes
 api.route('/system', systemRoutes);
+
+// Seed/demo data routes
+api.route('/seed', seedRoutes);
 
 /**
  * GET /api/v1

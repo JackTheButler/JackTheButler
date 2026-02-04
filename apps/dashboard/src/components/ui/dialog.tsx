@@ -79,3 +79,39 @@ export function DialogRoot({ open, onOpenChange, children }: DialogProps) {
     </DialogContext.Provider>
   );
 }
+
+export function DialogHeader({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn('flex flex-col space-y-1.5 text-center sm:text-start', className)}
+      {...props}
+    />
+  );
+}
+
+export function DialogFooter({ className, ...props }: React.HTMLAttributes<HTMLDivElement>) {
+  return (
+    <div
+      className={cn('flex flex-col-reverse sm:flex-row sm:justify-end sm:space-x-2 gap-2', className)}
+      {...props}
+    />
+  );
+}
+
+export function DialogTitle({ className, ...props }: React.HTMLAttributes<HTMLHeadingElement>) {
+  return (
+    <h2
+      className={cn('text-lg font-semibold leading-none tracking-tight', className)}
+      {...props}
+    />
+  );
+}
+
+export function DialogDescription({ className, ...props }: React.HTMLAttributes<HTMLParagraphElement>) {
+  return (
+    <p
+      className={cn('text-sm text-muted-foreground', className)}
+      {...props}
+    />
+  );
+}

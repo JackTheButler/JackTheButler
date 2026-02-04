@@ -62,7 +62,8 @@
     "settings": "设置",
     "extensions": "扩展",
     "automations": "自动化",
-    "autonomy": "自主性"
+    "autonomy": "自主性",
+    "dangerZone": "危险区域"
   },
   "filters": {
     "all": "全部",
@@ -89,6 +90,7 @@
     "aiProvider": "AI 提供商",
     "embeddings": "嵌入向量",
     "channels": "渠道",
+    "knowledge": "知识库",
     "extensions": "扩展",
     "gettingStarted": "开始使用",
     "stepsCompleted": "已完成 {{completed}}/{{total}} 步",
@@ -112,6 +114,10 @@
       "empty_knowledge_base": {
         "title": "构建知识库",
         "description": "从您的酒店网站抓取内容，自动导入常见问题、设施、政策和其他帮助 AI 回答客人问题的信息。"
+      },
+      "needs_reindex": {
+        "title": "重新索引知识库",
+        "description": "部分知识库条目缺少嵌入向量。重新索引以启用所有内容的搜索。"
       }
     },
     "completed": {
@@ -125,12 +131,21 @@
       "no_embedding_provider": "启用嵌入",
       "using_local_completion": "升级 AI",
       "no_channels": "添加渠道",
-      "empty_knowledge_base": "导入内容"
+      "empty_knowledge_base": "导入内容",
+      "needs_reindex": "立即重新索引"
     },
     "demoData": {
       "title": "使用示例数据体验",
       "description": "添加演示客人、预订和知识库来探索系统。准备正式使用时，可以在设置中重置所有数据。",
-      "createAll": "加载示例数据"
+      "createAll": "加载示例数据",
+      "confirmTitle": "加载示例数据？",
+      "confirmDescription": "这将添加演示客人、预订、对话、任务和知识库条目到您的数据库。现有数据不会受到影响。",
+      "confirm": "加载数据",
+      "success": "示例数据加载成功！",
+      "error": "加载示例数据失败。请重试。",
+      "nextStepLabel": "下一步：",
+      "nextStepText": "重新索引知识库以启用 AI 搜索。",
+      "reindexAction": "重新索引知识库"
     }
   },
   "tasks": {
@@ -239,7 +254,9 @@
     "goToSettings": "前往设置",
     "titleContentRequired": "标题和内容必填",
     "keywordsHint": "关键词（逗号分隔）",
-    "entryTitle": "条目标题"
+    "entryTitle": "条目标题",
+    "reindexNeeded": "需要重新索引",
+    "indexedStats": "已索引 {{indexed}}/{{total}} 条目"
   },
   "extensions": {
     "connected": "已连接",
@@ -599,6 +616,21 @@
       "escalated": "已升级",
       "resolved": "已解决",
       "closed": "已关闭"
+    }
+  },
+  "settings": {
+    "dangerZone": {
+      "title": "危险区域",
+      "description": "无法撤销的破坏性操作",
+      "resetDatabase": "重置数据库",
+      "resetDescription": "这将永久删除所有数据，包括客人、预订、对话、任务和知识库条目。此操作无法撤销。",
+      "resetButton": "重置数据库",
+      "resetConfirmTitle": "重置数据库",
+      "resetConfirmDescription": "这将永久删除所有数据。此操作无法撤销。",
+      "typeToConfirm": "输入 RESET 确认：",
+      "confirmReset": "重置所有内容",
+      "resetSuccess": "数据库已成功重置。所有数据已清除。",
+      "resetError": "重置数据库失败。请重试。"
     }
   },
   "reservationDetail": {

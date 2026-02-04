@@ -28,6 +28,7 @@ const issueTypes = [
   'using_local_completion',
   'no_channels',
   'empty_knowledge_base',
+  'needs_reindex',
 ] as const;
 
 /**

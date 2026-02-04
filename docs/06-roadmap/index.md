@@ -67,6 +67,7 @@ This roadmap defines a **phased, incremental build approach** where each release
 | **16** | **1.7.0** | **Easy Mail** | Gmail OAuth, Mailgun/SendGrid | **One-click email** |
 | **17** | **1.8.0** | **Smart Embed** | Local embeddings, capability fallback | **Offline-first AI** |
 | **18** | **1.9.0** | **Polyglot** | Dashboard internationalization (i18n) | **Multi-language UI** |
+| **19** | **1.10.0** | **Sandbox** | Demo data & database reset | **Test & reset** |
 
 ---
 
@@ -96,6 +97,7 @@ Phase 15 (Clean Slate) → No duplicate code, clear orchestrator/provider separa
 Phase 16 (Easy Mail)   → Gmail connected with one click, email works
 Phase 17 (Smart Embed) → Knowledge base search works without OpenAI
 Phase 18 (Polyglot)    → Dashboard displays in user's language
+Phase 19 (Sandbox)     → Demo data loads, database can be reset
 ```
 
 ### Implementation Rules
@@ -130,6 +132,7 @@ Phase 18 (Polyglot)    → Dashboard displays in user's language
 | [Phase 16: Email Providers](phase-16-email-providers.md) | Gmail OAuth, Mailgun/SendGrid |
 | [Phase 17: Local Embeddings](phase-17-local-embeddings.md) | Local AI for embeddings |
 | [Phase 18: Internationalization](phase-18-i18n.md) | Multi-language dashboard |
+| [Phase 19: Demo Data & Reset](phase-19-demo-data.md) | Sample data and database reset |
 
 ### Phase 15 Sub-Phases
 
@@ -249,6 +252,11 @@ Phase 18 (Polyglot)    → Dashboard displays in user's language
                     ┌────────────────▼──────────────┐
                     │     Phase 18: Polyglot        │
                     │   Dashboard i18n support      │
+                    └────────────────┬──────────────┘
+                                     │
+                    ┌────────────────▼──────────────┐
+                    │      Phase 19: Sandbox        │
+                    │   Demo data & database reset  │
                     └───────────────────────────────┘
 ```
 
@@ -279,6 +287,7 @@ Phase 18 (Polyglot)    → Dashboard displays in user's language
 | 1.7.0 | "Connect Gmail with one click, email works" | **Easy email setup** |
 | 1.8.0 | "Knowledge base works without external AI" | **Self-contained AI** |
 | 1.9.0 | "Dashboard displays in Spanish/French/etc" | **Global accessibility** |
+| 1.10.0 | "Load sample data, reset for production" | **Easy testing & cleanup** |
 
 ---
 

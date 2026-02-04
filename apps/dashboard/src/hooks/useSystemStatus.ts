@@ -41,6 +41,11 @@ export interface SystemStatus {
     pms: number;
     tool: number;
   };
+  knowledgeBase: {
+    total: number;
+    withoutEmbeddings: number;
+    needsReindex: boolean;
+  };
 }
 
 /**
@@ -65,5 +70,6 @@ export function useSystemStatus() {
     infoIssues: query.data?.issues?.filter((i) => i.severity === 'info') ?? [],
     providers: query.data?.providers ?? null,
     extensions: query.data?.extensions ?? null,
+    knowledgeBase: query.data?.knowledgeBase ?? null,
   };
 }
