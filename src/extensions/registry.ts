@@ -361,7 +361,7 @@ export class ExtensionRegistry {
 
   /**
    * Get a provider that supports completion
-   * Priority: User-configured provider (non-local) > Local fallback (if completion enabled)
+   * Priority: User-configured provider (non-local) > Local fallback (if explicitly configured)
    */
   getCompletionProvider(): AIProvider | undefined {
     // First try user's active AI provider with completion support (not local)
@@ -373,9 +373,9 @@ export class ExtensionRegistry {
         }
       }
     }
-    // Fallback to local if active
+    // Fallback to local only if active AND explicitly configured with a completion model
     const localExt = this.extensions.get('local');
-    if (localExt?.status === 'active') {
+    if (localExt?.status === 'active' && localExt.config?.completionModel) {
       return this.aiProviders.get('local');
     }
     return undefined;
@@ -383,7 +383,7 @@ export class ExtensionRegistry {
 
   /**
    * Get a provider that supports embeddings
-   * Priority: User-configured with real embeddings (non-local) > Local fallback
+   * Priority: User-configured with real embeddings (non-local) > Local fallback (if explicitly configured)
    */
   getEmbeddingProvider(): AIProvider | undefined {
     // First try user's active AI provider with embedding support (not local)
@@ -395,9 +395,9 @@ export class ExtensionRegistry {
         }
       }
     }
-    // Fallback to local (which has capabilities.embedding: true)
+    // Fallback to local only if active AND explicitly configured with an embedding model
     const localExt = this.extensions.get('local');
-    if (localExt?.status === 'active') {
+    if (localExt?.status === 'active' && localExt.config?.embeddingModel) {
       return this.aiProviders.get('local');
     }
     return undefined;

@@ -23,7 +23,7 @@ interface ResetResponse {
   error?: string;
 }
 
-export function DangerZonePage() {
+export function SettingsPage() {
   const { t } = useTranslation();
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmText, setConfirmText] = useState('');
@@ -51,6 +51,7 @@ export function DangerZonePage() {
 
   return (
     <PageContainer>
+      {/* Danger Zone Section */}
       <Card className="border-destructive">
         <CardHeader>
           <div className="flex items-center gap-3">

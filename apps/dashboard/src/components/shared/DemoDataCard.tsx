@@ -1,9 +1,10 @@
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { FlaskConical, X, Check, AlertTriangle, ArrowRight } from 'lucide-react';
 import { useDismissible } from '@/hooks/useDismissible';
+import { useSystemStatus } from '@/hooks/useSystemStatus';
 import { api } from '@/lib/api';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -37,10 +38,14 @@ const COMPLETED_KEY = 'demo-data-loaded';
 export function DemoDataCard() {
   const { t } = useTranslation();
   const { isDismissed, dismiss } = useDismissible('demo-data', true);
+  const { knowledgeBase } = useSystemStatus();
+  const queryClient = useQueryClient();
   const [completed, setCompleted] = useState(() => {
     return localStorage.getItem(COMPLETED_KEY) === 'true';
   });
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
+
+  const needsReindex = knowledgeBase?.needsReindex ?? false;
 
   const mutation = useMutation({
     mutationFn: () => api.post<DemoDataResponse>('/seed/demo', {}),
@@ -48,6 +53,8 @@ export function DemoDataCard() {
       setShowConfirmDialog(false);
       setCompleted(true);
       localStorage.setItem(COMPLETED_KEY, 'true');
+      // Refresh system status to update needsReindex
+      queryClient.invalidateQueries({ queryKey: ['system-status'] });
     },
   });
 
@@ -90,20 +97,24 @@ export function DemoDataCard() {
 
         {completed ? (
           <div>
-            <p className="flex items-center gap-2 text-sm text-success-foreground mb-2">
+            <p className="flex items-center gap-2 text-sm text-success-foreground">
               <Check className="h-4 w-4" />
               {t('home.demoData.success')}
             </p>
-            <p className="text-sm text-muted-foreground mb-4">
-              <span className="text-foreground font-medium">{t('home.demoData.nextStepLabel')}</span>{' '}
-              {t('home.demoData.nextStepText')}
-            </p>
-            <Link to="/tools/knowledge-base">
-              <Button size="sm">
-                {t('home.demoData.reindexAction')}
-                <ArrowRight className="h-3.5 w-3.5 ms-1.5 rtl:rotate-180" />
-              </Button>
-            </Link>
+            {needsReindex && (
+              <>
+                <p className="text-sm text-muted-foreground mt-2 mb-4">
+                  <span className="text-foreground font-medium">{t('home.demoData.nextStepLabel')}</span>{' '}
+                  {t('home.demoData.nextStepText')}
+                </p>
+                <Link to="/tools/knowledge-base">
+                  <Button size="sm">
+                    {t('home.demoData.reindexAction')}
+                    <ArrowRight className="h-3.5 w-3.5 ms-1.5 rtl:rotate-180" />
+                  </Button>
+                </Link>
+              </>
+            )}
           </div>
         ) : (
           <Button

@@ -25,7 +25,6 @@ import {
   Wrench,
   BookOpen,
   PanelLeft,
-  AlertTriangle,
 } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -157,7 +156,7 @@ export function Layout() {
   useEffect(() => {
     const collapsibleSections = [
       { id: 'tools', paths: ['/tools/knowledge-base', '/tools/site-scraper'] },
-      { id: 'settings', paths: ['/settings/extensions', '/settings/automations', '/settings/autonomy', '/settings/danger-zone'] },
+      { id: 'settings', paths: ['/settings/extensions', '/settings/automations', '/settings/autonomy'] },
     ];
 
     const newExpandedState: Record<string, boolean> = {};
@@ -237,7 +236,6 @@ export function Layout() {
         { path: '/settings/extensions', label: t('nav.extensions'), icon: <Puzzle size={20} /> },
         { path: '/settings/automations', label: t('nav.automations'), icon: <Zap size={20} /> },
         { path: '/settings/autonomy', label: t('nav.autonomy'), icon: <SlidersHorizontal size={20} /> },
-        { path: '/settings/danger-zone', label: t('nav.dangerZone'), icon: <AlertTriangle size={20} /> },
       ],
     },
   ];
@@ -519,9 +517,17 @@ function HeaderBar({
   const { actions } = usePageActions();
   const location = useLocation();
   const isHomePage = location.pathname === '/';
+  const isSettingsPage = location.pathname === '/settings';
   const activeItem = navSections
     .flatMap((s) => s.items)
     .find((item) => isActive(item.path));
+
+  // Get page title - prioritize active nav item, then check special routes
+  const getPageTitle = () => {
+    if (activeItem) return activeItem.label;
+    if (isSettingsPage) return t('common.settings');
+    return t('layout.dashboard');
+  };
 
   return (
     <header className="bg-card border-b h-14 flex-shrink-0 flex items-center justify-between px-6">
@@ -529,7 +535,7 @@ function HeaderBar({
         {activeItem && (
           <span className="text-muted-foreground">{activeItem.icon}</span>
         )}
-        {activeItem?.label || t('layout.dashboard')}
+        {getPageTitle()}
       </h1>
       <div className="flex items-center gap-2">
         {isHomePage && (

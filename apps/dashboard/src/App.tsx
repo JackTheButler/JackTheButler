@@ -10,7 +10,7 @@ import { ExtensionEditPage } from '@/pages/settings/extensions/ExtensionEdit';
 import { AutomationsPage } from '@/pages/settings/automations/Automations';
 import { AutomationEditPage } from '@/pages/settings/automations/AutomationEdit';
 import { AutonomyPage } from '@/pages/settings/autonomy/Autonomy';
-import { DangerZonePage } from '@/pages/settings/danger-zone/DangerZone';
+import { SettingsPage } from '@/pages/settings/Settings';
 import { ApprovalsPage } from '@/pages/approvals/Approvals';
 import { SiteScraperPage } from '@/pages/tools/SiteScraper';
 import { KnowledgeBasePage } from '@/pages/tools/KnowledgeBase';
@@ -32,7 +32,7 @@ export function App() {
           <Route path="/settings/automations" element={<AutomationsPage />} />
           <Route path="/settings/automations/:ruleId" element={<AutomationEditPage />} />
           <Route path="/settings/autonomy" element={<AutonomyPage />} />
-          <Route path="/settings/danger-zone" element={<DangerZonePage />} />
+          <Route path="/settings" element={<SettingsPage />} />
           <Route path="/approvals" element={<ApprovalsPage />} />
           <Route path="/guests" element={<GuestsPage />} />
           <Route path="/guests/new" element={<GuestFormPage />} />
