@@ -61,10 +61,10 @@ let initPromise: Promise<Responder> | null = null;
 async function initializeAIResponder(): Promise<Responder | null> {
   try {
     // Dynamic import to avoid circular dependency issues
-    const extensionsModule = await import('@/extensions/index.js');
+    const appsModule = await import('@/apps/index.js');
     const { AIResponder } = await import('./responder.js');
 
-    const registry = extensionsModule.getExtensionRegistry();
+    const registry = appsModule.getAppRegistry();
     const provider = registry.getActiveAIProvider();
 
     if (!provider) {

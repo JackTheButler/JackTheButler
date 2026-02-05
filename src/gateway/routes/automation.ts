@@ -19,7 +19,7 @@ import {
   type ActionConfig,
 } from '@/automation/index.js';
 import { createLogger } from '@/utils/logger.js';
-import { getExtensionRegistry } from '@/extensions/index.js';
+import { getAppRegistry } from '@/apps/index.js';
 import { generateId } from '@/utils/id.js';
 
 const log = createLogger('api:automation');
@@ -475,7 +475,7 @@ automationRoutes.post('/generate', async (c) => {
   const { prompt } = parsed.data;
 
   try {
-    const registry = getExtensionRegistry();
+    const registry = getAppRegistry();
     const aiProvider = registry.getCompletionProvider();
 
     if (!aiProvider) {

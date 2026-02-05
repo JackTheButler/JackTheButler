@@ -9,7 +9,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { appConfigService } from '@/services/app-config.js';
-import { getAllManifests, getManifest } from '@/extensions/index.js';
+import { getAllManifests, getManifest } from '@/apps/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { maskConfig } from '@/utils/crypto.js';
 

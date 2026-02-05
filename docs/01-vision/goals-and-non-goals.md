@@ -60,7 +60,23 @@ Allow hotels to run Jack on their own infrastructure for data sovereignty.
 **Success criteria:**
 - Docker-based deployment option
 - All data stored in hotel-controlled databases
-- No required external API calls except AI model providers
+- Fully offline capable with local AI (Transformers.js), no external API calls required
+
+### G8: Configurable Autonomy & Review Center
+Give hotels granular control over what Jack can do autonomously versus what requires staff approval.
+
+**Success criteria:**
+- Configurable autonomy levels controlling AI decision-making scope
+- Review center where staff approve or reject actions that exceed the current autonomy level
+- Clear audit trail of all autonomous and reviewed actions
+
+### G9: Hotel Knowledge Base
+Enable hotels to teach Jack their specific policies, FAQs, amenities, and procedures so responses are grounded in accurate, property-specific information.
+
+**Success criteria:**
+- Staff can add, edit, and organize knowledge base entries
+- Site scraper to import content from hotel website automatically
+- Semantic search via embeddings (RAG) to surface relevant knowledge in AI responses
 
 ---
 

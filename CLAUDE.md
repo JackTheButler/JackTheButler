@@ -32,8 +32,8 @@ jack/
 │   │   ├── message-processor.ts
 │   │   ├── task-router.ts
 │   │   ├── escalation-engine.ts
-│   │   └── interfaces/   # Abstract interfaces for extensions
-│   ├── extensions/       # Adapters - external integrations (v1.1.0+)
+│   │   └── interfaces/   # Abstract interfaces for apps
+│   ├── apps/             # Adapters - external integrations (v1.1.0+)
 │   │   ├── ai/           # AI providers (anthropic, openai, ollama)
 │   │   ├── channels/     # Communication (whatsapp, sms, email)
 │   │   └── pms/          # Property management systems
@@ -53,7 +53,7 @@ jack/
 └── config/               # Environment configs
 ```
 
-> **Note:** `src/core/` and `src/extensions/` are introduced in v1.1.0. See [ADR-006](docs/03-architecture/decisions/006-extension-architecture.md) for the architecture.
+> **Note:** `src/core/` and `src/apps/` follow a kernel/adapter architecture. Business logic lives in core, external integrations in apps.
 
 ## Key Commands
 
@@ -99,8 +99,8 @@ pnpm check                # Run all checks (lint + types + tests)
 4. **Channel-agnostic** - Core logic independent of messaging platform
 5. **AI provider abstraction** - Support Claude, OpenAI, or local Ollama
 6. **Simple operations** - SQLite database, easy backup (copy file)
-7. **Kernel/Extension separation** - Business logic in `src/core/`, adapters in `src/extensions/` (v1.1.0+)
-8. **Internal vs external naming** - Internal architecture uses "extensions" (`src/extensions/`), but all external-facing surfaces (API routes, DB tables, dashboard UI) use "apps". Primary API route: `/api/v1/apps` (with `/extensions` and `/integrations` as legacy aliases). DB tables: `app_configs`, `app_logs`. Service: `appConfigService` in `src/services/app-config.ts`.
+7. **Kernel/App separation** - Business logic in `src/core/`, adapters in `src/apps/`
+8. **Apps** - AI providers, communication channels, and hotel systems are collectively called "apps" across API (`/api/v1/apps`), database (`app_configs`, `app_logs`), and UI
 
 ## Code Conventions
 
@@ -190,7 +190,7 @@ export interface ChannelAdapter {
   verifySignature?(payload: unknown, signature: string): boolean;
 }
 
-// src/extensions/channels/whatsapp/adapter.ts
+// src/apps/channels/whatsapp/adapter.ts
 export class WhatsAppAdapter implements ChannelAdapter {
   readonly id = 'whatsapp';
   // ... implementation
@@ -211,12 +211,12 @@ export class ConversationRepository {
 }
 ```
 
-### Extension Manifest Pattern (v1.1.0+)
+### App Manifest Pattern
 ```typescript
-// src/extensions/channels/whatsapp/manifest.ts
-import type { ChannelManifest } from '../types.js';
+// src/apps/channels/whatsapp/manifest.ts
+import type { ChannelAppManifest } from '../types.js';
 
-export const manifest: ChannelManifest = {
+export const manifest: ChannelAppManifest = {
   id: 'whatsapp',
   name: 'WhatsApp Business',
   category: 'channel',
@@ -302,7 +302,7 @@ describe('GuestService', () => {
 - [Local Development](docs/05-operations/local-development.md)
 - [Deployment](docs/05-operations/deployment.md)
 - [Release Roadmap](docs/06-roadmap/index.md)
-- [ADR-006: Extension Architecture](docs/03-architecture/decisions/006-extension-architecture.md)
+- [Architecture](docs/03-architecture/index.md)
 
 ## When Implementing
 

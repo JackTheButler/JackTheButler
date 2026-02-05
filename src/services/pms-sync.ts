@@ -10,7 +10,7 @@ import { db, guests, reservations } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { normalizePhone } from '@/services/guest.js';
-import { getExtensionRegistry } from '@/extensions/index.js';
+import { getAppRegistry } from '@/apps/index.js';
 import type { NormalizedGuest, NormalizedReservation, SyncResult } from '@/core/interfaces/pms.js';
 import type { Guest, Reservation } from '@/db/schema.js';
 
@@ -21,7 +21,7 @@ export class PMSSyncService {
    * Sync all reservations modified since last sync
    */
   async syncReservations(since?: Date): Promise<SyncResult> {
-    const adapter = getExtensionRegistry().getActivePMSAdapter();
+    const adapter = getAppRegistry().getActivePMSAdapter();
     const result: SyncResult = { created: 0, updated: 0, unchanged: 0, errors: 0, errorDetails: [] };
 
     if (!adapter) {

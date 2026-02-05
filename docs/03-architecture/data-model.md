@@ -1,700 +1,408 @@
 # Data Model
 
-Entity relationships and database schema for Jack The Butler.
-
-**Database:** SQLite with better-sqlite3 and sqlite-vec extension
+Database schema for Jack The Butler.
 
 ---
 
-## Entity Relationship Diagram
+## Overview
+
+- **Database:** SQLite (single file at `data/jack.db`)
+- **ORM:** Drizzle with type-safe schema definitions in `src/db/schema.ts`
+- **Migrations:** Drizzle Kit, SQL files in `migrations/`
+- **Vector search:** sqlite-vec extension for knowledge base embeddings
+- **WAL mode** enabled for concurrent read access during writes
+
+---
+
+## Entity Relationships
 
 ```
-┌─────────────────┐       ┌─────────────────┐
-│      Guest      │       │   Reservation   │
-├─────────────────┤       ├─────────────────┤
-│ id              │       │ id              │
-│ first_name      │       │ guest_id        │──┐
-│ last_name       │       │ confirmation_no │  │
-│ email           │       │ room_number     │  │
-│ phone           │       │ arrival_date    │  │
-│ language        │       │ departure_date  │  │
-│ loyalty_tier    │       │ status          │  │
-│ preferences     │       └─────────────────┘  │
-│ external_ids    │                │           │
-└────────┬────────┘                │           │
-         │                         │           │
-         │    ┌────────────────────┘           │
-         │    │                                │
-         ▼    ▼                                ▼
-┌─────────────────────────────────────────────────────────────────────┐
-│                          Conversation                                │
-├─────────────────────────────────────────────────────────────────────┤
-│ id                                                                   │
-│ guest_id ────────────────────────────────────────────────────────────┘
-│ reservation_id ──────────────────────────────────────────────────────┘
-│ channel_type
-│ channel_id
-│ state (active, escalated, resolved)
-│ assigned_to
-│ created_at
-│ updated_at
-└──────────────────────────────────┬──────────────────────────────────┘
-                                   │
-                    ┌──────────────┼──────────────┐
-                    │              │              │
-                    ▼              ▼              ▼
-          ┌─────────────┐  ┌─────────────┐  ┌─────────────┐
-          │   Message   │  │    Task     │  │   Event     │
-          ├─────────────┤  ├─────────────┤  ├─────────────┤
-          │ id          │  │ id          │  │ id          │
-          │ convo_id    │  │ convo_id    │  │ convo_id    │
-          │ direction   │  │ type        │  │ type        │
-          │ content     │  │ status      │  │ payload     │
-          │ sender_type │  │ department  │  │ created_at  │
-          │ intent      │  │ assigned_to │  └─────────────┘
-          │ confidence  │  │ created_at  │
-          │ created_at  │  │ completed_at│
-          └─────────────┘  └─────────────┘
+┌────────┐     ┌──────────────┐     ┌───────┐
+│ guests │────►│ reservations │     │ staff │
+└───┬────┘     └──────┬───────┘     └───┬───┘
+    │                 │                 │
+    └────────►┌───────┴──────┐◄─────────┘
+              │conversations │
+              └──┬───────┬───┘
+                 │       │
+          ┌──────┘       └──────┐
+          ▼                     ▼
+     ┌──────────┐          ┌───────┐
+     │ messages │◄─────────│ tasks │───► staff
+     └──────────┘          └───────┘
+
+┌─────────────────┐
+│ approval_queue  │───► guests, conversations, staff
+└─────────────────┘
+
+┌────────────────┐     ┌──────────────────────┐
+│ knowledge_base │◄────│ knowledge_embeddings │
+└────────────────┘     └──────────────────────┘
+
+┌──────────────────┐     ┌─────────────────────┐
+│ automation_rules │◄────│ automation_logs      │
+│                  │◄────│ automation_executions│
+└──────────────────┘     └─────────────────────┘
+
+┌─────────────┐  ┌───────────┐  ┌───────────┐  ┌────────────────┐  ┌──────────┐
+│ app_configs │  │ app_logs  │  │ audit_log │  │ response_cache │  │ settings │
+└─────────────┘  └───────────┘  └───────────┘  └────────────────┘  └──────────┘
 ```
 
 ---
 
-## SQLite Configuration
+## Core Tables
 
-Jack uses SQLite with WAL mode for concurrent access:
-
-```typescript
-import Database from 'better-sqlite3';
-import * as sqliteVec from 'sqlite-vec';
-
-const db = new Database('data/jack.db');
-
-// Enable WAL mode for concurrent reads during writes
-db.pragma('journal_mode = WAL');
-
-// Wait up to 5 seconds for locks
-db.pragma('busy_timeout = 5000');
-
-// Balance between safety and performance
-db.pragma('synchronous = NORMAL');
-
-// Enable foreign keys
-db.pragma('foreign_keys = ON');
-
-// Load sqlite-vec for vector search
-sqliteVec.load(db);
-```
-
----
-
-## Core Entities
-
-### Settings
-
-Global configuration for the hotel.
-
-```sql
-CREATE TABLE IF NOT EXISTS settings (
-  key TEXT PRIMARY KEY,
-  value TEXT NOT NULL,
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
--- Example settings:
--- key: 'hotel.name', value: 'The Grand Hotel'
--- key: 'hotel.timezone', value: 'America/New_York'
--- key: 'channels.whatsapp.enabled', value: 'true'
--- key: 'escalation.threshold', value: '0.7'
-```
-
-### Guest
+### guests
 
 Guest profiles with preferences and history.
 
-```sql
-CREATE TABLE IF NOT EXISTS guests (
-  id TEXT PRIMARY KEY,  -- UUID generated in application
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| first_name, last_name | text | Required |
+| email, phone | text | Optional, unique indexes |
+| language | text | Default `en` |
+| loyalty_tier, vip_status | text | Optional |
+| external_ids | text (JSON) | PMS/loyalty IDs: `{"pms": "12345"}` |
+| preferences | text (JSON) | Guest preferences array |
+| stay_count | integer | Lifetime stays |
+| total_revenue | real | Lifetime revenue |
+| last_stay_date | text | ISO date |
+| notes, tags | text | Free text / JSON array |
+| created_at, updated_at | text | ISO datetime |
 
-  -- Identity
-  first_name TEXT NOT NULL,
-  last_name TEXT NOT NULL,
-  email TEXT,
-  phone TEXT,
-
-  -- Profile
-  language TEXT DEFAULT 'en',
-  loyalty_tier TEXT,
-  vip_status TEXT,
-
-  -- External references (JSON object)
-  -- { "pms": "12345", "loyalty": "G98765" }
-  external_ids TEXT NOT NULL DEFAULT '{}',
-
-  -- Preferences (JSON array)
-  -- [{ "category": "room", "key": "floor", "value": "high", "source": "stated", "confidence": 1.0 }]
-  preferences TEXT NOT NULL DEFAULT '[]',
-
-  -- Stats
-  stay_count INTEGER NOT NULL DEFAULT 0,
-  total_revenue REAL NOT NULL DEFAULT 0,
-  last_stay_date TEXT,
-
-  -- Metadata
-  notes TEXT,
-  -- Tags stored as JSON array: ["vip", "business"]
-  tags TEXT DEFAULT '[]',
-
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE UNIQUE INDEX IF NOT EXISTS idx_guests_email ON guests(email) WHERE email IS NOT NULL;
-CREATE UNIQUE INDEX IF NOT EXISTS idx_guests_phone ON guests(phone) WHERE phone IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_guests_name ON guests(last_name, first_name);
-```
-
-### Reservation
+### reservations
 
 Booking records synced from PMS.
 
-```sql
-CREATE TABLE IF NOT EXISTS reservations (
-  id TEXT PRIMARY KEY,
-  guest_id TEXT NOT NULL REFERENCES guests(id),
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| guest_id | text FK | → guests |
+| confirmation_number | text | Unique |
+| external_id | text | PMS reference |
+| room_number, room_type | text | Room type required |
+| arrival_date, departure_date | text | ISO date, required |
+| status | text | `confirmed`, `checked_in`, `checked_out`, `cancelled`, `no_show` |
+| estimated_arrival, actual_arrival | text | ISO datetime |
+| estimated_departure, actual_departure | text | ISO datetime |
+| rate_code, total_rate, balance | text/real | Financial |
+| special_requests, notes | text (JSON) | JSON arrays |
+| synced_at | text | Last PMS sync time |
+| created_at, updated_at | text | ISO datetime |
 
-  -- Identity
-  confirmation_number TEXT NOT NULL UNIQUE,
-  external_id TEXT,
-
-  -- Stay details
-  room_number TEXT,
-  room_type TEXT NOT NULL,
-  arrival_date TEXT NOT NULL,  -- YYYY-MM-DD
-  departure_date TEXT NOT NULL,  -- YYYY-MM-DD
-
-  -- Status: confirmed, checked_in, checked_out, cancelled, no_show
-  status TEXT NOT NULL DEFAULT 'confirmed',
-
-  -- Timing (ISO 8601 datetime strings)
-  estimated_arrival TEXT,
-  actual_arrival TEXT,
-  estimated_departure TEXT,
-  actual_departure TEXT,
-
-  -- Financial
-  rate_code TEXT,
-  total_rate REAL,
-  balance REAL DEFAULT 0,
-
-  -- Additional (JSON arrays)
-  special_requests TEXT DEFAULT '[]',
-  notes TEXT DEFAULT '[]',
-
-  -- Sync tracking
-  synced_at TEXT NOT NULL DEFAULT (datetime('now')),
-
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_reservations_guest ON reservations(guest_id);
-CREATE INDEX IF NOT EXISTS idx_reservations_dates ON reservations(arrival_date, departure_date);
-CREATE INDEX IF NOT EXISTS idx_reservations_status ON reservations(status);
-CREATE INDEX IF NOT EXISTS idx_reservations_room ON reservations(room_number) WHERE room_number IS NOT NULL;
-```
-
-### Conversation
-
-Guest communication threads.
-
-```sql
-CREATE TABLE IF NOT EXISTS conversations (
-  id TEXT PRIMARY KEY,
-  guest_id TEXT REFERENCES guests(id),
-  reservation_id TEXT REFERENCES reservations(id),
-
-  -- Channel: whatsapp, sms, email, webchat
-  channel_type TEXT NOT NULL,
-  -- Phone number, email address, or session ID
-  channel_id TEXT NOT NULL,
-
-  -- State: new, active, escalated, resolved, abandoned
-  state TEXT NOT NULL DEFAULT 'active',
-  assigned_to TEXT REFERENCES staff(id),
-
-  -- Context
-  current_intent TEXT,
-  -- Metadata as JSON object
-  metadata TEXT NOT NULL DEFAULT '{}',
-
-  -- Timing
-  last_message_at TEXT,
-  resolved_at TEXT,
-
-  -- Timeout tracking
-  idle_warned_at TEXT,  -- When we sent "are you still there?" message
-
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_conversations_guest ON conversations(guest_id);
-CREATE INDEX IF NOT EXISTS idx_conversations_channel ON conversations(channel_type, channel_id);
-CREATE INDEX IF NOT EXISTS idx_conversations_state ON conversations(state);
-CREATE INDEX IF NOT EXISTS idx_conversations_assigned ON conversations(assigned_to) WHERE assigned_to IS NOT NULL;
-```
-
-### Message
-
-Individual messages within conversations.
-
-```sql
-CREATE TABLE IF NOT EXISTS messages (
-  id TEXT PRIMARY KEY,
-  conversation_id TEXT NOT NULL REFERENCES conversations(id),
-
-  -- Direction: inbound, outbound
-  direction TEXT NOT NULL,
-  -- Sender: guest, ai, staff, system
-  sender_type TEXT NOT NULL,
-  sender_id TEXT,  -- staff ID if sender_type = 'staff'
-
-  -- Content
-  content TEXT NOT NULL,
-  -- Content type: text, image, audio, video, document, location, interactive
-  content_type TEXT NOT NULL DEFAULT 'text',
-  -- Media as JSON array: [{ "type": "image", "url": "...", "mime_type": "image/jpeg" }]
-  media TEXT,
-
-  -- AI metadata
-  intent TEXT,
-  confidence REAL,
-  -- Entities as JSON: [{ "type": "quantity", "value": 2 }]
-  entities TEXT,
-
-  -- Channel metadata
-  channel_message_id TEXT,
-  -- Delivery status: pending, sent, delivered, read, failed
-  delivery_status TEXT DEFAULT 'sent',
-  delivery_error TEXT,
-
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_messages_conversation ON messages(conversation_id);
-CREATE INDEX IF NOT EXISTS idx_messages_created ON messages(conversation_id, created_at);
-CREATE INDEX IF NOT EXISTS idx_messages_channel_id ON messages(channel_message_id) WHERE channel_message_id IS NOT NULL;
-```
-
-### Task
-
-Service requests and work orders.
-
-```sql
-CREATE TABLE IF NOT EXISTS tasks (
-  id TEXT PRIMARY KEY,
-  conversation_id TEXT REFERENCES conversations(id),
-
-  -- Type: housekeeping, maintenance, concierge, room_service, other
-  type TEXT NOT NULL,
-  department TEXT NOT NULL,
-
-  -- Details
-  room_number TEXT,
-  description TEXT NOT NULL,
-  -- Items as JSON: [{ "item": "towels", "quantity": 2 }]
-  items TEXT,
-  -- Priority: urgent, high, standard, low
-  priority TEXT NOT NULL DEFAULT 'standard',
-
-  -- Status: pending, assigned, in_progress, completed, cancelled
-  status TEXT NOT NULL DEFAULT 'pending',
-  assigned_to TEXT REFERENCES staff(id),
-
-  -- External reference (if synced to housekeeping system)
-  external_id TEXT,
-  external_system TEXT,
-
-  -- Timing
-  due_at TEXT,
-  started_at TEXT,
-  completed_at TEXT,
-
-  -- Notes
-  notes TEXT,
-  -- Completion notes from staff
-  completion_notes TEXT,
-
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_tasks_conversation ON tasks(conversation_id);
-CREATE INDEX IF NOT EXISTS idx_tasks_status ON tasks(status);
-CREATE INDEX IF NOT EXISTS idx_tasks_department ON tasks(department, status);
-CREATE INDEX IF NOT EXISTS idx_tasks_assigned ON tasks(assigned_to) WHERE assigned_to IS NOT NULL;
-CREATE INDEX IF NOT EXISTS idx_tasks_room ON tasks(room_number) WHERE room_number IS NOT NULL;
-```
-
-### Staff
+### staff
 
 Hotel staff users.
 
-```sql
-CREATE TABLE IF NOT EXISTS staff (
-  id TEXT PRIMARY KEY,
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| email | text | Unique, required |
+| name, phone | text | Name required |
+| role | text | `admin`, `manager`, `front_desk`, `concierge`, `housekeeping`, `maintenance` |
+| department | text | Optional |
+| permissions | text (JSON) | Permission strings array |
+| status | text | `active`, `inactive` |
+| last_active_at | text | ISO datetime |
+| password_hash | text | Bcrypt hash |
+| created_at, updated_at | text | ISO datetime |
 
-  -- Identity
-  email TEXT NOT NULL UNIQUE,
-  name TEXT NOT NULL,
-  phone TEXT,
+### conversations
 
-  -- Role: admin, manager, front_desk, concierge, housekeeping, maintenance
-  role TEXT NOT NULL,
-  department TEXT,
+Guest communication threads.
 
-  -- Permissions as JSON array (see Permission Model section below)
-  permissions TEXT NOT NULL DEFAULT '[]',
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| guest_id | text FK | → guests |
+| reservation_id | text FK | → reservations |
+| channel_type | text | `whatsapp`, `sms`, `email`, `webchat` |
+| channel_id | text | Phone number, email, or session ID |
+| state | text | `new`, `active`, `escalated`, `resolved`, `closed` |
+| assigned_to | text FK | → staff |
+| current_intent | text | Latest classified intent |
+| metadata | text (JSON) | Arbitrary context |
+| last_message_at | text | ISO datetime |
+| resolved_at | text | ISO datetime |
+| idle_warned_at | text | When idle warning was sent |
+| created_at, updated_at | text | ISO datetime |
 
-  -- Status: active, inactive
-  status TEXT NOT NULL DEFAULT 'active',
-  last_active_at TEXT,
+### messages
 
-  -- Auth (bcrypt hash)
-  password_hash TEXT,
+Individual messages within conversations.
 
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| conversation_id | text FK | → conversations |
+| direction | text | `inbound`, `outbound` |
+| sender_type | text | `guest`, `ai`, `staff`, `system` |
+| sender_id | text | Staff ID if sender_type is `staff` |
+| content | text | Message body |
+| content_type | text | `text`, `image`, `audio`, `video`, `document`, `location`, `interactive` |
+| media | text (JSON) | Media attachments array |
+| intent | text | Classified intent |
+| confidence | real | Intent confidence score |
+| entities | text (JSON) | Extracted entities |
+| channel_message_id | text | Platform message ID |
+| delivery_status | text | `pending`, `sent`, `delivered`, `read`, `failed` |
+| delivery_error | text | Error details if failed |
+| created_at | text | ISO datetime |
 
-CREATE INDEX IF NOT EXISTS idx_staff_role ON staff(role);
-CREATE INDEX IF NOT EXISTS idx_staff_department ON staff(department) WHERE department IS NOT NULL;
-```
+### tasks
 
----
+Service requests and work orders.
 
-## Permission Model
-
-Staff permissions are stored as a JSON array of permission strings. Permissions follow a resource.action pattern.
-
-### Available Permissions
-
-```typescript
-type Permission =
-  // Guest permissions
-  | 'guest.view'           // View guest profiles
-  | 'guest.view_contact'   // View email/phone (PII)
-  | 'guest.view_financial' // View revenue, balance
-  | 'guest.edit'           // Edit guest notes/tags
-  | 'guest.delete'         // Delete guest (GDPR)
-
-  // Conversation permissions
-  | 'conversation.view'    // View conversation queue
-  | 'conversation.respond' // Send messages to guests
-  | 'conversation.assign'  // Assign conversations to others
-  | 'conversation.escalate'// Escalate to manager
-
-  // Task permissions
-  | 'task.view'            // View task queue
-  | 'task.create'          // Create tasks manually
-  | 'task.assign'          // Assign tasks to others
-  | 'task.complete'        // Mark tasks complete
-
-  // Staff permissions
-  | 'staff.view'           // View staff list
-  | 'staff.manage'         // Create/edit staff
-
-  // Settings permissions
-  | 'settings.view'        // View configuration
-  | 'settings.edit'        // Edit configuration
-
-  // Analytics permissions
-  | 'analytics.view'       // View dashboards
-  | 'analytics.export';    // Export data
-```
-
-### Default Role Permissions
-
-```typescript
-const rolePermissions: Record<string, Permission[]> = {
-  admin: ['*'],  // All permissions
-
-  manager: [
-    'guest.view', 'guest.view_contact', 'guest.view_financial', 'guest.edit',
-    'conversation.view', 'conversation.respond', 'conversation.assign', 'conversation.escalate',
-    'task.view', 'task.create', 'task.assign', 'task.complete',
-    'staff.view',
-    'analytics.view', 'analytics.export'
-  ],
-
-  front_desk: [
-    'guest.view', 'guest.view_contact', 'guest.edit',
-    'conversation.view', 'conversation.respond', 'conversation.escalate',
-    'task.view', 'task.create',
-    'analytics.view'
-  ],
-
-  concierge: [
-    'guest.view', 'guest.view_contact',
-    'conversation.view', 'conversation.respond',
-    'task.view', 'task.create', 'task.complete'
-  ],
-
-  housekeeping: [
-    'task.view', 'task.complete'
-  ],
-
-  maintenance: [
-    'task.view', 'task.complete'
-  ]
-};
-```
-
-### Permission Check Example
-
-```typescript
-function hasPermission(staff: Staff, permission: Permission): boolean {
-  const permissions = JSON.parse(staff.permissions) as Permission[];
-
-  // Admin wildcard
-  if (permissions.includes('*')) return true;
-
-  // Direct permission
-  if (permissions.includes(permission)) return true;
-
-  // Role-based fallback
-  const rolePerms = rolePermissions[staff.role] || [];
-  return rolePerms.includes(permission);
-}
-```
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| conversation_id | text FK | → conversations |
+| message_id | text FK | → messages |
+| source | text | `manual`, `auto`, `automation` |
+| type | text | `housekeeping`, `maintenance`, `concierge`, `room_service`, `other` |
+| department | text | Required |
+| room_number | text | Optional |
+| description | text | Required |
+| items | text (JSON) | Items array: `[{"item": "towels", "quantity": 2}]` |
+| priority | text | `urgent`, `high`, `standard`, `low` |
+| status | text | `pending`, `assigned`, `in_progress`, `completed`, `cancelled` |
+| assigned_to | text FK | → staff |
+| external_id, external_system | text | External system reference |
+| due_at, started_at, completed_at | text | ISO datetime |
+| notes, completion_notes | text | Free text |
+| created_at, updated_at | text | ISO datetime |
 
 ---
 
-## Supporting Entities
+## Knowledge Base
 
-### Knowledge Base
+### knowledge_base
 
-Property-specific information for RAG.
+Hotel information for RAG (FAQ, policies, amenities, etc.).
 
-```sql
-CREATE TABLE IF NOT EXISTS knowledge_base (
-  id TEXT PRIMARY KEY,
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| category | text | `faq`, `policy`, `amenity`, `service`, `room_type`, `local_info` |
+| title | text | Required |
+| content | text | Required |
+| keywords | text (JSON) | Search keywords array |
+| status | text | `active`, `archived` |
+| priority | integer | Sort/relevance weight |
+| language | text | Default `en` |
+| source_url | text | If imported via site scraper |
+| source_entry_id | text | Original entry reference |
+| created_at, updated_at | text | ISO datetime |
 
-  -- Category: faq, policy, amenity, menu, local, service
-  category TEXT NOT NULL,
-  title TEXT NOT NULL,
-  content TEXT NOT NULL,
-  -- Keywords as JSON array for fallback search
-  keywords TEXT DEFAULT '[]',
+### knowledge_embeddings
 
-  -- Status: active, draft, archived
-  status TEXT NOT NULL DEFAULT 'active',
+Vector embeddings for semantic search.
 
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK/FK | → knowledge_base (cascade delete) |
+| embedding | text | JSON array of floats |
+| model | text | Embedding model name |
+| dimensions | integer | Vector dimensions |
+| created_at | text | ISO datetime |
 
-CREATE INDEX IF NOT EXISTS idx_knowledge_category ON knowledge_base(category);
-CREATE INDEX IF NOT EXISTS idx_knowledge_status ON knowledge_base(status);
-
--- Full-text search for keyword fallback
-CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_fts USING fts5(
-  title,
-  content,
-  content='knowledge_base',
-  content_rowid='rowid'
-);
-```
-
-### Knowledge Embeddings (sqlite-vec)
-
-Vector embeddings for semantic search, stored in a virtual table.
-
-```sql
--- Create sqlite-vec virtual table for embeddings
--- Dimension is configurable based on embedding model
-CREATE VIRTUAL TABLE IF NOT EXISTS knowledge_embeddings USING vec0(
-  id TEXT PRIMARY KEY,
-  embedding FLOAT[1536]  -- OpenAI text-embedding-3-small
-);
-
--- For other embedding models, dimensions vary:
--- - OpenAI text-embedding-3-small: 1536
--- - OpenAI text-embedding-3-large: 3072
--- - Ollama nomic-embed-text: 768
--- - Ollama mxbai-embed-large: 1024
-```
-
-**Embedding Dimension Strategy:**
-
-When switching embedding providers, embeddings must be regenerated. The system stores the current embedding model in settings:
-
-```sql
--- Track current embedding configuration
-INSERT INTO settings (key, value) VALUES
-  ('embeddings.model', 'text-embedding-3-small'),
-  ('embeddings.dimensions', '1536');
-```
-
-### Automation Rules
-
-Configured automation triggers.
-
-```sql
-CREATE TABLE IF NOT EXISTS automation_rules (
-  id TEXT PRIMARY KEY,
-
-  -- Identity
-  name TEXT NOT NULL,
-  description TEXT,
-
-  -- Trigger type: time_based, event_based, condition_based
-  trigger_type TEXT NOT NULL,
-  -- Trigger config as JSON
-  -- { "type": "pre_arrival", "offset_days": -3, "time": "10:00" }
-  trigger_config TEXT NOT NULL,
-
-  -- Action type: send_message, create_task, notify_staff
-  action_type TEXT NOT NULL,
-  -- Action config as JSON
-  -- { "template": "welcome", "channel": "whatsapp" }
-  action_config TEXT NOT NULL,
-
-  -- Status
-  enabled INTEGER NOT NULL DEFAULT 1,
-
-  created_at TEXT NOT NULL DEFAULT (datetime('now')),
-  updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_automation_enabled ON automation_rules(enabled);
-CREATE INDEX IF NOT EXISTS idx_automation_trigger ON automation_rules(trigger_type);
-```
-
-### Audit Log
-
-Track significant actions for compliance.
-
-```sql
-CREATE TABLE IF NOT EXISTS audit_log (
-  id TEXT PRIMARY KEY,
-
-  -- Actor type: staff, system, guest
-  actor_type TEXT NOT NULL,
-  actor_id TEXT,
-
-  -- Action (see Audit Actions below)
-  action TEXT NOT NULL,
-  resource_type TEXT NOT NULL,
-  resource_id TEXT,
-
-  -- Details as JSON
-  details TEXT,
-  ip_address TEXT,
-  user_agent TEXT,
-
-  created_at TEXT NOT NULL DEFAULT (datetime('now'))
-);
-
-CREATE INDEX IF NOT EXISTS idx_audit_created ON audit_log(created_at);
-CREATE INDEX IF NOT EXISTS idx_audit_actor ON audit_log(actor_type, actor_id);
-CREATE INDEX IF NOT EXISTS idx_audit_resource ON audit_log(resource_type, resource_id);
-CREATE INDEX IF NOT EXISTS idx_audit_action ON audit_log(action);
-```
-
-### Audit Actions
-
-The following actions are logged:
-
-| Action | Resource | When Logged |
-|--------|----------|-------------|
-| `guest.view` | guest | Staff views guest profile (once per session, not per field) |
-| `guest.edit` | guest | Staff edits guest info |
-| `guest.delete` | guest | Guest data deleted (GDPR) |
-| `conversation.escalate` | conversation | AI or staff escalates |
-| `conversation.assign` | conversation | Conversation assigned to staff |
-| `conversation.resolve` | conversation | Conversation marked resolved |
-| `task.create` | task | Task created (AI or manual) |
-| `task.complete` | task | Task marked complete |
-| `staff.login` | staff | Staff logs in |
-| `staff.create` | staff | New staff created |
-| `settings.change` | settings | Configuration changed |
-| `data.export` | - | Data exported |
-
-**Note:** LLM API calls are NOT individually logged to audit_log (too high volume). Instead, aggregate token usage is tracked in a separate metrics table or external monitoring.
-
-### Retention Policy
-
-| Data Type | Retention | Rationale |
-|-----------|-----------|-----------|
-| Messages | 2 years | Service history |
-| Conversations | 2 years | Matches messages |
-| Tasks | 1 year | Operational records |
-| Guest profiles | Indefinite | CRM value (unless GDPR deletion) |
-| Audit logs | 7 years | Compliance |
-| Knowledge embeddings | Indefinite | Regenerated on model change |
+Embeddings must be regenerated when switching embedding providers (different models produce different dimensions).
 
 ---
 
-## Migrations
+## Automation
 
-Migrations are managed with Drizzle Kit. Example migration file:
+### automation_rules
 
-```typescript
-// drizzle/0001_initial.sql
--- Generated by Drizzle Kit
+Configured automation triggers and actions.
 
-CREATE TABLE IF NOT EXISTS guests (
-  -- ... schema as above
-);
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| name | text | Required |
+| description | text | Optional |
+| trigger_type | text | `time_based`, `event_based` |
+| trigger_config | text (JSON) | Trigger-specific config |
+| action_type | text | `send_message`, `create_task`, `notify_staff`, `webhook` |
+| action_config | text (JSON) | Action-specific config |
+| actions | text (JSON) | Multi-step action chain (overrides action_type/action_config when set) |
+| retry_config | text (JSON) | Retry policy |
+| enabled | boolean | Default `true` |
+| last_run_at | text | ISO datetime |
+| last_error | text | Most recent error |
+| run_count | integer | Total executions |
+| consecutive_failures | integer | Failure streak count |
+| created_at, updated_at | text | ISO datetime |
 
--- ... other tables
-```
+### automation_logs
 
-Run migrations:
+Log of individual rule executions.
 
-```bash
-pnpm db:migrate      # Apply pending migrations
-pnpm db:generate     # Generate migration from schema changes
-pnpm db:studio       # Open Drizzle Studio for debugging
-```
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| rule_id | text FK | → automation_rules (cascade delete) |
+| status | text | `success`, `failed`, `skipped` |
+| trigger_data | text (JSON) | Event that triggered the rule |
+| action_result | text (JSON) | Outcome details |
+| error_message | text | Error if failed |
+| execution_time_ms | integer | Duration |
+| created_at | text | ISO datetime |
+
+### automation_executions
+
+Tracks action chains and retries for multi-step automations.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| rule_id | text FK | → automation_rules (cascade delete) |
+| triggered_at | text | ISO datetime |
+| trigger_data | text (JSON) | Event data |
+| status | text | `pending`, `running`, `completed`, `failed`, `partial` |
+| action_results | text (JSON) | Per-action results array |
+| attempt_number | integer | Retry attempt (starts at 1) |
+| next_retry_at | text | Scheduled retry time |
+| error_message | text | Error if failed |
+| completed_at | text | ISO datetime |
+| execution_time_ms | integer | Duration |
+| created_at | text | ISO datetime |
 
 ---
 
-## Type Definitions (Drizzle ORM)
+## App System
 
-```typescript
-// src/db/schema.ts
-import { sqliteTable, text, integer, real } from 'drizzle-orm/sqlite-core';
+### app_configs
 
-export const guests = sqliteTable('guests', {
-  id: text('id').primaryKey(),
-  firstName: text('first_name').notNull(),
-  lastName: text('last_name').notNull(),
-  email: text('email'),
-  phone: text('phone'),
-  language: text('language').default('en'),
-  loyaltyTier: text('loyalty_tier'),
-  vipStatus: text('vip_status'),
-  externalIds: text('external_ids').notNull().default('{}'),
-  preferences: text('preferences').notNull().default('[]'),
-  stayCount: integer('stay_count').notNull().default(0),
-  totalRevenue: real('total_revenue').notNull().default(0),
-  lastStayDate: text('last_stay_date'),
-  notes: text('notes'),
-  tags: text('tags').default('[]'),
-  createdAt: text('created_at').notNull().default(sql`(datetime('now'))`),
-  updatedAt: text('updated_at').notNull().default(sql`(datetime('now'))`)
-});
+Provider configuration storage (credentials encrypted).
 
-// ... similar for other tables
-```
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| app_id | text | Category: `sms`, `email`, `ai`, etc. |
+| provider_id | text | Provider: `twilio`, `mailgun`, `anthropic`, etc. |
+| enabled | boolean | Default `false` |
+| status | text | `not_configured`, `configured`, `connected`, `error`, `disabled` |
+| config | text (JSON) | Encrypted configuration object |
+| last_checked_at | text | Last connection test |
+| last_error | text | Most recent error |
+| created_at, updated_at | text | ISO datetime |
+
+Unique constraint on (`app_id`, `provider_id`).
+
+### app_logs
+
+Event log for app provider activity.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| app_id | text | Category |
+| provider_id | text | Provider |
+| event_type | text | `connection_test`, `sync`, `webhook`, `send`, `receive`, `error`, `config_changed` |
+| status | text | `success`, `failed` |
+| details | text (JSON) | Event-specific data |
+| error_message | text | Error if failed |
+| latency_ms | integer | Response time |
+| created_at | text | ISO datetime |
+
+---
+
+## Supporting Tables
+
+### approval_queue
+
+Staff approval workflow for AI actions (autonomy L1 mode).
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| type | text | `response`, `task`, `offer` |
+| action_type | text | `respondToGuest`, `createHousekeepingTask`, etc. |
+| action_data | text (JSON) | Proposed action details |
+| conversation_id | text FK | → conversations |
+| guest_id | text FK | → guests |
+| status | text | `pending`, `approved`, `rejected` |
+| decided_at | text | ISO datetime |
+| decided_by | text FK | → staff |
+| rejection_reason | text | Optional |
+| created_at | text | ISO datetime |
+
+### response_cache
+
+Cached AI responses for common queries.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| query_hash | text | Unique hash of normalized query |
+| query | text | Original query text |
+| response | text | Cached AI response |
+| intent | text | Classified intent |
+| hit_count | integer | Times served from cache |
+| last_hit_at | text | ISO datetime |
+| expires_at | text | ISO datetime |
+| created_at | text | ISO datetime |
+
+### audit_log
+
+Security-relevant event tracking.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| id | text PK | UUID |
+| actor_type | text | `user`, `system`, `api`, `webhook` |
+| actor_id | text | Who performed the action |
+| action | text | What was done |
+| resource_type | text | What was affected |
+| resource_id | text | Specific resource |
+| details | text (JSON) | Additional context |
+| ip_address | text | Request origin |
+| user_agent | text | Client info |
+| created_at | text | ISO datetime |
+
+### settings
+
+Global key-value configuration.
+
+| Column | Type | Notes |
+|--------|------|-------|
+| key | text PK | Setting name (e.g. `hotel.name`, `hotel.timezone`) |
+| value | text | Setting value |
+| updated_at | text | ISO datetime |
+
+---
+
+## Type Exports
+
+Drizzle infers TypeScript types from the schema. Available in `src/db/schema.ts`:
+
+| Type | Select | Insert |
+|------|--------|--------|
+| Guest | `Guest` | `NewGuest` |
+| Reservation | `Reservation` | `NewReservation` |
+| Staff | `Staff` | `NewStaff` |
+| Conversation | `Conversation` | `NewConversation` |
+| Message | `Message` | `NewMessage` |
+| Task | `Task` | `NewTask` |
+| KnowledgeItem | `KnowledgeItem` | `NewKnowledgeItem` |
+| KnowledgeEmbedding | `KnowledgeEmbedding` | `NewKnowledgeEmbedding` |
+| AutomationRule | `AutomationRule` | `NewAutomationRule` |
+| AutomationLog | `AutomationLog` | `NewAutomationLog` |
+| AutomationExecution | `AutomationExecution` | `NewAutomationExecution` |
+| AppConfig | `AppConfig` | `NewAppConfig` |
+| AppLog | `AppLog` | `NewAppLog` |
+| AuditLogEntry | `AuditLogEntry` | `NewAuditLogEntry` |
+| ResponseCacheEntry | `ResponseCacheEntry` | `NewResponseCacheEntry` |
+| ApprovalQueueItem | `ApprovalQueueItem` | `NewApprovalQueueItem` |
+| Settings | `Settings` | `NewSettings` |
 
 ---
 
 ## Related
 
-- [Architecture Overview](index.md)
-- [Tech Stack](tech-stack.md) - SQLite and sqlite-vec details
-- [Guest Memory Spec](../04-specs/features/guest-memory.md)
-- [Privacy Policy](../01-vision/goals-and-non-goals.md#ng3-surveillance-or-tracking)
+- [Tech Stack](tech-stack.md) — SQLite and Drizzle details
+- [Project Structure](project-structure.md) — Where schema lives
+- [Architecture Overview](index.md) — Principles and high-level view

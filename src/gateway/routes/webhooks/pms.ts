@@ -9,7 +9,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { createLogger } from '@/utils/logger.js';
-import { getExtensionRegistry } from '@/extensions/index.js';
+import { getAppRegistry } from '@/apps/index.js';
 import { appConfigService } from '@/services/app-config.js';
 import type { NormalizedGuest, NormalizedReservation, PMSEvent, PMSEventType } from '@/core/interfaces/pms.js';
 import { validateBody } from '../../middleware/validator.js';
@@ -213,7 +213,7 @@ pmsWebhooks.post('/mews', async (c) => {
   const signature = c.req.header('x-mews-signature');
   const body = await c.req.text();
 
-  const adapter = getExtensionRegistry().getActivePMSAdapter();
+  const adapter = getAppRegistry().getActivePMSAdapter();
   if (!adapter) {
     log.warn('No PMS adapter configured');
     return c.json({ error: 'PMS not configured' }, 400);
@@ -251,7 +251,7 @@ pmsWebhooks.post('/mews', async (c) => {
 pmsWebhooks.post('/cloudbeds', async (c) => {
   const body = await c.req.text();
 
-  const adapter = getExtensionRegistry().getActivePMSAdapter();
+  const adapter = getAppRegistry().getActivePMSAdapter();
   if (!adapter) {
     log.warn('No PMS adapter configured');
     return c.json({ error: 'PMS not configured' }, 400);

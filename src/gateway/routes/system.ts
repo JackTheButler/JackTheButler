@@ -7,8 +7,8 @@
  */
 
 import { Hono } from 'hono';
-import { getExtensionRegistry } from '@/extensions/index.js';
-import type { AIExtensionManifest } from '@/extensions/types.js';
+import { getAppRegistry } from '@/apps/index.js';
+import type { AIAppManifest } from '@/apps/types.js';
 import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { count, isNull, eq } from 'drizzle-orm';
 
@@ -71,7 +71,7 @@ const systemRoutes = new Hono();
  * Returns system health and critical issues
  */
 systemRoutes.get('/status', async (c) => {
-  const registry = getExtensionRegistry();
+  const registry = getAppRegistry();
   const issues: SystemIssue[] = [];
   const completedSteps: CompletedStep[] = [];
 
@@ -222,7 +222,7 @@ systemRoutes.get('/status', async (c) => {
  * Returns what capabilities are available based on configured providers
  */
 systemRoutes.get('/capabilities', async (c) => {
-  const registry = getExtensionRegistry();
+  const registry = getAppRegistry();
 
   const completionProvider = registry.getCompletionProvider();
   const embeddingProvider = registry.getEmbeddingProvider();
@@ -237,7 +237,7 @@ systemRoutes.get('/capabilities', async (c) => {
 
   // Check if any provider supports streaming
   for (const ext of aiExtensions) {
-    const manifest = ext.manifest as AIExtensionManifest;
+    const manifest = ext.manifest as AIAppManifest;
     if (manifest.capabilities?.streaming) {
       capabilities.streaming = true;
       break;

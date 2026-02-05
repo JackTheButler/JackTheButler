@@ -8,7 +8,7 @@
 import { Hono } from 'hono';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createLogger } from '@/utils/logger.js';
-import { getExtensionRegistry } from '@/extensions/index.js';
+import { getAppRegistry } from '@/apps/index.js';
 import { appConfigService } from '@/services/app-config.js';
 
 const log = createLogger('webhook:sms');
@@ -176,7 +176,7 @@ smsWebhook.post('/status', async (c) => {
  */
 async function processIncomingSmsAsync(body: TwilioWebhookBody): Promise<void> {
   // Get provider from extension registry
-  const registry = getExtensionRegistry();
+  const registry = getAppRegistry();
   const ext = registry.get('sms-twilio');
 
   if (ext?.status !== 'active' || !ext.instance) {

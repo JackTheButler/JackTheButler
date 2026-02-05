@@ -232,8 +232,8 @@ async function executeSendMessage(
 
   // Send via channel adapter
   try {
-    const { getExtensionRegistry } = await import('@/extensions/index.js');
-    const registry = getExtensionRegistry();
+    const { getAppRegistry } = await import('@/apps/index.js');
+    const registry = getAppRegistry();
     const channelAdapter = registry.getChannelAdapter(channel);
 
     if (channelAdapter) {
@@ -602,8 +602,8 @@ async function executeSendMessageDirect(
 
   // Send via channel adapter
   try {
-    const { getExtensionRegistry } = await import('@/extensions/index.js');
-    const registry = getExtensionRegistry();
+    const { getAppRegistry } = await import('@/apps/index.js');
+    const registry = getAppRegistry();
     const channelAdapter = registry.getChannelAdapter(channel);
 
     if (channelAdapter) {

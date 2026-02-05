@@ -5,8 +5,8 @@
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { Hono } from 'hono';
 import { systemRoutes } from '@/gateway/routes/system.js';
-import { resetExtensionRegistry, getExtensionRegistry } from '@/extensions/registry.js';
-import type { AIExtensionManifest } from '@/extensions/types.js';
+import { resetAppRegistry, getAppRegistry } from '@/apps/registry.js';
+import type { AIAppManifest } from '@/apps/types.js';
 
 // Create test app
 const app = new Hono();
@@ -14,11 +14,11 @@ app.route('/system', systemRoutes);
 
 describe('System Status API', () => {
   beforeEach(() => {
-    resetExtensionRegistry();
+    resetAppRegistry();
   });
 
   afterEach(() => {
-    resetExtensionRegistry();
+    resetAppRegistry();
   });
 
   describe('GET /system/status', () => {
@@ -37,8 +37,8 @@ describe('System Status API', () => {
 
     it('should return healthy status with cloud AI configured', async () => {
       // Register and activate a mock AI provider with both capabilities
-      const registry = getExtensionRegistry();
-      const mockManifest: AIExtensionManifest = {
+      const registry = getAppRegistry();
+      const mockManifest: AIAppManifest = {
         id: 'openai',
         name: 'OpenAI',
         category: 'ai',
@@ -68,10 +68,10 @@ describe('System Status API', () => {
     });
 
     it('should show info when using local embeddings as fallback', async () => {
-      const registry = getExtensionRegistry();
+      const registry = getAppRegistry();
 
       // Register Anthropic (no embedding)
-      const anthropicManifest: AIExtensionManifest = {
+      const anthropicManifest: AIAppManifest = {
         id: 'anthropic',
         name: 'Anthropic',
         category: 'ai',
@@ -87,7 +87,7 @@ describe('System Status API', () => {
       };
 
       // Register local (with embedding)
-      const localManifest: AIExtensionManifest = {
+      const localManifest: AIAppManifest = {
         id: 'local',
         name: 'Local AI',
         category: 'ai',
@@ -117,9 +117,9 @@ describe('System Status API', () => {
     });
 
     it('should warn when using local completion', async () => {
-      const registry = getExtensionRegistry();
+      const registry = getAppRegistry();
 
-      const localManifest: AIExtensionManifest = {
+      const localManifest: AIAppManifest = {
         id: 'local',
         name: 'Local AI',
         category: 'ai',
@@ -170,9 +170,9 @@ describe('System Status API', () => {
     });
 
     it('should show streaming capability when provider supports it', async () => {
-      const registry = getExtensionRegistry();
+      const registry = getAppRegistry();
 
-      const streamingManifest: AIExtensionManifest = {
+      const streamingManifest: AIAppManifest = {
         id: 'streaming-ai',
         name: 'Streaming AI',
         category: 'ai',

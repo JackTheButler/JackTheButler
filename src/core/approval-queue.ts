@@ -19,7 +19,7 @@ import { NotFoundError } from '@/errors/index.js';
 import { events, EventTypes } from '@/events/index.js';
 import { taskService, type TaskType } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
-import { getExtensionRegistry } from '@/extensions/index.js';
+import { getAppRegistry } from '@/apps/index.js';
 
 const log = createLogger('core:approval-queue');
 
@@ -410,7 +410,7 @@ export class ApprovalQueue {
         }
 
         // Send to channel based on type
-        const registry = getExtensionRegistry();
+        const registry = getAppRegistry();
         let messageSent = false;
 
         if (conversation.channelType === 'whatsapp') {

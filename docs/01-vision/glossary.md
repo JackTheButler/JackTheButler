@@ -20,6 +20,7 @@ To ensure consistency across all documentation and code, use these preferred ter
 | **Resolution** | Completion, Closure | Successfully finishing a request |
 | **Task** | Ticket, Request, Job | Unit of work for staff |
 | **Channel** | Platform, Medium | Communication pathway |
+| **App** | Extension, Integration, Connector | External-facing term for AI providers, channels, and PMS connectors |
 
 ---
 
@@ -122,6 +123,15 @@ A specific piece of information extracted from a message. Examples: room number,
 ### Skill
 A defined capability Jack can execute, potentially involving multiple steps and system integrations.
 
+### Autonomy Level
+A configurable setting that controls how much Jack can do without staff approval. Higher levels allow more autonomous actions.
+
+### Review Center
+The staff-facing queue where actions that exceed Jack's current autonomy level await approval or rejection before being executed.
+
+### Knowledge Base
+The stored collection of hotel-specific information (policies, FAQs, amenities, procedures) used by RAG to ground AI responses in accurate, property-specific content.
+
 ### Automation Rule
 A configured trigger-action pair that executes without AI reasoning. Example: "If checkout tomorrow, send reminder at 8am."
 
@@ -129,7 +139,7 @@ A configured trigger-action pair that executes without AI reasoning. Example: "I
 A measure (0-1) of how certain Jack is about intent classification or response appropriateness.
 
 ### Escalation Threshold
-The confidence level below which Jack routes to human agents rather than responding autonomously.
+The confidence level below which Jack routes to human staff rather than responding autonomously.
 
 ---
 
@@ -139,7 +149,7 @@ The confidence level below which Jack routes to human agents rather than respond
 An HTTP callback that notifies Jack of events from external systems.
 
 ### Message Broker
-The internal system (EventEmitter for self-hosted, optional Redis for scaled deployments) that queues and routes messages between components.
+The internal EventEmitter system that queues and routes messages between components.
 
 ### State Machine
 The model tracking conversation state and valid transitions.

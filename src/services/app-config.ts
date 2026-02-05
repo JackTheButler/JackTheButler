@@ -2,7 +2,7 @@
  * App Config Service
  *
  * Manages app configurations stored in the database.
- * Bridges the dashboard UI with the ExtensionRegistry for runtime activation.
+ * Bridges the dashboard UI with the AppRegistry for runtime activation.
  *
  * @module services/app-config
  */
@@ -13,13 +13,13 @@ import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { encryptObject, decryptObject, maskConfig } from '@/utils/crypto.js';
 import {
-  getExtensionRegistry,
+  getAppRegistry,
   getAllManifests,
   getManifest,
-  type AnyExtensionManifest,
-  type ExtensionCategory,
-} from '@/extensions/index.js';
-import type { ConnectionTestResult } from '@/extensions/types.js';
+  type AnyAppManifest,
+  type AppCategory,
+} from '@/apps/index.js';
+import type { ConnectionTestResult } from '@/apps/types.js';
 import { resetResponder } from '@/ai/index.js';
 
 const log = createLogger('service:app-config');
@@ -61,7 +61,7 @@ export interface AppConfigRecord {
  * App with status for API responses
  */
 export interface AppWithStatus {
-  manifest: AnyExtensionManifest;
+  manifest: AnyAppManifest;
   config?: AppConfigRecord;
   status: AppStatus;
   isActive: boolean;
@@ -71,7 +71,7 @@ export interface AppWithStatus {
  * App group (for UI categories)
  */
 export interface AppGroup {
-  category: ExtensionCategory;
+  category: AppCategory;
   categoryLabel: string;
   apps: AppWithStatus[];
 }
@@ -82,7 +82,7 @@ export interface AppGroup {
  * Note: 'tool' category is excluded as tools are built-in features
  * accessed via the sidebar menu, not configurable apps.
  */
-const categoryLabels: Record<Exclude<ExtensionCategory, 'tool'>, string> = {
+const categoryLabels: Record<Exclude<AppCategory, 'tool'>, string> = {
   ai: 'AI Providers',
   channel: 'Communication Channels',
   pms: 'Property Management',
@@ -103,7 +103,7 @@ export class AppConfigService {
   async listApps(): Promise<AppWithStatus[]> {
     const manifests = getAllManifests();
     const configs = await db.select().from(appConfigs).all();
-    const registry = getExtensionRegistry();
+    const registry = getAppRegistry();
 
     // Build config map for quick lookup
     const configMap = new Map<string, (typeof configs)[0]>();
@@ -144,7 +144,7 @@ export class AppConfigService {
     const apps = await this.listApps();
 
     // Only include configurable app categories (not tools)
-    const groups: Record<Exclude<ExtensionCategory, 'tool'>, AppWithStatus[]> = {
+    const groups: Record<Exclude<AppCategory, 'tool'>, AppWithStatus[]> = {
       ai: [],
       channel: [],
       pms: [],
@@ -153,14 +153,14 @@ export class AppConfigService {
     for (const app of apps) {
       // Skip tools - they're accessed via sidebar menu, not Apps page
       if (app.manifest.category === 'tool') continue;
-      groups[app.manifest.category as Exclude<ExtensionCategory, 'tool'>].push(app);
+      groups[app.manifest.category as Exclude<AppCategory, 'tool'>].push(app);
     }
 
     return Object.entries(groups)
       .filter(([, apps]) => apps.length > 0)
       .map(([category, apps]) => ({
-        category: category as ExtensionCategory,
-        categoryLabel: categoryLabels[category as Exclude<ExtensionCategory, 'tool'>],
+        category: category as AppCategory,
+        categoryLabel: categoryLabels[category as Exclude<AppCategory, 'tool'>],
         apps,
       }));
   }
@@ -175,7 +175,7 @@ export class AppConfigService {
     }
 
     const config = await this.getAppConfig(extensionId);
-    const registry = getExtensionRegistry();
+    const registry = getAppRegistry();
     const registeredExt = registry.get(extensionId);
     const isActive = registeredExt?.status === 'active';
 
@@ -369,7 +369,7 @@ export class AppConfigService {
     log.info({ extensionId, enabled }, 'App enabled state changed');
 
     // Activate or deactivate in registry
-    const registry = getExtensionRegistry();
+    const registry = getAppRegistry();
     if (enabled) {
       await this.activateExtension(extensionId, configRecord.config);
     } else {
@@ -400,7 +400,7 @@ export class AppConfigService {
       };
     }
 
-    const registry = getExtensionRegistry();
+    const registry = getAppRegistry();
 
     // Ensure extension is registered
     const manifest = getManifest(extensionId);
@@ -508,7 +508,7 @@ export class AppConfigService {
     const appId = this.getAppId(manifest);
 
     // Disable in registry first
-    const registry = getExtensionRegistry();
+    const registry = getAppRegistry();
     try {
       registry.disable(extensionId);
     } catch {
@@ -587,7 +587,7 @@ export class AppConfigService {
    * Load all enabled apps from database into registry
    */
   async loadEnabledApps(): Promise<void> {
-    const registry = getExtensionRegistry();
+    const registry = getAppRegistry();
 
     // First, register all manifests
     const manifests = getAllManifests();
@@ -627,7 +627,7 @@ export class AppConfigService {
     extensionId: string,
     config: ProviderConfig
   ): Promise<void> {
-    const registry = getExtensionRegistry();
+    const registry = getAppRegistry();
     const manifest = getManifest(extensionId);
 
     if (!manifest) {
@@ -702,7 +702,7 @@ export class AppConfigService {
   /**
    * Get app ID from manifest category
    */
-  private getAppId(manifest: AnyExtensionManifest): string {
+  private getAppId(manifest: AnyAppManifest): string {
     switch (manifest.category) {
       case 'ai':
         return 'ai';

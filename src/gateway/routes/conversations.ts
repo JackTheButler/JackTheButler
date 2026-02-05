@@ -11,7 +11,7 @@ import { guestContextService } from '@/services/guest-context.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth } from '../middleware/auth.js';
 import type { ContentType, ChannelType } from '@/types/index.js';
-import { getExtensionRegistry } from '@/extensions/index.js';
+import { getAppRegistry } from '@/apps/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('api:conversations');
@@ -188,7 +188,7 @@ async function sendToChannel(
   channelId: string,
   content: string
 ): Promise<void> {
-  const registry = getExtensionRegistry();
+  const registry = getAppRegistry();
 
   switch (channelType) {
     case 'whatsapp': {

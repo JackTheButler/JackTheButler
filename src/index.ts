@@ -48,9 +48,9 @@ async function main(): Promise<void> {
     await appConfigService.loadEnabledApps();
     // Reset responder cache so it picks up the newly loaded AI provider
     resetResponder();
-    logger.info('Extensions loaded from database');
+    logger.info('Apps loaded from database');
   } catch (error) {
-    logger.error({ error }, 'Failed to load extensions from database');
+    logger.error({ error }, 'Failed to load apps from database');
   }
 
   // Create HTTP server

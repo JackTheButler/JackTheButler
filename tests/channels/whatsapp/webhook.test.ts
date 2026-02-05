@@ -2,7 +2,7 @@
  * WhatsApp Webhook Tests
  *
  * Tests webhook verification and message handling.
- * Config is mocked via extension config service (no .env fallback).
+ * Config is mocked via app config service (no .env fallback).
  */
 
 import { describe, it, expect, beforeEach, vi } from 'vitest';
@@ -22,9 +22,9 @@ vi.mock('@/services/app-config.js', () => ({
   },
 }));
 
-// Mock the extension registry
-vi.mock('@/extensions/index.js', () => ({
-  getExtensionRegistry: () => ({
+// Mock the app registry
+vi.mock('@/apps/index.js', () => ({
+  getAppRegistry: () => ({
     get: () => null,
   }),
 }));

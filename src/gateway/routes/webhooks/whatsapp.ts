@@ -7,7 +7,7 @@
 
 import { Hono } from 'hono';
 import { createLogger } from '@/utils/logger.js';
-import { getExtensionRegistry } from '@/extensions/index.js';
+import { getAppRegistry } from '@/apps/index.js';
 import { appConfigService } from '@/services/app-config.js';
 import { createHmac } from 'node:crypto';
 
@@ -243,7 +243,7 @@ async function handleIncomingMessage(
   );
 
   // Get provider from extension registry
-  const registry = getExtensionRegistry();
+  const registry = getAppRegistry();
   const ext = registry.get('whatsapp-meta');
 
   if (ext?.status === 'active' && ext.instance) {

@@ -42,6 +42,11 @@ Jack serves three primary actor groups:
 | S-03 | Guest intelligence lookup | P1 | Draft | [staff/guest-intelligence.md](staff/guest-intelligence.md) |
 | S-04 | Shift handoff | P2 | Planned | [staff/task-management.md](staff/task-management.md#shift-handoff) |
 | S-05 | Response assistance | P1 | Planned | [staff/task-management.md](staff/task-management.md#response-assistance) |
+| S-06 | Review center | P0 | Built | [staff/review-center.md](staff/review-center.md) |
+| S-07 | Knowledge base management | P0 | Built | [staff/knowledge-base.md](staff/knowledge-base.md) |
+| S-08 | App configuration | P0 | Built | [staff/engine-configuration.md](staff/engine-configuration.md) |
+| S-09 | Autonomy settings | P0 | Built | [staff/engine-configuration.md](staff/engine-configuration.md#autonomy-settings) |
+| S-10 | Automation rules | P1 | Built | [staff/engine-configuration.md](staff/engine-configuration.md#automation-rules) |
 
 ### Operations Use Cases
 

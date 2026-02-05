@@ -17,7 +17,7 @@ import { hotelProfileRoutes } from './hotel-profile.js';
 import { knowledgeRoutes } from './knowledge.js';
 import { guestRoutes } from './guests.js';
 import { reservationRoutes } from './reservations.js';
-import { siteScraperRoutes } from '@/extensions/tools/site-scraper/routes.js';
+import { siteScraperRoutes } from '@/apps/tools/site-scraper/routes.js';
 import { systemRoutes } from './system.js';
 import { seedRoutes } from './seed.js';
 

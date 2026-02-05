@@ -13,7 +13,7 @@ import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { validateBody } from '@/gateway/middleware/index.js';
-import { getExtensionRegistry } from '@/extensions/index.js';
+import { getAppRegistry } from '@/apps/index.js';
 import { KnowledgeService } from '@/ai/knowledge/index.js';
 import type { LLMProvider } from '@/ai/types.js';
 
@@ -194,7 +194,7 @@ knowledgeRoutes.post('/search', validateBody(querySchema), async (c) => {
   log.info({ query: query.substring(0, 50) }, 'Searching knowledge base');
 
   // Get embedding provider from extension registry
-  const registry = getExtensionRegistry();
+  const registry = getAppRegistry();
   const embeddingProvider = registry.getEmbeddingProvider();
 
   if (!embeddingProvider) {
@@ -233,7 +233,7 @@ knowledgeRoutes.post('/ask', validateBody(querySchema), async (c) => {
   log.info({ query: query.substring(0, 50) }, 'Testing knowledge base');
 
   // Get providers from extension registry
-  const registry = getExtensionRegistry();
+  const registry = getAppRegistry();
   const completionProvider = registry.getCompletionProvider();
   const embeddingProvider = registry.getEmbeddingProvider();
 
@@ -301,7 +301,7 @@ knowledgeRoutes.post('/ask', validateBody(querySchema), async (c) => {
  */
 knowledgeRoutes.post('/reindex', async (c) => {
   // Get embedding provider
-  const registry = getExtensionRegistry();
+  const registry = getAppRegistry();
   const provider = registry.getEmbeddingProvider();
 
   if (!provider) {
@@ -394,7 +394,7 @@ knowledgeRoutes.post('/', validateBody(createEntrySchema), async (c) => {
   log.info({ id, category: data.category, title: data.title }, 'Knowledge entry created');
 
   // Generate embedding if embedding provider is available
-  const registry = getExtensionRegistry();
+  const registry = getAppRegistry();
   const embeddingProvider = registry.getEmbeddingProvider();
   if (embeddingProvider) {
     try {
@@ -448,7 +448,7 @@ knowledgeRoutes.put('/:id', validateBody(updateEntrySchema), async (c) => {
 
   // Regenerate embedding if content changed
   if (data.content) {
-    const registry = getExtensionRegistry();
+    const registry = getAppRegistry();
     const embeddingProvider = registry.getEmbeddingProvider();
     if (embeddingProvider) {
       try {

@@ -38,6 +38,11 @@ Staff interact with Jack through dedicated interfaces (dashboard, mobile app, in
 | S-03 | Guest intelligence | P1 | Draft | [guest-intelligence.md](guest-intelligence.md) |
 | S-04 | Shift handoff | P2 | Planned | [task-management.md](task-management.md#shift-handoff) |
 | S-05 | Response assistance | P1 | Planned | [task-management.md](task-management.md#response-assistance) |
+| S-06 | Review center | P0 | Built | [review-center.md](review-center.md) |
+| S-07 | Knowledge base management | P0 | Built | [knowledge-base.md](knowledge-base.md) |
+| S-08 | App configuration | P0 | Built | [engine-configuration.md](engine-configuration.md) |
+| S-09 | Autonomy settings | P0 | Built | [engine-configuration.md](engine-configuration.md#autonomy-settings) |
+| S-10 | Automation rules | P1 | Built | [engine-configuration.md](engine-configuration.md#automation-rules) |
 
 ---
 
@@ -130,6 +135,9 @@ Staff interact with Jack through dedicated interfaces (dashboard, mobile app, in
 
 - [Task Management](task-management.md) - Conversations, tasks, handoffs
 - [Guest Intelligence](guest-intelligence.md) - Profile lookup and insights
+- [Review Center](review-center.md) - Approving and rejecting AI actions
+- [Knowledge Base](knowledge-base.md) - Managing hotel knowledge and site scraper
+- [Engine Configuration](engine-configuration.md) - Apps, autonomy, and automation rules
 
 ---
 

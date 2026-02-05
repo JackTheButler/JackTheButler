@@ -27,13 +27,13 @@ Every feature decision starts with: "How does this improve the guest experience?
 Guest data remains under hotel control. Jack can be self-hosted, data retention policies are configurable, and no guest information is used to train external models.
 
 ### 3. AI Assists, Humans Decide
-Jack handles routine requests autonomously but maintains clear escalation paths. Staff are empowered with context, not replaced. The AI amplifies hospitality, it doesn't substitute for it.
+Jack handles routine requests autonomously but maintains clear escalation paths. Hotels configure how much autonomy Jack has—from fully supervised to highly autonomous—with a review center where staff approve actions that exceed the current level. The AI amplifies hospitality, it doesn't substitute for it.
 
 ### 4. Channel Agnostic
 Guests shouldn't have to download an app or change their behavior. Jack meets them on WhatsApp, SMS, web chat, email, phone—wherever they prefer to communicate.
 
 ### 5. Hospitality Native
-Jack is built specifically for hotels, understanding the unique workflows, terminology, and systems of the hospitality industry. It's not a generic chatbot with hotel prompts bolted on.
+Jack is built specifically for hotels, understanding the unique workflows, terminology, and systems of the hospitality industry. Hotels teach Jack their own policies, FAQs, and amenities through a knowledge base, so responses are grounded in accurate, property-specific information—not generic chatbot prompts.
 
 ## Target Users
 
