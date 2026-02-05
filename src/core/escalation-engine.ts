@@ -52,8 +52,8 @@ function getConfidenceThresholdFromAutonomy(): number {
   try {
     const autonomyEngine = getAutonomyEngine();
     const settings = autonomyEngine.getSettings();
-    // Use the urgent threshold from autonomy settings
-    return settings.confidenceThresholds.urgent;
+    // Use the approval threshold from autonomy settings
+    return settings.confidenceThresholds.approval;
   } catch {
     return DEFAULT_CONFIG.confidenceThreshold;
   }
@@ -160,15 +160,11 @@ export class EscalationManager {
       reasons.push('Guest repeating similar request');
     }
 
-    // 5. Check VIP status
+    // 5. Check VIP status (only amplifies priority, doesn't trigger escalation alone)
     let guest: Guest | null = null;
     if (conversation.guestId) {
       guest =
         (await db.select().from(guests).where(eq(guests.id, conversation.guestId)).get()) || null;
-
-      if (guest?.vipStatus) {
-        reasons.push(`VIP guest (${guest.vipStatus})`);
-      }
     }
 
     // 6. Check active reservation status

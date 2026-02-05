@@ -67,10 +67,23 @@ export interface TaskCreationResult {
  */
 function getTaskType(intent: string): string {
   if (intent.startsWith('request.housekeeping')) return 'housekeeping';
+  if (intent.startsWith('request.dnd')) return 'housekeeping';
+  if (intent.startsWith('request.laundry')) return 'housekeeping';
   if (intent.startsWith('request.maintenance')) return 'maintenance';
   if (intent.startsWith('request.room_service')) return 'room_service';
   if (intent.startsWith('request.concierge')) return 'concierge';
-  if (intent.startsWith('inquiry.reservation')) return 'concierge';
+  if (intent.startsWith('request.transport')) return 'concierge';
+  if (intent.startsWith('request.special_occasion')) return 'concierge';
+  if (intent.startsWith('request.reservation')) return 'concierge';
+  if (intent.startsWith('request.checkin')) return 'concierge';
+  if (intent.startsWith('request.checkout')) return 'concierge';
+  if (intent.startsWith('request.wakeup')) return 'concierge';
+  if (intent.startsWith('request.luggage')) return 'concierge';
+  if (intent.startsWith('request.room_change')) return 'concierge';
+  if (intent.startsWith('request.lost_found')) return 'concierge';
+  if (intent.startsWith('request.security')) return 'concierge';
+  if (intent.startsWith('request.noise')) return 'concierge';
+  if (intent.startsWith('request.billing')) return 'concierge';
   if (intent.startsWith('feedback.complaint')) return 'other';
   if (intent.startsWith('emergency')) return 'other';
   return 'other';
@@ -115,8 +128,8 @@ export class TaskRouter {
   route(classification: ClassificationResult, context: GuestContext): RoutingDecision {
     const definition = getIntentDefinition(classification.intent);
 
-    // If no action required or no definition, don't create task
-    if (!classification.requiresAction || !definition) {
+    // If no definition found, don't create task
+    if (!definition) {
       return {
         shouldCreateTask: false,
         priority: 'standard',

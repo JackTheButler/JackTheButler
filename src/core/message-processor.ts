@@ -29,6 +29,7 @@ import type { InboundMessage, OutboundMessage } from '@/types/message.js';
 import type { Responder } from '@/ai/index.js';
 import { defaultResponder } from '@/ai/index.js';
 import type { ClassificationResult } from '@/ai/intent/index.js';
+import { getIntentDefinition } from '@/ai/intent/index.js';
 
 const log = createLogger('core:processor');
 
@@ -135,8 +136,8 @@ export class MessageProcessor {
       const classification: ClassificationResult = {
         intent: response.intent,
         confidence: response.confidence,
-        department: null, // Will be determined by TaskRouter
-        requiresAction: true, // Assume true, TaskRouter will verify
+        department: getIntentDefinition(response.intent)?.department ?? null,
+        requiresAction: getIntentDefinition(response.intent)?.requiresAction ?? false,
       };
 
       // Build task router context from guest context
@@ -168,11 +169,9 @@ export class MessageProcessor {
           : '';
         const channelInfo = inbound.channel ? `via ${inbound.channel}` : '';
 
-        // Create a clear, actionable description using the guest's actual message
-        const contextParts = [roomInfo, channelInfo].filter(Boolean).join(' ');
-        const taskDescription = contextParts
-          ? `${guestName} (${contextParts}): "${inbound.content}"`
-          : `${guestName}: "${inbound.content}"`;
+        // Create a clear, actionable description — message first, guest context at end
+        const contextParts = [guestName, roomInfo, channelInfo].filter(Boolean).join(', ');
+        const taskDescription = `"${inbound.content}" — ${contextParts}`;
 
         const taskInput: Parameters<typeof taskService.create>[0] = {
           conversationId: conversation.id,
@@ -298,8 +297,11 @@ export class MessageProcessor {
         timestamp: new Date(),
       });
 
-      // Modify response to acknowledge escalation
-      response.content = `I understand you'd like to speak with someone from our team. I'm connecting you with a staff member who can assist you further. ${escalationDecision.priority === 'urgent' ? 'Someone will be with you shortly.' : 'Please hold on while I find someone to help.'}\n\nIn the meantime, is there anything else I can help clarify?`;
+      // Append escalation notice to response, preserving the AI's answer
+      const escalationNotice = escalationDecision.priority === 'urgent'
+        ? "I'm also connecting you with a staff member who will be with you shortly."
+        : "I'm also connecting you with a staff member who can assist you further.";
+      response.content = `${response.content}\n\n${escalationNotice}`;
       response.metadata = {
         ...response.metadata,
         escalated: true,
@@ -353,11 +355,11 @@ export class MessageProcessor {
         'Response queued for approval'
       );
 
-      // Return a pending response to the guest
+      // Return a contextual pending response to the guest
+      const pendingContent = this.getPendingMessage(response.intent, guestContext?.guest?.firstName);
       const pendingResponse: OutboundMessage = {
         conversationId: conversation.id,
-        content:
-          "Thank you for your message. A member of our team will review and respond to you shortly.",
+        content: pendingContent,
         contentType: 'text',
         metadata: {
           pendingApproval: true,
@@ -369,7 +371,7 @@ export class MessageProcessor {
       // Save the pending response message
       await this.conversationSvc.addMessage(conversation.id, {
         direction: 'outbound',
-        senderType: 'system',
+        senderType: 'ai',
         content: pendingResponse.content,
         contentType: 'text',
       });
@@ -422,6 +424,57 @@ export class MessageProcessor {
     }
 
     return result;
+  }
+
+  /**
+   * Generate a contextual pending message based on intent
+   */
+  private getPendingMessage(intent?: string, firstName?: string): string {
+    const name = firstName ?? 'there';
+    const prefix = `Thanks ${name}`;
+
+    if (!intent) {
+      return `${prefix}, I'm looking into this for you. Someone from our team will get back to you shortly.`;
+    }
+
+    if (intent.startsWith('request.housekeeping') || intent === 'request.dnd' || intent === 'request.laundry') {
+      return `${prefix}, I've noted your housekeeping request. Our team will arrange this and confirm shortly.`;
+    }
+    if (intent.startsWith('request.maintenance')) {
+      return `${prefix}, I've flagged this with our maintenance team. Someone will look into it shortly.`;
+    }
+    if (intent.startsWith('request.room_service')) {
+      return `${prefix}, I've passed your order along. Our room service team will confirm shortly.`;
+    }
+    if (intent.startsWith('request.transport')) {
+      return `${prefix}, I'm arranging your transport. Someone will confirm the details shortly.`;
+    }
+    if (intent.startsWith('request.reservation') || intent.startsWith('request.checkin') || intent.startsWith('request.checkout')) {
+      return `${prefix}, I've forwarded your request to our front desk. They'll get back to you shortly.`;
+    }
+    if (intent.startsWith('request.billing')) {
+      return `${prefix}, I've sent your billing request to our front desk. They'll have that ready for you shortly.`;
+    }
+    if (intent.startsWith('request.room_change')) {
+      return `${prefix}, I've noted your room change request. Our front desk will look into available options shortly.`;
+    }
+    if (intent.startsWith('request.security') || intent.startsWith('request.noise')) {
+      return `${prefix}, I've alerted our team about this. Someone will assist you right away.`;
+    }
+    if (intent.startsWith('request.special_occasion')) {
+      return `${prefix}, how lovely! I've passed this along to our team to arrange something special for you.`;
+    }
+    if (intent.startsWith('feedback.complaint')) {
+      return `${prefix}, I'm sorry to hear that. I've flagged your concern and a manager will follow up with you shortly.`;
+    }
+    if (intent.startsWith('inquiry')) {
+      return `${prefix}, great question! Let me check on that — someone from our team will get back to you shortly.`;
+    }
+    if (intent === 'emergency') {
+      return `${prefix}, I've immediately alerted our team. Someone will be with you right away.`;
+    }
+
+    return `${prefix}, I'm looking into this for you. Someone from our team will get back to you shortly.`;
   }
 
   /**
