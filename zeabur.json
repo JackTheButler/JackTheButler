@@ -1,0 +1,16 @@
+{
+  "build": {
+    "type": "dockerfile",
+    "dockerfile": "Dockerfile"
+  },
+  "deploy": {
+    "healthCheck": {
+      "path": "/health/live"
+    }
+  },
+  "env": {
+    "NODE_ENV": "production",
+    "PORT": "3000",
+    "DATABASE_PATH": "/app/data/jack.db"
+  }
+}

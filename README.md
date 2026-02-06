@@ -38,9 +38,9 @@ Jack handles routine guest requests autonomously while intelligently routing com
 
 Deploy Jack to Railway with one click - no installation needed:
 
-| Railway | Render |
-|---------|--------|
-| [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/W82qDp?referralCode=Aizkfk) | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/JackTheButler/JackTheButler) |
+| Railway | Render | Zeabur |
+|---------|--------|--------|
+| [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/W82qDp?referralCode=Aizkfk) | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/JackTheButler/JackTheButler) | [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates?repo=JackTheButler/JackTheButler) |
 
 1. Click a deploy button above
 2. Sign up (email or Google - no GitHub needed)
