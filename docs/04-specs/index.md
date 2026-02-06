@@ -1,98 +1,53 @@
 # Specifications
 
-Detailed technical specifications for Jack The Butler.
+Technical specifications for Jack The Butler.
 
 ---
 
-## Overview
+## API
 
-This section contains implementation-level specifications for APIs, integrations, and features. These documents provide the detail needed for engineering implementation.
+| Document | Description | Status |
+|----------|-------------|--------|
+| [REST API](api/rest-api.md) | HTTP endpoints | Implemented |
+| [WebSocket](api/websocket.md) | Real-time events | Implemented |
+| [Webhooks](api/webhooks.md) | Inbound webhook handling | Implemented |
+| [Authentication](api/authentication.md) | JWT auth flow | Implemented |
+| [Rate Limiting](api/rate-limiting.md) | Request throttling | Planned |
 
----
+## Channels
 
-## Sections
+| Document | Description | Status |
+|----------|-------------|--------|
+| [WhatsApp](channels/whatsapp.md) | Meta Cloud API | Implemented |
+| [SMS](channels/sms.md) | Twilio | Implemented |
+| [Email](channels/email.md) | SMTP/Mailgun/SendGrid | Implemented |
 
-### API Specifications
+## Features
 
-Technical specifications for Jack's APIs.
+| Document | Description | Status |
+|----------|-------------|--------|
+| [Intent Taxonomy](features/intent-taxonomy.md) | Message classification | Implemented |
+| [Conversation FSM](features/conversation-fsm.md) | State machine | Implemented |
+| [Task Routing](features/task-routing.md) | Department routing | Implemented |
+| [Autonomy](features/autonomy.md) | L1/L2 approval flow | Implemented |
+| [Knowledge Base](features/knowledge-base.md) | RAG and embeddings | Implemented |
+| [Automation](features/automation.md) | Triggers and actions | Implemented |
+| [Guest Memory](features/guest-memory.md) | Preferences and history | Planned |
+| [Multi-Language](features/multi-language.md) | i18n support | Planned |
+| [Analytics](features/analytics.md) | Metrics pipeline | Planned |
+| [File Uploads](features/file-uploads.md) | Media handling | Planned |
+| [Vector Search](features/vector-search.md) | Semantic search | Planned |
 
-| Document | Description |
-|----------|-------------|
-| [Gateway API](api/gateway-api.md) | REST and WebSocket API reference |
-| [Webhook Spec](api/webhook-spec.md) | Inbound webhook handling |
+## PMS
 
-### Integration Specifications
-
-How Jack connects to external systems.
-
-| Document | Description |
-|----------|-------------|
-| [Index](integrations/index.md) | Integration overview |
-| [PMS Integration](integrations/pms-integration.md) | Property Management System spec |
-| [WhatsApp Channel](integrations/whatsapp-channel.md) | WhatsApp Business API integration |
-
-### Feature Specifications
-
-Detailed specs for major features.
-
-| Document | Description |
-|----------|-------------|
-| [Guest Memory](features/guest-memory.md) | Guest profile and preference management |
-| [Task Routing](features/task-routing.md) | Request routing and escalation logic |
-
----
-
-## Spec Template
-
-All specifications follow this structure:
-
-```markdown
-# Specification: [Name]
-
-## Overview
-[Brief description of what this spec covers]
-
-## Requirements
-[Functional and non-functional requirements]
-
-## Design
-[Technical design and data structures]
-
-## API / Interface
-[Endpoints, methods, parameters]
-
-## Configuration
-[Configurable options]
-
-## Error Handling
-[Error cases and responses]
-
-## Security
-[Security considerations]
-
-## Testing
-[Testing approach]
-
-## Related
-[Links to related docs]
-```
-
----
-
-## Document Status
-
-| Document | Status | Last Updated |
-|----------|--------|--------------|
-| Gateway API | Draft | 2024-01 |
-| Webhook Spec | Draft | 2024-01 |
-| PMS Integration | Draft | 2024-01 |
-| WhatsApp Channel | Draft | 2024-01 |
-| Guest Memory | Draft | 2024-01 |
-| Task Routing | Draft | 2024-01 |
+| Document | Description | Status |
+|----------|-------------|--------|
+| [PMS Integration](pms/index.md) | Adapter interface | Partial |
+| [Sync Conflicts](pms/sync-conflicts.md) | Conflict resolution | Planned |
 
 ---
 
 ## Related
 
-- [Architecture](../03-architecture/) - System design
-- [Use Cases](../02-use-cases/) - Feature requirements
+- [Architecture](../03-architecture/) — System design
+- [Use Cases](../02-use-cases/) — Feature requirements

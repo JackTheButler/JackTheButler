@@ -66,7 +66,7 @@ See the [docs](docs/) folder for full documentation:
 - [Architecture](docs/03-architecture/)
 - [API Specs](docs/04-specs/)
 - [Operations](docs/05-operations/)
-- [Roadmap](docs/06-roadmap/)
+- [User Guide](docs/user-guide/) - For hotel staff
 
 ---
 
@@ -76,7 +76,7 @@ See the [docs](docs/) folder for full documentation:
 - **Language**: TypeScript
 - **Web Framework**: Hono
 - **Database**: SQLite + Drizzle ORM
-- **AI**: Anthropic Claude, OpenAI, Local (Transformers.js)
+- **AI**: Anthropic Claude, OpenAI, Ollama, Local (Transformers.js)
 - **Dashboard**: React + Vite + Tailwind CSS
 
 ---

@@ -24,8 +24,8 @@
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
     "db:seed": "tsx --env-file=.env.development src/db/seed.ts",
-    "docs": "npx @redocly/cli preview-docs docs/api/openapi.yaml",
-    "docs:lint": "npx @redocly/cli lint docs/api/openapi.yaml"
+    "docs": "npx @redocly/cli preview-docs docs/04-specs/api/openapi.yaml",
+    "docs:lint": "npx @redocly/cli lint docs/04-specs/api/openapi.yaml"
   },
   "engines": {
     "node": ">=22"

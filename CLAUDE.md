@@ -19,7 +19,7 @@
 - **Database:** SQLite (single file, zero config)
 - **Vector Search:** sqlite-vec (embeddings)
 - **Cache:** In-memory LRU
-- **AI:** Anthropic Claude API (primary), OpenAI (fallback), Ollama (local)
+- **AI:** Anthropic Claude (primary), OpenAI, Ollama, Local (Transformers.js)
 - **Testing:** Vitest (70% coverage target)
 - **Linting:** oxlint + Prettier
 
@@ -65,10 +65,10 @@ pnpm dev:gateway          # Start only API server
 pnpm dev:dashboard        # Start only dashboard
 
 # Database
+pnpm db:generate          # Generate migrations from schema changes
 pnpm db:migrate           # Run migrations
-pnpm db:migrate:create    # Create new migration
+pnpm db:push              # Push schema directly (dev only)
 pnpm db:seed              # Seed development data
-pnpm db:reset             # Reset database (dev only)
 pnpm db:studio            # Open Drizzle Studio
 
 # Testing
@@ -115,12 +115,12 @@ pnpm check                # Run all checks (lint + types + tests)
 import { Hono } from 'hono';
 import Database from 'better-sqlite3';
 
-// Internal absolute imports
-import { GuestService } from '@/services/guest';
-import { logger } from '@/utils/logger';
+// Internal absolute imports (must use .js extension for ESM)
+import { GuestService } from '@/services/guest.js';
+import { logger } from '@/utils/logger.js';
 
-// Relative imports last
-import { handleMessage } from './handlers';
+// Relative imports last (also need .js)
+import { handleMessage } from './handlers.js';
 ```
 
 ### Error Handling
@@ -164,150 +164,76 @@ TWILIO_ACCOUNT_SID=...
 TWILIO_AUTH_TOKEN=...
 ```
 
-## Common Patterns
-
-### Service Pattern
-```typescript
-// src/services/guest.ts
-export class GuestService {
-  constructor(private db: Database) {}
-
-  async findById(id: string): Promise<Guest | null> {
-    return this.db
-      .prepare('SELECT * FROM guests WHERE id = ?')
-      .get(id) as Guest | null;
-  }
-}
-```
-
-### Channel Adapter Pattern
-```typescript
-// src/core/interfaces/channel.ts (v1.1.0+)
-export interface ChannelAdapter {
-  readonly id: string;
-  send(message: OutboundMessage): Promise<SendResult>;
-  parseIncoming(payload: unknown): InboundMessage | null;
-  verifySignature?(payload: unknown, signature: string): boolean;
-}
-
-// src/apps/channels/whatsapp/adapter.ts
-export class WhatsAppAdapter implements ChannelAdapter {
-  readonly id = 'whatsapp';
-  // ... implementation
-}
-```
-
-### Repository Pattern
-```typescript
-// src/db/repositories/conversation.ts
-export class ConversationRepository {
-  constructor(private db: Database) {}
-
-  async findActive(guestId: string): Promise<Conversation | null> {
-    return this.db
-      .prepare('SELECT * FROM conversations WHERE guest_id = ? AND status = ?')
-      .get(guestId, 'active') as Conversation | null;
-  }
-}
-```
-
-### App Manifest Pattern
-```typescript
-// src/apps/channels/whatsapp/manifest.ts
-import type { ChannelAppManifest } from '../types.js';
-
-export const manifest: ChannelAppManifest = {
-  id: 'whatsapp',
-  name: 'WhatsApp Business',
-  category: 'channel',
-  configSchema: [
-    { key: 'accessToken', type: 'password', required: true },
-    { key: 'phoneNumberId', type: 'text', required: true },
-  ],
-  createAdapter: (config) => new WhatsAppAdapter(config),
-  getRoutes: () => whatsappWebhookRoutes,
-};
-```
-
-### Real-Time Updates Pattern (v1.5.0+)
-Use WebSocket push instead of polling for dashboard updates:
-```typescript
-// Backend: Subscribe to events, broadcast to clients
-events.on(EventTypes.TASK_CREATED, async () => {
-  const stats = await taskService.getStats();
-  broadcast({ type: 'stats:tasks', payload: stats });
-});
-
-// Frontend: Update React Query cache directly
-ws.onmessage = (event) => {
-  const msg = JSON.parse(event.data);
-  if (msg.type === 'stats:tasks') {
-    queryClient.setQueryData(['taskStats'], msg.payload);
-  }
-};
-```
-See `src/gateway/websocket-bridge.ts` and `apps/dashboard/src/hooks/useWebSocket.ts`.
-
-## Database (SQLite)
-
-```typescript
-// src/db/index.ts
-import Database from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
-
-const sqlite = new Database(process.env.DATABASE_PATH || './data/jack.db');
-export const db = drizzle(sqlite);
-
-// Enable WAL mode for better concurrency
-sqlite.pragma('journal_mode = WAL');
-```
-
-## Testing Approach
-
-```typescript
-// tests/services/guest.test.ts
-import { describe, it, expect, beforeEach } from 'vitest';
-import Database from 'better-sqlite3';
-import { GuestService } from '@/services/guest';
-
-describe('GuestService', () => {
-  let service: GuestService;
-  let db: Database;
-
-  beforeEach(() => {
-    // In-memory SQLite for tests
-    db = new Database(':memory:');
-    // Run migrations
-    migrate(db);
-    service = new GuestService(db);
-  });
-
-  it('should find guest by id', async () => {
-    db.prepare('INSERT INTO guests (id, name) VALUES (?, ?)').run('123', 'Test');
-
-    const guest = await service.findById('123');
-
-    expect(guest).toEqual({ id: '123', name: 'Test' });
-  });
-});
-```
-
 ## Key Documentation
 
 - [Vision & Goals](docs/01-vision/overview.md)
 - [Use Cases](docs/02-use-cases/index.md)
 - [Architecture](docs/03-architecture/index.md)
-- [Tech Stack](docs/03-architecture/tech-stack.md)
-- [API Specs](docs/04-specs/api/openapi.yaml)
+- [API Specs](docs/04-specs/api/)
 - [Local Development](docs/05-operations/local-development.md)
 - [Deployment](docs/05-operations/deployment.md)
-- [Release Roadmap](docs/06-roadmap/index.md)
-- [Architecture](docs/03-architecture/index.md)
+
+## Where to Find Things
+
+| Looking for... | Location |
+|----------------|----------|
+| Database schema | `src/db/schema.ts` |
+| API routes | `src/gateway/routes/` |
+| Business logic | `src/core/` |
+| App adapters (AI, channels, PMS) | `src/apps/` |
+| Services (state management) | `src/services/` |
+| Type definitions | `src/types/` |
+| React dashboard | `apps/dashboard/src/` |
+| Tests | `tests/` (mirrors src/ structure) |
+
+### Key Entry Points
+- **Message flow**: `src/core/message-processor.ts` → processes incoming guest messages
+- **Task creation**: `src/core/task-router.ts` → creates tasks from intents
+- **AI responses**: `src/ai/index.ts` → generates responses using configured provider
+- **API server**: `src/gateway/index.ts` → Hono app with all routes
+- **App registry**: `src/apps/registry.ts` → manages loaded app adapters
+
+### Adding New Features
+- **New API endpoint**: Add route file in `src/gateway/routes/`, register in `src/gateway/routes/api.ts`
+- **New app/adapter**: Create manifest in `src/apps/{category}/`, follows `AppManifest` pattern
+- **New service**: Add to `src/services/`, use singleton pattern with `getXxxService()`
+- **New database table**: Add to `src/db/schema.ts`, run `pnpm db:generate && pnpm db:migrate`
+
+## Before Writing Code
+
+**IMPORTANT: Always check existing code before writing new code.**
+
+1. **Find a similar example first** - Before creating a new service, route, adapter, or component, find an existing one in the codebase and use it as your template
+2. **Don't invent patterns** - If something similar exists, follow that pattern exactly. Copy the structure, naming, and style
+3. **Update the checklist** - If you find a good reference file not in the Pattern Reference Checklist below, add it
+4. **Ask if no pattern exists** - If you can't find a similar example and need to create a new pattern, ask before implementing
+
+### Pattern Reference Checklist
+
+| Creating... | Look at this example first |
+|-------------|---------------------------|
+| New API route | `src/gateway/routes/tasks.ts` |
+| New service | `src/services/task.ts` |
+| New AI app | `src/apps/ai/providers/anthropic.ts` |
+| New channel app | `src/apps/channels/sms/twilio.ts` |
+| New PMS app | `src/apps/pms/mock.ts` |
+| New tool app | `src/apps/tools/site-scraper/index.ts` |
+| App manifest types | `src/apps/types.ts` |
+| Core interface | `src/core/interfaces/channel.ts` |
+| Core module | `src/core/task-router.ts` |
+| Database table | `src/db/schema.ts` (all tables in one file) |
+| Database setup | `src/db/index.ts` |
+| WebSocket events | `src/gateway/websocket-bridge.ts` |
+| Test file | `tests/services/guest.test.ts` |
+| React hook | `apps/dashboard/src/hooks/useWebSocket.ts` |
+| React component | `apps/dashboard/src/components/conversations/` |
 
 ## When Implementing
 
 1. **Read relevant use case first** - Understand the user story
-2. **Check existing patterns** - Follow established conventions
+2. **Match existing patterns exactly** - Don't improve or refactor while implementing
 3. **Write tests** - Aim for 70%+ coverage
 4. **Keep it simple** - SQLite is enough, no microservices
 5. **Small commits** - One logical change per commit
+6. **Use .js extensions** - All local imports must use `.js` (ESM requirement)
+7. **Update docs if patterns changed** - If you change a pattern, update CLAUDE.md to match

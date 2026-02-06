@@ -4,7 +4,7 @@
  * Automatically creates tasks from guest intents.
  * Routes service requests to appropriate departments.
  *
- * @see docs/06-roadmap/phase-10-2-task-router.md
+ * @see docs/04-specs/features/task-routing.md
  */
 
 import { createLogger } from '@/utils/logger.js';
