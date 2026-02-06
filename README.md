@@ -34,7 +34,27 @@ Jack handles routine guest requests autonomously while intelligently routing com
 
 ## Quick Start
 
-### Step 1: Install Docker (if you don't have it)
+### Option A: Deploy to Cloud (Easiest)
+
+Deploy Jack to Railway with one click - no installation needed:
+
+[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/JackTheButler/JackTheButler)
+
+1. Click the button above
+2. Sign up with GitHub (free)
+3. Click **Deploy Now**
+4. Wait for build to complete (~3 min)
+5. Click the provided URL to access your dashboard
+
+Your Jack will be live at `https://jack-xxxxx.up.railway.app` with automatic HTTPS.
+
+> **Note:** Railway's free tier includes $5/month credit. For production use, expect ~$5-10/month.
+
+---
+
+### Option B: Install Locally
+
+#### Step 1: Install Docker (if you don't have it)
 
 Docker is a tool that runs Jack in an isolated container. It's free and easy to install:
 
@@ -46,7 +66,7 @@ Docker is a tool that runs Jack in an isolated container. It's free and easy to 
 
 After installing, make sure Docker is running (you'll see the Docker icon in your system tray/menu bar).
 
-### Step 2: Install Jack
+#### Step 2: Install Jack
 
 Open your terminal (Mac: Terminal app, Windows: PowerShell) and paste this command:
 
@@ -56,7 +76,7 @@ curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/in
 
 That's it! The installer will download and start Jack automatically.
 
-### Step 3: Open the Dashboard
+#### Step 3: Open the Dashboard
 
 Once installation completes, open your web browser and go to:
 
@@ -66,7 +86,7 @@ Log in with:
 - **Email:** `admin@butler.com`
 - **Password:** `pa$$word2026`
 
-### Step 4: Configure Your AI
+#### Step 4: Configure Your AI
 
 1. In the dashboard, go to **Engine > Apps**
 2. Click on an AI provider (Anthropic Claude, OpenAI, or Local AI)
