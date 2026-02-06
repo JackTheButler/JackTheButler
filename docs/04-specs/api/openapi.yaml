@@ -137,8 +137,8 @@ paths:
             schema:
               $ref: '#/components/schemas/LoginRequest'
             example:
-              email: admin@hotel.com
-              password: admin123
+              email: admin@butler.com
+              password: pa$$word2026
       responses:
         '200':
           description: Login successful

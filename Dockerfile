@@ -15,18 +15,23 @@ RUN apk add --no-cache python3 make g++
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* ./
+# Copy package files (root and dashboard)
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+COPY apps/dashboard/package.json ./apps/dashboard/
 
-# Install dependencies (allow build scripts via npm for native modules)
+# Install all dependencies
 RUN pnpm install --frozen-lockfile && npm rebuild better-sqlite3
 
 # Copy source code
 COPY tsconfig.json ./
 COPY src ./src
+COPY apps/dashboard ./apps/dashboard
 
-# Build TypeScript
+# Build backend TypeScript
 RUN pnpm build
+
+# Build dashboard
+RUN pnpm --filter @jack/dashboard build
 
 # ===================
 # Production Stage
@@ -47,8 +52,11 @@ COPY package.json pnpm-lock.yaml* ./
 # Install production dependencies only and build native modules
 RUN pnpm install --prod --frozen-lockfile && npm rebuild better-sqlite3
 
-# Copy built files
+# Copy built backend
 COPY --from=builder /app/dist ./dist
+
+# Copy built dashboard
+COPY --from=builder /app/apps/dashboard/dist ./dashboard
 
 # Create data directory
 RUN mkdir -p /app/data
@@ -65,7 +73,7 @@ ENV LOG_LEVEL=info
 # Expose port
 EXPOSE 3000
 
-# Health check - simplified since we don't have HTTP server yet
+# Health check
 HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
   CMD pgrep -x node || exit 1
 

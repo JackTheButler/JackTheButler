@@ -34,26 +34,90 @@ Jack handles routine guest requests autonomously while intelligently routing com
 
 ## Quick Start
 
+### One-Line Install
+
 ```bash
-# Clone the repository
+curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/install.sh | bash
+```
+
+### Docker
+
+```bash
+docker run -d \
+  --name jack \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  ghcr.io/jackthebutler/jackthebutler:latest
+```
+
+### From Source
+
+```bash
 git clone git@github.com:JackTheButler/JackTheButler.git
 cd JackTheButler
-
-# Install dependencies
 pnpm install
-
-# Set up environment
 cp .env.example .env
-# Edit .env with your API keys
-
-# Run database migrations
 pnpm db:migrate
-
-# Start development server
 pnpm dev
 ```
 
-Visit `http://localhost:3000` to access the dashboard.
+---
+
+## Accessing Jack
+
+Once running, Jack exposes the following on port `3000`:
+
+| Interface | URL | Description |
+|-----------|-----|-------------|
+| **Dashboard** | http://localhost:3000 | Staff web interface for managing conversations, tasks, and settings |
+| **REST API** | http://localhost:3000/api/v1 | JSON API for integrations and automation |
+| **WebSocket** | ws://localhost:3000/ws | Real-time updates for dashboard (requires JWT auth) |
+| **Health Check** | http://localhost:3000/health | Server health status |
+| **Webhooks** | http://localhost:3000/webhooks/* | Inbound webhooks for WhatsApp, SMS, Email |
+
+### First Steps
+
+1. Open http://localhost:3000 in your browser
+2. Log in with default credentials: `admin@butler.com` / `pa$$word2026`
+3. Go to **Engine > Apps** to configure your AI provider (Anthropic, OpenAI, or Ollama)
+4. Go to **Engine > Apps** to configure messaging channels (WhatsApp, SMS, Email)
+5. Start chatting with guests!
+
+### API Authentication
+
+```bash
+# Get access token
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@butler.com", "password": "pa$$word2026"}'
+
+# Use token in requests
+curl http://localhost:3000/api/v1/conversations \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+```
+
+### WebSocket Connection
+
+```javascript
+// Connect with JWT token
+const ws = new WebSocket('ws://localhost:3000/ws?token=YOUR_ACCESS_TOKEN');
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  console.log('Received:', message.type, message.payload);
+};
+
+// Message types received:
+// - connected: Initial connection confirmation
+// - stats:tasks: Task statistics update
+// - stats:conversations: Conversation statistics update
+// - stats:approvals: Approval queue update
+// - conversation:new: New conversation created
+// - conversation:message: New message in conversation
+// - task:created: New task created
+// - task:updated: Task status changed
+```
 
 ---
 

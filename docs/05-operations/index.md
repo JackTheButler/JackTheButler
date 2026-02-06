@@ -19,29 +19,40 @@ Deployment, configuration, and operational guides for Jack The Butler.
 
 ## Quick Start
 
-### Prerequisites
-
-- Docker (recommended) or Node.js 22+
-
-No external databases required — Jack uses embedded SQLite.
-
-### Minimal Deployment
+### One-Line Install
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/install.sh | bash
 ```
 
-Or with Docker directly:
+### Docker
 
 ```bash
 docker run -d \
   --name jack \
+  --restart unless-stopped \
   -p 3000:3000 \
   -v jack-data:/app/data \
   ghcr.io/jackthebutler/jackthebutler:latest
 ```
 
-Access dashboard at `http://localhost:3000`. Configure AI provider in **Engine > Apps**.
+---
+
+## Accessing Jack
+
+Once running, Jack exposes the following on port `3000`:
+
+| Interface | URL | Description |
+|-----------|-----|-------------|
+| **Dashboard** | http://localhost:3000 | Staff web interface |
+| **REST API** | http://localhost:3000/api/v1 | JSON API for integrations |
+| **WebSocket** | ws://localhost:3000/ws | Real-time updates (requires JWT) |
+| **Health Check** | http://localhost:3000/health | Server health status |
+| **Webhooks** | http://localhost:3000/webhooks/* | Inbound webhooks |
+
+Default credentials: `admin@butler.com` / `pa$$word2026`
+
+Configure AI provider in **Engine > Apps**.
 
 ---
 
@@ -51,10 +62,13 @@ SQLite makes backups simple — just copy the database file:
 
 ```bash
 # Backup
-cp data/jack.db data/jack.db.backup
+docker exec jack sqlite3 /app/data/jack.db ".backup '/app/data/backup.db'"
+docker cp jack:/app/data/backup.db ./backup.db
 
 # Restore
-cp data/jack.db.backup data/jack.db
+docker stop jack
+docker cp ./backup.db jack:/app/data/jack.db
+docker start jack
 ```
 
 ---
@@ -71,3 +85,4 @@ curl http://localhost:3000/health
 
 - [Architecture](../03-architecture/) — System design
 - [API Specs](../04-specs/api/) — API documentation
+- [User Guide](../user-guide/) — For hotel staff

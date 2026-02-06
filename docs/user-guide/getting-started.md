@@ -4,87 +4,81 @@ This guide will help you get Jack The Butler up and running quickly.
 
 ## Prerequisites
 
-- Docker or Node.js 22+
+- Docker (recommended) or Node.js 22+
 
-## Quick Start
+---
 
-The fastest way to run Jack:
+## Installation
+
+### One-Line Install (Recommended)
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/install.sh | bash
 ```
 
-Or with Docker directly:
+### Docker
 
 ```bash
 docker run -d \
   --name jack \
+  --restart unless-stopped \
   -p 3000:3000 \
   -v jack-data:/app/data \
   ghcr.io/jackthebutler/jackthebutler:latest
 ```
 
-Jack is now running at http://localhost:3000. Configure AI provider in **Engine > Apps**.
+### From Source
 
-## Quick Start with Node.js
-
-1. Clone the repository:
 ```bash
 git clone https://github.com/JackTheButler/JackTheButler.git
 cd JackTheButler
-```
-
-2. Install dependencies:
-```bash
 pnpm install
-```
-
-3. Create a `.env` file:
-```bash
 cp .env.example .env
-# Edit .env with your settings
-```
-
-4. Run database migrations:
-```bash
 pnpm db:migrate
-```
-
-5. Start the server:
-```bash
 pnpm dev
 ```
 
-Jack is now running at http://localhost:3000
+---
+
+## Accessing Jack
+
+Once running, Jack exposes the following on port `3000`:
+
+| Interface | URL | Description |
+|-----------|-----|-------------|
+| **Dashboard** | http://localhost:3000 | Staff web interface |
+| **REST API** | http://localhost:3000/api/v1 | JSON API for integrations |
+| **WebSocket** | ws://localhost:3000/ws | Real-time updates (requires JWT) |
+| **Health Check** | http://localhost:3000/health | Server health status |
+| **Webhooks** | http://localhost:3000/webhooks/* | Inbound webhooks |
+
+---
 
 ## First Steps
 
 ### 1. Access the Dashboard
 
 Open http://localhost:3000 in your browser. The default admin credentials are:
-- Email: `admin@hotel.com`
-- Password: `admin123`
+- Email: `admin@butler.com`
+- Password: `pa$$word2026`
 
 ### 2. Configure AI Provider
 
-1. Go to **Settings > Integrations**
-2. Click on **AI** integration
-3. Select **Anthropic** (or OpenAI)
-4. Enter your API key
-5. Click **Test Connection**
-6. Toggle **Enabled** to activate
+1. Go to **Engine > Apps**
+2. Click on an AI provider (Anthropic, OpenAI, or Ollama)
+3. Enter your API key
+4. Click **Save** and toggle **Enabled**
 
 ### 3. Set Up a Channel (WhatsApp)
 
-1. Go to **Settings > Integrations**
-2. Click on **WhatsApp** integration
-3. Select **Meta Business**
-4. Enter your Meta Business credentials:
+1. Go to **Engine > Apps**
+2. Click on **WhatsApp**
+3. Enter your Meta Business credentials:
    - Access Token
    - Phone Number ID
    - Webhook Verify Token
-5. Click **Test Connection**
-6. Configure the webhook URL in your Meta dashboard:
+4. Click **Save** and toggle **Enabled**
+5. Configure the webhook URL in your Meta dashboard:
    - URL: `https://your-domain.com/webhooks/whatsapp`
    - Verify Token: Your configured token
 
@@ -94,10 +88,103 @@ Open http://localhost:3000 in your browser. The default admin credentials are:
 2. You should see the conversation appear in the dashboard
 3. Jack will respond automatically using AI
 
+---
+
+## API Usage
+
+### Authentication
+
+```bash
+# Get access token
+curl -X POST http://localhost:3000/api/v1/auth/login \
+  -H "Content-Type: application/json" \
+  -d '{"email": "admin@butler.com", "password": "pa$$word2026"}'
+
+# Response: { "accessToken": "...", "refreshToken": "..." }
+```
+
+### Making Requests
+
+```bash
+# List conversations
+curl http://localhost:3000/api/v1/conversations \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+# Get conversation messages
+curl http://localhost:3000/api/v1/conversations/CONVERSATION_ID/messages \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
+
+# Send a message
+curl -X POST http://localhost:3000/api/v1/conversations/CONVERSATION_ID/messages \
+  -H "Authorization: Bearer YOUR_ACCESS_TOKEN" \
+  -H "Content-Type: application/json" \
+  -d '{"content": "Hello from the API!"}'
+```
+
+---
+
+## WebSocket Connection
+
+Connect to receive real-time updates:
+
+```javascript
+// Connect with JWT token
+const ws = new WebSocket('ws://localhost:3000/ws?token=YOUR_ACCESS_TOKEN');
+
+ws.onopen = () => {
+  console.log('Connected to Jack');
+};
+
+ws.onmessage = (event) => {
+  const message = JSON.parse(event.data);
+  console.log('Received:', message.type, message.payload);
+};
+
+// Message types:
+// - connected: Connection confirmed
+// - stats:tasks: Task statistics
+// - stats:conversations: Conversation statistics
+// - stats:approvals: Approval queue stats
+// - conversation:new: New conversation
+// - conversation:message: New message
+// - task:created: Task created
+// - task:updated: Task updated
+```
+
+---
+
+## Production Configuration
+
+For production, set your own secrets:
+
+```bash
+docker run -d \
+  --name jack \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  -e JWT_SECRET=your-secret-min-32-chars \
+  -e ENCRYPTION_KEY=your-key-min-32-chars \
+  ghcr.io/jackthebutler/jackthebutler:latest
+```
+
+Or use an environment file:
+
+```bash
+docker run -d \
+  --name jack \
+  --restart unless-stopped \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  --env-file .env \
+  ghcr.io/jackthebutler/jackthebutler:latest
+```
+
+---
+
 ## Next Steps
 
 - [Configuration Guide](./configuration.md) - Detailed configuration options
-- [Dashboard Guide](./dashboard-guide.md) - Learn to use the staff dashboard
 - [Troubleshooting](./troubleshooting.md) - Common issues and solutions
 
 ## Getting Help
