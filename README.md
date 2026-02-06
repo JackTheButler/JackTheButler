@@ -38,7 +38,7 @@ Jack handles routine guest requests autonomously while intelligently routing com
 
 Deploy Jack to Railway with one click - no installation needed:
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/JackTheButler/JackTheButler)
+[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/W82qDp?referralCode=Aizkfk)
 
 1. Click the button above
 2. Sign up with GitHub (free)
