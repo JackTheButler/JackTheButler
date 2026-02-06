@@ -5,12 +5,12 @@
 # ===================
 # Build Stage
 # ===================
-FROM node:22-alpine AS builder
+FROM node:22-slim AS builder
 
 WORKDIR /app
 
-# Install build dependencies for better-sqlite3
-RUN apk add --no-cache python3 make g++
+# Install build dependencies for better-sqlite3 and native modules
+RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
@@ -37,12 +37,12 @@ RUN pnpm --filter @jack/dashboard build
 # ===================
 # Production Stage
 # ===================
-FROM node:22-alpine
+FROM node:22-slim
 
 WORKDIR /app
 
-# Install build dependencies for better-sqlite3
-RUN apk add --no-cache python3 make g++
+# Install build dependencies for better-sqlite3 and runtime deps for ONNX
+RUN apt-get update && apt-get install -y python3 make g++ procps && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm for production deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
