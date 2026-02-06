@@ -206,7 +206,7 @@ docker run -d \
   --name jack \
   -p 3000:3000 \
   -v jack-data:/app/data \
-  jackthebutler/jack:latest
+  ghcr.io/jackthebutler/jackthebutler:latest
 ```
 
 ### Direct Node.js

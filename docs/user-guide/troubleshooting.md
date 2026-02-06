@@ -252,7 +252,7 @@ Before contacting support, gather:
 ### Contact Support
 
 - Documentation: https://jackthebutler.com/docs
-- Issues: https://github.com/jackthebutler/jack/issues
+- Issues: https://github.com/JackTheButler/JackTheButler/issues
 - Email: support@jackthebutler.com
 
 Include the following in your support request:

@@ -67,7 +67,7 @@ Minimal (uses built-in defaults):
 docker run -d \
   -p 3000:3000 \
   -v jack-data:/app/data \
-  jackthebutler/jack:latest
+  ghcr.io/jackthebutler/jackthebutler:latest
 ```
 
 For production, set your own secrets:
@@ -78,7 +78,7 @@ docker run -d \
   -v jack-data:/app/data \
   -e JWT_SECRET=your-jwt-secret-min-32-chars \
   -e ENCRYPTION_KEY=your-encryption-key-min-32-chars \
-  jackthebutler/jack:latest
+  ghcr.io/jackthebutler/jackthebutler:latest
 ```
 
 Or use a `.env` file:
@@ -86,7 +86,7 @@ Or use a `.env` file:
 ```bash
 docker run -d \
   --env-file .env \
-  jackthebutler/jack:1.0.0
+  ghcr.io/jackthebutler/jackthebutler:1.0.0
 ```
 
 ## Configuration via Dashboard

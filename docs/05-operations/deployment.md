@@ -23,12 +23,18 @@ Jack The Butler is designed for **self-hosted deployment** on hotel infrastructu
 ### One-Command Deploy
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/install.sh | bash
+```
+
+Or with Docker directly:
+
+```bash
 docker run -d \
   --name jack \
   --restart unless-stopped \
   -p 3000:3000 \
   -v jack-data:/app/data \
-  jackthebutler/jack:latest
+  ghcr.io/jackthebutler/jackthebutler:latest
 ```
 
 That's it. Jack is now running at `http://localhost:3000`. Configure AI provider in **Engine > Apps**.
@@ -44,7 +50,7 @@ docker run -d \
   -p 3000:3000 \
   -v jack-data:/app/data \
   --env-file /path/to/.env \
-  jackthebutler/jack:latest
+  ghcr.io/jackthebutler/jackthebutler:latest
 ```
 
 ### Environment File
@@ -85,7 +91,7 @@ version: '3.8'
 
 services:
   jack:
-    image: jackthebutler/jack:latest
+    image: ghcr.io/jackthebutler/jackthebutler:latest
     container_name: jack
     restart: unless-stopped
     ports:
@@ -150,8 +156,8 @@ npm install -g pnpm
 
 ```bash
 # Clone repository
-git clone https://github.com/jackthebutler/jack.git
-cd jack
+git clone https://github.com/JackTheButler/JackTheButler.git
+cd JackTheButler
 
 # Install dependencies
 pnpm install --frozen-lockfile
@@ -306,7 +312,7 @@ docker start jack
 
 ```bash
 # Pull latest image
-docker pull jackthebutler/jack:latest
+docker pull ghcr.io/jackthebutler/jackthebutler:latest
 
 # Stop current container
 docker stop jack
@@ -321,7 +327,7 @@ docker run -d \
   -p 3000:3000 \
   -v jack-data:/app/data \
   --env-file /path/to/.env \
-  jackthebutler/jack:latest
+  ghcr.io/jackthebutler/jackthebutler:latest
 
 # Run migrations (if needed)
 docker exec jack pnpm db:migrate
@@ -501,7 +507,7 @@ docker run -d \
     -p 3000:3000 \
     -v jack-data:/app/data \
     --env-file /etc/jack/.env \
-    jackthebutler/jack:latest
+    ghcr.io/jackthebutler/jackthebutler:latest
 
 # Step 7: Wait for health check
 echo "7. Waiting for service to be healthy..."

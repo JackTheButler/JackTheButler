@@ -30,8 +30,8 @@ Setting up a local development environment for Jack The Butler.
 
 ```bash
 # 1. Clone repository
-git clone https://github.com/jackthebutler/jack.git
-cd jack
+git clone https://github.com/JackTheButler/JackTheButler.git
+cd JackTheButler
 
 # 2. Install dependencies
 pnpm install

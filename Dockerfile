@@ -1,6 +1,6 @@
 # Jack The Butler - Production Dockerfile
-# Build: docker build -t jack-the-butler .
-# Run: docker run -p 3000:3000 -v jack-data:/app/data jack-the-butler
+# Build: docker build -t jack .
+# Run: docker run -d -p 3000:3000 -v jack-data:/app/data jack
 
 # ===================
 # Build Stage

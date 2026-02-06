@@ -1,7 +1,7 @@
 #!/bin/bash
 #
 # Jack The Butler - Installer Script
-# Usage: curl -fsSL https://jackthebutler.com/install.sh | bash
+# Usage: curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/install.sh | bash
 #
 
 set -e
@@ -14,7 +14,7 @@ BLUE='\033[0;34m'
 NC='\033[0m' # No Color
 
 # Config
-IMAGE_NAME="ghcr.io/jackthebutler/jack"
+IMAGE_NAME="ghcr.io/jackthebutler/jackthebutler"
 CONTAINER_NAME="jack"
 PORT=3000
 VOLUME_NAME="jack-data"

@@ -28,11 +28,17 @@ No external databases required — Jack uses embedded SQLite.
 ### Minimal Deployment
 
 ```bash
+curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/install.sh | bash
+```
+
+Or with Docker directly:
+
+```bash
 docker run -d \
   --name jack \
   -p 3000:3000 \
   -v jack-data:/app/data \
-  jackthebutler/jack:latest
+  ghcr.io/jackthebutler/jackthebutler:latest
 ```
 
 Access dashboard at `http://localhost:3000`. Configure AI provider in **Engine > Apps**.

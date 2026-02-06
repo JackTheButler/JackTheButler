@@ -6,16 +6,22 @@ This guide will help you get Jack The Butler up and running quickly.
 
 - Docker or Node.js 22+
 
-## Quick Start with Docker
+## Quick Start
 
-The fastest way to run Jack is with Docker:
+The fastest way to run Jack:
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/install.sh | bash
+```
+
+Or with Docker directly:
 
 ```bash
 docker run -d \
   --name jack \
   -p 3000:3000 \
   -v jack-data:/app/data \
-  jackthebutler/jack:latest
+  ghcr.io/jackthebutler/jackthebutler:latest
 ```
 
 Jack is now running at http://localhost:3000. Configure AI provider in **Engine > Apps**.
@@ -24,8 +30,8 @@ Jack is now running at http://localhost:3000. Configure AI provider in **Engine 
 
 1. Clone the repository:
 ```bash
-git clone https://github.com/jackthebutler/jack.git
-cd jack
+git clone https://github.com/JackTheButler/JackTheButler.git
+cd JackTheButler
 ```
 
 2. Install dependencies:
@@ -97,5 +103,5 @@ Open http://localhost:3000 in your browser. The default admin credentials are:
 ## Getting Help
 
 - Documentation: https://jackthebutler.com/docs
-- Issues: https://github.com/jackthebutler/jack/issues
+- Issues: https://github.com/JackTheButler/JackTheButler/issues
 - Support: support@jackthebutler.com
