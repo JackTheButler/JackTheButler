@@ -38,17 +38,19 @@ Jack handles routine guest requests autonomously while intelligently routing com
 
 Deploy Jack to Railway with one click - no installation needed:
 
-[![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/W82qDp?referralCode=Aizkfk)
+| Railway | Render |
+|---------|--------|
+| [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/W82qDp?referralCode=Aizkfk) | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/JackTheButler/JackTheButler) |
 
-1. Click the button above
-2. Sign up with GitHub (free)
-3. Click **Deploy Now**
-4. Wait for build to complete (~3 min)
+1. Click a deploy button above
+2. Sign up (email or Google - no GitHub needed)
+3. Click **Deploy**
+4. Wait for build to complete (~3-5 min)
 5. Click the provided URL to access your dashboard
 
-Your Jack will be live at `https://jack-xxxxx.up.railway.app` with automatic HTTPS.
+Your Jack will be live at a public URL like `https://jack-xxxxx.up.railway.app` with automatic HTTPS.
 
-> **Note:** Railway's free tier includes $5/month credit. For production use, expect ~$5-10/month.
+> **Pricing:** Both have free tiers. For production use, expect ~$5-10/month.
 
 ---
 

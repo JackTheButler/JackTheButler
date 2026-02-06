@@ -1,0 +1,17 @@
+services:
+  - type: web
+    name: jack-the-butler
+    runtime: docker
+    dockerfilePath: ./Dockerfile
+    healthCheckPath: /health/live
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DATABASE_PATH
+        value: /app/data/jack.db
+    disk:
+      name: jack-data
+      mountPath: /app/data
+      sizeGB: 1
