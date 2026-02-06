@@ -39,12 +39,9 @@ Priority: Environment variables > Config files > Database defaults
 | `ENCRYPTION_KEY` | Key for data encryption (32 bytes) | Yes |
 | `CORS_ORIGINS` | Allowed CORS origins (comma-separated) | No |
 
-### AI Providers
+### Apps (AI, Channels, PMS)
 
-| Variable | Description | Required |
-|----------|-------------|----------|
-| `ANTHROPIC_API_KEY` | Anthropic API key | Yes |
-| `OPENAI_API_KEY` | OpenAI API key | No |
+AI providers, messaging channels, and PMS integrations are configured via the dashboard (Engine > Apps), not environment variables.
 
 ### WhatsApp
 
@@ -364,7 +361,7 @@ if (featureFlags.isEnabled('ai.rag')) {
 Use `.env` file (gitignored):
 
 ```bash
-ANTHROPIC_API_KEY=sk-ant-...
+JWT_SECRET=your-dev-secret-min-32-chars
 DATABASE_PATH=./data/jack.db
 ```
 

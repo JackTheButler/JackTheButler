@@ -22,7 +22,6 @@ Deployment, configuration, and operational guides for Jack The Butler.
 ### Prerequisites
 
 - Docker (recommended) or Node.js 22+
-- API key for AI provider (Anthropic recommended)
 
 No external databases required — Jack uses embedded SQLite.
 
@@ -33,11 +32,10 @@ docker run -d \
   --name jack \
   -p 3000:3000 \
   -v jack-data:/app/data \
-  -e JWT_SECRET=your-secure-secret-min-32-chars \
   jackthebutler/jack:latest
 ```
 
-Access dashboard at `http://localhost:3000`. Configure AI provider in Engine > Apps.
+Access dashboard at `http://localhost:3000`. Configure AI provider in **Engine > Apps**.
 
 ---
 

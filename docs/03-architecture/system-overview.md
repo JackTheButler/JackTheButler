@@ -206,7 +206,6 @@ docker run -d \
   --name jack \
   -p 3000:3000 \
   -v jack-data:/app/data \
-  -e JWT_SECRET=your-secret \
   jackthebutler/jack:latest
 ```
 

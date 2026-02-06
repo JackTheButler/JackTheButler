@@ -28,12 +28,12 @@ docker run -d \
   --restart unless-stopped \
   -p 3000:3000 \
   -v jack-data:/app/data \
-  -e ANTHROPIC_API_KEY=sk-ant-... \
-  -e JWT_SECRET=your-secure-secret-min-32-chars \
   jackthebutler/jack:latest
 ```
 
-That's it. Jack is now running at `http://localhost:3000`.
+That's it. Jack is now running at `http://localhost:3000`. Configure AI provider in **Engine > Apps**.
+
+For production, set your own secrets (see [Configuration](configuration.md)).
 
 ### Configuration via Environment
 
@@ -64,18 +64,7 @@ DATABASE_PATH=/app/data/jack.db
 JWT_SECRET=generate-a-secure-random-string-min-32-chars
 ENCRYPTION_KEY=another-secure-random-string-32-chars
 
-# AI Provider
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Channels (configure as needed)
-WHATSAPP_PHONE_NUMBER_ID=123456789
-WHATSAPP_ACCESS_TOKEN=EAAxxxxxxx
-WHATSAPP_VERIFY_TOKEN=your-verify-token
-WHATSAPP_APP_SECRET=your-app-secret
-
-TWILIO_ACCOUNT_SID=ACxxxxxxx
-TWILIO_AUTH_TOKEN=xxxxxxx
-TWILIO_PHONE_NUMBER=+1234567890
+# AI and channels are configured via dashboard (Engine > Apps)
 
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587

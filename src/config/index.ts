@@ -33,6 +33,14 @@ const configSchema = z.object({
       .default('development-secret-change-in-production-min-32-chars'),
   }),
 
+  // Encryption (for storing credentials in DB)
+  encryption: z.object({
+    key: z
+      .string()
+      .min(32, 'Encryption key must be at least 32 characters')
+      .default('development-encryption-key-change-in-production'),
+  }),
+
   // AI Configuration
   ai: z.object({
     provider: z.enum(['claude', 'openai', 'ollama']).default('claude'),
@@ -125,6 +133,9 @@ export function loadConfig(): Config {
     },
     jwt: {
       secret: process.env.JWT_SECRET,
+    },
+    encryption: {
+      key: process.env.ENCRYPTION_KEY,
     },
     ai: {
       provider: process.env.AI_PROVIDER,

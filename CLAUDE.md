@@ -150,18 +150,10 @@ PORT=3000
 DATABASE_PATH=./data/jack.db
 
 # Security
-JWT_SECRET=your-secret-min-32-chars
-ENCRYPTION_KEY=your-key-32-bytes
+JWT_SECRET=your-jwt-secret-min-32-chars           # For API auth tokens
+ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 
-# AI (at least one required)
-ANTHROPIC_API_KEY=sk-ant-...
-# OPENAI_API_KEY=sk-...
-# OLLAMA_BASE_URL=http://localhost:11434
-
-# Channels (as needed)
-WHATSAPP_ACCESS_TOKEN=...
-TWILIO_ACCOUNT_SID=...
-TWILIO_AUTH_TOKEN=...
+# AI and channels are configured via dashboard, not env vars
 ```
 
 ## Key Documentation

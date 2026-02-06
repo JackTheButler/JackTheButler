@@ -15,11 +15,11 @@ const AUTH_TAG_LENGTH = 16;
 const SALT_LENGTH = 16;
 
 /**
- * Derive an encryption key from the JWT secret
+ * Derive an encryption key from ENCRYPTION_KEY
  */
 function deriveKey(salt: Buffer): Buffer {
   const config = loadConfig();
-  return scryptSync(config.jwt.secret, salt, KEY_LENGTH);
+  return scryptSync(config.encryption.key, salt, KEY_LENGTH);
 }
 
 /**

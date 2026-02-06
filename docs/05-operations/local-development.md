@@ -81,27 +81,9 @@ JWT_SECRET=dev-secret-change-in-production-min-32-chars
 ENCRYPTION_KEY=dev-encryption-key-32-bytes-long
 
 # ============================================
-# AI PROVIDERS
+# AI & CHANNELS
 # ============================================
-# Primary LLM (choose one)
-ANTHROPIC_API_KEY=sk-ant-...
-
-# Optional fallback
-OPENAI_API_KEY=sk-...
-
-# Optional local LLM (Ollama)
-# OLLAMA_BASE_URL=http://localhost:11434
-# OLLAMA_MODEL=llama3.1
-
-# ============================================
-# CHANNELS (Optional for local dev)
-# ============================================
-
-# WhatsApp (Meta Cloud API)
-WHATSAPP_PHONE_NUMBER_ID=
-WHATSAPP_ACCESS_TOKEN=
-WHATSAPP_VERIFY_TOKEN=dev-verify-token
-WHATSAPP_APP_SECRET=
+# Configured via dashboard (Engine > Apps), not env vars
 
 # Twilio (SMS)
 TWILIO_ACCOUNT_SID=

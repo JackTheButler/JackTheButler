@@ -5,8 +5,6 @@ This guide will help you get Jack The Butler up and running quickly.
 ## Prerequisites
 
 - Docker or Node.js 22+
-- An Anthropic API key (Claude) or OpenAI API key
-- (Optional) WhatsApp Business API credentials
 
 ## Quick Start with Docker
 
@@ -17,12 +15,10 @@ docker run -d \
   --name jack \
   -p 3000:3000 \
   -v jack-data:/app/data \
-  -e ANTHROPIC_API_KEY=your-api-key \
-  -e JWT_SECRET=your-jwt-secret-min-32-chars \
-  jackthebutler/jack:1.0.0
+  jackthebutler/jack:latest
 ```
 
-Jack is now running at http://localhost:3000
+Jack is now running at http://localhost:3000. Configure AI provider in **Engine > Apps**.
 
 ## Quick Start with Node.js
 
