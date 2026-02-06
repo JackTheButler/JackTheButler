@@ -34,13 +34,64 @@ Jack handles routine guest requests autonomously while intelligently routing com
 
 ## Quick Start
 
-### One-Line Install
+### Step 1: Install Docker (if you don't have it)
+
+Docker is a tool that runs Jack in an isolated container. It's free and easy to install:
+
+| Operating System | Installation |
+|------------------|--------------|
+| **Mac** | Download [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/) |
+| **Windows** | Download [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) |
+| **Linux** | Run: `curl -fsSL https://get.docker.com \| sh` |
+
+After installing, make sure Docker is running (you'll see the Docker icon in your system tray/menu bar).
+
+### Step 2: Install Jack
+
+Open your terminal (Mac: Terminal app, Windows: PowerShell) and paste this command:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/install.sh | bash
 ```
 
-### Docker
+That's it! The installer will download and start Jack automatically.
+
+### Step 3: Open the Dashboard
+
+Once installation completes, open your web browser and go to:
+
+**http://localhost:3000**
+
+Log in with:
+- **Email:** `admin@butler.com`
+- **Password:** `pa$$word2026`
+
+### Step 4: Configure Your AI
+
+1. In the dashboard, go to **Engine > Apps**
+2. Click on an AI provider (Anthropic Claude, OpenAI, or Local AI)
+3. Enter your API key and click **Save**
+4. Jack is now ready to chat!
+
+---
+
+## Managing Jack
+
+Common commands to manage your Jack installation:
+
+| Action | Command |
+|--------|---------|
+| **Stop Jack** | `docker stop jack` |
+| **Start Jack** | `docker start jack` |
+| **View logs** | `docker logs -f jack` |
+| **Restart Jack** | `docker restart jack` |
+| **Uninstall Jack** | `docker rm -f jack` |
+
+---
+
+## For Developers
+
+### Manual Docker Install
 
 ```bash
 docker run -d \
@@ -62,27 +113,15 @@ pnpm db:migrate
 pnpm dev
 ```
 
----
-
-## Accessing Jack
-
-Once running, Jack exposes the following on port `3000`:
+### API & WebSocket Access
 
 | Interface | URL | Description |
 |-----------|-----|-------------|
-| **Dashboard** | http://localhost:3000 | Staff web interface for managing conversations, tasks, and settings |
-| **REST API** | http://localhost:3000/api/v1 | JSON API for integrations and automation |
-| **WebSocket** | ws://localhost:3000/ws | Real-time updates for dashboard (requires JWT auth) |
+| **Dashboard** | http://localhost:3000 | Staff web interface |
+| **REST API** | http://localhost:3000/api/v1 | JSON API for integrations |
+| **WebSocket** | ws://localhost:3000/ws | Real-time updates (requires JWT) |
 | **Health Check** | http://localhost:3000/health | Server health status |
-| **Webhooks** | http://localhost:3000/webhooks/* | Inbound webhooks for WhatsApp, SMS, Email |
-
-### First Steps
-
-1. Open http://localhost:3000 in your browser
-2. Log in with default credentials: `admin@butler.com` / `pa$$word2026`
-3. Go to **Engine > Apps** to configure your AI provider (Anthropic, OpenAI, or Ollama)
-4. Go to **Engine > Apps** to configure messaging channels (WhatsApp, SMS, Email)
-5. Start chatting with guests!
+| **Webhooks** | http://localhost:3000/webhooks/* | WhatsApp, SMS, Email webhooks |
 
 ### API Authentication
 
@@ -97,7 +136,8 @@ curl http://localhost:3000/api/v1/conversations \
   -H "Authorization: Bearer YOUR_ACCESS_TOKEN"
 ```
 
-### WebSocket Connection
+<details>
+<summary>WebSocket Connection Example</summary>
 
 ```javascript
 // Connect with JWT token
@@ -118,6 +158,8 @@ ws.onmessage = (event) => {
 // - task:created: New task created
 // - task:updated: Task status changed
 ```
+
+</details>
 
 ---
 

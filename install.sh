@@ -11,6 +11,7 @@ RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
 BLUE='\033[0;34m'
+BOLD='\033[1m'
 NC='\033[0m' # No Color
 
 # Config
@@ -19,16 +20,30 @@ CONTAINER_NAME="jack"
 PORT=3000
 VOLUME_NAME="jack-data"
 
-echo -e "${BLUE}"
-echo "     ██╗ █████╗  ██████╗██╗  ██╗"
-echo "     ██║██╔══██╗██╔════╝██║ ██╔╝"
-echo "     ██║███████║██║     █████╔╝ "
-echo "██   ██║██╔══██║██║     ██╔═██╗ "
-echo "╚█████╔╝██║  ██║╚██████╗██║  ██╗"
-echo " ╚════╝ ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝"
-echo -e "${NC}"
-echo "Jack The Butler - AI Hospitality Assistant"
-echo "==========================================="
+echo ""
+echo -e "${BOLD}      ██╗ █████╗  ██████╗██╗  ██╗    ${NC}"
+echo -e "${BOLD}      ██║██╔══██╗██╔════╝██║ ██╔╝    ${NC}"
+echo -e "${BOLD}      ██║███████║██║     █████╔╝     ${NC}"
+echo -e "${BOLD} ██   ██║██╔══██║██║     ██╔═██╗     ${NC}"
+echo -e "${BOLD} ╚█████╔╝██║  ██║╚██████╗██║  ██╗    ${NC}"
+echo -e "${BOLD}  ╚════╝ ╚═╝  ╚═╝ ╚═════╝╚═╝  ╚═╝    ${NC}"
+echo ""
+echo -e "${BOLD} ████████╗██╗  ██╗███████╗${NC}"
+echo -e "${BOLD} ╚══██╔══╝██║  ██║██╔════╝${NC}"
+echo -e "${BOLD}    ██║   ███████║█████╗  ${NC}"
+echo -e "${BOLD}    ██║   ██╔══██║██╔══╝  ${NC}"
+echo -e "${BOLD}    ██║   ██║  ██║███████╗${NC}"
+echo -e "${BOLD}    ╚═╝   ╚═╝  ╚═╝╚══════╝${NC}"
+echo ""
+echo -e "${BOLD} ██████╗ ██╗   ██╗████████╗██╗     ███████╗██████╗ ${NC}"
+echo -e "${BOLD} ██╔══██╗██║   ██║╚══██╔══╝██║     ██╔════╝██╔══██╗${NC}"
+echo -e "${BOLD} ██████╔╝██║   ██║   ██║   ██║     █████╗  ██████╔╝${NC}"
+echo -e "${BOLD} ██╔══██╗██║   ██║   ██║   ██║     ██╔══╝  ██╔══██╗${NC}"
+echo -e "${BOLD} ██████╔╝╚██████╔╝   ██║   ███████╗███████╗██║  ██║${NC}"
+echo -e "${BOLD} ╚═════╝  ╚═════╝    ╚═╝   ╚══════╝╚══════╝╚═╝  ╚═╝${NC}"
+echo ""
+echo "AI Hospitality Assistant"
+echo "========================"
 echo ""
 
 # Check for Docker
@@ -125,12 +140,16 @@ run_jack() {
     echo ""
     echo "==========================================="
     echo -e "Dashboard: ${BLUE}http://localhost:${PORT}${NC}"
+    echo ""
+    echo -e "Email:    ${BOLD}admin@butler.com${NC}"
+    echo -e "Password: ${BOLD}pa\$\$word2026${NC}"
     echo "==========================================="
     echo ""
     echo "Next steps:"
     echo "  1. Open the dashboard in your browser"
-    echo "  2. Configure your AI provider in Engine > Apps"
-    echo "  3. Start chatting with guests!"
+    echo "  2. Log in with the credentials above"
+    echo "  3. Configure your AI provider in Engine > Apps"
+    echo "  4. Start chatting with guests!"
     echo ""
     echo "Commands:"
     echo "  Stop:    docker stop $CONTAINER_NAME"
