@@ -1,6 +1,8 @@
 {
   "title": "Welcome to JACK",
   "skip": "Skip",
+  "skipHint": "Prefer to set things up manually?",
+  "skipLink": "Skip setup",
   "bootstrap": {
     "title": "Getting Ready",
     "message": "Welcome! I'm getting ready to walk you through the basics.",

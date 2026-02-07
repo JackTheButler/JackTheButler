@@ -6,16 +6,12 @@ import { useTheme } from '@/contexts/ThemeContext';
 import { Progress } from '@/components/ui/progress';
 
 interface SetupHeaderProps {
-  onSkip?: () => void;
-  showSkip?: boolean;
   progressCurrent?: number;
   progressTotal?: number;
   showProgress?: boolean;
 }
 
 export function SetupHeader({
-  onSkip,
-  showSkip = true,
   progressCurrent = 0,
   progressTotal = 3,
   showProgress = false,
@@ -43,15 +39,6 @@ export function SetupHeader({
             <ThemeToggle />
           </span>
         </Tooltip>
-
-        {showSkip && onSkip && (
-          <button
-            onClick={onSkip}
-            className="text-sm text-muted-foreground hover:text-foreground transition-colors px-3 py-1.5"
-          >
-            {t('skip')}
-          </button>
-        )}
       </div>
     </header>
   );

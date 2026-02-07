@@ -1,6 +1,8 @@
 {
   "title": "Bienvenido a JACK",
   "skip": "Omitir",
+  "skipHint": "¿Prefieres configurar todo manualmente?",
+  "skipLink": "Omitir configuración",
   "bootstrap": {
     "title": "Preparándose",
     "message": "¡Bienvenido! Me estoy preparando para guiarte a través de lo básico.",
@@ -103,9 +105,10 @@
     "errorFetching": "No pude acceder a ese sitio web. Por favor verifica la URL e intenta de nuevo.",
     "checklist": {
       "title": "Conocimiento Encontrado",
-      "description": "Esto es lo que encontré. Avísame si falta algo.",
+      "description": "Esto es lo que encontré. Siempre puedes actualizar esto en Configuración después de iniciar sesión.",
       "required": "Requerido",
       "optional": "Opcional",
+      "extracted": "Detalles de la Propiedad",
       "tryAnotherUrl": "Probar otra URL",
       "tellMe": "Cuéntame directamente",
       "continue": "Continuar"

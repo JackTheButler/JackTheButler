@@ -1,6 +1,8 @@
 {
   "title": "欢迎使用 JACK",
   "skip": "跳过",
+  "skipHint": "更喜欢手动设置？",
+  "skipLink": "跳过设置",
   "bootstrap": {
     "title": "准备中",
     "message": "欢迎！我正在准备引导您了解基本内容。",
@@ -103,9 +105,10 @@
     "errorFetching": "无法访问该网站。请检查网址后重试。",
     "checklist": {
       "title": "发现的知识",
-      "description": "这是我找到的内容。如果有遗漏请告诉我。",
+      "description": "这是我找到的内容。登录后可以在设置中随时更新。",
       "required": "必需",
       "optional": "可选",
+      "extracted": "物业详情",
       "tryAnotherUrl": "尝试其他网址",
       "tellMe": "直接告诉我",
       "continue": "继续"

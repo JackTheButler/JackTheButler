@@ -235,8 +235,6 @@ export function SetupAssistant() {
       {/* Header overlays content for blur effect */}
       <div className="absolute top-0 left-0 right-0 z-10">
         <SetupHeader
-          onSkip={handleSkip}
-          showSkip={currentStep !== 'bootstrap' && chatStep !== 'done'}
           showProgress={showProgress}
           progressCurrent={getProgressStep(currentStep === 'bootstrap' ? 'bootstrap' : 'chat', chatStep)}
           progressTotal={totalSteps}
@@ -278,6 +276,8 @@ export function SetupAssistant() {
               chatStep === 'complete' ||
               chatStep === 'scraping'
             }
+            onSkip={handleSkip}
+            showSkip={chatStep !== 'done' && chatStep !== 'complete'}
           />
         )}
       </main>

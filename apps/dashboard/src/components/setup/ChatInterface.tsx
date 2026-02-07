@@ -48,6 +48,8 @@ interface ChatInterfaceProps {
   isTyping?: boolean;
   typingStatusText?: string;
   disabled?: boolean;
+  onSkip?: () => void;
+  showSkip?: boolean;
 }
 
 export function ChatInterface({
@@ -70,6 +72,8 @@ export function ChatInterface({
   isTyping,
   typingStatusText,
   disabled,
+  onSkip,
+  showSkip,
 }: ChatInterfaceProps) {
   const { t } = useTranslation('setup');
   const [inputValue, setInputValue] = useState('');
@@ -252,6 +256,19 @@ export function ChatInterface({
               <Send className="w-4 h-4" />
             </button>
           </div>
+        )}
+
+        {/* Skip option */}
+        {showSkip && onSkip && (
+          <p className="text-sm text-muted-foreground mt-3 text-center">
+            {t('skipHint')}{' '}
+            <button
+              onClick={onSkip}
+              className="text-foreground hover:underline transition-colors"
+            >
+              {t('skipLink')}
+            </button>
+          </p>
         )}
       </div>
     </div>
