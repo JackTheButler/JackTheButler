@@ -231,16 +231,19 @@ export function SetupAssistant() {
   const showProgress = currentStep !== 'bootstrap' && chatStep !== 'done' && chatStep !== 'complete';
 
   return (
-    <div className="min-h-screen bg-background flex flex-col">
-      <SetupHeader
-        onSkip={handleSkip}
-        showSkip={currentStep !== 'bootstrap' && chatStep !== 'done'}
-        showProgress={showProgress}
-        progressCurrent={getProgressStep(currentStep === 'bootstrap' ? 'bootstrap' : 'chat', chatStep)}
-        progressTotal={totalSteps}
-      />
+    <div className="h-screen bg-background flex flex-col overflow-hidden relative">
+      {/* Header overlays content for blur effect */}
+      <div className="absolute top-0 left-0 right-0 z-10">
+        <SetupHeader
+          onSkip={handleSkip}
+          showSkip={currentStep !== 'bootstrap' && chatStep !== 'done'}
+          showProgress={showProgress}
+          progressCurrent={getProgressStep(currentStep === 'bootstrap' ? 'bootstrap' : 'chat', chatStep)}
+          progressTotal={totalSteps}
+        />
+      </div>
 
-      <main className="flex-1 flex flex-col">
+      <main className="flex-1 flex flex-col min-h-0 pt-0">
         {currentStep === 'bootstrap' && (
           <BootstrapScreen onContinue={handleBootstrapContinue} isLoading={isLoading} />
         )}

@@ -103,57 +103,61 @@ export function ChatInterface({
   };
 
   return (
-    <div className="flex flex-col h-full max-w-2xl mx-auto w-full pb-[15vh]">
-      {/* Messages area */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-4">
-        {messages.map((message) => (
-          <ChatMessage
-            key={message.id}
-            role={message.role}
-            content={message.content}
-          />
-        ))}
-        {isTyping && (
-          <ChatMessage role="assistant" content="" isTyping statusText={typingStatusText} />
-        )}
-        {/* Choices appear in chat after the question */}
-        {inputMode === 'choices' && choices && onSelectChoice && !isTyping && (
-          <div className="pl-7">
-            <ChoiceButtons
-              choices={choices}
-              onSelect={onSelectChoice}
-              disabled={disabled}
+    <div className="flex flex-col flex-1 max-w-2xl mx-auto w-full min-h-0">
+      {/* Messages area with fade at bottom */}
+      <div className="flex-1 min-h-0 relative">
+        <div className="absolute inset-0 overflow-y-auto px-4 pt-20 pb-12 space-y-4 scrollbar-hide">
+          {messages.map((message) => (
+            <ChatMessage
+              key={message.id}
+              role={message.role}
+              content={message.content}
             />
-          </div>
-        )}
-        {/* Card choices for richer options like AI provider */}
-        {inputMode === 'cards' && cardChoices && onSelectChoice && !isTyping && (
-          <div className="pl-7">
-            <ChoiceCards
-              choices={cardChoices}
-              onSelect={onSelectChoice}
-              disabled={disabled}
-            />
-          </div>
-        )}
-        {/* Checklist for knowledge gathering */}
-        {inputMode === 'checklist' && checklistItems && onChecklistTryUrl && onChecklistTellManually && onChecklistContinue && !isTyping && (
-          <div className="pl-7">
-            <ChecklistCard
-              items={checklistItems}
-              onTryAnotherUrl={onChecklistTryUrl}
-              onTellManually={onChecklistTellManually}
-              onContinue={onChecklistContinue}
-              canContinue={checklistCanContinue ?? false}
-              disabled={disabled}
-            />
-          </div>
-        )}
-        <div ref={messagesEndRef} />
+          ))}
+          {isTyping && (
+            <ChatMessage role="assistant" content="" isTyping statusText={typingStatusText} />
+          )}
+          {/* Choices appear in chat after the question */}
+          {inputMode === 'choices' && choices && onSelectChoice && !isTyping && (
+            <div className="pl-7">
+              <ChoiceButtons
+                choices={choices}
+                onSelect={onSelectChoice}
+                disabled={disabled}
+              />
+            </div>
+          )}
+          {/* Card choices for richer options like AI provider */}
+          {inputMode === 'cards' && cardChoices && onSelectChoice && !isTyping && (
+            <div className="pl-7">
+              <ChoiceCards
+                choices={cardChoices}
+                onSelect={onSelectChoice}
+                disabled={disabled}
+              />
+            </div>
+          )}
+          {/* Checklist for knowledge gathering */}
+          {inputMode === 'checklist' && checklistItems && onChecklistTryUrl && onChecklistTellManually && onChecklistContinue && !isTyping && (
+            <div className="pl-7">
+              <ChecklistCard
+                items={checklistItems}
+                onTryAnotherUrl={onChecklistTryUrl}
+                onTellManually={onChecklistTellManually}
+                onContinue={onChecklistContinue}
+                canContinue={checklistCanContinue ?? false}
+                disabled={disabled}
+              />
+            </div>
+          )}
+          <div ref={messagesEndRef} />
+        </div>
+        {/* Fade overlay at bottom */}
+        <div className="absolute bottom-0 left-0 right-0 h-12 bg-gradient-to-t from-background to-transparent pointer-events-none" />
       </div>
 
-      {/* Input area */}
-      <div className="px-4 pb-6">
+      {/* Input area - stays at bottom */}
+      <div className="shrink-0 px-4 pb-6 pt-1 bg-background">
         {/* Form card appears above input when needed */}
         {inputMode === 'form' && formConfig && onFormSubmit && (
           <div className="pl-7 mb-4">
