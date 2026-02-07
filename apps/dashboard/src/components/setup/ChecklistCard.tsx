@@ -1,5 +1,5 @@
 import { useTranslation } from 'react-i18next';
-import { Check, X, Globe, MessageSquare, ArrowRight } from 'lucide-react';
+import { Check, X, Globe, MessageSquare, ArrowRight, Clock, Phone, Mail, MapPin, Building } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { Button } from '@/components/ui/button';
 
@@ -11,8 +11,18 @@ export interface ChecklistItem {
   required: boolean;
 }
 
+export interface ProfileData {
+  name?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  address?: string;
+}
+
 export interface ChecklistCardProps {
   items: ChecklistItem[];
+  profile?: ProfileData;
   onTryAnotherUrl: () => void;
   onTellManually: () => void;
   onContinue: () => void;
@@ -22,6 +32,7 @@ export interface ChecklistCardProps {
 
 export function ChecklistCard({
   items,
+  profile,
   onTryAnotherUrl,
   onTellManually,
   onContinue,
@@ -33,6 +44,16 @@ export function ChecklistCard({
   const requiredItems = items.filter((item) => item.required);
   const optionalItems = items.filter((item) => !item.required);
 
+  // Check if we have any profile data to show
+  const hasProfileData = profile && (
+    profile.name ||
+    profile.checkInTime ||
+    profile.checkOutTime ||
+    profile.contactPhone ||
+    profile.contactEmail ||
+    profile.address
+  );
+
   return (
     <div className="w-full max-w-md bg-card border border-border rounded-lg shadow-md">
       {/* Header */}
@@ -42,6 +63,51 @@ export function ChecklistCard({
           {t('knowledge.checklist.description')}
         </p>
       </div>
+
+      {/* Profile Data */}
+      {hasProfileData && (
+        <div className="px-4 py-2 border-t border-border/50">
+          <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">
+            {t('knowledge.checklist.extracted')}
+          </p>
+          <div className="space-y-1.5 text-sm">
+            {profile.name && (
+              <div className="flex items-center gap-2 text-foreground">
+                <Building className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="font-medium">{profile.name}</span>
+              </div>
+            )}
+            {(profile.checkInTime || profile.checkOutTime) && (
+              <div className="flex items-center gap-2 text-foreground">
+                <Clock className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <span>
+                  {profile.checkInTime && `Check-in: ${profile.checkInTime}`}
+                  {profile.checkInTime && profile.checkOutTime && ' · '}
+                  {profile.checkOutTime && `Check-out: ${profile.checkOutTime}`}
+                </span>
+              </div>
+            )}
+            {profile.contactPhone && (
+              <div className="flex items-center gap-2 text-foreground">
+                <Phone className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <span>{profile.contactPhone}</span>
+              </div>
+            )}
+            {profile.contactEmail && (
+              <div className="flex items-center gap-2 text-foreground">
+                <Mail className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0" />
+                <span className="truncate">{profile.contactEmail}</span>
+              </div>
+            )}
+            {profile.address && (
+              <div className="flex items-start gap-2 text-foreground">
+                <MapPin className="w-3.5 h-3.5 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <span className="line-clamp-2">{profile.address}</span>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Required items */}
       <div className="px-4 py-2">

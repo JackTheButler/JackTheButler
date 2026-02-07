@@ -8,11 +8,11 @@
 
 import type { StepProps } from '@/shared/assistant';
 import type { FormSchema } from '@/shared/forms';
-import type { SetupContext, ChatStep, ExtractedEntry, KnowledgeChecklist } from '../types';
+import type { SetupContext, ChatStep, ExtractedEntry, KnowledgeChecklist, HotelProfile } from '../types';
 import type { Choice } from '@/components/setup/ChoiceButtons';
 import type { CardChoice } from '@/components/setup/ChoiceCards';
 import type { FormField } from '@/components/setup/FormCard';
-import type { ChecklistItem } from '@/components/setup/ChecklistCard';
+import type { ChecklistItem, ProfileData } from '@/components/setup/ChecklistCard';
 
 /**
  * Extended setup context with runtime state
@@ -77,6 +77,9 @@ export interface StepUIConfig {
 
   /** Whether can continue from checklist */
   checklistCanContinue?: boolean;
+
+  /** Profile data for checklist mode */
+  checklistProfile?: ProfileData;
 }
 
 /**

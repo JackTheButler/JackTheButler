@@ -6,7 +6,7 @@ import { ChatMessage, type MessageRole } from './ChatMessage';
 import { ChoiceButtons, type Choice } from './ChoiceButtons';
 import { ChoiceCards, type CardChoice } from './ChoiceCards';
 import { FormCard, type FormField } from './FormCard';
-import { ChecklistCard, type ChecklistItem } from './ChecklistCard';
+import { ChecklistCard, type ChecklistItem, type ProfileData } from './ChecklistCard';
 import type { FormSchema } from '@/shared/forms/types';
 
 export interface Message {
@@ -41,6 +41,7 @@ interface ChatInterfaceProps {
   onFormHelp?: () => void;
   checklistItems?: ChecklistItem[];
   checklistCanContinue?: boolean;
+  checklistProfile?: ProfileData;
   onChecklistTryUrl?: () => void;
   onChecklistTellManually?: () => void;
   onChecklistContinue?: () => void;
@@ -62,6 +63,7 @@ export function ChatInterface({
   onFormHelp,
   checklistItems,
   checklistCanContinue,
+  checklistProfile,
   onChecklistTryUrl,
   onChecklistTellManually,
   onChecklistContinue,
@@ -142,6 +144,7 @@ export function ChatInterface({
             <div className="pl-7">
               <ChecklistCard
                 items={checklistItems}
+                profile={checklistProfile}
                 onTryAnotherUrl={onChecklistTryUrl}
                 onTellManually={onChecklistTellManually}
                 onContinue={onChecklistContinue}

@@ -100,12 +100,26 @@ export interface ChecklistItem {
 }
 
 /**
+ * Hotel profile data extracted from knowledge
+ */
+export interface HotelProfile {
+  name?: string;
+  type?: string;
+  checkInTime?: string;
+  checkOutTime?: string;
+  contactPhone?: string;
+  contactEmail?: string;
+  address?: string;
+}
+
+/**
  * Knowledge checklist state
  */
 export interface KnowledgeChecklist {
   items: ChecklistItem[];
   entries: ExtractedEntry[];
   canContinue: boolean;
+  profile?: HotelProfile;
 }
 
 /**

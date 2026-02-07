@@ -6,7 +6,7 @@
  * @module features/setup/api
  */
 
-import type { SetupState, ProcessMessageResponse, ExtractedEntry, AIProvider } from './types';
+import type { SetupState, ProcessMessageResponse, ExtractedEntry, AIProvider, HotelProfile } from './types';
 
 const BASE_PATH = '/api/v1/setup';
 const SCRAPER_PATH = '/api/v1/tools/site-scraper';
@@ -109,8 +109,15 @@ export async function processMessage(
 /**
  * Sync hotel profile from knowledge
  */
-export async function syncProfile(): Promise<void> {
-  await fetch(`${BASE_PATH}/sync-profile`, { method: 'POST' });
+export async function syncProfile(): Promise<HotelProfile | null> {
+  try {
+    const response = await fetch(`${BASE_PATH}/sync-profile`, { method: 'POST' });
+    if (!response.ok) return null;
+    const data = await response.json();
+    return data.profile || null;
+  } catch {
+    return null;
+  }
 }
 
 /**

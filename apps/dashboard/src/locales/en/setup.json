@@ -103,9 +103,10 @@
     "errorFetching": "I couldn't access that website. Please check the URL and try again.",
     "checklist": {
       "title": "Knowledge Found",
-      "description": "Here's what I found. Let me know if anything's missing.",
+      "description": "Here's what I found. You can always update this in Settings after login.",
       "required": "Required",
       "optional": "Optional",
+      "extracted": "Property Details",
       "tryAnotherUrl": "Try another URL",
       "tellMe": "Tell me directly",
       "continue": "Continue"

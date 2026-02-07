@@ -52,10 +52,10 @@ export function ChatMessage({ role, content, isTyping, statusText }: ChatMessage
           >
             <defs>
               <linearGradient id="spinner-gradient" x1="0%" y1="0%" x2="100%" y2="100%">
-                <stop offset="0%" stopColor="#4285F4" />
-                <stop offset="33%" stopColor="#34A853" />
-                <stop offset="66%" stopColor="#EA4335" />
-                <stop offset="100%" stopColor="#4285F4" />
+                <stop offset="0%" stopColor="#24C0E7" />
+                <stop offset="33%" stopColor="#FF3892" />
+                <stop offset="66%" stopColor="#60D660" />
+                <stop offset="100%" stopColor="#24C0E7" />
               </linearGradient>
             </defs>
             <circle

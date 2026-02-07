@@ -453,19 +453,31 @@ export class SetupService {
     // Extract check-in/out times from policy entries
     for (const entry of policyEntries) {
       const content = entry.content.toLowerCase();
+      log.debug({ content: entry.content }, 'Processing policy entry for time extraction');
 
-      // Try to extract check-in time (e.g., "check-in: 3pm", "check in at 15:00")
-      const checkInMatch = content.match(/check[- ]?in[:\s]+(?:at\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);
-      if (checkInMatch?.[1] && !profile.checkInTime) {
-        profile.checkInTime = this.normalizeTime(checkInMatch[1]);
+      // Try to extract check-in time (e.g., "check-in: 3pm", "check in at 15:00", "check-in time is 2:00pm")
+      const checkInMatch = content.match(/check[- ]?in(?:\s+time)?[:\s]+(?:is\s+)?(?:at\s+)?(?:from\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm))/i);
+      log.debug({ checkInMatch: checkInMatch?.[0], captured: checkInMatch?.[1] }, 'Check-in regex result');
+      if (checkInMatch?.[1]) {
+        const normalized = this.normalizeTime(checkInMatch[1]);
+        log.debug({ input: checkInMatch[1], normalized }, 'Normalized check-in time');
+        if (normalized) profile.checkInTime = normalized;
       }
 
       // Try to extract check-out time
-      const checkOutMatch = content.match(/check[- ]?out[:\s]+(?:at\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm)?)/i);
-      if (checkOutMatch?.[1] && !profile.checkOutTime) {
-        profile.checkOutTime = this.normalizeTime(checkOutMatch[1]);
+      const checkOutMatch = content.match(/check[- ]?out(?:\s+time)?[:\s]+(?:is\s+)?(?:at\s+)?(?:by\s+)?(?:until\s+)?(\d{1,2}(?::\d{2})?\s*(?:am|pm))/i);
+      log.debug({ checkOutMatch: checkOutMatch?.[0], captured: checkOutMatch?.[1] }, 'Check-out regex result');
+      if (checkOutMatch?.[1]) {
+        const normalized = this.normalizeTime(checkOutMatch[1]);
+        log.debug({ input: checkOutMatch[1], normalized }, 'Normalized check-out time');
+        if (normalized) profile.checkOutTime = normalized;
       }
     }
+
+    log.info({ checkInTime: profile.checkInTime, checkOutTime: profile.checkOutTime }, 'Extracted times from policy entries');
+    // Temporary debug output
+    console.log('[SETUP DEBUG] Policy entries:', policyEntries.map(e => e.content));
+    console.log('[SETUP DEBUG] Extracted times:', { checkInTime: profile.checkInTime, checkOutTime: profile.checkOutTime });
 
     // Extract contact info
     for (const entry of contactEntries) {
@@ -502,22 +514,22 @@ export class SetupService {
   }
 
   /**
-   * Normalize time string to HH:MM format
+   * Normalize time string to readable format (e.g., "2:00 PM" or "14:00")
+   * Returns null if cannot parse
    */
-  private normalizeTime(timeStr: string): string {
+  private normalizeTime(timeStr: string): string | null {
     const cleaned = timeStr.toLowerCase().trim();
 
     // Parse 12-hour format (e.g., "3pm", "3:00pm", "3:00 pm")
     const match12 = cleaned.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
     if (match12?.[1] && match12[3]) {
-      let hours = parseInt(match12[1], 10);
+      const hours = parseInt(match12[1], 10);
       const minutes = match12[2] ? parseInt(match12[2], 10) : 0;
-      const period = match12[3].toLowerCase();
+      const period = match12[3].toUpperCase();
 
-      if (period === 'pm' && hours !== 12) hours += 12;
-      if (period === 'am' && hours === 12) hours = 0;
-
-      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+      // Return in readable 12-hour format
+      const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, '0')}` : '';
+      return `${hours}${minuteStr} ${period}`;
     }
 
     // Parse 24-hour format (e.g., "15:00", "15")
@@ -531,8 +543,8 @@ export class SetupService {
       }
     }
 
-    // Fallback: return default if can't parse
-    return '15:00';
+    // Return null if can't parse - don't guess
+    return null;
   }
 
   /**
@@ -613,11 +625,19 @@ export class SetupService {
 
   /**
    * Reset setup state (for development)
+   * Clears setup state, hotel profile, and knowledge base
    */
   async reset(): Promise<SetupStateRecord> {
+    // Clear setup state
     await db.delete(setupState).where(eq(setupState.id, 'setup')).run();
 
-    log.info('Setup state reset');
+    // Clear hotel profile from settings
+    await db.delete(settings).where(eq(settings.key, HOTEL_PROFILE_KEY)).run();
+
+    // Clear knowledge base
+    await db.delete(knowledgeBase).run();
+
+    log.info('Setup state, settings, and knowledge base reset');
 
     return this.createInitialState();
   }

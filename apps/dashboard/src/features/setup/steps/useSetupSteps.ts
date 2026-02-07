@@ -321,12 +321,20 @@ ${t('aiProvider.freeCredits')}`;
           }))
         );
 
+        // Sync profile to extract structured data
+        const profile = await syncProfile();
+
         hideTyping();
         updateContext({ typingStatus: '' });
 
         const uniqueNewEntries = deduplicateEntries(scrapedEntries, entries);
         const allEntries = [...scrapedEntries, ...uniqueNewEntries];
         const newChecklist = buildChecklistWithTranslation(allEntries);
+
+        // Include profile in checklist
+        if (profile) {
+          newChecklist.profile = profile;
+        }
 
         updateContext({
           scrapedEntries: allEntries,
@@ -672,6 +680,7 @@ ${t('aiProvider.freeCredits')}`;
     if (inputMode === 'checklist' && checklist) {
       config.checklistItems = checklist.items;
       config.checklistCanContinue = checklist.canContinue;
+      config.checklistProfile = checklist.profile;
     }
 
     return config;

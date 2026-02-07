@@ -266,6 +266,7 @@ export function SetupAssistant() {
             onFormHelp={handlers.onFormHelp}
             checklistItems={uiConfig.checklistItems}
             checklistCanContinue={uiConfig.checklistCanContinue}
+            checklistProfile={uiConfig.checklistProfile}
             onChecklistTryUrl={handlers.onChecklistTryUrl}
             onChecklistTellManually={handlers.onChecklistTellManually}
             onChecklistContinue={handlers.onChecklistContinue}
