@@ -24,10 +24,16 @@ const SETTINGS_KEY = 'hotel_profile';
 // ===================
 
 /**
+ * Property type enum
+ */
+const propertyTypeEnum = z.enum(['hotel', 'bnb', 'vacation_rental', 'other']);
+
+/**
  * Hotel profile schema
  */
 const hotelProfileSchema = z.object({
   name: z.string().min(1).max(200),
+  propertyType: propertyTypeEnum.optional(), // hotel, bnb, vacation_rental, other
   address: z.string().max(500).optional(),
   city: z.string().max(100).optional(),
   country: z.string().max(100).optional(),

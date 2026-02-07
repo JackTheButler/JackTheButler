@@ -1,7 +1,7 @@
 # AI Assistant Framework
 
 > Phase: In Progress
-> Status: Phase 1 & 2 Complete
+> Status: Phase 1, 2, 3, 4 & 7 Complete
 > Priority: High
 
 ## Overview
@@ -438,35 +438,56 @@ Fresh Install
 └─────────────────────┘
 ```
 
-### Implemented Components (Phase 1 & 2)
+### Implemented Components (Phase 1-4)
 
 ```
 src/
 ├── services/
 │   └── setup.ts               # Setup state management service
+│                              # - getState(), start(), completeStep()
+│                              # - savePropertyInfo(), configureAIProvider()
+│                              # - completeKnowledge(), syncProfileFromKnowledge()
+│                              # - createAdminAccount() (Phase 4)
 ├── gateway/
 │   └── routes/
 │       └── setup.ts           # Setup API endpoints (public, no auth)
+│                              # - GET /state, POST /start, /bootstrap
+│                              # - POST /welcome, /ai-provider
+│                              # - POST /process-message (AI intent detection)
+│                              # - POST /sync-profile, /knowledge/complete
+│                              # - POST /create-admin (Phase 4)
+│                              # - POST /skip, /reset
+├── apps/
+│   └── tools/
+│       └── site-scraper/      # Website scraping for knowledge gathering
+│           └── index.ts       # /parse (fetch+extract) and /import endpoints
 │
 apps/dashboard/src/
 ├── pages/
 │   └── Setup.tsx              # Main setup page orchestrator
+│                              # - Chat flow state machine
+│                              # - Website scraping with progress
+│                              # - Checklist for found/missing items
+│                              # - Manual entry for missing items
+│                              # - AI intent processing
+│                              # - Admin account form (Phase 4)
 ├── hooks/
 │   └── useChatFlow.ts         # Reusable chat flow hook
 ├── components/setup/
 │   ├── index.ts               # Exports all setup components
 │   ├── BootstrapScreen.tsx    # "Getting Ready" screen with Continue
 │   ├── ChatInterface.tsx      # Chat container with messages + input
-│   ├── ChatMessage.tsx        # Message bubble with typewriter effect
+│   ├── ChatMessage.tsx        # Message bubble with typewriter + status text
 │   ├── ChoiceButtons.tsx      # Horizontal button choices (property type)
 │   ├── ChoiceCards.tsx        # Vertical card choices (AI provider)
-│   ├── FormCard.tsx           # Form card for structured input (API key)
+│   ├── FormCard.tsx           # Form card for structured input (API key, admin)
+│   ├── ChecklistCard.tsx      # Knowledge checklist with found/missing items
 │   └── SetupHeader.tsx        # Sticky header with progress + skip
 └── locales/en/
-    └── setup.json             # English translations
+    └── setup.json             # English translations (all phases)
 ```
 
-### Future Components (Phase 3+)
+### Future Components (Phase 5+)
 
 ```
 src/
@@ -503,11 +524,21 @@ CREATE TABLE setup_state (
 ### API Endpoints
 
 ```
-POST /api/v1/setup/start     # Begin setup (no auth required)
-POST /api/v1/setup/message   # Send message to assistant
-GET  /api/v1/setup/state     # Get current setup state
-POST /api/v1/setup/skip      # Skip to manual login
-POST /api/v1/setup/reset     # Reset setup (admin only)
+GET  /api/v1/setup/state              # Get current setup state
+POST /api/v1/setup/start              # Begin setup (enables Local AI)
+POST /api/v1/setup/bootstrap          # Complete bootstrap step
+POST /api/v1/setup/welcome            # Save property name/type
+POST /api/v1/setup/ai-provider        # Configure AI provider (local/anthropic/openai)
+POST /api/v1/setup/process-message    # AI intent detection for user messages
+POST /api/v1/setup/sync-profile       # Sync hotel profile from knowledge entries
+POST /api/v1/setup/knowledge/complete # Complete knowledge gathering step
+POST /api/v1/setup/create-admin       # Create admin account (Phase 4)
+POST /api/v1/setup/skip               # Skip to manual login
+POST /api/v1/setup/reset              # Reset setup (dev only)
+
+# Site scraper (used by knowledge gathering)
+POST /api/v1/tools/site-scraper/parse  # Fetch URL and extract knowledge
+POST /api/v1/tools/site-scraper/import # Import entries to knowledge base
 ```
 
 ## Local AI Requirements
@@ -702,36 +733,60 @@ Raw HTML
 
 **Note:** Local AI auto-start and seamless provider switching are handled by the existing app config system. The setup wizard configures the provider via `/api/v1/setup/ai-provider` which saves to the database.
 
-### Phase 3: Knowledge Gathering
-- [ ] URL input and validation
-- [ ] Single page scraping
-- [ ] AI extraction to structured data
-- [ ] Checklist evaluation (what's missing?)
-- [ ] Ask for more URLs or manual input
-- [ ] Auto-discover linked pages (/rooms, /amenities, etc.)
-- [ ] Knowledge base population
-- [ ] Stop when minimum requirements met
+### Phase 3: Knowledge Gathering ✅ COMPLETE
+- [x] URL input and validation
+- [x] Single page scraping with progress indicators
+- [x] AI extraction to structured data (categories: policy, room_type, contact, local_info, amenity, service, dining, faq)
+- [x] Checklist evaluation (what's missing?) with required/optional indicators
+- [x] Ask for more URLs or manual input ("Try another URL" / "Tell me directly")
+- [x] AI intent detection for user messages (answer, question, skip, unclear)
+- [ ] Auto-discover linked pages (/rooms, /amenities, etc.) - Deferred
+- [x] Knowledge base population via `/api/v1/tools/site-scraper/import`
+- [x] Stop when minimum requirements met (policy, room_type, contact, local_info)
+- [x] Frontend deduplication across multiple URL scrapes
+- [x] Hotel profile sync from knowledge entries (check-in/out times, phone, email, address)
+- [x] Manual entry flow for missing required items
 
-### Phase 4: Account & Channels
-- [ ] Admin account creation
+### Phase 4: Admin Account Creation ✅ COMPLETE
+- [x] Admin account creation form (name, email, password, confirm password)
+- [x] Email format validation
+- [x] Password minimum length (8 characters)
+- [x] Confirm password match validation
+- [x] New admin created in staff table with admin role
+- [x] Default admin (`staff-admin-butler`) disabled (status: inactive)
+- [x] Setup state tracking with `create_admin` step
+- [x] Resume support for admin creation step
+- [x] Redirect to login after completion
+
+### Phase 5: Channel Configuration 📅 DEFERRED
 - [ ] WhatsApp guided setup
 - [ ] SMS (Twilio) guided setup
 - [ ] Email setup
 - [ ] Webhook URL display
 
-### Phase 5: Ongoing Help
+**Note:** Channel configuration can be done post-setup via Settings > Apps. Not blocking for initial deployment.
+
+### Phase 6: Ongoing Help 📅 DEFERRED
 - [ ] Help button in dashboard
 - [ ] Context-aware assistance
 - [ ] Error recovery suggestions
 - [ ] "Ask Jack" in settings pages
 
-### Phase 6: Multi-language Support
-- [ ] i18n framework for assistant strings
-- [ ] Language detection from browser
-- [ ] Language selection in setup
-- [ ] Translate all assistant messages
-- [ ] AI responses in user's language
-- [ ] RTL support (Arabic, Hebrew)
+**Note:** Can be added after core setup is complete. Not blocking for initial deployment.
+
+### Phase 7: Multi-language Support ✅ COMPLETE
+- [x] i18n framework for assistant strings (react-i18next)
+- [x] Language detection from browser (via i18n config)
+- [x] Language selection in setup (language selector dropdown)
+- [x] Translate all assistant messages (6 languages)
+  - [x] English (en) - default
+  - [x] Spanish (es)
+  - [x] Arabic (ar)
+  - [x] Hindi (hi)
+  - [x] Russian (ru)
+  - [x] Chinese (zh)
+- [ ] AI responses in user's language - Deferred (handled by AI provider)
+- [x] RTL support (Arabic) - via Tailwind `rtl:` utilities
 
 ## Extensibility
 

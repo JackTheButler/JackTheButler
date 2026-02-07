@@ -6,6 +6,7 @@ import { ChatMessage, type MessageRole } from './ChatMessage';
 import { ChoiceButtons, type Choice } from './ChoiceButtons';
 import { ChoiceCards, type CardChoice } from './ChoiceCards';
 import { FormCard, type FormField } from './FormCard';
+import { ChecklistCard, type ChecklistItem } from './ChecklistCard';
 
 export interface Message {
   id: string;
@@ -22,7 +23,7 @@ export interface FormCardConfig {
   helpLabel?: string;
 }
 
-type InputMode = 'text' | 'choices' | 'cards' | 'form' | 'none';
+type InputMode = 'text' | 'choices' | 'cards' | 'form' | 'checklist' | 'none';
 
 interface ChatInterfaceProps {
   messages: Message[];
@@ -35,7 +36,13 @@ interface ChatInterfaceProps {
   onFormSubmit?: (data: Record<string, string>) => void;
   onFormSkip?: () => void;
   onFormHelp?: () => void;
+  checklistItems?: ChecklistItem[];
+  checklistCanContinue?: boolean;
+  onChecklistTryUrl?: () => void;
+  onChecklistTellManually?: () => void;
+  onChecklistContinue?: () => void;
   isTyping?: boolean;
+  typingStatusText?: string;
   disabled?: boolean;
 }
 
@@ -50,7 +57,13 @@ export function ChatInterface({
   onFormSubmit,
   onFormSkip,
   onFormHelp,
+  checklistItems,
+  checklistCanContinue,
+  onChecklistTryUrl,
+  onChecklistTellManually,
+  onChecklistContinue,
   isTyping,
+  typingStatusText,
   disabled,
 }: ChatInterfaceProps) {
   const { t } = useTranslation('setup');
@@ -98,7 +111,7 @@ export function ChatInterface({
           />
         ))}
         {isTyping && (
-          <ChatMessage role="assistant" content="" isTyping />
+          <ChatMessage role="assistant" content="" isTyping statusText={typingStatusText} />
         )}
         {/* Choices appear in chat after the question */}
         {inputMode === 'choices' && choices && onSelectChoice && !isTyping && (
@@ -116,6 +129,19 @@ export function ChatInterface({
             <ChoiceCards
               choices={cardChoices}
               onSelect={onSelectChoice}
+              disabled={disabled}
+            />
+          </div>
+        )}
+        {/* Checklist for knowledge gathering */}
+        {inputMode === 'checklist' && checklistItems && onChecklistTryUrl && onChecklistTellManually && onChecklistContinue && !isTyping && (
+          <div className="pl-7">
+            <ChecklistCard
+              items={checklistItems}
+              onTryAnotherUrl={onChecklistTryUrl}
+              onTellManually={onChecklistTellManually}
+              onContinue={onChecklistContinue}
+              canContinue={checklistCanContinue ?? false}
               disabled={disabled}
             />
           </div>

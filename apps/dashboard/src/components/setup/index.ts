@@ -5,6 +5,7 @@ export { ChoiceButtons, type Choice } from './ChoiceButtons';
 export { ChoiceCards, type CardChoice } from './ChoiceCards';
 export { BootstrapScreen } from './BootstrapScreen';
 export { FormCard, type FormField, type FormCardProps } from './FormCard';
+export { ChecklistCard, type ChecklistItem, type ChecklistCardProps } from './ChecklistCard';
 
 // Types for Setup.tsx
 export type PropertyType = 'hotel' | 'bnb' | 'vacation_rental' | 'other';

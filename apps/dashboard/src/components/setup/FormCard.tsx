@@ -74,6 +74,7 @@ export function FormCard({
   return (
     <form
       onSubmit={handleSubmit}
+      autoComplete="off"
       className="w-full max-w-md bg-card border border-border rounded-lg shadow-md"
     >
       {/* Header */}
@@ -105,6 +106,7 @@ export function FormCard({
             <div className="relative">
               <input
                 id={field.key}
+                name={`${field.key}-${Date.now()}`}
                 type={
                   field.type === 'password' && !showPasswords[field.key]
                     ? 'password'
@@ -116,6 +118,10 @@ export function FormCard({
                 onChange={(e) => handleChange(field.key, e.target.value)}
                 placeholder={field.placeholder}
                 disabled={disabled || loading}
+                autoComplete="new-password"
+                data-form-type="other"
+                data-lpignore="true"
+                data-1p-ignore
                 className={cn(
                   'w-full px-3 py-2 rounded-md border border-input bg-background',
                   'text-sm placeholder:text-muted-foreground',

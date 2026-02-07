@@ -6,7 +6,7 @@ Future features and improvements planned for Jack The Butler.
 
 | Feature | Status | Priority | Description |
 |---------|--------|----------|-------------|
-| [AI Assistant Framework](./001-ai-assistant-framework.md) | Proposed | High | Modular AI assistant for setup, integrations, and ongoing help |
+| [AI Assistant Framework](./001-ai-assistant-framework.md) | In Progress | High | Modular AI assistant for setup, integrations, and ongoing help (Phases 1-4, 7 complete) |
 
 ## How to Propose Features
 

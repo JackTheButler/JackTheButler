@@ -8,6 +8,7 @@ interface ChatMessageProps {
   role: MessageRole;
   content: string;
   isTyping?: boolean;
+  statusText?: string;
 }
 
 function useTypewriter(text: string, enabled: boolean, speed: number = 20) {
@@ -37,14 +38,14 @@ function useTypewriter(text: string, enabled: boolean, speed: number = 20) {
   return displayedText;
 }
 
-export function ChatMessage({ role, content, isTyping }: ChatMessageProps) {
+export function ChatMessage({ role, content, isTyping, statusText }: ChatMessageProps) {
   const isAssistant = role === 'assistant';
   const displayedContent = useTypewriter(content, isAssistant, 20);
 
   if (isTyping && isAssistant) {
     return (
-      <div className="flex w-full justify-start">
-        <div className="relative w-5 h-5 flex items-center justify-center mr-2">
+      <div className="flex w-full justify-start items-center">
+        <div className="relative w-5 h-5 flex items-center justify-center mr-2 flex-shrink-0">
           <svg
             className="absolute inset-[-3px] w-[26px] h-[26px] animate-spin"
             viewBox="0 0 50 50"
@@ -70,6 +71,11 @@ export function ChatMessage({ role, content, isTyping }: ChatMessageProps) {
           </svg>
           <Cpu className="w-4 h-4 text-foreground" />
         </div>
+        {statusText && (
+          <span className="text-sm text-muted-foreground/70 animate-pulse">
+            {statusText}
+          </span>
+        )}
       </div>
     );
   }
