@@ -189,7 +189,7 @@ export function FormCard({
                   onBlur={() => handleBlur(field.key)}
                   placeholder={field.placeholder}
                   disabled={disabled || loading}
-                  autoComplete="new-password"
+                  autoComplete="one-time-code"
                   data-form-type="other"
                   data-lpignore="true"
                   data-1p-ignore

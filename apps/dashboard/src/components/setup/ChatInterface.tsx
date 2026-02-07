@@ -150,6 +150,24 @@ export function ChatInterface({
               />
             </div>
           )}
+          {/* Form card appears in chat flow */}
+          {inputMode === 'form' && formConfig && onFormSubmit && !isTyping && (
+            <div className="pl-7">
+              <FormCard
+                title={formConfig.title}
+                description={formConfig.description}
+                fields={formConfig.fields}
+                submitLabel={formConfig.submitLabel}
+                skipLabel={formConfig.skipLabel}
+                helpLabel={formConfig.helpLabel}
+                onSubmit={onFormSubmit}
+                onSkip={onFormSkip}
+                onHelp={onFormHelp}
+                disabled={disabled}
+                schema={formConfig.schema}
+              />
+            </div>
+          )}
           <div ref={messagesEndRef} />
         </div>
         {/* Fade overlay at bottom */}
@@ -158,25 +176,6 @@ export function ChatInterface({
 
       {/* Input area - stays at bottom */}
       <div className="shrink-0 px-4 pb-6 pt-1 bg-background">
-        {/* Form card appears above input when needed */}
-        {inputMode === 'form' && formConfig && onFormSubmit && (
-          <div className="pl-7 mb-4">
-            <FormCard
-              title={formConfig.title}
-              description={formConfig.description}
-              fields={formConfig.fields}
-              submitLabel={formConfig.submitLabel}
-              skipLabel={formConfig.skipLabel}
-              helpLabel={formConfig.helpLabel}
-              onSubmit={onFormSubmit}
-              onSkip={onFormSkip}
-              onHelp={onFormHelp}
-              disabled={disabled}
-              schema={formConfig.schema}
-            />
-          </div>
-        )}
-
         {/* Input always visible, enabled only for text mode */}
         {inputMode === 'text' ? (
           <form

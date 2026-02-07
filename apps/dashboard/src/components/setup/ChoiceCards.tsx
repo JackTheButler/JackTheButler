@@ -29,27 +29,15 @@ export function ChoiceCards({
           disabled={disabled}
           className={cn(
             'flex items-center gap-3 p-3 rounded-xl text-left',
-            'border transition-all',
-            recommended
-              ? 'border-primary bg-primary/5 hover:bg-primary/10'
-              : 'border-input bg-background hover:bg-accent',
+            'border border-input bg-background transition-all',
+            'hover:bg-accent',
             'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring',
             'disabled:opacity-50 disabled:pointer-events-none'
           )}
         >
           {Icon && (
-            <div
-              className={cn(
-                'w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0',
-                recommended ? 'bg-primary/10' : 'bg-muted'
-              )}
-            >
-              <Icon
-                className={cn(
-                  'w-4 h-4',
-                  recommended ? 'text-primary' : 'text-muted-foreground'
-                )}
-              />
+            <div className="w-9 h-9 rounded-full flex items-center justify-center flex-shrink-0 bg-muted">
+              <Icon className="w-4 h-4 text-muted-foreground" />
             </div>
           )}
           <div className="flex-1 min-w-0">
