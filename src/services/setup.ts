@@ -514,7 +514,7 @@ export class SetupService {
   }
 
   /**
-   * Normalize time string to readable format (e.g., "2:00 PM" or "14:00")
+   * Normalize time string to HH:MM format (24-hour)
    * Returns null if cannot parse
    */
   private normalizeTime(timeStr: string): string | null {
@@ -523,13 +523,15 @@ export class SetupService {
     // Parse 12-hour format (e.g., "3pm", "3:00pm", "3:00 pm")
     const match12 = cleaned.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)/i);
     if (match12?.[1] && match12[3]) {
-      const hours = parseInt(match12[1], 10);
+      let hours = parseInt(match12[1], 10);
       const minutes = match12[2] ? parseInt(match12[2], 10) : 0;
-      const period = match12[3].toUpperCase();
+      const period = match12[3].toLowerCase();
 
-      // Return in readable 12-hour format
-      const minuteStr = minutes > 0 ? `:${minutes.toString().padStart(2, '0')}` : '';
-      return `${hours}${minuteStr} ${period}`;
+      // Convert to 24-hour format
+      if (period === 'pm' && hours !== 12) hours += 12;
+      if (period === 'am' && hours === 12) hours = 0;
+
+      return `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     }
 
     // Parse 24-hour format (e.g., "15:00", "15")

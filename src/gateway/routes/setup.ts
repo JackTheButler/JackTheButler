@@ -18,11 +18,16 @@ const setup = new Hono();
 
 /**
  * Security middleware: Block setup modification after completion
- * Only GET /state is allowed after setup is complete
+ * Only GET /state and POST /reset (in dev) are allowed after setup is complete
  */
 setup.use('*', async (c, next) => {
   // Allow GET /state always (for checking status)
   if (c.req.method === 'GET' && c.req.path.endsWith('/state')) {
+    return next();
+  }
+
+  // Allow POST /reset in development (handled by the route itself)
+  if (c.req.method === 'POST' && c.req.path.endsWith('/reset')) {
     return next();
   }
 
