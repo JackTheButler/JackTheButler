@@ -210,6 +210,73 @@ Sends message via the conversation's channel (WhatsApp, SMS, Email).
 
 ---
 
+## Setup (No Auth Required)
+
+Setup endpoints are public for fresh installations. After setup is completed, all POST endpoints return `403 Forbidden`.
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/setup/state` | Get current setup state |
+| POST | `/setup/start` | Start setup wizard, enable Local AI |
+| POST | `/setup/bootstrap` | Complete bootstrap step |
+| POST | `/setup/welcome` | Save property name and type |
+| POST | `/setup/ai-provider` | Configure AI provider |
+| POST | `/setup/knowledge/complete` | Complete knowledge gathering |
+| POST | `/setup/create-admin` | Create admin account |
+| POST | `/setup/skip` | Skip setup entirely |
+| POST | `/setup/reset` | Reset setup (dev only) |
+| POST | `/setup/sync-profile` | Sync hotel profile from knowledge |
+| POST | `/setup/process-message` | AI intent detection for chat flow |
+
+### Security
+
+After setup is completed (`status: 'completed'`), all POST endpoints are blocked to prevent unauthorized reconfiguration.
+
+---
+
+## Site Scraper Tool
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/tools/site-scraper/parse` | Fetch and extract content from URLs |
+| POST | `/tools/site-scraper/import` | Import entries to knowledge base |
+| POST | `/tools/site-scraper/generate-qa` | Generate Q&A pairs from entries |
+| GET | `/tools/site-scraper/sources` | List previously imported URLs |
+
+### POST /tools/site-scraper/parse
+
+Fetches URLs and extracts knowledge entries using AI.
+
+```json
+{
+  "urls": ["https://hotel.com/amenities", "https://hotel.com/policies"],
+  "options": {
+    "hotelName": "Grand Hotel"
+  }
+}
+```
+
+### POST /tools/site-scraper/import
+
+Imports extracted entries to knowledge base with embeddings.
+
+```json
+{
+  "entries": [
+    {
+      "category": "amenity",
+      "title": "Pool Hours",
+      "content": "Pool open 7am-10pm daily",
+      "keywords": ["pool", "swimming"],
+      "priority": 5,
+      "sourceUrl": "https://hotel.com/amenities"
+    }
+  ]
+}
+```
+
+---
+
 ## Hotel Profile
 
 | Method | Path | Description |

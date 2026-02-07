@@ -7,6 +7,8 @@ Future features and improvements planned for Jack The Butler.
 | Feature | Status | Priority | Description |
 |---------|--------|----------|-------------|
 | [AI Assistant Framework](./001-ai-assistant-framework.md) | In Progress | High | Modular AI assistant for setup, integrations, and ongoing help (Phases 1-4, 7 complete) |
+| [Reusable Assistant System](./002-setup-architecture-refactoring.md) | In Progress | Medium | Build reusable assistant framework with multiple render modes (Phase 8A in progress) |
+| [Setup API Reference](./003-setup-api-cleanup.md) | Reference | Low | API catalog for Phase 1-4 implementation (for refactoring reference) |
 
 ## How to Propose Features
 

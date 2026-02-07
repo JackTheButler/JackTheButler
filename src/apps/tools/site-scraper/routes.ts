@@ -10,10 +10,9 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, sql } from 'drizzle-orm';
 import { validateBody } from '@/gateway/middleware/index.js';
-import { scrapeUrl, scrapeUrls } from './scraper.js';
+import { scrapeUrls } from './scraper.js';
 import { parseHtml } from './parser.js';
 import { processContent } from './processor.js';
-import type { ProcessedEntry } from './processor.js';
 import { htmlToCleanText } from './html-to-text.js';
 import { extractContentWithAI } from './ai-parser.js';
 import type { AIExtractedEntry } from './ai-parser.js';
@@ -43,25 +42,6 @@ const fetchSchema = z.object({
       selector: z.string().optional(),
       excludeSelectors: z.array(z.string()).optional(),
       timeout: z.number().min(1000).max(30000).optional(),
-      hotelName: z.string().optional(),
-    })
-    .optional(),
-});
-
-/**
- * Process content schema
- */
-const processSchema = z.object({
-  results: z.array(
-    z.object({
-      url: z.string(),
-      title: z.string(),
-      html: z.string(),
-      status: z.enum(['success', 'error']),
-    })
-  ),
-  options: z
-    .object({
       hotelName: z.string().optional(),
     })
     .optional(),
@@ -109,36 +89,6 @@ const qaSchema = z.object({
       confidence: z.number(),
     })
   ),
-});
-
-/**
- * POST /api/v1/tools/site-scraper/fetch
- * Fetch content from one or more URLs
- */
-router.post('/fetch', validateBody(fetchSchema), async (c) => {
-  const { urls, options } = c.get('validatedBody') as z.infer<typeof fetchSchema>;
-
-  logger.info({ urlCount: urls.length }, 'Site scraper fetch request');
-
-  const results = await scrapeUrls(urls, options || {});
-
-  return c.json({
-    results: results.map((r) => ({
-      url: r.url,
-      title: r.title,
-      status: r.status,
-      error: r.error,
-      statusCode: r.statusCode,
-      fetchedAt: r.fetchedAt,
-      contentLength: r.html.length,
-      // Don't include full HTML in response - too large
-    })),
-    summary: {
-      total: results.length,
-      success: results.filter((r) => r.status === 'success').length,
-      failed: results.filter((r) => r.status === 'error').length,
-    },
-  });
 });
 
 /**
@@ -258,81 +208,6 @@ router.post('/parse', validateBody(fetchSchema), async (c) => {
 });
 
 /**
- * POST /api/v1/tools/site-scraper/process
- * Process parsed content with AI categorization
- */
-router.post('/process', validateBody(processSchema), async (c) => {
-  const { results, options } = c.get('validatedBody') as z.infer<typeof processSchema>;
-
-  logger.info({ resultCount: results.length }, 'Site scraper process request');
-
-  const allEntries: ProcessedEntry[] = [];
-
-  for (const result of results) {
-    if (result.status !== 'success' || !result.html) {
-      continue;
-    }
-
-    try {
-      // Try AI-powered extraction first
-      const cleanText = htmlToCleanText(result.html);
-      const aiEntries = await extractContentWithAI(cleanText, {
-        hotelName: options?.hotelName,
-        url: result.url,
-      });
-
-      if (aiEntries && aiEntries.length > 0) {
-        // Convert AIExtractedEntry to ProcessedEntry
-        allEntries.push(
-          ...aiEntries.map((e) => ({
-            category: e.category,
-            title: e.title,
-            content: e.content,
-            keywords: e.keywords,
-            priority: 5,
-            sourceUrl: result.url,
-            confidence: e.confidence,
-            originalType: 'paragraph' as const,
-          }))
-        );
-        continue;
-      }
-
-      // Fallback to old path
-      const parsed = parseHtml(result.html);
-      const entries = await processContent(parsed.sections, {
-        sourceUrl: result.url,
-        hotelName: options?.hotelName,
-        metadata: parsed.metadata,
-      });
-
-      allEntries.push(...entries);
-    } catch (error) {
-      logger.error({ url: result.url, error }, 'Failed to process result');
-    }
-  }
-
-  // Semantic dedup on converted entries
-  const aiEntries: AIExtractedEntry[] = allEntries.map((e) => ({
-    title: e.title,
-    content: e.content,
-    category: e.category,
-    keywords: e.keywords,
-    confidence: e.confidence,
-  }));
-  const dedupResult = await semanticDedup(aiEntries);
-
-  return c.json({
-    entries: allEntries,
-    duplicates: dedupResult.duplicates,
-    summary: {
-      total: allEntries.length,
-      byCategory: countByCategory(allEntries),
-    },
-  });
-});
-
-/**
  * POST /api/v1/tools/site-scraper/generate-qa
  * Generate Q&A pairs from extracted entries
  */
@@ -434,79 +309,6 @@ router.get('/sources', async (c) => {
     })),
   });
 });
-
-/**
- * GET /api/v1/tools/site-scraper/preview
- * Quick preview of what can be scraped from a URL
- */
-router.get('/preview', async (c) => {
-  const url = c.req.query('url');
-
-  if (!url) {
-    return c.json({ error: 'URL parameter is required' }, 400);
-  }
-
-  // Validate URL
-  try {
-    new URL(url);
-  } catch {
-    return c.json({ error: 'Invalid URL' }, 400);
-  }
-
-  logger.info({ url }, 'Site scraper preview request');
-
-  // Fetch and parse
-  const fetchResult = await scrapeUrl({ url, timeout: 15000 });
-
-  if (fetchResult.status === 'error') {
-    return c.json({
-      url,
-      status: 'error',
-      error: fetchResult.error,
-    });
-  }
-
-  const parsed = parseHtml(fetchResult.html);
-
-  return c.json({
-    url,
-    status: 'success',
-    title: parsed.title,
-    metadata: parsed.metadata,
-    preview: {
-      sectionCount: parsed.sections.length,
-      sectionTypes: countSectionTypes(parsed.sections),
-      estimatedEntries: parsed.sections.length,
-      sampleSections: parsed.sections.slice(0, 3).map((s) => ({
-        type: s.type,
-        heading: s.heading,
-        contentPreview: (s.content || '').substring(0, 200),
-      })),
-    },
-  });
-});
-
-/**
- * Count entries by category
- */
-function countByCategory(entries: ProcessedEntry[]): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const entry of entries) {
-    counts[entry.category] = (counts[entry.category] || 0) + 1;
-  }
-  return counts;
-}
-
-/**
- * Count sections by type
- */
-function countSectionTypes(sections: Array<{ type: string }>): Record<string, number> {
-  const counts: Record<string, number> = {};
-  for (const section of sections) {
-    counts[section.type] = (counts[section.type] || 0) + 1;
-  }
-  return counts;
-}
 
 /**
  * Import entries to knowledge base with embeddings

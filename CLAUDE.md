@@ -45,6 +45,9 @@ jack/
 │   └── types/            # TypeScript type definitions
 ├── apps/
 │   ├── dashboard/        # Staff web dashboard (React)
+│   │   └── src/
+│   │       ├── features/ # Feature modules (setup/, etc.)
+│   │       └── shared/   # Shared infrastructure (assistant/, forms/)
 │   └── widget/           # Guest web chat widget
 ├── data/                 # SQLite database & uploads (gitignored)
 │   └── jack.db           # Main database file
@@ -219,6 +222,9 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 | Test file | `tests/services/guest.test.ts` |
 | React hook | `apps/dashboard/src/hooks/useWebSocket.ts` |
 | React component | `apps/dashboard/src/components/conversations/` |
+| Dashboard feature module | `apps/dashboard/src/features/setup/` |
+| Form schema | `apps/dashboard/src/features/setup/schemas.ts` |
+| Protected public route | `src/gateway/routes/setup.ts` (no auth, blocked after completion) |
 
 ## When Implementing
 

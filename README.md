@@ -78,22 +78,29 @@ curl -fsSL https://raw.githubusercontent.com/JackTheButler/JackTheButler/main/in
 
 That's it! The installer will download and start Jack automatically.
 
-#### Step 3: Open the Dashboard
+#### Step 3: Complete Setup Wizard
 
 Once installation completes, open your web browser and go to:
 
 **http://localhost:3000**
 
-Log in with:
-- **Email:** `admin@butler.com`
-- **Password:** `pa$$word2026`
+The **Setup Wizard** will guide you through:
+1. **Property Info** - Enter your property name and type
+2. **AI Provider** - Choose Local AI or configure Anthropic/OpenAI
+3. **Knowledge Base** - Optionally import from your website
+4. **Admin Account** - Create your login credentials
 
-#### Step 4: Configure Your AI
+> **Skip Setup?** If you skip the wizard, use default credentials:
+> - Email: `admin@butler.com`
+> - Password: `pa$$word2026`
 
-1. In the dashboard, go to **Engine > Apps**
-2. Click on an AI provider (Anthropic Claude, OpenAI, or Local AI)
-3. Enter your API key and click **Save**
-4. Jack is now ready to chat!
+#### Step 4: You're Ready!
+
+After completing setup, Jack is ready to use. You can:
+- View and respond to guest conversations
+- Manage tasks assigned to staff
+- Add more knowledge to the knowledge base
+- Configure additional channels (WhatsApp, SMS, Email) in **Engine > Apps**
 
 ---
 

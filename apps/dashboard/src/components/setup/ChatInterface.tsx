@@ -7,6 +7,7 @@ import { ChoiceButtons, type Choice } from './ChoiceButtons';
 import { ChoiceCards, type CardChoice } from './ChoiceCards';
 import { FormCard, type FormField } from './FormCard';
 import { ChecklistCard, type ChecklistItem } from './ChecklistCard';
+import type { FormSchema } from '@/shared/forms/types';
 
 export interface Message {
   id: string;
@@ -21,6 +22,8 @@ export interface FormCardConfig {
   submitLabel?: string;
   skipLabel?: string;
   helpLabel?: string;
+  /** Optional schema for advanced validation */
+  schema?: FormSchema;
 }
 
 type InputMode = 'text' | 'choices' | 'cards' | 'form' | 'checklist' | 'none';
@@ -165,6 +168,7 @@ export function ChatInterface({
               onSkip={onFormSkip}
               onHelp={onFormHelp}
               disabled={disabled}
+              schema={formConfig.schema}
             />
           </div>
         )}

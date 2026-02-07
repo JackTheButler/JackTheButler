@@ -56,13 +56,22 @@ Once running, Jack exposes the following on port `3000`:
 
 ## First Steps
 
-### 1. Access the Dashboard
+### 1. Complete the Setup Wizard
 
-Open http://localhost:3000 in your browser. The default admin credentials are:
-- Email: `admin@butler.com`
-- Password: `pa$$word2026`
+On first access, Jack presents a **Setup Wizard** that guides you through initial configuration:
 
-### 2. Configure AI Provider
+1. **Property Info** — Enter your property name and type (hotel, B&B, vacation rental)
+2. **AI Provider** — Choose Local AI (default) or configure Anthropic/OpenAI with an API key
+3. **Knowledge Base** — Optionally scrape your website to populate the knowledge base
+4. **Admin Account** — Create your admin credentials
+
+After completing the wizard, log in with the credentials you created.
+
+> **Skipping Setup:** If you skip the wizard, use the default admin credentials:
+> - Email: `admin@butler.com`
+> - Password: `pa$$word2026`
+
+### 2. Configure AI Provider (if not done in setup)
 
 1. Go to **Engine > Apps**
 2. Click on an AI provider (Anthropic, OpenAI, or Ollama)

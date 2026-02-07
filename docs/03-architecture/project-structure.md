@@ -120,6 +120,7 @@ Central entry point for all external requests.
 | `automation.ts` | `/api/v1/automation` | Automation rules |
 | `autonomy.ts` | `/api/v1/autonomy` | Autonomy level & approval queue |
 | `system.ts` | `/api/v1/system` | System info & settings |
+| `setup.ts` | `/api/v1/setup` | Setup wizard (no auth, protected after completion) |
 | `health.ts` | `/health` | Health check |
 
 ---
@@ -151,6 +152,7 @@ Business services for data access and operations.
 | `task.ts` | Task creation, assignment, status tracking |
 | `auth.ts` | Staff authentication, JWT tokens |
 | `app-config.ts` | App provider configuration (encrypted storage) |
+| `setup.ts` | Setup wizard state machine, admin creation |
 | `pms-sync.ts` | PMS data synchronization |
 | `scheduler.ts` | Scheduled job execution |
 | `audit.ts` | Audit log recording |
@@ -210,6 +212,23 @@ React SPA for hotel staff to manage conversations, tasks, and settings.
 - **Styling:** Tailwind CSS + Radix UI
 - **State:** TanStack Query + WebSocket for real-time updates
 - **Auth:** JWT-based, connects to gateway `/api/v1/auth`
+
+### Dashboard Structure
+
+```
+apps/dashboard/src/
+├── components/         # Reusable UI components
+├── features/           # Feature modules with co-located logic
+│   ├── setup/          # Setup wizard (types, API, utils, schemas)
+│   └── ...
+├── shared/             # Shared infrastructure
+│   ├── assistant/      # Assistant system (registry, context, render modes)
+│   └── forms/          # Form schema and validation system
+├── pages/              # Route page components
+├── hooks/              # Global React hooks
+├── lib/                # Utilities (API client, formatters)
+└── locales/            # i18n translations (6 languages)
+```
 
 ---
 

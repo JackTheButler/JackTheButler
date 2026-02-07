@@ -153,13 +153,66 @@ Reindex regenerates embeddings for all active entries.
 
 ## Site Scraper
 
-The Site Scraper tool can populate the knowledge base from hotel website:
+The Site Scraper tool populates the knowledge base from hotel websites.
 
-1. Crawl website pages
-2. Extract content with AI
-3. Deduplicate similar content
-4. Generate Q&A pairs
-5. Create knowledge entries with embeddings
+### Workflow
+
+1. **Parse** — Fetch URLs and extract content with AI categorization
+2. **Deduplicate** — Semantic deduplication against existing entries
+3. **Generate Q&A** — Create FAQ entries from extracted content
+4. **Import** — Save entries with embeddings to knowledge base
+
+### API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| POST | `/tools/site-scraper/parse` | Fetch and extract from URLs |
+| POST | `/tools/site-scraper/import` | Import entries with embeddings |
+| POST | `/tools/site-scraper/generate-qa` | Generate Q&A pairs |
+| GET | `/tools/site-scraper/sources` | List imported source URLs |
+
+### Parse Request
+
+```json
+{
+  "urls": ["https://hotel.com/amenities"],
+  "options": {
+    "hotelName": "Grand Hotel",
+    "timeout": 15000
+  }
+}
+```
+
+### Parse Response
+
+```json
+{
+  "entries": [
+    {
+      "title": "Pool Hours",
+      "content": "The outdoor pool is open daily from 7am to 10pm.",
+      "category": "amenity",
+      "keywords": ["pool", "swimming", "hours"],
+      "confidence": 0.92
+    }
+  ],
+  "duplicates": [],
+  "summary": {
+    "total": 1,
+    "success": 1,
+    "totalEntries": 5
+  }
+}
+```
+
+### Usage in Setup Wizard
+
+The Setup Wizard uses the Site Scraper to collect initial knowledge:
+1. User provides website URL
+2. System scrapes and extracts entries
+3. User reviews and confirms entries
+4. Entries are imported to knowledge base
+5. Hotel profile is synced from extracted data (check-in times, contact info)
 
 ---
 

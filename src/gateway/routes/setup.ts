@@ -17,6 +17,33 @@ const log = createLogger('routes:setup');
 const setup = new Hono();
 
 /**
+ * Security middleware: Block setup modification after completion
+ * Only GET /state is allowed after setup is complete
+ */
+setup.use('*', async (c, next) => {
+  // Allow GET /state always (for checking status)
+  if (c.req.method === 'GET' && c.req.path.endsWith('/state')) {
+    return next();
+  }
+
+  const state = await setupService.getState();
+  if (state.status === 'completed') {
+    log.warn({ path: c.req.path, method: c.req.method }, 'Blocked setup access after completion');
+    return c.json(
+      {
+        error: {
+          code: 'SETUP_ALREADY_COMPLETED',
+          message: 'Setup has already been completed',
+        },
+      },
+      403
+    );
+  }
+
+  return next();
+});
+
+/**
  * GET /api/v1/setup/state
  * Get current setup state
  */
