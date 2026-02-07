@@ -62,7 +62,7 @@ export const setupAssistantConfig: AssistantConfig<SetupStepContext> = {
       resumeMessage: (ctx) =>
         ctx.propertyName
           ? `Welcome back! Let's continue setting up ${ctx.propertyName}.`
-          : undefined,
+          : '',
     },
     {
       id: 'ai-provider',

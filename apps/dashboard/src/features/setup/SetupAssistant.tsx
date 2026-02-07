@@ -35,7 +35,6 @@ export function SetupAssistant() {
     isTyping,
     typingStatus,
     start,
-    close,
     updateContext,
     setCurrentStep,
     setLoading,
@@ -46,7 +45,7 @@ export function SetupAssistant() {
   } = useAssistantContext();
 
   // Cast context to SetupStepContext
-  const setupContext = context as SetupStepContext;
+  const setupContext = context as unknown as SetupStepContext;
 
   // Initialize the setup steps hook
   const { uiConfig, handlers } = useSetupSteps({
@@ -87,7 +86,7 @@ export function SetupAssistant() {
       // Cast to generic type for the shared assistant context
       start(
         setupAssistantConfig as unknown as Parameters<typeof start>[0],
-        initialContext as Record<string, unknown>
+        initialContext as unknown as Record<string, unknown>
       );
 
       // Determine which step to start at
@@ -95,11 +94,14 @@ export function SetupAssistant() {
         setCurrentStep('bootstrap');
       } else {
         setCurrentStep('property');
-        await resumeChat(data.currentStep, data.context);
+        await resumeChat(data.currentStep, data.context as unknown as Record<string, unknown>);
       }
     } catch {
       // Start fresh on error
-      start(setupAssistantConfig, getInitialSetupContext());
+      start(
+        setupAssistantConfig as unknown as Parameters<typeof start>[0],
+        getInitialSetupContext() as unknown as Record<string, unknown>
+      );
       setCurrentStep('bootstrap');
     }
   }, [navigate, start, setCurrentStep]);

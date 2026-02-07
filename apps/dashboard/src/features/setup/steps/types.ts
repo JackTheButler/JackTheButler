@@ -8,7 +8,8 @@
 
 import type { StepProps } from '@/shared/assistant';
 import type { FormSchema } from '@/shared/forms';
-import type { SetupContext, ChatStep, ExtractedEntry, KnowledgeChecklist, HotelProfile } from '../types';
+import type { SetupContext, ChatStep, ExtractedEntry, KnowledgeChecklist } from '../types';
+import type { InputMode } from '../configs';
 import type { Choice } from '@/components/setup/ChoiceButtons';
 import type { CardChoice } from '@/components/setup/ChoiceCards';
 import type { FormField } from '@/components/setup/FormCard';
@@ -36,11 +37,6 @@ export interface SetupStepContext extends SetupContext {
   /** Typing status message */
   typingStatus: string;
 }
-
-/**
- * Input mode for ChatInterface
- */
-export type InputMode = 'text' | 'choices' | 'cards' | 'form' | 'checklist' | 'none';
 
 /**
  * Form configuration for ChatInterface

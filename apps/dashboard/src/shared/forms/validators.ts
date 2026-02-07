@@ -6,7 +6,7 @@
  * @module shared/forms/validators
  */
 
-import type { FormField, FieldValidation } from './types';
+import type { FormField } from './types';
 
 /**
  * Validate required field

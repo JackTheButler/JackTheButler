@@ -8,7 +8,8 @@
  */
 
 import { useCallback, useMemo } from 'react';
-import type { SetupStepContext, StepUIConfig, StepHandlers, InputMode } from './types';
+import type { SetupStepContext, StepUIConfig, StepHandlers } from './types';
+import type { InputMode } from '../configs';
 import type { PropertyType, AIProvider, ExtractedEntry } from '../types';
 import {
   savePropertyInfo,
