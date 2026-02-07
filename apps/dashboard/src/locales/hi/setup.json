@@ -1,0 +1,83 @@
+{
+  "title": "Welcome to JACK",
+  "skip": "Skip",
+  "bootstrap": {
+    "title": "Getting Ready",
+    "message": "Welcome! I'm getting ready to walk you through the basics.",
+    "continue": "Continue"
+  },
+  "welcome": {
+    "greeting": "Hi! I'm Jack, your AI hospitality assistant.",
+    "askName": "What's your property called?",
+    "askType": "Is {{name}} a:",
+    "confirmation": "Perfect! I'll remember that {{name}} is a {{type}}.",
+    "redirecting": "Redirecting you to login...",
+    "nextStep": "Now let's set up my brain."
+  },
+  "propertyTypes": {
+    "hotel": "Hotel",
+    "bnb": "B&B",
+    "vacation_rental": "Vacation Rental",
+    "other": "Other"
+  },
+  "chat": {
+    "placeholder": "Type your answer...",
+    "send": "Send"
+  },
+  "formCard": {
+    "submit": "Connect",
+    "skip": "Skip",
+    "needHelp": "Need help?"
+  },
+  "aiProvider": {
+    "title": "Set Up AI",
+    "recommendation": "For the best experience, I recommend using Claude or OpenAI. They handle complex guest requests much better.",
+    "anthropic": "Anthropic Claude",
+    "anthropicDesc": "Best for hospitality - natural, helpful responses",
+    "openai": "OpenAI GPT",
+    "openaiDesc": "Powerful and widely used",
+    "local": "Keep Using Local AI",
+    "localDesc": "Works offline but has limited capabilities",
+    "recommended": "Recommended",
+    "or": "or",
+    "canChangeLater": "You can change this anytime in Settings > Apps",
+    "anthropicTitle": "Connect Anthropic Claude",
+    "openaiTitle": "Connect OpenAI",
+    "enterKeyDescription": "Paste your API key below",
+    "anthropicKeyLabel": "Anthropic API Key",
+    "anthropicKeyHelp": "Starts with sk-ant-api03-",
+    "openaiKeyLabel": "OpenAI API Key",
+    "openaiKeyHelp": "Starts with sk-",
+    "connect": "Connect",
+    "back": "Back",
+    "getKey": "How do I get a key?",
+    "helpAnthropic": "Getting an Anthropic API Key",
+    "helpOpenai": "Getting an OpenAI API Key",
+    "step1Anthropic": "Go to console.anthropic.com",
+    "step2Anthropic": "Sign up or log in",
+    "step3Anthropic": "Go to API Keys and create a new key",
+    "step1Openai": "Go to platform.openai.com",
+    "step2Openai": "Sign up or log in",
+    "step3Openai": "Go to API Keys and create a new key",
+    "openConsole": "Open console",
+    "freeCredits": "Both providers offer free credits to start.",
+    "validating": "Validating API key...",
+    "success": "Connected successfully!",
+    "localSuccess": "Staying with Local AI. You can upgrade anytime.",
+    "error": "Failed to connect. Please check your API key."
+  },
+  "progress": {
+    "step": "Step {{current}} of {{total}}",
+    "bootstrap": "Start",
+    "welcome": "Property",
+    "aiProvider": "AI",
+    "knowledge": "Knowledge",
+    "admin": "Account",
+    "channels": "Channels"
+  },
+  "errors": {
+    "startFailed": "Failed to start setup",
+    "saveFailed": "Failed to save property info",
+    "aiConfigFailed": "Failed to configure AI provider"
+  }
+}

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
@@ -19,6 +19,28 @@ export function LoginPage() {
   const [rememberMe, setRememberMe] = useState(true);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+  const [checkingSetup, setCheckingSetup] = useState(true);
+
+  // Check if setup is needed on mount
+  useEffect(() => {
+    const checkSetupState = async () => {
+      try {
+        const response = await fetch('/api/v1/setup/state');
+        const data = await response.json();
+
+        if (data.isFreshInstall) {
+          // Redirect to setup wizard
+          navigate('/setup', { replace: true });
+          return;
+        }
+      } catch {
+        // On error, proceed to login (setup endpoint might not exist in older versions)
+      }
+      setCheckingSetup(false);
+    };
+
+    checkSetupState();
+  }, [navigate]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -38,6 +60,15 @@ export function LoginPage() {
   const isRTL = i18n.language === 'ar';
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
+
+  // Show loading while checking setup state
+  if (checkingSetup) {
+    return (
+      <div className="min-h-screen bg-muted flex items-center justify-center">
+        <div className="animate-pulse text-muted-foreground">{t('common.loading')}</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>

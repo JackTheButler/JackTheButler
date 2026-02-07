@@ -8,6 +8,7 @@ import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { serveStatic } from '@hono/node-server/serve-static';
 import { healthRoutes } from './routes/health.js';
+import { setupRoutes } from './routes/setup.js';
 import { apiRoutes } from './routes/api.js';
 import { webhookRoutes } from './routes/webhooks/index.js';
 import { errorHandler, requestLogger, securityHeaders, apiRateLimit } from './middleware/index.js';
@@ -41,6 +42,9 @@ export function createApp() {
 
   // Health check routes (no auth required)
   app.route('/health', healthRoutes);
+
+  // Setup routes (no auth required, for fresh installations)
+  app.route('/api/v1/setup', setupRoutes);
 
   // Webhook routes (no auth, uses signature verification)
   app.route('/webhooks', webhookRoutes);

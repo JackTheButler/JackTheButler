@@ -13,6 +13,7 @@ import enReservations from '@/locales/en/reservations.json';
 import enSettings from '@/locales/en/settings.json';
 import enAutomations from '@/locales/en/automations.json';
 import enKnowledge from '@/locales/en/knowledge.json';
+import enSetup from '@/locales/en/setup.json';
 
 import esCommon from '@/locales/es/common.json';
 import esAuth from '@/locales/es/auth.json';
@@ -24,6 +25,7 @@ import esReservations from '@/locales/es/reservations.json';
 import esSettings from '@/locales/es/settings.json';
 import esAutomations from '@/locales/es/automations.json';
 import esKnowledge from '@/locales/es/knowledge.json';
+import esSetup from '@/locales/es/setup.json';
 
 import arCommon from '@/locales/ar/common.json';
 import arAuth from '@/locales/ar/auth.json';
@@ -35,6 +37,7 @@ import arReservations from '@/locales/ar/reservations.json';
 import arSettings from '@/locales/ar/settings.json';
 import arAutomations from '@/locales/ar/automations.json';
 import arKnowledge from '@/locales/ar/knowledge.json';
+import arSetup from '@/locales/ar/setup.json';
 
 import hiCommon from '@/locales/hi/common.json';
 import hiAuth from '@/locales/hi/auth.json';
@@ -46,6 +49,7 @@ import hiReservations from '@/locales/hi/reservations.json';
 import hiSettings from '@/locales/hi/settings.json';
 import hiAutomations from '@/locales/hi/automations.json';
 import hiKnowledge from '@/locales/hi/knowledge.json';
+import hiSetup from '@/locales/hi/setup.json';
 
 import ruCommon from '@/locales/ru/common.json';
 import ruAuth from '@/locales/ru/auth.json';
@@ -57,6 +61,7 @@ import ruReservations from '@/locales/ru/reservations.json';
 import ruSettings from '@/locales/ru/settings.json';
 import ruAutomations from '@/locales/ru/automations.json';
 import ruKnowledge from '@/locales/ru/knowledge.json';
+import ruSetup from '@/locales/ru/setup.json';
 
 import zhCommon from '@/locales/zh/common.json';
 import zhAuth from '@/locales/zh/auth.json';
@@ -68,6 +73,7 @@ import zhReservations from '@/locales/zh/reservations.json';
 import zhSettings from '@/locales/zh/settings.json';
 import zhAutomations from '@/locales/zh/automations.json';
 import zhKnowledge from '@/locales/zh/knowledge.json';
+import zhSetup from '@/locales/zh/setup.json';
 
 // Define available namespaces
 export const namespaces = [
@@ -81,6 +87,7 @@ export const namespaces = [
   'settings',
   'automations',
   'knowledge',
+  'setup',
 ] as const;
 
 export type Namespace = (typeof namespaces)[number];
@@ -101,6 +108,7 @@ i18n
         settings: enSettings,
         automations: enAutomations,
         knowledge: enKnowledge,
+        setup: enSetup,
       },
       es: {
         common: esCommon,
@@ -113,6 +121,7 @@ i18n
         settings: esSettings,
         automations: esAutomations,
         knowledge: esKnowledge,
+        setup: esSetup,
       },
       ar: {
         common: arCommon,
@@ -125,6 +134,7 @@ i18n
         settings: arSettings,
         automations: arAutomations,
         knowledge: arKnowledge,
+        setup: arSetup,
       },
       hi: {
         common: hiCommon,
@@ -137,6 +147,7 @@ i18n
         settings: hiSettings,
         automations: hiAutomations,
         knowledge: hiKnowledge,
+        setup: hiSetup,
       },
       ru: {
         common: ruCommon,
@@ -149,6 +160,7 @@ i18n
         settings: ruSettings,
         automations: ruAutomations,
         knowledge: ruKnowledge,
+        setup: ruSetup,
       },
       zh: {
         common: zhCommon,
@@ -161,6 +173,7 @@ i18n
         settings: zhSettings,
         automations: zhAutomations,
         knowledge: zhKnowledge,
+        setup: zhSetup,
       },
     },
     fallbackLng: 'en',
@@ -170,7 +183,7 @@ i18n
     // Load all namespaces (they're bundled anyway)
     ns: namespaces as unknown as string[],
     // Search other namespaces when key not found in default
-    fallbackNS: ['auth', 'dashboard', 'tasks', 'conversations', 'guests', 'reservations', 'settings', 'automations', 'knowledge'],
+    fallbackNS: ['auth', 'dashboard', 'tasks', 'conversations', 'guests', 'reservations', 'settings', 'automations', 'knowledge', 'setup'],
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],

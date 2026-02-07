@@ -171,6 +171,26 @@ button, a, input, select, textarea {
   }
 }
 
+/* Stretching spinner animation */
+@keyframes spinner-dash {
+  0% {
+    stroke-dasharray: 1 150;
+    stroke-dashoffset: 0;
+  }
+  50% {
+    stroke-dasharray: 90 150;
+    stroke-dashoffset: -35;
+  }
+  100% {
+    stroke-dasharray: 90 150;
+    stroke-dashoffset: -124;
+  }
+}
+
+.animate-spinner-dash {
+  animation: spinner-dash 1.5s ease-in-out infinite;
+}
+
 /* Time input styling to match shadcn design */
 input[type="time"] {
   color-scheme: light;

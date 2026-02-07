@@ -800,3 +800,30 @@ export const approvalQueue = sqliteTable(
 
 export type ApprovalQueueItem = typeof approvalQueue.$inferSelect;
 export type NewApprovalQueueItem = typeof approvalQueue.$inferInsert;
+
+// ===================
+// Setup State
+// ===================
+
+/**
+ * Setup wizard state for fresh installations
+ */
+export const setupState = sqliteTable('setup_state', {
+  id: text('id').primaryKey().default('setup'),
+  // Status: pending, in_progress, completed
+  status: text('status').notNull().default('pending'),
+  currentStep: text('current_step'),
+  // JSON array of completed step names
+  completedSteps: text('completed_steps').notNull().default('[]'),
+  // JSON object with setup context data
+  context: text('context').notNull().default('{}'),
+  createdAt: text('created_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+  updatedAt: text('updated_at')
+    .notNull()
+    .default(sql`(datetime('now'))`),
+});
+
+export type SetupState = typeof setupState.$inferSelect;
+export type NewSetupState = typeof setupState.$inferInsert;

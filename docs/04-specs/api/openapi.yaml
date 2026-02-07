@@ -17,6 +17,7 @@ info:
 
     The following endpoints do not require authentication:
     - Health checks (`/health/*`)
+    - Setup wizard (`/api/v1/setup/*`)
     - Login (`/api/v1/auth/login`)
     - Token refresh (`/api/v1/auth/refresh`)
   version: 0.7.0
@@ -34,6 +35,8 @@ servers:
 tags:
   - name: Health
     description: Health check endpoints for monitoring
+  - name: Setup
+    description: Setup wizard for fresh installations (no auth required)
   - name: Authentication
     description: Login, logout, and token management
   - name: Guests
@@ -122,6 +125,179 @@ paths:
             application/json:
               schema:
                 $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/setup/state:
+    get:
+      tags: [Setup]
+      summary: Get setup state
+      description: Returns the current setup wizard state. Used to determine if setup is needed.
+      operationId: setupGetState
+      security: []
+      responses:
+        '200':
+          description: Setup state
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SetupState'
+              example:
+                status: pending
+                currentStep: null
+                completedSteps: []
+                context: {}
+                isFreshInstall: true
+
+  /api/v1/setup/start:
+    post:
+      tags: [Setup]
+      summary: Start setup wizard
+      description: Begins the setup wizard and enables Local AI provider.
+      operationId: setupStart
+      security: []
+      responses:
+        '200':
+          description: Setup started
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: in_progress
+                  currentStep:
+                    type: string
+                    example: bootstrap
+                  message:
+                    type: string
+                    example: Setup started, Local AI enabled
+
+  /api/v1/setup/bootstrap:
+    post:
+      tags: [Setup]
+      summary: Complete bootstrap step
+      description: Completes the bootstrap step (Local AI enabled) and moves to welcome step.
+      operationId: setupBootstrap
+      security: []
+      responses:
+        '200':
+          description: Bootstrap completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: in_progress
+                  currentStep:
+                    type: string
+                    example: welcome
+                  completedSteps:
+                    type: array
+                    items:
+                      type: string
+                    example: [bootstrap]
+
+  /api/v1/setup/welcome:
+    post:
+      tags: [Setup]
+      summary: Save property info and complete setup
+      description: Saves property name and type to settings, completing the setup wizard.
+      operationId: setupWelcome
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/SetupWelcomeRequest'
+            example:
+              name: The Grand Hotel
+              type: hotel
+      responses:
+        '200':
+          description: Setup completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: completed
+                  currentStep:
+                    type: 'null'
+                  completedSteps:
+                    type: array
+                    items:
+                      type: string
+                    example: [bootstrap, welcome, property_name, property_type]
+                  context:
+                    $ref: '#/components/schemas/SetupContext'
+                  message:
+                    type: string
+                    example: Setup completed
+        '400':
+          description: Validation error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+
+  /api/v1/setup/skip:
+    post:
+      tags: [Setup]
+      summary: Skip setup wizard
+      description: Skips the setup wizard and marks it as completed. User goes directly to login.
+      operationId: setupSkip
+      security: []
+      responses:
+        '200':
+          description: Setup skipped
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: completed
+                  message:
+                    type: string
+                    example: Setup skipped
+
+  /api/v1/setup/reset:
+    post:
+      tags: [Setup]
+      summary: Reset setup state (dev only)
+      description: Resets the setup state to allow re-running the wizard. Only available in development mode.
+      operationId: setupReset
+      security: []
+      responses:
+        '200':
+          description: Setup reset
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                    example: pending
+                  message:
+                    type: string
+                    example: Setup state reset
+        '403':
+          description: Forbidden in production
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorResponse'
+              example:
+                error:
+                  code: FORBIDDEN
+                  message: Setup reset is not available in production
 
   /api/v1/auth/login:
     post:
@@ -389,3 +565,57 @@ components:
               type: object
               description: Additional error details
               additionalProperties: true
+
+    SetupState:
+      type: object
+      required: [status, completedSteps, context, isFreshInstall]
+      properties:
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+          description: Current setup status
+        currentStep:
+          type:
+            - string
+            - 'null'
+          enum: [bootstrap, welcome, property_name, property_type, null]
+          description: Current step in the setup wizard
+        completedSteps:
+          type: array
+          items:
+            type: string
+            enum: [bootstrap, welcome, property_name, property_type]
+          description: List of completed setup steps
+        context:
+          $ref: '#/components/schemas/SetupContext'
+        isFreshInstall:
+          type: boolean
+          description: True if setup has not been completed
+
+    SetupContext:
+      type: object
+      description: Context data collected during setup
+      properties:
+        propertyName:
+          type: string
+          description: Name of the property
+        propertyType:
+          type: string
+          enum: [hotel, bnb, vacation_rental, other]
+          description: Type of property
+        localAiEnabled:
+          type: boolean
+          description: Whether Local AI was enabled during setup
+
+    SetupWelcomeRequest:
+      type: object
+      required: [name, type]
+      properties:
+        name:
+          type: string
+          minLength: 1
+          description: Property name
+        type:
+          type: string
+          enum: [hotel, bnb, vacation_rental, other]
+          description: Property type

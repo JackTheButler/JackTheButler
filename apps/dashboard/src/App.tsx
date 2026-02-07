@@ -1,6 +1,7 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LoginPage } from '@/pages/Login';
+import { SetupPage } from '@/pages/Setup';
 import { Layout } from '@/components/layout/Layout';
 import { HomePage } from '@/pages/home/Home';
 import { ConversationsPage } from '@/pages/inbox/Conversations';
@@ -24,6 +25,7 @@ export function App() {
       <BrowserRouter>
         <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/setup" element={<SetupPage />} />
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/inbox" element={<ConversationsPage />} />
