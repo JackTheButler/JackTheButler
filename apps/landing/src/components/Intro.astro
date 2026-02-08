@@ -15,18 +15,37 @@
 <style is:inline>
   .intro-seen #intro-overlay { display: none !important; }
 </style>
-<div id="intro-overlay" class="fixed inset-0 z-[100] bg-neutral-950 flex items-center justify-center">
-  <!-- Skip button -->
-  <button id="skip-intro" class="absolute top-6 right-6 text-neutral-500 hover:text-white text-sm transition-colors cursor-pointer">
+<div id="intro-overlay" class="fixed inset-0 z-[100] bg-white dark:bg-neutral-950 flex items-center justify-center">
+  <!-- Skip button (left) -->
+  <button id="skip-intro" class="absolute top-6 left-6 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white text-sm rounded-full transition-colors cursor-pointer">
     Skip
   </button>
+
+  <!-- Theme Toggle (right) -->
+  <div class="absolute top-6 right-6">
+    <button
+      id="intro-theme-toggle"
+      type="button"
+      class="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors relative overflow-hidden cursor-pointer"
+      aria-label="Toggle theme"
+    >
+      <!-- Sun icon (visible in dark mode) -->
+      <svg class="w-6 h-6 text-yellow-500 absolute transition-all duration-300 ease-out opacity-0 dark:opacity-100 scale-50 dark:scale-100 rotate-90 dark:rotate-0" viewBox="0 0 24 24">
+        <path fill="currentColor" fill-rule="evenodd" d="M13 3a1 1 0 1 0-2 0v2a1 1 0 1 0 2 0zM6.343 4.929A1 1 0 0 0 4.93 6.343l1.414 1.414a1 1 0 0 0 1.414-1.414zm12.728 1.414a1 1 0 0 0-1.414-1.414l-1.414 1.414a1 1 0 0 0 1.414 1.414zM12 7a5 5 0 1 0 0 10a5 5 0 0 0 0-10m-9 4a1 1 0 1 0 0 2h2a1 1 0 1 0 0-2zm16 0a1 1 0 1 0 0 2h2a1 1 0 1 0 0-2zM7.757 17.657a1 1 0 1 0-1.414-1.414l-1.414 1.414a1 1 0 1 0 1.414 1.414zm9.9-1.414a1 1 0 0 0-1.414 1.414l1.414 1.414a1 1 0 0 0 1.414-1.414zM13 19a1 1 0 1 0-2 0v2a1 1 0 1 0 2 0z" clip-rule="evenodd"/>
+      </svg>
+      <!-- Moon icon (visible in light mode) -->
+      <svg class="w-5 h-5 text-indigo-400 absolute transition-all duration-300 ease-out opacity-100 dark:opacity-0 scale-100 dark:scale-50 rotate-0 dark:rotate-90" viewBox="0 0 24 24">
+        <path fill="currentColor" d="M9.272 2.406a1 1 0 0 0-1.23-1.355C6.59 1.535 5.432 2.488 4.37 3.55a11.4 11.4 0 0 0 0 16.182c4.518 4.519 11.51 4.261 15.976-.205c1.062-1.062 2.014-2.22 2.498-3.673A1 1 0 0 0 21.55 14.6c-3.59 1.322-7.675.734-10.433-2.025C8.35 9.808 7.788 5.744 9.272 2.406"/>
+      </svg>
+    </button>
+  </div>
 
   <!-- Center container -->
   <div class="w-full max-w-2xl px-6">
     <!-- Logo (starts centered, moves left to reveal JACK) -->
     <div id="intro-logo" class="flex items-center justify-center gap-3 mb-12 opacity-0 translate-y-8 transition-all duration-700">
-      <img id="intro-logo-img" src={`${import.meta.env.BASE_URL}butler.svg`} alt="Jack The Butler" class="w-16 h-16 invert -rotate-90 translate-x-12 transition-all duration-700" />
-      <span id="intro-logo-text" class="text-3xl font-bold text-white opacity-0 transition-opacity duration-500">Jack</span>
+      <img id="intro-logo-img" src={`${import.meta.env.BASE_URL}butler.svg`} alt="Jack The Butler" class="w-16 h-16 dark:invert -rotate-90 translate-x-12 transition-all duration-700" />
+      <span id="intro-logo-text" class="text-3xl font-bold text-neutral-900 dark:text-white opacity-0 transition-opacity duration-500">JACK</span>
     </div>
 
 
@@ -39,16 +58,16 @@
 
   <!-- Input field (fixed at bottom) -->
   <div id="intro-input-container" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 translate-y-4 transition-all duration-500">
-    <div class="w-full px-5 py-4 rounded-2xl bg-neutral-900 border border-neutral-700 text-white">
-      <span id="intro-input" class="text-neutral-300"></span>
+    <div class="w-full px-5 py-4 rounded-2xl bg-neutral-100 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-700 text-neutral-900 dark:text-white">
+      <span id="intro-input" class="text-neutral-700 dark:text-neutral-300"></span>
       <span class="inline-block w-0.5 h-5 bg-blue-500 animate-pulse ml-0.5 align-middle"></span>
     </div>
   </div>
 
   <!-- Gradient orbs for atmosphere -->
   <div class="absolute inset-0 overflow-hidden pointer-events-none">
-    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
-    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/20 dark:bg-emerald-500/10 rounded-full blur-3xl"></div>
   </div>
 </div>
 
@@ -141,7 +160,7 @@
     msg.innerHTML = `
       <div class="max-w-[80%] px-4 py-3 rounded-2xl ${
         type === 'user'
-          ? 'bg-neutral-700 text-white rounded-br-md'
+          ? 'bg-neutral-200 dark:bg-neutral-700 text-neutral-900 dark:text-white rounded-br-md'
           : 'bg-blue-600 text-white rounded-bl-md'
       }">
         <p class="text-sm">${text}</p>
@@ -174,7 +193,7 @@
       if (msg.type === 'time') {
         // Show timestamp with counter animation
         const timeEl = document.createElement('div');
-        timeEl.className = 'intro-message text-center text-neutral-400 text-xs py-2';
+        timeEl.className = 'intro-message text-center text-neutral-600 dark:text-neutral-400 text-xs py-2';
         timeEl.innerHTML = '<span class="time-hour">3</span>:<span class="time-min">11</span> AM';
         messages?.appendChild(timeEl);
         await sleep(800);
@@ -211,7 +230,7 @@
     inputContainer!.style.display = 'none';
 
     const continueBtn = document.createElement('button');
-    continueBtn.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-8 py-4 bg-white hover:bg-neutral-100 text-neutral-900 font-semibold rounded-full transition-all duration-500 opacity-0 translate-y-4 cursor-pointer';
+    continueBtn.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-8 py-4 bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-900 font-semibold rounded-full transition-all duration-500 opacity-0 translate-y-4 cursor-pointer';
     continueBtn.textContent = 'Get Jack for Free →';
     continueBtn.onclick = endIntro;
     overlay?.appendChild(continueBtn);
@@ -231,6 +250,39 @@
 
   // Skip button
   skipBtn?.addEventListener('click', endIntro);
+
+  // Theme toggle with View Transitions API (same as main site)
+  document.getElementById('intro-theme-toggle')?.addEventListener('click', function() {
+    const isDark = document.documentElement.classList.contains('dark');
+    const newTheme = isDark ? 'light' : 'dark';
+
+    // Get button position for animation origin
+    const rect = this.getBoundingClientRect();
+    const x = rect.left + rect.width / 2;
+    const y = rect.top + rect.height / 2;
+
+    // Calculate the max radius needed to cover the screen
+    const maxRadius = Math.hypot(
+      Math.max(x, window.innerWidth - x),
+      Math.max(y, window.innerHeight - y)
+    );
+
+    // Check for View Transitions API support
+    if (document.startViewTransition) {
+      document.documentElement.style.setProperty('--x', x + 'px');
+      document.documentElement.style.setProperty('--y', y + 'px');
+      document.documentElement.style.setProperty('--r', maxRadius + 'px');
+
+      document.startViewTransition(function() {
+        document.documentElement.classList.toggle('dark');
+        localStorage.setItem('theme', newTheme);
+      });
+    } else {
+      // Fallback for browsers without View Transitions
+      document.documentElement.classList.toggle('dark');
+      localStorage.setItem('theme', newTheme);
+    }
+  });
 
   // Keyboard skip (Escape or Space)
   document.addEventListener('keydown', (e) => {
