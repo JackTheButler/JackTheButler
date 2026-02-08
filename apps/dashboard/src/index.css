@@ -208,3 +208,17 @@ input[type="time"]::-webkit-calendar-picker-indicator {
 .dark input[type="time"]::-webkit-calendar-picker-indicator {
   filter: invert(1);
 }
+
+/* Subtle breathing/scale animation */
+@keyframes breathe {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+}
+
+.animate-breathe {
+  animation: breathe 2s ease-in-out infinite;
+}

@@ -42,16 +42,20 @@ export function BootstrapScreen({ onContinue, isLoading }: BootstrapScreenProps)
         {t('bootstrap.message')}
       </p>
 
-      <Button
-        onClick={onContinue}
-        disabled={isLoading}
-        loading={isLoading}
-        size="lg"
-        className="min-w-32 opacity-0 animate-fade-in-up"
+      <div
+        className="opacity-0 animate-fade-in-up"
         style={{ animationDelay: '450ms' }}
       >
-        {t('bootstrap.continue')}
-      </Button>
+        <Button
+          onClick={onContinue}
+          disabled={isLoading}
+          loading={isLoading}
+          size="lg"
+          className="min-w-32 rounded-full animate-breathe"
+        >
+          {t('bootstrap.continue')}
+        </Button>
+      </div>
     </div>
   );
 }

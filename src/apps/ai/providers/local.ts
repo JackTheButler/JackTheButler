@@ -76,7 +76,8 @@ interface TextGenerationPipeline {
  * Features:
  * - Semantic embeddings using all-MiniLM-L6-v2 (~80MB)
  * - Multiple completion model options:
- *   - Llama 3.2 1B (~1.2GB quantized, 128K context) - Default
+ *   - Llama 3.2 1B (~1.2GB, 128K context) - Default
+ *   - Gemma 3 1B (~1GB, Google)
  *   - SmolLM2 1.7B (~3.4GB, optimized for on-device)
  *   - Phi-3 Mini (~2GB, 3.8B params, best quality)
  * - No external API calls required
@@ -356,6 +357,8 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
     // Detect model type and use appropriate format
     if (this.completionModel.includes('Llama-3')) {
       return this.buildLlamaPrompt(messages);
+    } else if (this.completionModel.includes('gemma')) {
+      return this.buildGemmaPrompt(messages);
     } else if (this.completionModel.includes('SmolLM')) {
       return this.buildChatMLPrompt(messages);
     } else if (this.completionModel.includes('Phi-3')) {
@@ -379,6 +382,23 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
     parts.push('<|start_header_id|>assistant<|end_header_id|>\n\n');
 
     return parts.join('');
+  }
+
+  /**
+   * Gemma chat format
+   */
+  private buildGemmaPrompt(messages: { role: string; content: string }[]): string {
+    const parts: string[] = [];
+
+    for (const msg of messages) {
+      const role = msg.role === 'assistant' ? 'model' : msg.role;
+      parts.push(`<start_of_turn>${role}\n${msg.content}<end_of_turn>`);
+    }
+
+    // Add model turn to continue
+    parts.push('<start_of_turn>model\n');
+
+    return parts.join('\n');
   }
 
   /**
@@ -455,6 +475,7 @@ export const manifest: AIAppManifest = {
       default: COMPLETION_MODEL,
       options: [
         { value: 'onnx-community/Llama-3.2-1B-Instruct-ONNX', label: 'Llama 3.2 1B (1.2GB, 128K context, Default)' },
+        { value: 'onnx-community/gemma-3-1b-it-ONNX', label: 'Gemma 3 1B (1GB, Google)' },
         { value: 'HuggingFaceTB/SmolLM2-1.7B-Instruct', label: 'SmolLM2 1.7B (3.4GB, Balanced)' },
         { value: 'onnx-community/Phi-3-mini-4k-instruct-onnx', label: 'Phi-3 Mini (2GB, Best Quality)' },
       ],

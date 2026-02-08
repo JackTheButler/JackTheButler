@@ -96,7 +96,7 @@ export function ChatMessage({ role, content, isTyping, statusText }: ChatMessage
         className={cn(
           'max-w-[80%] text-sm',
           isAssistant
-            ? 'text-foreground pt-0.5 whitespace-pre-wrap'
+            ? 'text-foreground whitespace-pre-wrap'
             : 'bg-primary text-primary-foreground rounded-2xl rounded-tr-sm px-4 py-2.5'
         )}
       >

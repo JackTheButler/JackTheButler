@@ -85,6 +85,10 @@ export default {
           '0%': { transform: 'scale(0.8) rotate(0deg)' },
           '100%': { transform: 'scale(1) rotate(90deg)' },
         },
+        breathe: {
+          '0%, 100%': { transform: 'scale(1)' },
+          '50%': { transform: 'scale(1.05)' },
+        },
         dash: {
           '0%': { strokeDasharray: '1 200', strokeDashoffset: '0' },
           '50%': { strokeDasharray: '45 200', strokeDashoffset: '-20' },
@@ -97,6 +101,7 @@ export default {
         'fade-in-up': 'fade-in-up 0.5s ease-out forwards',
         'spin-once': 'spin-once 0.5s ease-out',
         'scale-in': 'scale-in 0.3s ease-out forwards',
+        breathe: 'breathe 2s ease-in-out infinite',
       },
     },
   },
