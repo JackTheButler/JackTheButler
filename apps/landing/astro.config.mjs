@@ -6,8 +6,8 @@ const isProduction = process.env.NODE_ENV === 'production';
 
 // https://astro.build/config
 export default defineConfig({
-  site: isProduction ? 'https://jackthebutler.github.io' : 'http://localhost:4321',
-  base: isProduction ? '/JackTheButler/' : '/',
+  site: isProduction ? 'https://jackthebutler.com' : 'http://localhost:4321',
+  base: '/',
   vite: {
     plugins: [tailwindcss()]
   }
