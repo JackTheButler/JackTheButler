@@ -1,0 +1,57 @@
+---
+// Why Self-Hosted section
+import { Lock, CircleDollarSign, Server, Code } from '@lucide/astro'
+---
+
+<section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">
+      Why self-hosted?
+    </h2>
+    <p class="text-neutral-600 dark:text-neutral-400 text-center mb-16 max-w-2xl mx-auto">
+      Your guests trust you with their data. Keep it on your own server.
+    </p>
+
+    <div class="grid md:grid-cols-2 gap-8">
+      <div class="flex gap-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <Lock class="w-5 h-5" />
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-1">Your Data Stays Yours</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">Guest conversations never leave your server. Full GDPR compliance by design.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <CircleDollarSign class="w-5 h-5" />
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-1">No Per-Message Fees</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">Pay only for your server and AI API. Handle unlimited messages.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <Server class="w-5 h-5" />
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-1">Works Offline</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">Run local AI models. No internet dependency for core features.</p>
+        </div>
+      </div>
+
+      <div class="flex gap-4">
+        <div class="w-10 h-10 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0">
+          <Code class="w-5 h-5" />
+        </div>
+        <div>
+          <h3 class="text-lg font-semibold mb-1">Full Control</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">Open source. Customize anything. No vendor lock-in.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>

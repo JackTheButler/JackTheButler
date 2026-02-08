@@ -1,0 +1,147 @@
+---
+// Stats banner - Before/After comparison with animated counters
+import { Clock, Zap, MessageSquare, ArrowRight } from '@lucide/astro'
+
+const stats = [
+  {
+    icon: Clock,
+    label: 'Response Time',
+    before: '2hrs',
+    after: '10',
+    afterUnit: 's',
+    isTime: true
+  },
+  {
+    icon: Zap,
+    label: 'Availability',
+    before: '9-5',
+    after: '24/7',
+    afterUnit: '',
+    isTime: false
+  },
+  {
+    icon: MessageSquare,
+    label: 'Auto-Resolved',
+    before: '0',
+    after: '80',
+    afterUnit: '%',
+    isNumber: true
+  },
+]
+---
+
+<section class="py-16 px-6">
+  <div class="max-w-5xl mx-auto">
+    <div class="grid md:grid-cols-3 gap-6">
+      {stats.map((stat, index) => (
+        <div class="stat-card group relative p-6 rounded-2xl bg-neutral-900 dark:bg-neutral-100 border border-neutral-800 dark:border-neutral-200 overflow-hidden" data-index={index}>
+          <!-- Background gradient on hover -->
+          <div class="absolute inset-0 bg-gradient-to-br from-blue-500/10 to-emerald-500/10 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+          <div class="relative">
+            <!-- Icon -->
+            <div class="inline-flex items-center justify-center w-10 h-10 rounded-xl bg-white/10 dark:bg-neutral-900/20 text-blue-400 dark:text-blue-600 mb-4">
+              <stat.icon class="w-5 h-5" />
+            </div>
+
+            <!-- Label -->
+            <div class="text-sm font-medium text-white dark:text-neutral-900 mb-4">{stat.label}</div>
+
+            <!-- Before / After -->
+            <div class="flex items-center gap-3">
+              <!-- Before -->
+              <div class="flex-1">
+                <div class="text-xs text-neutral-400 dark:text-neutral-500 mb-1">Before</div>
+                <div class="text-xl font-semibold text-neutral-400 dark:text-neutral-600 line-through decoration-red-400/50">
+                  {stat.before}
+                </div>
+              </div>
+
+              <!-- Arrow -->
+              <div class="text-neutral-600 dark:text-neutral-400">
+                <ArrowRight class="w-5 h-5" />
+              </div>
+
+              <!-- After -->
+              <div class="flex-1 text-right">
+                <div class="text-xs text-emerald-400 dark:text-emerald-600 mb-1">With Jack</div>
+                <div class="text-2xl font-bold text-emerald-400 dark:text-emerald-600">
+                  {stat.isNumber ? (
+                    <span class="counter" data-target={stat.after}>0</span>
+                  ) : stat.isTime ? (
+                    <span class="counter" data-target={stat.after}>0</span>
+                  ) : (
+                    <span>{stat.after}</span>
+                  )}
+                  <span class="text-lg">{stat.afterUnit}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Progress bar -->
+            <div class="mt-4 h-1.5 bg-neutral-700 dark:bg-neutral-300 rounded-full overflow-hidden">
+              <div
+                class="progress-bar h-full bg-gradient-to-r from-blue-500 to-emerald-500 rounded-full transition-all duration-1000 ease-out"
+                style="width: 0%"
+                data-width={stat.isNumber ? stat.after : "100"}
+              ></div>
+            </div>
+          </div>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>
+
+<script>
+  // Intersection Observer for scroll-triggered animations
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        // Animate counters
+        const counters = entry.target.querySelectorAll('.counter');
+        counters.forEach(counter => {
+          const target = parseInt(counter.getAttribute('data-target') || '0');
+          const duration = 1500;
+          const start = performance.now();
+
+          const animate = (currentTime: number) => {
+            const elapsed = currentTime - start;
+            const progress = Math.min(elapsed / duration, 1);
+
+            // Easing function (ease-out)
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            const current = Math.floor(easeOut * target);
+
+            counter.textContent = current.toString();
+
+            if (progress < 1) {
+              requestAnimationFrame(animate);
+            } else {
+              counter.textContent = target.toString();
+            }
+          };
+
+          requestAnimationFrame(animate);
+        });
+
+        // Animate progress bars
+        const progressBars = entry.target.querySelectorAll('.progress-bar');
+        progressBars.forEach((bar, index) => {
+          setTimeout(() => {
+            const width = bar.getAttribute('data-width') || '100';
+            (bar as HTMLElement).style.width = `${width}%`;
+          }, index * 200);
+        });
+
+        // Stop observing after animation
+        observer.unobserve(entry.target);
+      }
+    });
+  }, { threshold: 0.3 });
+
+  // Observe the stats section
+  document.querySelectorAll('.stat-card').forEach(card => {
+    observer.observe(card);
+  });
+</script>

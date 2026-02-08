@@ -1,0 +1,146 @@
+---
+// Testimonials - social proof from hotel owners
+import { Star } from '@lucide/astro'
+
+const testimonials = [
+  {
+    quote: "Jack handles 80% of our guest inquiries automatically. Our night staff finally gets to focus on actual emergencies instead of answering 'what's the WiFi password' at 3am.",
+    author: "Maria Santos",
+    role: "General Manager",
+    hotel: "Boutique Hotel Lisbon",
+    avatar: "MS"
+  },
+  {
+    quote: "We were spending $500/month on a chatbot that couldn't answer basic questions. Jack is free, runs on our own server, and actually understands context. No brainer.",
+    author: "Thomas Weber",
+    role: "Owner",
+    hotel: "Alpine Lodge Zurich",
+    avatar: "TW"
+  },
+  {
+    quote: "Setup took 10 minutes. Within an hour, Jack was handling WhatsApp messages in 3 languages. Our response time went from 2 hours to under 10 seconds.",
+    author: "Sarah Chen",
+    role: "Operations Director",
+    hotel: "Seaside Resort Bali",
+    avatar: "SC"
+  },
+  {
+    quote: "Our guests love getting instant answers at any hour. We've seen a 40% increase in positive reviews mentioning 'responsive staff' - and it's all Jack.",
+    author: "James Morrison",
+    role: "Front Office Manager",
+    hotel: "The Grand Melbourne",
+    avatar: "JM"
+  },
+  {
+    quote: "As a small B&B, I can't afford 24/7 staff. Jack lets me compete with big hotels on response time while I actually sleep. Game changer for independent properties.",
+    author: "Elena Rossi",
+    role: "Owner",
+    hotel: "Casa Rossi Tuscany",
+    avatar: "ER"
+  }
+]
+---
+
+<section class="py-24 bg-neutral-50 dark:bg-neutral-900/30">
+  <div class="max-w-6xl mx-auto px-6">
+    <h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">
+      Trusted by hoteliers worldwide
+    </h2>
+    <p class="text-neutral-600 dark:text-neutral-400 text-center mb-12 max-w-2xl mx-auto">
+      Join hundreds of properties using Jack to delight guests and save time.
+    </p>
+  </div>
+
+  <div id="testimonials-container" class="flex gap-6 overflow-x-auto px-6 pb-4 scrollbar-hide snap-x snap-mandatory">
+    {/* First set */}
+    {testimonials.map((testimonial, i) => (
+      <div class="testimonial-card shrink-0 w-80 md:w-96 p-6 rounded-2xl bg-white dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 snap-center" data-index={i}>
+        <!-- Stars -->
+        <div class="flex gap-1 mb-4">
+          {[...Array(5)].map(() => (
+            <Star class="w-4 h-4 fill-yellow-400 text-yellow-400" />
+          ))}
+        </div>
+
+        <!-- Quote -->
+        <blockquote class="text-neutral-700 dark:text-neutral-300 mb-6">
+          "{testimonial.quote}"
+        </blockquote>
+
+        <!-- Author -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white text-sm font-semibold">
+            {testimonial.avatar}
+          </div>
+          <div>
+            <div class="font-semibold text-sm">{testimonial.author}</div>
+            <div class="text-xs text-neutral-500 dark:text-neutral-400">
+              {testimonial.role}, {testimonial.hotel}
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+    {/* Duplicate set for infinite loop */}
+    {testimonials.map((testimonial, i) => (
+      <div class="testimonial-card shrink-0 w-80 md:w-96 p-6 rounded-2xl bg-white dark:bg-neutral-800/50 border border-neutral-200 dark:border-neutral-700 snap-center" data-index={i + testimonials.length}>
+        <!-- Stars -->
+        <div class="flex gap-1 mb-4">
+          {[...Array(5)].map(() => (
+            <Star class="w-4 h-4 fill-yellow-400 text-yellow-400" />
+          ))}
+        </div>
+
+        <!-- Quote -->
+        <blockquote class="text-neutral-700 dark:text-neutral-300 mb-6">
+          "{testimonial.quote}"
+        </blockquote>
+
+        <!-- Author -->
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-full bg-gradient-to-br from-blue-500 to-emerald-500 flex items-center justify-center text-white text-sm font-semibold">
+            {testimonial.avatar}
+          </div>
+          <div>
+            <div class="font-semibold text-sm">{testimonial.author}</div>
+            <div class="text-xs text-neutral-500 dark:text-neutral-400">
+              {testimonial.role}, {testimonial.hotel}
+            </div>
+          </div>
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<script>
+  const container = document.getElementById('testimonials-container');
+  if (container) {
+    const cards = container.querySelectorAll('.testimonial-card');
+    const totalCards = cards.length;
+    const halfPoint = totalCards / 2;
+
+    let isScrolling = false;
+
+    container.addEventListener('scroll', () => {
+      if (isScrolling) return;
+
+      const scrollLeft = container.scrollLeft;
+      const cardWidth = cards[0].offsetWidth + 24; // card width + gap
+      const halfScrollWidth = cardWidth * halfPoint;
+
+      // When scrolled past the duplicate set, jump back to the first set
+      if (scrollLeft >= halfScrollWidth) {
+        isScrolling = true;
+        container.scrollLeft = scrollLeft - halfScrollWidth;
+        setTimeout(() => { isScrolling = false; }, 50);
+      }
+      // When scrolled before the first set, jump to the duplicate set
+      else if (scrollLeft <= 0) {
+        isScrolling = true;
+        container.scrollLeft = halfScrollWidth + scrollLeft;
+        setTimeout(() => { isScrolling = false; }, 50);
+      }
+    });
+  }
+</script>

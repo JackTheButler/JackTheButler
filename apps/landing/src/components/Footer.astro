@@ -1,0 +1,43 @@
+---
+// Footer with final CTA
+import { Github } from '@lucide/astro'
+---
+
+<footer class="py-24 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <!-- Final CTA -->
+    <h2 class="text-3xl sm:text-4xl font-bold mb-4">
+      Ready to automate your guest communication?
+    </h2>
+    <p class="text-neutral-600 dark:text-neutral-400 mb-8 max-w-xl mx-auto">
+      Deploy in 5 minutes. No credit card required. Own your data forever.
+    </p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
+      <a
+        href="https://railway.com/deploy/jack-the-butler"
+        class="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold rounded-full transition-colors"
+      >
+        Deploy Free on Railway
+      </a>
+      <a
+        href="https://github.com/JackTheButler/JackTheButler"
+        class="inline-flex items-center gap-2 px-8 py-4 text-neutral-700 dark:text-neutral-300 font-semibold rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+      >
+        <Github class="w-5 h-5" />
+        View on GitHub
+      </a>
+    </div>
+
+    <!-- Links -->
+    <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-500 dark:text-neutral-400 mb-8">
+      <a href="https://github.com/JackTheButler/JackTheButler" class="hover:text-neutral-900 dark:hover:text-white transition-colors">GitHub</a>
+      <a href="https://github.com/JackTheButler/JackTheButler/tree/main/docs" class="hover:text-neutral-900 dark:hover:text-white transition-colors">Documentation</a>
+      <a href="https://github.com/JackTheButler/JackTheButler/issues" class="hover:text-neutral-900 dark:hover:text-white transition-colors">Community</a>
+    </div>
+
+    <!-- Copyright -->
+    <p class="text-sm text-neutral-400 dark:text-neutral-600">
+      Open source under MIT License
+    </p>
+  </div>
+</footer>

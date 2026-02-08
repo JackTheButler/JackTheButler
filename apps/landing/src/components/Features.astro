@@ -1,0 +1,60 @@
+---
+// Features grid
+import { Inbox, Lightbulb, Bell, User, ClipboardCheck, BarChart3 } from '@lucide/astro'
+
+const features = [
+  {
+    icon: Inbox,
+    title: 'Multi-Channel Inbox',
+    description: 'WhatsApp, SMS, Email, and Web Chat in one unified dashboard.'
+  },
+  {
+    icon: Lightbulb,
+    title: 'AI-Powered Responses',
+    description: 'Answers using your hotel\'s knowledge. Sounds like your team.'
+  },
+  {
+    icon: Bell,
+    title: 'Smart Escalation',
+    description: 'Routes complex requests to staff. You handle what matters.'
+  },
+  {
+    icon: User,
+    title: 'Guest Memory',
+    description: 'Remembers preferences across conversations. Personal touch at scale.'
+  },
+  {
+    icon: ClipboardCheck,
+    title: 'Task Management',
+    description: 'Creates and tracks tasks automatically. Nothing falls through.'
+  },
+  {
+    icon: BarChart3,
+    title: 'Analytics',
+    description: 'Insights on response times, topics, and guest satisfaction.'
+  }
+]
+---
+
+<section class="py-24 px-6">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">
+      Everything you need
+    </h2>
+    <p class="text-neutral-600 dark:text-neutral-400 text-center mb-16 max-w-2xl mx-auto">
+      A complete guest communication platform. No modules to buy, no per-message fees.
+    </p>
+
+    <div class="grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
+      {features.map((feature) => (
+        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+          <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
+            <feature.icon class="w-5 h-5" />
+          </div>
+          <h3 class="text-lg font-semibold mb-2">{feature.title}</h3>
+          <p class="text-neutral-600 dark:text-neutral-400 text-sm">{feature.description}</p>
+        </div>
+      ))}
+    </div>
+  </div>
+</section>

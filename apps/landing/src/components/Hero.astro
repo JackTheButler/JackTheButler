@@ -1,0 +1,162 @@
+---
+// Hero section - above the fold
+import { Github, ChevronRight } from '@lucide/astro'
+---
+
+<section class="min-h-screen flex items-center justify-center px-6 pt-28 relative overflow-hidden">
+  <!-- Stripe-like animated gradient background -->
+  <div class="absolute inset-0 -z-10 overflow-hidden">
+    <div class="stripe-gradient">
+      <div class="stripe-blob stripe-blob-1"></div>
+      <div class="stripe-blob stripe-blob-2"></div>
+      <div class="stripe-blob stripe-blob-3"></div>
+      <div class="stripe-blob stripe-blob-4"></div>
+    </div>
+  </div>
+
+  <div class="max-w-4xl mx-auto text-center">
+    <!-- Trust badges -->
+    <div class="flex items-center justify-center gap-4 mb-8 text-sm text-neutral-500 dark:text-neutral-400">
+      <span class="flex items-center gap-1.5">
+        <Github class="w-4 h-4" />
+        Open Source
+      </span>
+      <span class="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700"></span>
+      <span>Self-Hosted</span>
+      <span class="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700"></span>
+      <span>Free Forever</span>
+    </div>
+
+    <!-- Headline -->
+    <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
+      Your AI Concierge That
+      <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">
+        Never Sleeps
+      </span>
+    </h1>
+
+    <!-- Sub-headline -->
+    <p class="text-lg sm:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-10">
+      Handle WhatsApp, SMS, and email inquiries automatically.<br />
+      Deploy in 5 minutes. Own your data.
+    </p>
+
+    <!-- CTAs -->
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a
+        href="https://railway.com/deploy/jack-the-butler"
+        class="inline-flex items-center gap-2 px-8 py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
+      >
+        <svg class="w-5 h-5" viewBox="0 0 1024 1024" fill="currentColor">
+          <path d="M4.756 438.175A520.713 520.713 0 0 0 0 489.735h777.799c-2.716-5.306-6.365-10.09-10.045-14.772-132.97-171.791-204.498-156.896-306.819-161.26-34.114-1.403-57.249-1.967-193.037-1.967-72.677 0-151.688.185-228.628.39-9.96 26.884-19.566 52.942-24.243 74.14h398.571v51.909H4.756ZM783.93 541.696H.399c.82 13.851 2.112 27.517 3.978 40.999h723.39c32.248 0 50.299-18.297 56.162-40.999ZM45.017 724.306S164.941 1018.77 511.46 1024c207.112 0 385.071-123.006 465.907-299.694H45.017Z"/>
+          <path d="M511.454 0C319.953 0 153.311 105.16 65.31 260.612c68.771-.144 202.704-.226 202.704-.226h.031v-.051c158.309 0 164.193.707 195.118 1.998l19.149.706c66.7 2.224 148.683 9.384 213.19 58.19 35.015 26.471 85.571 84.896 115.708 126.52 27.861 38.499 35.876 82.756 16.933 125.158-17.436 38.97-54.952 62.215-100.383 62.215H16.69s4.233 17.944 10.58 37.751h970.632A510.385 510.385 0 0 0 1024 512.218C1024.01 229.355 794.532 0 511.454 0Z"/>
+        </svg>
+        Deploy Free on Railway
+      </a>
+      <a
+        href="#see-it-work"
+        class="inline-flex items-center gap-2 px-8 py-4 text-neutral-700 dark:text-neutral-300 font-semibold rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
+      >
+        See It Work
+        <ChevronRight class="w-4 h-4" />
+      </a>
+    </div>
+
+    <!-- Product visual -->
+    <div class="mt-16 relative">
+      <div class="absolute inset-0 bg-gradient-to-t from-white dark:from-neutral-950 to-transparent z-10 pointer-events-none"></div>
+      <div class="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 p-4 shadow-2xl shadow-neutral-200/50 dark:shadow-neutral-900/50">
+        <img
+          src="/dashboard.jpg"
+          alt="Jack The Butler Dashboard"
+          class="rounded-lg w-full"
+        />
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .stripe-gradient {
+    position: absolute;
+    inset: -50%;
+    width: 200%;
+    height: 200%;
+    filter: blur(120px);
+    opacity: 0.5;
+  }
+
+  :global(.dark) .stripe-gradient {
+    opacity: 0.3;
+  }
+
+  .stripe-blob {
+    position: absolute;
+    border-radius: 50%;
+    mix-blend-mode: multiply;
+  }
+
+  :global(.dark) .stripe-blob {
+    mix-blend-mode: screen;
+  }
+
+  .stripe-blob-1 {
+    width: 60%;
+    height: 60%;
+    top: 0;
+    left: -10%;
+    background: linear-gradient(180deg, #a855f7 0%, #6366f1 100%);
+    animation: float1 20s ease-in-out infinite;
+  }
+
+  .stripe-blob-2 {
+    width: 50%;
+    height: 50%;
+    top: 10%;
+    right: -5%;
+    background: linear-gradient(180deg, #3b82f6 0%, #06b6d4 100%);
+    animation: float2 25s ease-in-out infinite;
+  }
+
+  .stripe-blob-3 {
+    width: 45%;
+    height: 45%;
+    bottom: 10%;
+    left: 20%;
+    background: linear-gradient(180deg, #ec4899 0%, #f97316 100%);
+    animation: float3 22s ease-in-out infinite;
+  }
+
+  .stripe-blob-4 {
+    width: 40%;
+    height: 40%;
+    bottom: -5%;
+    right: 15%;
+    background: linear-gradient(180deg, #10b981 0%, #3b82f6 100%);
+    animation: float4 18s ease-in-out infinite;
+  }
+
+  @keyframes float1 {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(10%, 5%) rotate(5deg); }
+    66% { transform: translate(-5%, 10%) rotate(-3deg); }
+  }
+
+  @keyframes float2 {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(-8%, 8%) rotate(-4deg); }
+    66% { transform: translate(5%, -5%) rotate(6deg); }
+  }
+
+  @keyframes float3 {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(8%, -6%) rotate(3deg); }
+    66% { transform: translate(-10%, 5%) rotate(-5deg); }
+  }
+
+  @keyframes float4 {
+    0%, 100% { transform: translate(0, 0) rotate(0deg); }
+    33% { transform: translate(-5%, -8%) rotate(-6deg); }
+    66% { transform: translate(10%, 3%) rotate(4deg); }
+  }
+</style>

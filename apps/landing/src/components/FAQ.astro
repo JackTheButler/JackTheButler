@@ -1,0 +1,47 @@
+---
+// FAQ section
+import { ChevronDown } from '@lucide/astro'
+
+const faqs = [
+  {
+    question: 'How much does it cost?',
+    answer: 'Jack is free and open source. You only pay for your server (Railway free tier works) and AI API usage (typically $5-20/month for a small hotel).'
+  },
+  {
+    question: 'What AI providers are supported?',
+    answer: 'Claude (Anthropic), GPT (OpenAI), Ollama for local models, and built-in local AI using Transformers.js. Mix and match as needed.'
+  },
+  {
+    question: 'Can I run it without cloud AI?',
+    answer: 'Yes! Jack includes local AI models that run entirely on your server. No external API calls required for basic functionality.'
+  },
+  {
+    question: 'How do I connect WhatsApp?',
+    answer: 'Through WhatsApp Business API (Meta). The setup wizard guides you through the process. SMS works via Twilio, email via any SMTP.'
+  },
+  {
+    question: 'Is my data secure?',
+    answer: 'Your data stays on your server. We never see it. All credentials are encrypted at rest. You control backups and access.'
+  }
+]
+---
+
+<section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
+  <div class="max-w-3xl mx-auto">
+    <h2 class="text-3xl sm:text-4xl font-bold text-center mb-16">
+      Frequently asked questions
+    </h2>
+
+    <div class="space-y-4">
+      {faqs.map((faq) => (
+        <details class="group p-6 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <summary class="flex items-center justify-between cursor-pointer list-none">
+            <h3 class="text-lg font-semibold pr-4">{faq.question}</h3>
+            <ChevronDown class="w-5 h-5 text-neutral-500 dark:text-neutral-400 group-open:rotate-180 transition-transform" />
+          </summary>
+          <p class="mt-4 text-neutral-600 dark:text-neutral-400">{faq.answer}</p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>

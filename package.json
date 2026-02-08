@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env.development src/index.ts",
     "dev:dashboard": "pnpm --filter @jack/dashboard dev",
+    "dev:website": "pnpm --filter @jack/landing dev",
     "build": "tsc && tsc-alias",
     "start": "node --env-file=.env dist/index.js",
     "lint": "oxlint src/",
