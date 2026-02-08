@@ -16,7 +16,7 @@ import { Github, ChevronRight } from '@lucide/astro'
 
   <div class="max-w-4xl mx-auto text-center">
     <!-- Trust badges -->
-    <div class="flex items-center justify-center gap-4 mb-8 text-sm text-neutral-500 dark:text-neutral-400">
+    <div class="hero-animate delay-1 flex items-center justify-center gap-4 mb-8 text-sm text-neutral-500 dark:text-neutral-400">
       <span class="flex items-center gap-1.5">
         <Github class="w-4 h-4" />
         Open Source
@@ -28,7 +28,7 @@ import { Github, ChevronRight } from '@lucide/astro'
     </div>
 
     <!-- Headline -->
-    <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
+    <h1 class="hero-animate delay-2 text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
       Your AI Concierge That
       <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">
         Never Sleeps
@@ -36,13 +36,13 @@ import { Github, ChevronRight } from '@lucide/astro'
     </h1>
 
     <!-- Sub-headline -->
-    <p class="text-lg sm:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-10">
+    <p class="hero-animate delay-3 text-lg sm:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-10">
       Handle WhatsApp, SMS, and email inquiries automatically.<br />
       Deploy in 5 minutes. Own your data.
     </p>
 
     <!-- CTAs -->
-    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+    <div class="hero-animate delay-4 flex flex-col sm:flex-row items-center justify-center gap-4">
       <a
         href="https://railway.com/deploy/jack-the-butler"
         class="inline-flex items-center gap-2 px-8 py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
@@ -54,7 +54,7 @@ import { Github, ChevronRight } from '@lucide/astro'
         Deploy Free on Railway
       </a>
       <a
-        href="#see-it-work"
+        href="https://railway.com/deploy/jack-the-butler"
         class="inline-flex items-center gap-2 px-8 py-4 text-neutral-700 dark:text-neutral-300 font-semibold rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
       >
         See It Work
@@ -63,7 +63,7 @@ import { Github, ChevronRight } from '@lucide/astro'
     </div>
 
     <!-- Product visual -->
-    <div class="mt-16 relative">
+    <div class="hero-animate delay-4 mt-16 relative" style="animation-delay: 600ms;">
       <div class="absolute inset-0 bg-gradient-to-t from-white dark:from-neutral-950 to-transparent z-10 pointer-events-none"></div>
       <div class="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 p-4 shadow-2xl shadow-neutral-200/50 dark:shadow-neutral-900/50">
         <img
@@ -75,6 +75,17 @@ import { Github, ChevronRight } from '@lucide/astro'
     </div>
   </div>
 </section>
+
+<script>
+  // Trigger hero animations on page load
+  document.addEventListener('DOMContentLoaded', () => {
+    setTimeout(() => {
+      document.querySelectorAll('.hero-animate').forEach(el => {
+        el.classList.add('is-loaded');
+      });
+    }, 100);
+  });
+</script>
 
 <style>
   .stripe-gradient {
