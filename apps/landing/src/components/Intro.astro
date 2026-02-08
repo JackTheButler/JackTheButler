@@ -25,7 +25,7 @@
   <div class="w-full max-w-2xl px-6">
     <!-- Logo (starts centered, moves left to reveal JACK) -->
     <div id="intro-logo" class="flex items-center justify-center gap-3 mb-12 opacity-0 translate-y-8 transition-all duration-700">
-      <img id="intro-logo-img" src="/butler.svg" alt="Jack The Butler" class="w-16 h-16 invert -rotate-90 translate-x-12 transition-all duration-700" />
+      <img id="intro-logo-img" src={`${import.meta.env.BASE_URL}butler.svg`} alt="Jack The Butler" class="w-16 h-16 invert -rotate-90 translate-x-12 transition-all duration-700" />
       <span id="intro-logo-text" class="text-3xl font-bold text-white opacity-0 transition-opacity duration-500">Jack</span>
     </div>
 
