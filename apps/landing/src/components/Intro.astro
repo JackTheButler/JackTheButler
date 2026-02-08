@@ -230,7 +230,7 @@
     inputContainer!.style.display = 'none';
 
     const continueBtn = document.createElement('button');
-    continueBtn.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-8 py-4 bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-900 font-semibold rounded-full transition-all duration-500 opacity-0 translate-y-4 cursor-pointer';
+    continueBtn.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-8 py-4 bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-900 font-semibold rounded-full transition-all duration-500 opacity-0 translate-y-4 cursor-pointer whitespace-nowrap';
     continueBtn.textContent = 'Get Jack for Free →';
     continueBtn.onclick = endIntro;
     overlay?.appendChild(continueBtn);
