@@ -9,13 +9,18 @@
     var thirtyDays = 30 * 24 * 60 * 60 * 1000;
     if (lastSeen && (Date.now() - parseInt(lastSeen)) < thirtyDays) {
       document.documentElement.classList.add('intro-seen');
+    } else {
+      // Lock scroll while intro is active
+      document.documentElement.classList.add('intro-active');
     }
   })();
 </script>
 <style is:inline>
   .intro-seen #intro-overlay { display: none !important; }
+  .intro-active { overflow: hidden !important; }
+  .intro-active body { overflow: hidden !important; }
 </style>
-<div id="intro-overlay" class="fixed inset-0 z-[100] bg-white dark:bg-neutral-950 flex items-center justify-center">
+<div id="intro-overlay" class="fixed inset-0 z-[100] bg-white dark:bg-neutral-950 flex items-center justify-center min-h-[100dvh]">
   <!-- Skip button (left) -->
   <button id="skip-intro" class="absolute top-6 left-6 px-4 py-2 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 hover:text-neutral-900 dark:hover:text-white text-sm rounded-full transition-colors cursor-pointer">
     Skip
@@ -241,6 +246,8 @@
 
   function endIntro(): void {
     localStorage.setItem(INTRO_SEEN_KEY, Date.now().toString());
+    // Unlock scroll
+    document.documentElement.classList.remove('intro-active');
     overlay?.classList.add('opacity-0', 'pointer-events-none');
     overlay!.style.transition = 'opacity 0.5s ease-out';
     setTimeout(() => {
@@ -294,6 +301,7 @@
   // Run intro if not seen in last 30 days
   if (hasSeenIntro) {
     overlay?.remove();
+    document.documentElement.classList.remove('intro-active');
   } else {
     runIntro();
   }
