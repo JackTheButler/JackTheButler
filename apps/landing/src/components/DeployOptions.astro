@@ -14,7 +14,7 @@ import { Terminal, Copy } from '@lucide/astro'
 
     <div class="stagger-children grid md:grid-cols-3 gap-6">
       <!-- Railway -->
-      <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border-2 border-blue-500/50 relative">
+      <div class="deploy-card p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border-2 border-blue-500/50 relative hover:shadow-xl dark:hover:shadow-blue-500/10">
         <div class="absolute -top-3 left-6 px-3 py-1 bg-blue-600 dark:bg-blue-500 text-white text-xs font-semibold rounded-full">
           Recommended
         </div>
@@ -37,7 +37,7 @@ import { Terminal, Copy } from '@lucide/astro'
       </div>
 
       <!-- Render -->
-      <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+      <div class="deploy-card p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:shadow-xl dark:hover:shadow-neutral-500/10">
         <div class="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-white/10 flex items-center justify-center mb-4">
           <svg class="w-7 h-7" viewBox="0 0 21 21" fill="currentColor">
             <path d="M15.6491 0.00582604C12.9679 -0.120371 10.7133 1.81847 10.3286 4.373C10.3134 4.49154 10.2905 4.60627 10.2715 4.72099C9.67356 7.90268 6.88955 10.3119 3.5457 10.3119C2.35364 10.3119 1.23395 10.006 0.258977 9.47058C0.140914 9.40557 0 9.4897 0 9.62354V10.3081V20.6218H10.2677V12.8894C10.2677 11.4668 11.4178 10.3119 12.8346 10.3119H15.4015C18.3074 10.3119 20.6458 7.89121 20.5315 4.94662C20.4287 2.29649 18.2884 0.132023 15.6491 0.00582604Z"/>
@@ -56,7 +56,7 @@ import { Terminal, Copy } from '@lucide/astro'
       </div>
 
       <!-- Docker -->
-      <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+      <div class="deploy-card p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:shadow-xl dark:hover:shadow-neutral-500/10">
         <div class="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-white/10 flex items-center justify-center mb-4">
           <svg class="w-7 h-7 text-neutral-700 dark:text-white" viewBox="0 0 24 24" fill="currentColor">
             <path d="M13.983 11.078h2.119a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.119a.185.185 0 00-.185.185v1.888c0 .102.083.185.185.185m-2.954-5.43h2.118a.186.186 0 00.186-.186V3.574a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.186m0 2.716h2.118a.187.187 0 00.186-.186V6.29a.186.186 0 00-.186-.185h-2.118a.185.185 0 00-.185.185v1.887c0 .102.082.185.185.186m-2.93 0h2.12a.186.186 0 00.184-.186V6.29a.185.185 0 00-.185-.185H8.1a.185.185 0 00-.185.185v1.887c0 .102.083.185.185.186m-2.964 0h2.119a.186.186 0 00.185-.186V6.29a.185.185 0 00-.185-.185H5.136a.186.186 0 00-.186.185v1.887c0 .102.084.185.186.186m5.893 2.715h2.118a.186.186 0 00.186-.185V9.006a.186.186 0 00-.186-.186h-2.118a.185.185 0 00-.185.185v1.888c0 .102.082.185.185.185m-2.93 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.083.185.185.185m-2.964 0h2.119a.185.185 0 00.185-.185V9.006a.185.185 0 00-.184-.186h-2.12a.186.186 0 00-.186.186v1.887c0 .102.084.185.186.185m-2.92 0h2.12a.185.185 0 00.184-.185V9.006a.185.185 0 00-.184-.186h-2.12a.185.185 0 00-.184.185v1.888c0 .102.082.185.185.185M23.763 9.89c-.065-.051-.672-.51-1.954-.51-.338.001-.676.03-1.01.087-.248-1.7-1.653-2.53-1.716-2.566l-.344-.199-.226.327c-.284.438-.49.922-.612 1.43-.23.97-.09 1.882.403 2.661-.595.332-1.55.413-1.744.42H.751a.751.751 0 00-.75.748 11.376 11.376 0 00.692 4.062c.545 1.428 1.355 2.48 2.41 3.124 1.18.723 3.1 1.137 5.275 1.137.983.003 1.963-.086 2.93-.266a12.248 12.248 0 003.823-1.389c.98-.567 1.86-1.288 2.61-2.136 1.252-1.418 1.998-2.997 2.553-4.4h.221c1.372 0 2.215-.549 2.68-1.009.309-.293.55-.65.707-1.046l.098-.288z"/>
@@ -76,7 +76,7 @@ import { Terminal, Copy } from '@lucide/astro'
     </div>
 
     <!-- One-Line Install Card -->
-    <div class="animate-on-scroll mt-8 p-8 rounded-2xl bg-neutral-900 dark:bg-neutral-800/50 border border-neutral-800 dark:border-neutral-700">
+    <div class="install-card animate-on-scroll mt-8 p-8 rounded-2xl bg-neutral-900 dark:bg-neutral-800/50 border border-neutral-800 dark:border-neutral-700">
       <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
         <div class="flex items-center gap-4">
           <div class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0">
@@ -115,3 +115,22 @@ import { Terminal, Copy } from '@lucide/astro'
     setTimeout(() => { btn.innerHTML = originalHTML; }, 2000);
   });
 </script>
+
+<style>
+  .stagger-children.is-visible .deploy-card {
+    transition: transform 0.4s ease-out, box-shadow 0.4s ease-out;
+  }
+
+  .stagger-children.is-visible .deploy-card:hover {
+    transform: scale(1.03);
+  }
+
+  .install-card.is-visible {
+    transition: transform 0.4s ease-out, box-shadow 0.4s ease-out;
+  }
+
+  .install-card.is-visible:hover {
+    transform: scale(1.02);
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+  }
+</style>

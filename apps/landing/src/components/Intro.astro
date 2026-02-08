@@ -1,0 +1,248 @@
+---
+// Intro - First-time visitor wow experience
+---
+
+<script is:inline>
+  // Hide intro immediately if seen within 30 days (prevents flash)
+  (function() {
+    var lastSeen = localStorage.getItem('jack_intro_seen');
+    var thirtyDays = 30 * 24 * 60 * 60 * 1000;
+    if (lastSeen && (Date.now() - parseInt(lastSeen)) < thirtyDays) {
+      document.documentElement.classList.add('intro-seen');
+    }
+  })();
+</script>
+<style is:inline>
+  .intro-seen #intro-overlay { display: none !important; }
+</style>
+<div id="intro-overlay" class="fixed inset-0 z-[100] bg-neutral-950 flex items-center justify-center">
+  <!-- Skip button -->
+  <button id="skip-intro" class="absolute top-6 right-6 text-neutral-500 hover:text-white text-sm transition-colors cursor-pointer">
+    Skip
+  </button>
+
+  <!-- Center container -->
+  <div class="w-full max-w-2xl px-6">
+    <!-- Logo (starts centered, moves left to reveal JACK) -->
+    <div id="intro-logo" class="flex items-center justify-center gap-3 mb-12 opacity-0 translate-y-8 transition-all duration-700">
+      <img id="intro-logo-img" src="/butler.svg" alt="Jack The Butler" class="w-16 h-16 invert -rotate-90 translate-x-12 transition-all duration-700" />
+      <span id="intro-logo-text" class="text-3xl font-bold text-white opacity-0 transition-opacity duration-500">Jack</span>
+    </div>
+
+
+    <!-- Chat container -->
+    <div id="intro-chat">
+      <!-- Messages will appear here -->
+      <div id="intro-messages" class="space-y-4 mb-24 min-h-[200px]"></div>
+    </div>
+  </div>
+
+  <!-- Input field (fixed at bottom) -->
+  <div id="intro-input-container" class="fixed bottom-6 left-1/2 -translate-x-1/2 w-full max-w-2xl px-6 opacity-0 translate-y-4 transition-all duration-500">
+    <div class="w-full px-5 py-4 rounded-2xl bg-neutral-900 border border-neutral-700 text-white">
+      <span id="intro-input" class="text-neutral-300"></span>
+      <span class="inline-block w-0.5 h-5 bg-blue-500 animate-pulse ml-0.5 align-middle"></span>
+    </div>
+  </div>
+
+  <!-- Gradient orbs for atmosphere -->
+  <div class="absolute inset-0 overflow-hidden pointer-events-none">
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/10 rounded-full blur-3xl"></div>
+  </div>
+</div>
+
+<style>
+  .intro-message {
+    opacity: 0;
+    transform: translateY(10px);
+    animation: messageIn 0.4s ease-out forwards;
+  }
+
+  @keyframes messageIn {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  .typing-cursor {
+    display: inline-block;
+    width: 2px;
+    height: 1em;
+    background: #3b82f6;
+    animation: blink 1s step-end infinite;
+    vertical-align: middle;
+    margin-left: 2px;
+  }
+
+  @keyframes blink {
+    50% { opacity: 0; }
+  }
+
+  .time-tick {
+    display: inline-block;
+    animation: tick 0.15s ease-out;
+  }
+
+  @keyframes tick {
+    0% { transform: translateY(0); opacity: 1; }
+    50% { transform: translateY(-8px); opacity: 0; }
+    51% { transform: translateY(8px); opacity: 0; }
+    100% { transform: translateY(0); opacity: 1; }
+  }
+</style>
+
+<script>
+  const INTRO_SEEN_KEY = 'jack_intro_seen';
+  const THIRTY_DAYS_MS = 30 * 24 * 60 * 60 * 1000;
+
+  // Check if user has seen intro within last 30 days
+  const lastSeen = localStorage.getItem(INTRO_SEEN_KEY);
+  const hasSeenIntro = lastSeen && (Date.now() - parseInt(lastSeen)) < THIRTY_DAYS_MS;
+
+  const overlay = document.getElementById('intro-overlay');
+  const skipBtn = document.getElementById('skip-intro');
+  const logo = document.getElementById('intro-logo');
+  const logoImg = document.getElementById('intro-logo-img');
+  const logoText = document.getElementById('intro-logo-text');
+    const chat = document.getElementById('intro-chat');
+  const messages = document.getElementById('intro-messages');
+  const inputContainer = document.getElementById('intro-input-container');
+  const inputEl = document.getElementById('intro-input');
+
+  // Conversation script - Real guest interaction demo at 3AM
+  const conversation = [
+    { type: 'time', text: '3:12 AM' },
+    { type: 'user', text: 'Hey, our flight just got cancelled. Can we extend our stay by 2 nights?' },
+    { type: 'ai', text: 'Of course! I\'ve extended your reservation in room 412 through <strong>Thursday.</strong> Same rate applies. I\'ve also notified housekeeping and <strong>rescheduled your spa appointment.</strong>' },
+    { type: 'user', text: 'Wow that was fast. Thank you!' },
+    { type: 'ai', text: 'Happy to help! I\'ve sent the updated confirmation to your email. If you need anything else tonight, I\'m here.' },
+  ];
+
+  function typeText(element: HTMLElement, text: string, speed = 40): Promise<void> {
+    return new Promise((resolve) => {
+      let i = 0;
+      element.textContent = '';
+      const interval = setInterval(() => {
+        element.textContent += text[i];
+        i++;
+        if (i >= text.length) {
+          clearInterval(interval);
+          resolve();
+        }
+      }, speed);
+    });
+  }
+
+  function addMessage(type: 'user' | 'ai', text: string): void {
+    const msg = document.createElement('div');
+    msg.className = `intro-message flex ${type === 'user' ? 'justify-end' : 'justify-start'}`;
+    msg.innerHTML = `
+      <div class="max-w-[80%] px-4 py-3 rounded-2xl ${
+        type === 'user'
+          ? 'bg-neutral-700 text-white rounded-br-md'
+          : 'bg-blue-600 text-white rounded-bl-md'
+      }">
+        <p class="text-sm">${text}</p>
+      </div>
+    `;
+    messages?.appendChild(msg);
+  }
+
+  function sleep(ms: number): Promise<void> {
+    return new Promise(resolve => setTimeout(resolve, ms));
+  }
+
+  async function runIntro(): Promise<void> {
+    // Phase 1: Logo slides up and rotates
+    await sleep(300);
+    logo?.classList.remove('opacity-0', 'translate-y-8');
+    logoImg?.classList.remove('-rotate-90');
+    logoImg?.classList.add('rotate-0');
+
+    // Phase 1b: Logo moves left and reveals "Jack" text
+    await sleep(500);
+    logoImg?.classList.remove('translate-x-12');
+    logoText?.classList.remove('opacity-0');
+
+    // Phase 2: Show time first
+    await sleep(1000);
+
+    // Phase 3: Conversation
+    for (const msg of conversation) {
+      if (msg.type === 'time') {
+        // Show timestamp with counter animation
+        const timeEl = document.createElement('div');
+        timeEl.className = 'intro-message text-center text-neutral-400 text-xs py-2';
+        timeEl.innerHTML = '<span class="time-hour">3</span>:<span class="time-min">11</span> AM';
+        messages?.appendChild(timeEl);
+        await sleep(800);
+        // Animate minute counter up by 1
+        const minEl = timeEl.querySelector('.time-min');
+        if (minEl) {
+          minEl.classList.add('time-tick');
+          await sleep(150);
+          minEl.textContent = '12';
+        }
+        await sleep(400);
+        // Show input field after time
+        inputContainer?.classList.remove('opacity-0', 'translate-y-4');
+        await sleep(300);
+      } else if (msg.type === 'user') {
+        // Type in input
+        await typeText(inputEl!, msg.text, 35);
+        await sleep(400);
+        // Clear input and show as message
+        if (inputEl) inputEl.textContent = '';
+        addMessage('user', msg.text);
+      } else {
+        // AI thinking delay
+        await sleep(600);
+        addMessage('ai', msg.text);
+      }
+      await sleep(800);
+    }
+
+    // Phase 5: Hide input and show continue button
+    await sleep(500);
+    inputContainer?.classList.add('opacity-0', 'translate-y-4');
+    await sleep(300);
+    inputContainer!.style.display = 'none';
+
+    const continueBtn = document.createElement('button');
+    continueBtn.className = 'fixed bottom-6 left-1/2 -translate-x-1/2 px-8 py-4 bg-white hover:bg-neutral-100 text-neutral-900 font-semibold rounded-full transition-all duration-500 opacity-0 translate-y-4 cursor-pointer';
+    continueBtn.textContent = 'Get Jack for Free →';
+    continueBtn.onclick = endIntro;
+    overlay?.appendChild(continueBtn);
+
+    await sleep(50);
+    continueBtn.classList.remove('opacity-0', 'translate-y-4');
+  }
+
+  function endIntro(): void {
+    localStorage.setItem(INTRO_SEEN_KEY, Date.now().toString());
+    overlay?.classList.add('opacity-0', 'pointer-events-none');
+    overlay!.style.transition = 'opacity 0.5s ease-out';
+    setTimeout(() => {
+      overlay?.remove();
+    }, 500);
+  }
+
+  // Skip button
+  skipBtn?.addEventListener('click', endIntro);
+
+  // Keyboard skip (Escape or Space)
+  document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape' || e.key === ' ') {
+      endIntro();
+    }
+  });
+
+  // Run intro if not seen in last 30 days
+  if (hasSeenIntro) {
+    overlay?.remove();
+  } else {
+    runIntro();
+  }
+</script>
