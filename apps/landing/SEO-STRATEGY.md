@@ -23,8 +23,8 @@
 
 ### This Month
 - [ ] Write blog post: "What is a Hotel Chatbot? Complete Guide"
-- [ ] Write blog post: "Free Hotel Chatbot Solutions"
-- [ ] Add blog section to website
+- [x] Write blog post: "Free Hotel Chatbot Solutions" ✅
+- [x] Add blog section to website ✅
 - [x] Create /hotel-chatbot landing page ✅
 - [x] Add lazy loading to below-fold images ✅
 - [ ] Build 10 backlinks
@@ -120,7 +120,7 @@
 - [x] Add "hotel chatbot" to H1 or subtitle ✅
 - [x] Add more keyword-rich content sections ✅
 - [x] Create dedicated landing pages for each keyword ✅ (/hotel-chatbot)
-- [ ] Add blog section
+- [x] Add blog section ✅ (/blog)
 
 ---
 
@@ -129,7 +129,7 @@
 ### Blog Posts to Create
 
 #### High Priority
-1. **"What is a Hotel Chatbot? Complete Guide 2025"**
+1. **"What is a Hotel Chatbot? Complete Guide 2026"**
    - Target: hotel chatbot
    - Word count: 2,500+
    - Include: comparison table, pros/cons, how to choose
@@ -149,7 +149,7 @@
    - Target: AI hotel concierge
    - Word count: 1,500+
 
-5. **"Free Hotel Chatbot Solutions in 2025"**
+5. **"Free Hotel Chatbot Solutions in 2026"**
    - Target: free hotel chatbot
    - Word count: 2,000+
 

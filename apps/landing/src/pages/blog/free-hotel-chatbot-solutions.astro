@@ -1,0 +1,366 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Footer from '../../components/Footer.astro'
+import ArticleHeader from '../../components/blog/ArticleHeader.astro'
+import ArticleSchema from '../../components/blog/ArticleSchema.astro'
+import ArticleCTA from '../../components/blog/ArticleCTA.astro'
+import ArticleBottomCTA from '../../components/blog/ArticleBottomCTA.astro'
+import RelatedPosts from '../../components/blog/RelatedPosts.astro'
+import { Check, ExternalLink } from '@lucide/astro'
+import { getPost } from '../../data/blog-posts'
+
+const post = getPost('free-hotel-chatbot-solutions')!
+
+const relatedPosts = [
+  {
+    href: '/blog/what-is-hotel-chatbot/',
+    title: 'What is a Hotel Chatbot?',
+    description: 'Complete guide to hotel chatbots and how they work.'
+  },
+  {
+    href: '/hotel-chatbot/',
+    title: 'Jack The Butler Overview',
+    description: 'Learn more about the free, open-source hotel chatbot.'
+  }
+]
+---
+
+<Layout
+  title={`${post.title} | Jack The Butler Blog`}
+  description={post.description}
+  type="article"
+  author={post.author.name}
+  publishedTime={post.date}
+>
+  <ArticleSchema post={post} />
+
+  <article class="pt-32 pb-24 px-6">
+    <div class="max-w-3xl mx-auto">
+      <ArticleHeader post={post} />
+
+      <!-- Content -->
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <p class="lead text-xl text-neutral-600 dark:text-neutral-400">
+          Looking for a hotel chatbot that won't destroy your budget? You're not alone. Most hotel chatbot solutions charge $200-2000/month plus per-message fees. But there are genuinely free options that actually work.
+        </p>
+
+        <p>
+          In this guide, we'll compare the best free hotel chatbot solutions available in 2026, including fully free options, freemium tools, and open-source alternatives you can self-host.
+        </p>
+
+        <div class="not-prose my-12 p-6 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <h4 class="font-semibold text-blue-900 dark:text-blue-300 mb-2">Quick Summary</h4>
+          <p class="text-blue-800 dark:text-blue-200 text-sm">
+            If you want a truly free hotel chatbot with no limits, <strong>Jack The Butler</strong> is the only open-source, self-hosted option. For cloud-based freemium options, Tidio and Crisp offer limited free tiers.
+          </p>
+        </div>
+
+        <h2 id="comparison">Free Hotel Chatbot Comparison</h2>
+
+        <p>
+          Let's cut through the marketing and see what "free" actually means for each solution:
+        </p>
+
+      </div>
+
+      <!-- Comparison Table -->
+      <div class="not-prose my-12 overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-neutral-200 dark:border-neutral-700">
+              <th class="py-4 px-4 font-semibold">Solution</th>
+              <th class="py-4 px-4 font-semibold">Free Tier</th>
+              <th class="py-4 px-4 font-semibold">Limitations</th>
+              <th class="py-4 px-4 font-semibold">Best For</th>
+            </tr>
+          </thead>
+          <tbody class="text-neutral-600 dark:text-neutral-400">
+            <tr class="border-b border-neutral-200 dark:border-neutral-800 bg-emerald-50/50 dark:bg-emerald-500/5">
+              <td class="py-4 px-4 font-semibold text-neutral-900 dark:text-white">Jack The Butler</td>
+              <td class="py-4 px-4"><span class="text-emerald-600 dark:text-emerald-400 font-medium">100% Free</span></td>
+              <td class="py-4 px-4">None (self-hosted)</td>
+              <td class="py-4 px-4">Hotels wanting full control</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">Tidio</td>
+              <td class="py-4 px-4">Free tier</td>
+              <td class="py-4 px-4">50 conversations/mo</td>
+              <td class="py-4 px-4">Small B&Bs</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">Crisp</td>
+              <td class="py-4 px-4">Free tier</td>
+              <td class="py-4 px-4">2 seats, basic features</td>
+              <td class="py-4 px-4">Testing only</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">Tawk.to</td>
+              <td class="py-4 px-4">Free</td>
+              <td class="py-4 px-4">No AI, manual only</td>
+              <td class="py-4 px-4">Live chat only</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">HiJiffy</td>
+              <td class="py-4 px-4 text-red-500">No free tier</td>
+              <td class="py-4 px-4">Starts at $100+/mo</td>
+              <td class="py-4 px-4">Enterprise hotels</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-4 font-medium">Asksuite</td>
+              <td class="py-4 px-4 text-red-500">No free tier</td>
+              <td class="py-4 px-4">Custom pricing</td>
+              <td class="py-4 px-4">Large chains</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="jack-the-butler">1. Jack The Butler (Best Free Option)</h2>
+
+        <p>
+          <strong>Jack The Butler</strong> is the only truly free, open-source hotel chatbot available. Unlike freemium solutions with conversation limits, Jack is completely unlimited because you host it yourself.
+        </p>
+
+      </div>
+
+      <!-- Feature Box -->
+      <div class="not-prose my-8 p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+        <h4 class="font-semibold mb-4 flex items-center gap-2">
+          <Check class="w-5 h-5 text-emerald-500" />
+          Jack The Butler Features
+        </h4>
+        <div class="grid sm:grid-cols-2 gap-3">
+          <div class="flex items-center gap-2 text-sm">
+            <Check class="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>WhatsApp, SMS, Email, Web Chat</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <Check class="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>AI-powered responses (Claude, GPT, Local)</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <Check class="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>Unlimited conversations</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <Check class="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>Self-hosted (your data stays yours)</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <Check class="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>Smart escalation to staff</span>
+          </div>
+          <div class="flex items-center gap-2 text-sm">
+            <Check class="w-4 h-4 text-emerald-500 shrink-0" />
+            <span>Knowledge base & guest memory</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <p><strong>Cost breakdown:</strong></p>
+        <ul>
+          <li>Software: Free (open source)</li>
+          <li>Hosting: ~$5-10/month (Railway, Render, or self-hosted)</li>
+          <li>AI API: ~$10-20/month (or free with local AI)</li>
+        </ul>
+
+        <p>
+          <strong>Total: $5-30/month</strong> for unlimited conversations, compared to $200-2000/month for competitors.
+        </p>
+
+      </div>
+
+      <ArticleCTA />
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="tidio">2. Tidio (Best Freemium Option)</h2>
+
+        <p>
+          Tidio is a popular live chat and chatbot platform with a genuine free tier. It's not hotel-specific, but can be configured for hospitality use.
+        </p>
+
+        <p><strong>Free tier includes:</strong></p>
+        <ul>
+          <li>50 unique conversations per month</li>
+          <li>Basic chatbot builder</li>
+          <li>Live chat widget</li>
+          <li>Email integration</li>
+        </ul>
+
+        <p><strong>Limitations:</strong></p>
+        <ul>
+          <li>50 conversations is very limiting for most hotels</li>
+          <li>No WhatsApp on free tier</li>
+          <li>AI features require paid plan ($29+/month)</li>
+          <li>Tidio branding on widget</li>
+        </ul>
+
+        <p>
+          <strong>Verdict:</strong> Good for testing, but you'll likely outgrow the free tier quickly.
+        </p>
+
+        <h2 id="crisp">3. Crisp (Basic Free Tier)</h2>
+
+        <p>
+          Crisp offers a free tier with basic live chat functionality. Like Tidio, it's a general-purpose tool rather than hotel-specific.
+        </p>
+
+        <p><strong>Free tier includes:</strong></p>
+        <ul>
+          <li>2 team members</li>
+          <li>Basic live chat</li>
+          <li>Mobile apps</li>
+        </ul>
+
+        <p><strong>Limitations:</strong></p>
+        <ul>
+          <li>No chatbot automation on free tier</li>
+          <li>No AI features</li>
+          <li>Very basic functionality</li>
+        </ul>
+
+        <p>
+          <strong>Verdict:</strong> Only useful as a basic live chat, not a true chatbot.
+        </p>
+
+        <h2 id="tawk">4. Tawk.to (Free Live Chat)</h2>
+
+        <p>
+          Tawk.to is 100% free live chat software. However, it's important to note that it's <strong>not a chatbot</strong> — it's live chat that requires human agents to respond.
+        </p>
+
+        <p><strong>What you get:</strong></p>
+        <ul>
+          <li>Unlimited agents</li>
+          <li>Unlimited chats</li>
+          <li>Mobile apps</li>
+          <li>Ticketing system</li>
+        </ul>
+
+        <p><strong>What you don't get:</strong></p>
+        <ul>
+          <li>AI-powered automation</li>
+          <li>Chatbot functionality</li>
+          <li>WhatsApp integration</li>
+        </ul>
+
+        <p>
+          <strong>Verdict:</strong> Great free live chat, but not a chatbot. Won't help with 3am guest messages.
+        </p>
+
+        <h2 id="conclusion">Which Free Hotel Chatbot Should You Choose?</h2>
+
+        <p>Here's our recommendation based on your situation:</p>
+
+      </div>
+
+      <!-- Recommendation Cards -->
+      <div class="not-prose my-8 grid sm:grid-cols-2 gap-4">
+        <div class="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+          <h4 class="font-semibold text-emerald-900 dark:text-emerald-300 mb-2">Want truly free with no limits?</h4>
+          <p class="text-emerald-800 dark:text-emerald-200 text-sm mb-3">
+            Choose Jack The Butler. Self-hosted, unlimited conversations, full AI.
+          </p>
+          <a href="/" class="text-emerald-700 dark:text-emerald-400 text-sm font-medium hover:underline">
+            Learn more about Jack →
+          </a>
+        </div>
+        <div class="p-6 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <h4 class="font-semibold text-blue-900 dark:text-blue-300 mb-2">Just testing / very small property?</h4>
+          <p class="text-blue-800 dark:text-blue-200 text-sm mb-3">
+            Try Tidio's free tier to see if a chatbot helps, then switch to Jack.
+          </p>
+          <a href="https://tidio.com" class="text-blue-700 dark:text-blue-400 text-sm font-medium hover:underline">
+            Try Tidio →
+          </a>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="faq">Frequently Asked Questions</h2>
+
+        <h3>Are free hotel chatbots actually good?</h3>
+        <p>
+          It depends. Freemium chatbots like Tidio have severe limitations on free tiers. Open-source options like Jack The Butler offer full functionality for free because you host them yourself.
+        </p>
+
+        <h3>What's the catch with free chatbots?</h3>
+        <p>
+          For freemium tools: conversation limits, missing features, and aggressive upselling. For self-hosted solutions: you need to manage hosting (though one-click deploy makes this easy).
+        </p>
+
+        <h3>Can free chatbots handle WhatsApp?</h3>
+        <p>
+          Most free tiers don't include WhatsApp. Jack The Butler supports WhatsApp Business API on the free self-hosted version.
+        </p>
+
+        <h3>How much does a "free" chatbot actually cost?</h3>
+        <p>
+          Freemium tools: Free until you hit limits, then $30-200+/month. Self-hosted Jack: $5-30/month total (hosting + optional AI API).
+        </p>
+
+      </div>
+
+      <ArticleBottomCTA />
+
+    </div>
+  </article>
+
+  <RelatedPosts posts={relatedPosts} />
+
+  <Footer />
+</Layout>
+
+<style>
+  .prose h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+  }
+  .prose h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+  .prose p {
+    color: rgb(82 82 82);
+    margin-bottom: 1rem;
+  }
+  .prose ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+    color: rgb(82 82 82);
+  }
+  .prose ul li {
+    margin-bottom: 0.25rem;
+  }
+  .prose strong {
+    color: rgb(23 23 23);
+  }
+  .prose a {
+    color: rgb(37 99 235);
+  }
+  .prose a:hover {
+    text-decoration: underline;
+  }
+  :global(.dark) .prose p,
+  :global(.dark) .prose ul {
+    color: rgb(163 163 163);
+  }
+  :global(.dark) .prose strong {
+    color: white;
+  }
+  :global(.dark) .prose a {
+    color: rgb(96 165 250);
+  }
+</style>

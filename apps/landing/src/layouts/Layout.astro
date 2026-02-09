@@ -6,12 +6,23 @@ import Intro from '../components/Intro.astro'
 interface Props {
   title?: string
   description?: string
+  canonical?: string
+  type?: 'website' | 'article'
+  author?: string
+  publishedTime?: string
 }
 
 const {
   title = 'Jack The Butler - Free Open Source Hotel Chatbot',
-  description = 'The open-source hotel chatbot that handles WhatsApp, SMS, and email automatically. Self-hosted AI concierge. Deploy in 5 minutes. Own your data.'
+  description = 'The open-source hotel chatbot that handles WhatsApp, SMS, and email automatically. Self-hosted AI concierge. Deploy in 5 minutes. Own your data.',
+  canonical,
+  type = 'website',
+  author,
+  publishedTime
 } = Astro.props
+
+const canonicalUrl = canonical || Astro.url.pathname
+const fullCanonicalUrl = `https://jackthebutler.com${canonicalUrl === '/' ? '' : canonicalUrl}`
 ---
 
 <!doctype html>
@@ -23,7 +34,7 @@ const {
     <meta name="keywords" content="AI hotel concierge, hotel chatbot, hotel guest messaging, AI guest communication, hotel WhatsApp automation, self-hosted hotel software, open source hotel chatbot, AI for hospitality" />
     <meta name="author" content="Jack The Butler" />
     <meta name="robots" content="index, follow" />
-    <link rel="canonical" href="https://jackthebutler.com/" />
+    <link rel="canonical" href={fullCanonicalUrl} />
 
     <!-- Preconnect to external domains -->
     <link rel="preconnect" href="https://www.googletagmanager.com" />
@@ -45,9 +56,12 @@ const {
     <!-- Open Graph -->
     <meta property="og:title" content={title} />
     <meta property="og:description" content={description} />
-    <meta property="og:type" content="website" />
-    <meta property="og:url" content="https://jackthebutler.com" />
+    <meta property="og:type" content={type} />
+    <meta property="og:url" content={fullCanonicalUrl} />
     <meta property="og:image" content="https://jackthebutler.com/og-image.png" />
+    <meta property="og:site_name" content="Jack The Butler" />
+    {type === 'article' && author && <meta property="article:author" content={author} />}
+    {type === 'article' && publishedTime && <meta property="article:published_time" content={publishedTime} />}
 
     <!-- Twitter -->
     <meta name="twitter:card" content="summary_large_image" />

@@ -1,0 +1,32 @@
+---
+import type { BlogPost } from '../../data/blog-posts'
+
+interface Props {
+  post: BlogPost
+}
+
+const { post } = Astro.props
+
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": post.title,
+  "description": post.description,
+  "datePublished": post.date,
+  "author": {
+    "@type": "Person",
+    "name": post.author.name,
+    "description": post.author.bio,
+    "image": `https://jackthebutler.com${post.author.avatar}`,
+    "url": `https://jackthebutler.com/blog/author/${post.author.slug}/`,
+    "sameAs": post.author.linkedin ? [post.author.linkedin] : []
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Jack The Butler",
+    "url": "https://jackthebutler.com"
+  }
+}
+---
+
+<script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />

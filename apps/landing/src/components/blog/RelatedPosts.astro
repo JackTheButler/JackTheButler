@@ -1,0 +1,27 @@
+---
+interface RelatedPost {
+  href: string
+  title: string
+  description: string
+}
+
+interface Props {
+  posts: RelatedPost[]
+}
+
+const { posts } = Astro.props
+---
+
+<section class="px-6 pb-24 border-t border-neutral-200 dark:border-neutral-800">
+  <div class="max-w-3xl mx-auto pt-16">
+    <h2 class="text-2xl font-bold mb-8">Related Articles</h2>
+    <div class="grid sm:grid-cols-2 gap-6">
+      {posts.map((post) => (
+        <a href={post.href} class="group block p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+          <h3 class="font-semibold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">{post.title}</h3>
+          <p class="text-neutral-600 dark:text-neutral-400 text-sm">{post.description}</p>
+        </a>
+      ))}
+    </div>
+  </div>
+</section>

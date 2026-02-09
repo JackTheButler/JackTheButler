@@ -1,0 +1,103 @@
+---
+import Layout from '../../../layouts/Layout.astro'
+import Footer from '../../../components/Footer.astro'
+import { Calendar, Clock, ArrowRight, Linkedin } from '@lucide/astro'
+import { authors, blogPosts, formatDate } from '../../../data/blog-posts'
+
+const author = authors.arash
+const authorPosts = blogPosts.filter(post => post.author.slug === 'arash')
+
+const personSchema = {
+  "@context": "https://schema.org",
+  "@type": "Person",
+  "name": author.name,
+  "description": author.bio,
+  "image": `https://jackthebutler.com${author.avatar}`,
+  "sameAs": [author.linkedin]
+}
+---
+
+<Layout
+  title={`${author.name} - Author | Jack The Butler Blog`}
+  description={author.bio}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(personSchema)} />
+
+  <section class="pt-32 pb-16 px-6">
+    <div class="max-w-3xl mx-auto">
+      <!-- Author Header -->
+      <div class="flex flex-col sm:flex-row items-center sm:items-start gap-6 mb-12">
+        <img
+          src={author.avatar}
+          alt={author.name}
+          class="w-24 h-24 sm:w-32 sm:h-32 rounded-full object-cover border-4 border-white dark:border-neutral-800 shadow-lg"
+        />
+        <div class="text-center sm:text-left">
+          <h1 class="text-3xl sm:text-4xl font-bold mb-3">{author.name}</h1>
+          <p class="text-neutral-600 dark:text-neutral-400 mb-4 max-w-xl">
+            {author.bio}
+          </p>
+          {author.linkedin && (
+            <a
+              href={author.linkedin}
+              target="_blank"
+              rel="noopener noreferrer"
+              class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300 text-sm font-medium hover:bg-blue-200 dark:hover:bg-blue-500/30 transition-colors"
+            >
+              <Linkedin class="w-4 h-4" />
+              LinkedIn
+            </a>
+          )}
+        </div>
+      </div>
+
+      <!-- Articles by Author -->
+      <h2 class="text-2xl font-bold mb-8">Articles by {author.name}</h2>
+
+      <div class="space-y-6">
+        {authorPosts.map((post) => (
+          <a href={`/blog/${post.slug}/`} class="group block p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+              <div class="flex-1">
+                <span class="inline-block px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-medium mb-2">
+                  {post.category}
+                </span>
+                <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                  {post.title}
+                </h3>
+                <p class="text-neutral-600 dark:text-neutral-400 text-sm mb-3 line-clamp-2">
+                  {post.description}
+                </p>
+                <div class="flex items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+                  <span class="flex items-center gap-1.5">
+                    <Calendar class="w-3.5 h-3.5" />
+                    {formatDate(post.date)}
+                  </span>
+                  <span class="flex items-center gap-1.5">
+                    <Clock class="w-3.5 h-3.5" />
+                    {post.readTime}
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium text-sm group-hover:gap-2 transition-all shrink-0">
+                Read
+                <ArrowRight class="w-4 h-4" />
+              </div>
+            </div>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

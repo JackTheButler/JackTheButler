@@ -1,0 +1,125 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Footer from '../../components/Footer.astro'
+import { Calendar, Clock, ArrowRight } from '@lucide/astro'
+import { blogPosts as posts, formatDate } from '../../data/blog-posts'
+---
+
+<Layout
+  title="Blog - Hotel Chatbot Guides & Tutorials | Jack The Butler"
+  description="Learn about hotel chatbots, AI guest messaging, and hospitality automation. Guides, tutorials, and industry insights."
+>
+  <!-- Hero -->
+  <section class="pt-32 pb-16 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <h1 class="text-4xl sm:text-5xl font-bold tracking-tight mb-6">
+        Hotel Chatbot Blog
+      </h1>
+      <p class="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+        Guides, tutorials, and insights on hotel chatbots, AI guest messaging, and hospitality automation.
+      </p>
+    </div>
+  </section>
+
+  <!-- Featured Post -->
+  <section class="px-6 pb-12">
+    <div class="max-w-5xl mx-auto">
+      <a href={`/blog/${posts[0].slug}/`} class="group block">
+        <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 to-emerald-600 p-8 md:p-12">
+          <div class="absolute inset-0 bg-black/20"></div>
+          <div class="relative z-10 max-w-2xl">
+            <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-white text-sm font-medium mb-4">
+              {posts[0].category}
+            </span>
+            <h2 class="text-2xl md:text-4xl font-bold text-white mb-4 group-hover:underline decoration-2 underline-offset-4">
+              {posts[0].title}
+            </h2>
+            <p class="text-white/80 text-lg mb-6">
+              {posts[0].description}
+            </p>
+            <div class="flex items-center gap-4 text-white/70 text-sm">
+              <span class="flex items-center gap-1.5">
+                <Calendar class="w-4 h-4" />
+                {formatDate(posts[0].date)}
+              </span>
+              <span class="flex items-center gap-1.5">
+                <Clock class="w-4 h-4" />
+                {posts[0].readTime}
+              </span>
+            </div>
+          </div>
+        </div>
+      </a>
+    </div>
+  </section>
+
+  <!-- All Posts -->
+  <section class="px-6 pb-24">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-2xl font-bold mb-8">All Articles</h2>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        {posts.map((post) => (
+          <a href={`/blog/${post.slug}/`} class="group block">
+            <article class="h-full p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+              <span class="inline-block px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-medium mb-4">
+                {post.category}
+              </span>
+              <h3 class="text-lg font-semibold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">
+                {post.title}
+              </h3>
+              <p class="text-neutral-600 dark:text-neutral-400 text-sm mb-4 line-clamp-2">
+                {post.description}
+              </p>
+              <div class="flex items-center justify-between text-sm text-neutral-500 dark:text-neutral-400">
+                <span class="flex items-center gap-1.5">
+                  <Calendar class="w-3.5 h-3.5" />
+                  {formatDate(post.date)}
+                </span>
+                <span class="flex items-center gap-1 text-blue-600 dark:text-blue-400 font-medium group-hover:gap-2 transition-all">
+                  Read
+                  <ArrowRight class="w-3.5 h-3.5" />
+                </span>
+              </div>
+            </article>
+          </a>
+        ))}
+      </div>
+    </div>
+  </section>
+
+  <!-- Newsletter CTA -->
+  <section class="px-6 pb-24">
+    <div class="max-w-3xl mx-auto">
+      <div class="p-8 md:p-12 rounded-3xl bg-neutral-100 dark:bg-neutral-900 text-center">
+        <h2 class="text-2xl md:text-3xl font-bold mb-4">
+          Stay Updated
+        </h2>
+        <p class="text-neutral-600 dark:text-neutral-400 mb-6 max-w-md mx-auto">
+          Get the latest guides on hotel chatbots and AI guest messaging delivered to your inbox.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 max-w-md mx-auto">
+          <input
+            type="email"
+            placeholder="Enter your email"
+            class="flex-1 px-4 py-3 rounded-full bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+          <button class="px-6 py-3 rounded-full bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors">
+            Subscribe
+          </button>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<style>
+  .line-clamp-2 {
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+</style>

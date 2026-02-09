@@ -1,0 +1,33 @@
+---
+import { ExternalLink } from '@lucide/astro'
+
+interface Props {
+  title?: string
+  description?: string
+  buttonText?: string
+  buttonHref?: string
+}
+
+const {
+  title = "Ready to try the best free hotel chatbot?",
+  description = "Deploy Jack The Butler in 5 minutes.",
+  buttonText = "Deploy Free",
+  buttonHref = "https://railway.com/deploy/jack-the-butler"
+} = Astro.props
+---
+
+<div class="not-prose mt-16 pt-8 border-t border-neutral-200 dark:border-neutral-800">
+  <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+    <div>
+      <h3 class="text-xl font-bold mb-2">{title}</h3>
+      <p class="text-neutral-600 dark:text-neutral-400">{description}</p>
+    </div>
+    <a
+      href={buttonHref}
+      class="inline-flex items-center gap-2 px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors whitespace-nowrap"
+    >
+      {buttonText}
+      <ExternalLink class="w-4 h-4" />
+    </a>
+  </div>
+</div>

@@ -1,0 +1,471 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Footer from '../../components/Footer.astro'
+import { Calendar, Clock, ArrowLeft, Check, MessageSquare, Bot, Users, Zap } from '@lucide/astro'
+import { getPost, formatDate } from '../../data/blog-posts'
+
+const post = getPost('what-is-hotel-chatbot')!
+
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": post.title,
+  "description": post.description,
+  "datePublished": post.date,
+  "author": {
+    "@type": "Person",
+    "name": post.author.name,
+    "description": post.author.bio,
+    "image": `https://jackthebutler.com${post.author.avatar}`,
+    "url": `https://jackthebutler.com/blog/author/${post.author.slug}/`,
+    "sameAs": post.author.linkedin ? [post.author.linkedin] : []
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Jack The Butler",
+    "url": "https://jackthebutler.com"
+  }
+}
+---
+
+<Layout
+  title={`${post.title} | Jack The Butler Blog`}
+  description={post.description}
+  type="article"
+  author={post.author.name}
+  publishedTime={post.date}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+
+  <article class="pt-32 pb-24 px-6">
+    <div class="max-w-3xl mx-auto">
+      <!-- Back link -->
+      <a href="/blog/" class="inline-flex items-center gap-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors mb-8">
+        <ArrowLeft class="w-4 h-4" />
+        Back to Blog
+      </a>
+
+      <!-- Header -->
+      <header class="mb-12">
+        <span class="inline-block px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-sm font-medium mb-4">
+          {post.category}
+        </span>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-6">
+          {post.title}
+        </h1>
+        <p class="text-xl text-neutral-600 dark:text-neutral-400 mb-6">
+          {post.description}
+        </p>
+        <div class="flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+          <a href={`/blog/author/${post.author.slug}/`} class="flex items-center gap-2 hover:text-neutral-900 dark:hover:text-white transition-colors">
+            <img src={post.author.avatar} alt={post.author.name} class="w-6 h-6 rounded-full object-cover" />
+            {post.author.name}
+          </a>
+          <span class="flex items-center gap-1.5">
+            <Calendar class="w-4 h-4" />
+            {formatDate(post.date)}
+          </span>
+          <span class="flex items-center gap-1.5">
+            <Clock class="w-4 h-4" />
+            {post.readTime}
+          </span>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <p class="lead text-xl text-neutral-600 dark:text-neutral-400">
+          A hotel chatbot is an AI-powered virtual assistant that handles guest communication automatically. It answers questions, takes requests, and provides information 24/7 — without requiring staff intervention for routine inquiries.
+        </p>
+
+        <p>
+          Whether guests message via WhatsApp, SMS, email, or your website, a hotel chatbot responds instantly with accurate, helpful information about your property.
+        </p>
+
+      </div>
+
+      <!-- What is a chatbot visual -->
+      <div class="not-prose my-12 p-8 rounded-2xl bg-gradient-to-br from-blue-50 to-emerald-50 dark:from-blue-500/10 dark:to-emerald-500/10 border border-blue-200 dark:border-blue-500/20">
+        <div class="grid sm:grid-cols-3 gap-6 text-center">
+          <div>
+            <div class="w-12 h-12 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center mx-auto mb-3">
+              <MessageSquare class="w-6 h-6 text-blue-600 dark:text-blue-400" />
+            </div>
+            <h4 class="font-semibold mb-1">Guest Messages</h4>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">WhatsApp, SMS, Email, Web</p>
+          </div>
+          <div>
+            <div class="w-12 h-12 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+              <Bot class="w-6 h-6 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <h4 class="font-semibold mb-1">AI Chatbot</h4>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">Understands & responds</p>
+          </div>
+          <div>
+            <div class="w-12 h-12 rounded-full bg-purple-100 dark:bg-purple-500/20 flex items-center justify-center mx-auto mb-3">
+              <Users class="w-6 h-6 text-purple-600 dark:text-purple-400" />
+            </div>
+            <h4 class="font-semibold mb-1">Happy Guests</h4>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">Instant answers, 24/7</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="how-it-works">How Does a Hotel Chatbot Work?</h2>
+
+        <p>
+          Modern hotel chatbots use artificial intelligence (AI) to understand guest messages and respond appropriately. Here's the typical flow:
+        </p>
+
+        <ol>
+          <li><strong>Guest sends a message</strong> — "What time is checkout?" via WhatsApp</li>
+          <li><strong>AI processes the message</strong> — Understands intent and extracts key information</li>
+          <li><strong>Chatbot checks knowledge base</strong> — Finds checkout time is 11am</li>
+          <li><strong>Sends personalized response</strong> — "Checkout is at 11am. Would you like a late checkout?"</li>
+        </ol>
+
+        <p>
+          For complex requests the chatbot can't handle, it escalates to your staff with full context — so they can respond quickly without asking the guest to repeat themselves.
+        </p>
+
+        <h2 id="what-can-it-do">What Can a Hotel Chatbot Do?</h2>
+
+      </div>
+
+      <!-- Capabilities Grid -->
+      <div class="not-prose my-10 grid sm:grid-cols-2 gap-6 sm:gap-8">
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-blue-50 to-blue-100/50 dark:from-blue-500/10 dark:to-blue-500/5 border border-blue-200 dark:border-blue-500/20">
+          <div class="w-10 h-10 rounded-xl bg-blue-500 flex items-center justify-center mb-4">
+            <MessageSquare class="w-5 h-5 text-white" />
+          </div>
+          <h4 class="font-semibold text-lg mb-3 text-blue-900 dark:text-blue-100">Answer Common Questions</h4>
+          <ul class="text-sm text-blue-800 dark:text-blue-200 space-y-2">
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-blue-500 shrink-0" /> Check-in/checkout times</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-blue-500 shrink-0" /> WiFi passwords</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-blue-500 shrink-0" /> Parking information</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-blue-500 shrink-0" /> Amenities & facilities</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-blue-500 shrink-0" /> Restaurant hours</li>
+          </ul>
+        </div>
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-emerald-100/50 dark:from-emerald-500/10 dark:to-emerald-500/5 border border-emerald-200 dark:border-emerald-500/20">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center mb-4">
+            <Zap class="w-5 h-5 text-white" />
+          </div>
+          <h4 class="font-semibold text-lg mb-3 text-emerald-900 dark:text-emerald-100">Handle Requests</h4>
+          <ul class="text-sm text-emerald-800 dark:text-emerald-200 space-y-2">
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-emerald-500 shrink-0" /> Extra towels or pillows</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-emerald-500 shrink-0" /> Room service orders</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-emerald-500 shrink-0" /> Housekeeping requests</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-emerald-500 shrink-0" /> Wake-up calls</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-emerald-500 shrink-0" /> Transportation booking</li>
+          </ul>
+        </div>
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-violet-50 to-violet-100/50 dark:from-violet-500/10 dark:to-violet-500/5 border border-violet-200 dark:border-violet-500/20">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background-color: #8b5cf6;">
+            <Users class="w-5 h-5 text-white" />
+          </div>
+          <h4 class="font-semibold text-lg mb-3 text-violet-900 dark:text-violet-100">Provide Local Info</h4>
+          <ul class="text-sm text-violet-800 dark:text-violet-200 space-y-2">
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-violet-500 shrink-0" /> Restaurant recommendations</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-violet-500 shrink-0" /> Directions & transportation</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-violet-500 shrink-0" /> Local attractions</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-violet-500 shrink-0" /> Events & activities</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-violet-500 shrink-0" /> Weather updates</li>
+          </ul>
+        </div>
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-orange-50 to-orange-100/50 dark:from-orange-500/10 dark:to-orange-500/5 border border-orange-200 dark:border-orange-500/20">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-4" style="background-color: #f97316;">
+            <Bot class="w-5 h-5 text-white" />
+          </div>
+          <h4 class="font-semibold text-lg mb-3 text-orange-900 dark:text-orange-100">Support Operations</h4>
+          <ul class="text-sm text-orange-800 dark:text-orange-200 space-y-2">
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-orange-500 shrink-0" /> Pre-arrival communication</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-orange-500 shrink-0" /> Booking confirmations</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-orange-500 shrink-0" /> Upsell room upgrades</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-orange-500 shrink-0" /> Collect feedback</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-orange-500 shrink-0" /> Handle complaints</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="benefits">Benefits of Hotel Chatbots</h2>
+
+        <h3>For Your Guests</h3>
+        <ul>
+          <li><strong>Instant responses</strong> — No waiting on hold or for email replies</li>
+          <li><strong>24/7 availability</strong> — Get help at 3am without disturbing staff</li>
+          <li><strong>Use their preferred channel</strong> — WhatsApp, SMS, or whatever they like</li>
+          <li><strong>Multilingual support</strong> — AI can respond in 50+ languages</li>
+        </ul>
+
+        <h3>For Your Hotel</h3>
+        <ul>
+          <li><strong>Reduce front desk workload</strong> — Staff handle complex issues, not WiFi passwords</li>
+          <li><strong>Never miss a message</strong> — Every inquiry gets a response</li>
+          <li><strong>Increase revenue</strong> — Automated upsells for upgrades, spa, dining</li>
+          <li><strong>Better reviews</strong> — Fast responses = happier guests</li>
+          <li><strong>Valuable insights</strong> — See what guests ask most often</li>
+        </ul>
+
+        <h2 id="types">Types of Hotel Chatbots</h2>
+
+        <h3>Rule-Based Chatbots</h3>
+        <p>
+          Simple chatbots that follow pre-defined rules. If guest says X, respond with Y. Limited but predictable. Often frustrating for guests when their question doesn't match a rule.
+        </p>
+
+        <h3>AI-Powered Chatbots</h3>
+        <p>
+          Use natural language processing (NLP) to understand intent, not just keywords. Can handle variations like "what time do I need to leave?" and "checkout time?" the same way. Much more natural conversations.
+        </p>
+
+        <h3>Hybrid Chatbots</h3>
+        <p>
+          Combine AI understanding with human handoff. The AI handles routine questions, but complex issues get routed to staff. This is the most effective approach for hotels.
+        </p>
+
+      </div>
+
+      <!-- Comparison Box -->
+      <div class="not-prose my-8 overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="border-b border-neutral-200 dark:border-neutral-700">
+              <th class="py-3 px-4 font-semibold">Type</th>
+              <th class="py-3 px-4 font-semibold">Pros</th>
+              <th class="py-3 px-4 font-semibold">Cons</th>
+            </tr>
+          </thead>
+          <tbody class="text-neutral-600 dark:text-neutral-400">
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">Rule-Based</td>
+              <td class="py-3 px-4">Predictable, simple to set up</td>
+              <td class="py-3 px-4">Limited, frustrating UX</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">AI-Powered</td>
+              <td class="py-3 px-4">Natural conversations, flexible</td>
+              <td class="py-3 px-4">Can hallucinate, needs training</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">Hybrid</td>
+              <td class="py-3 px-4">Best of both, human backup</td>
+              <td class="py-3 px-4">More complex to implement</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="cost">How Much Does a Hotel Chatbot Cost?</h2>
+
+        <p>Hotel chatbot pricing varies wildly:</p>
+
+        <ul>
+          <li><strong>Enterprise solutions</strong> (HiJiffy, Asksuite): $200-2,000+/month</li>
+          <li><strong>Freemium tools</strong> (Tidio, Crisp): Free tier with limits, $30-200/month for full features</li>
+          <li><strong>Open source</strong> (Jack The Butler): Free software, ~$10-30/month for hosting + AI</li>
+        </ul>
+
+        <p>
+          Most enterprise chatbots also charge per-message or per-room fees that add up quickly. Self-hosted options like Jack avoid these ongoing costs.
+        </p>
+
+        <h2 id="how-to-choose">How to Choose a Hotel Chatbot</h2>
+
+        <p>Consider these factors when evaluating options:</p>
+
+      </div>
+
+      <!-- Checklist -->
+      <div class="not-prose my-8 p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+        <h4 class="font-semibold mb-4">Hotel Chatbot Evaluation Checklist</h4>
+        <div class="space-y-3">
+          <div class="flex items-start gap-3">
+            <Check class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <p class="font-medium">Channel support</p>
+              <p class="text-sm text-neutral-600 dark:text-neutral-400">Does it support WhatsApp, SMS, email, and web chat?</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <Check class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <p class="font-medium">AI quality</p>
+              <p class="text-sm text-neutral-600 dark:text-neutral-400">Can it understand natural language, not just keywords?</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <Check class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <p class="font-medium">Human handoff</p>
+              <p class="text-sm text-neutral-600 dark:text-neutral-400">Can it escalate to staff when needed?</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <Check class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <p class="font-medium">Customization</p>
+              <p class="text-sm text-neutral-600 dark:text-neutral-400">Can you train it on your property's specific info?</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <Check class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <p class="font-medium">Pricing transparency</p>
+              <p class="text-sm text-neutral-600 dark:text-neutral-400">Are there hidden per-message or per-room fees?</p>
+            </div>
+          </div>
+          <div class="flex items-start gap-3">
+            <Check class="w-5 h-5 text-emerald-500 shrink-0 mt-0.5" />
+            <div>
+              <p class="font-medium">Data ownership</p>
+              <p class="text-sm text-neutral-600 dark:text-neutral-400">Who owns your guest conversation data?</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- CTA Box -->
+      <div class="not-prose my-12 p-8 rounded-2xl bg-gradient-to-r from-blue-600 to-emerald-600 text-white text-center">
+        <h3 class="text-2xl font-bold mb-3">Try Jack The Butler Free</h3>
+        <p class="text-white/80 mb-6 max-w-md mx-auto">
+          Open-source hotel chatbot. Self-hosted. No per-message fees. Deploy in 5 minutes.
+        </p>
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-white text-blue-600 font-semibold rounded-full hover:bg-neutral-100 transition-colors"
+        >
+          Learn More About Jack
+          <Zap class="w-4 h-4" />
+        </a>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="faq">Frequently Asked Questions</h2>
+
+        <h3>Do hotel chatbots replace human staff?</h3>
+        <p>
+          No. Chatbots handle routine questions so your staff can focus on complex issues and personal guest interactions. Think of it as a first line of support, not a replacement.
+        </p>
+
+        <h3>What if the chatbot gives wrong information?</h3>
+        <p>
+          Good hotel chatbots are trained on your specific property information and have safeguards against hallucination. They should also escalate to humans when uncertain.
+        </p>
+
+        <h3>How long does it take to set up?</h3>
+        <p>
+          Simple chatbots can be running in hours. More sophisticated setups with custom training typically take 1-2 weeks. Self-hosted solutions like Jack can deploy in 5 minutes with one-click installers.
+        </p>
+
+        <h3>Do guests actually use chatbots?</h3>
+        <p>
+          Yes, especially via WhatsApp and SMS. Guests prefer messaging over phone calls — 75% of hotel guests say they'd rather text than call the front desk.
+        </p>
+
+        <h3>Can chatbots handle multiple languages?</h3>
+        <p>
+          AI-powered chatbots can typically understand and respond in 50+ languages automatically, making them ideal for international guests.
+        </p>
+
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="not-prose mt-16 pt-8 border-t border-neutral-200 dark:border-neutral-800">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div>
+            <h3 class="text-xl font-bold mb-2">Ready to add a chatbot to your hotel?</h3>
+            <p class="text-neutral-600 dark:text-neutral-400">Compare the best free options available.</p>
+          </div>
+          <a
+            href="/blog/free-hotel-chatbot-solutions/"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors whitespace-nowrap"
+          >
+            Free Chatbot Options
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </article>
+
+  <!-- Related Posts -->
+  <section class="px-6 pb-24 border-t border-neutral-200 dark:border-neutral-800">
+    <div class="max-w-3xl mx-auto pt-16">
+      <h2 class="text-2xl font-bold mb-8">Related Articles</h2>
+      <div class="grid sm:grid-cols-2 gap-6">
+        <a href="/blog/free-hotel-chatbot-solutions/" class="group block p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+          <h3 class="font-semibold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Free Hotel Chatbot Solutions</h3>
+          <p class="text-neutral-600 dark:text-neutral-400 text-sm">Compare the best free options for your hotel.</p>
+        </a>
+        <a href="/blog/hotel-whatsapp-automation/" class="group block p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+          <h3 class="font-semibold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">WhatsApp for Hotels</h3>
+          <p class="text-neutral-600 dark:text-neutral-400 text-sm">Set up WhatsApp Business automation.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<style>
+  .prose h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+  }
+  .prose h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+  .prose p {
+    color: rgb(82 82 82);
+    margin-bottom: 1rem;
+  }
+  .prose ul, .prose ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+    color: rgb(82 82 82);
+  }
+  .prose ul {
+    list-style-type: disc;
+  }
+  .prose ol {
+    list-style-type: decimal;
+  }
+  .prose ul li, .prose ol li {
+    margin-bottom: 0.5rem;
+  }
+  .prose strong {
+    color: rgb(23 23 23);
+  }
+  .prose a {
+    color: rgb(37 99 235);
+  }
+  .prose a:hover {
+    text-decoration: underline;
+  }
+  :global(.dark) .prose p,
+  :global(.dark) .prose ul,
+  :global(.dark) .prose ol {
+    color: rgb(163 163 163);
+  }
+  :global(.dark) .prose strong {
+    color: white;
+  }
+  :global(.dark) .prose a {
+    color: rgb(96 165 250);
+  }
+</style>

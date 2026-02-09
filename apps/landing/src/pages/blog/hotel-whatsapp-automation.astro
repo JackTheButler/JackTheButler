@@ -1,0 +1,505 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Footer from '../../components/Footer.astro'
+import { Calendar, Clock, ArrowLeft, Check, MessageCircle, Zap, Smartphone, Settings, Send, Bot, Shield, Globe, X } from '@lucide/astro'
+import { getPost, formatDate } from '../../data/blog-posts'
+
+const post = getPost('hotel-whatsapp-automation')!
+
+const articleSchema = {
+  "@context": "https://schema.org",
+  "@type": "Article",
+  "headline": post.title,
+  "description": post.description,
+  "datePublished": post.date,
+  "author": {
+    "@type": "Person",
+    "name": post.author.name,
+    "description": post.author.bio,
+    "image": `https://jackthebutler.com${post.author.avatar}`,
+    "url": `https://jackthebutler.com/blog/author/${post.author.slug}/`,
+    "sameAs": post.author.linkedin ? [post.author.linkedin] : []
+  },
+  "publisher": {
+    "@type": "Organization",
+    "name": "Jack The Butler",
+    "url": "https://jackthebutler.com"
+  }
+}
+---
+
+<Layout
+  title={`${post.title} | Jack The Butler Blog`}
+  description={post.description}
+  type="article"
+  author={post.author.name}
+  publishedTime={post.date}
+>
+  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+
+  <article class="pt-32 pb-24 px-6">
+    <div class="max-w-3xl mx-auto">
+      <!-- Back link -->
+      <a href="/blog/" class="inline-flex items-center gap-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors mb-8">
+        <ArrowLeft class="w-4 h-4" />
+        Back to Blog
+      </a>
+
+      <!-- Header -->
+      <header class="mb-12">
+        <span class="inline-block px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-sm font-medium mb-4">
+          {post.category}
+        </span>
+        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-6">
+          {post.title}
+        </h1>
+        <p class="text-xl text-neutral-600 dark:text-neutral-400 mb-6">
+          {post.description}
+        </p>
+        <div class="flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
+          <a href={`/blog/author/${post.author.slug}/`} class="flex items-center gap-2 hover:text-neutral-900 dark:hover:text-white transition-colors">
+            <img src={post.author.avatar} alt={post.author.name} class="w-6 h-6 rounded-full object-cover" />
+            {post.author.name}
+          </a>
+          <span class="flex items-center gap-1.5">
+            <Calendar class="w-4 h-4" />
+            {formatDate(post.date)}
+          </span>
+          <span class="flex items-center gap-1.5">
+            <Clock class="w-4 h-4" />
+            {post.readTime}
+          </span>
+        </div>
+      </header>
+
+      <!-- Content -->
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <p class="lead text-xl text-neutral-600 dark:text-neutral-400">
+          WhatsApp has over 2 billion users worldwide. Your guests are already using it daily. Setting up WhatsApp for your hotel means meeting guests where they are — and automating responses to save your staff hours every day.
+        </p>
+
+        <p>
+          This guide walks you through setting up WhatsApp Business for your hotel, from basic setup to full AI-powered automation.
+        </p>
+
+      </div>
+
+      <!-- Why WhatsApp -->
+      <div class="not-prose my-12 p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+        <h4 class="font-semibold text-emerald-900 dark:text-emerald-300 mb-4 flex items-center gap-2">
+          <MessageCircle class="w-5 h-5" />
+          Why WhatsApp for Hotels?
+        </h4>
+        <div class="grid sm:grid-cols-2 gap-4 text-sm">
+          <div class="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+            <Check class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>98% message open rate (vs 20% for email)</span>
+          </div>
+          <div class="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+            <Check class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>Guests already have it installed</span>
+          </div>
+          <div class="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+            <Check class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>Rich media: photos, PDFs, locations</span>
+          </div>
+          <div class="flex items-center gap-2 text-emerald-800 dark:text-emerald-200">
+            <Check class="w-4 h-4 text-emerald-600 dark:text-emerald-400 shrink-0" />
+            <span>International guests prefer it over SMS</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <h2 id="options">WhatsApp Business Options</h2>
+        <p>There are two ways to use WhatsApp for business:</p>
+      </div>
+
+      <!-- Options Comparison Cards -->
+      <div class="not-prose my-10 grid sm:grid-cols-2 gap-6">
+        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center">
+              <Smartphone class="w-6 h-6 text-neutral-600 dark:text-neutral-300" />
+            </div>
+            <div>
+              <h4 class="font-semibold text-lg">Business App</h4>
+              <span class="text-sm text-emerald-600 dark:text-emerald-400 font-medium">Free</span>
+            </div>
+          </div>
+          <ul class="space-y-2 text-sm mb-4">
+            <li class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <Check class="w-4 h-4 shrink-0" /> Easy setup
+            </li>
+            <li class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <Check class="w-4 h-4 shrink-0" /> No cost
+            </li>
+            <li class="flex items-center gap-2 text-neutral-500">
+              <X class="w-4 h-4 shrink-0" /> Single device only
+            </li>
+            <li class="flex items-center gap-2 text-neutral-500">
+              <X class="w-4 h-4 shrink-0" /> No automation
+            </li>
+            <li class="flex items-center gap-2 text-neutral-500">
+              <X class="w-4 h-4 shrink-0" /> Manual responses
+            </li>
+          </ul>
+          <p class="text-xs text-neutral-500 dark:text-neutral-400">Best for: Testing only</p>
+        </div>
+        <div class="p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-500/10 dark:to-blue-500/10 border-2 border-emerald-300 dark:border-emerald-500/30 relative">
+          <div class="absolute -top-3 right-4 px-3 py-1 rounded-full text-xs font-semibold text-white" style="background-color: #10b981;">Recommended</div>
+          <div class="flex items-center gap-3 mb-4">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background-color: #10b981;">
+              <Settings class="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h4 class="font-semibold text-lg">Business API</h4>
+              <span class="text-sm text-neutral-600 dark:text-neutral-400">Pay per conversation</span>
+            </div>
+          </div>
+          <ul class="space-y-2 text-sm mb-4">
+            <li class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <Check class="w-4 h-4 shrink-0" /> Full automation
+            </li>
+            <li class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <Check class="w-4 h-4 shrink-0" /> AI chatbot integration
+            </li>
+            <li class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <Check class="w-4 h-4 shrink-0" /> Multiple team members
+            </li>
+            <li class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <Check class="w-4 h-4 shrink-0" /> CRM integration
+            </li>
+            <li class="flex items-center gap-2 text-emerald-600 dark:text-emerald-400">
+              <Check class="w-4 h-4 shrink-0" /> 1,000 free/month
+            </li>
+          </ul>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400">Best for: Hotels wanting automation</p>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <h2 id="setup-api">Setting Up WhatsApp Business API</h2>
+        <p>Follow these 5 steps to get your WhatsApp Business API running:</p>
+      </div>
+
+      <!-- Setup Steps -->
+      <div class="not-prose my-10 space-y-4">
+        <div class="flex gap-4 p-5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold" style="background-color: #3b82f6;">1</div>
+          <div>
+            <h4 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Create a Meta Business Account</h4>
+            <p class="text-sm text-blue-800 dark:text-blue-200 mb-2">Go to business.facebook.com and create or use an existing Business Account. Verify your business with official documents (takes 1-3 days).</p>
+          </div>
+        </div>
+        <div class="flex gap-4 p-5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold" style="background-color: #3b82f6;">2</div>
+          <div>
+            <h4 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Set Up WhatsApp Business</h4>
+            <p class="text-sm text-blue-800 dark:text-blue-200">In Meta Business Suite, add a WhatsApp Account and enter your hotel phone number. Verify via SMS or voice call.</p>
+          </div>
+        </div>
+        <div class="flex gap-4 p-5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold" style="background-color: #3b82f6;">3</div>
+          <div>
+            <h4 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Create a WhatsApp Business App</h4>
+            <p class="text-sm text-blue-800 dark:text-blue-200">At developers.facebook.com, create a new Business app, add WhatsApp product, and link your account.</p>
+          </div>
+        </div>
+        <div class="flex gap-4 p-5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold" style="background-color: #3b82f6;">4</div>
+          <div>
+            <h4 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Get Your API Credentials</h4>
+            <p class="text-sm text-blue-800 dark:text-blue-200 mb-2">From your app dashboard, copy these three values:</p>
+            <div class="flex flex-wrap gap-2">
+              <span class="px-2 py-1 rounded bg-blue-100 dark:bg-blue-500/20 text-xs font-mono">Phone Number ID</span>
+              <span class="px-2 py-1 rounded bg-blue-100 dark:bg-blue-500/20 text-xs font-mono">Business Account ID</span>
+              <span class="px-2 py-1 rounded bg-blue-100 dark:bg-blue-500/20 text-xs font-mono">Access Token</span>
+            </div>
+          </div>
+        </div>
+        <div class="flex gap-4 p-5 rounded-2xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <div class="w-10 h-10 rounded-full flex items-center justify-center shrink-0 text-white font-bold" style="background-color: #3b82f6;">5</div>
+          <div>
+            <h4 class="font-semibold text-blue-900 dark:text-blue-100 mb-2">Configure Webhooks</h4>
+            <p class="text-sm text-blue-800 dark:text-blue-200">Enter your webhook URL, set a verify token, and subscribe to the messages field to receive incoming messages.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <h2 id="automation">Connecting to a Hotel Chatbot</h2>
+        <p>Once your API is set up, connect it to an AI chatbot for automated responses:</p>
+      </div>
+
+      <!-- Automation Flow -->
+      <div class="not-prose my-10 p-8 rounded-2xl bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-500/10 dark:to-blue-500/10 border border-emerald-200 dark:border-emerald-500/20">
+        <div class="flex flex-col md:flex-row items-center justify-between gap-6 text-center">
+          <div class="flex-1">
+            <div class="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+              <MessageCircle class="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <p class="font-semibold">Guest Messages</p>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">"What time is checkout?"</p>
+          </div>
+          <div class="text-3xl text-emerald-400 hidden md:block">→</div>
+          <div class="text-3xl text-emerald-400 md:hidden">↓</div>
+          <div class="flex-1">
+            <div class="w-14 h-14 rounded-full bg-blue-100 dark:bg-blue-500/20 flex items-center justify-center mx-auto mb-3">
+              <Bot class="w-7 h-7 text-blue-600 dark:text-blue-400" />
+            </div>
+            <p class="font-semibold">AI Processes</p>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">Checks knowledge base</p>
+          </div>
+          <div class="text-3xl text-blue-400 hidden md:block">→</div>
+          <div class="text-3xl text-blue-400 md:hidden">↓</div>
+          <div class="flex-1">
+            <div class="w-14 h-14 rounded-full bg-emerald-100 dark:bg-emerald-500/20 flex items-center justify-center mx-auto mb-3">
+              <Send class="w-7 h-7 text-emerald-600 dark:text-emerald-400" />
+            </div>
+            <p class="font-semibold">Instant Reply</p>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">"Checkout is at 11am"</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Platform vs Custom -->
+      <div class="not-prose my-10 grid sm:grid-cols-2 gap-6">
+        <div class="p-6 rounded-2xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+          <h4 class="font-semibold text-lg text-emerald-900 dark:text-emerald-100 mb-3">Option A: Use Jack The Butler</h4>
+          <p class="text-sm text-emerald-800 dark:text-emerald-200 mb-4">Built-in WhatsApp integration. Just paste your credentials.</p>
+          <ul class="space-y-2 text-sm text-emerald-800 dark:text-emerald-200">
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-emerald-500 shrink-0" /> No coding required</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-emerald-500 shrink-0" /> AI from your knowledge base</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-emerald-500 shrink-0" /> Staff dashboard included</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-emerald-500 shrink-0" /> Auto-escalation to humans</li>
+          </ul>
+        </div>
+        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <h4 class="font-semibold text-lg mb-3">Option B: Build Custom</h4>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-4">Use WhatsApp Cloud API directly with your own code.</p>
+          <ul class="space-y-2 text-sm text-neutral-600 dark:text-neutral-400">
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-neutral-400 shrink-0" /> Maximum flexibility</li>
+            <li class="flex items-center gap-2"><Check class="w-4 h-4 text-neutral-400 shrink-0" /> Full control</li>
+            <li class="flex items-center gap-2"><X class="w-4 h-4 text-neutral-400 shrink-0" /> Requires developers</li>
+            <li class="flex items-center gap-2"><X class="w-4 h-4 text-neutral-400 shrink-0" /> Significant effort</li>
+          </ul>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <h2 id="templates">Message Templates</h2>
+        <p>WhatsApp requires pre-approved templates for outbound messages. Here are common hotel templates:</p>
+      </div>
+
+      <!-- Templates -->
+      <div class="not-prose my-10 space-y-4">
+        <div class="p-5 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-blue-100 dark:bg-blue-500/20 text-blue-700 dark:text-blue-300">Booking Confirmation</span>
+          </div>
+          <p class="text-sm text-neutral-700 dark:text-neutral-300 font-mono bg-white dark:bg-neutral-800 p-3 rounded-lg">Hi [[name]]! Your reservation at [[hotel]] is confirmed for [[date]]. Check-in: [[time]]. Reply if you have questions!</p>
+        </div>
+        <div class="p-5 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-emerald-100 dark:bg-emerald-500/20 text-emerald-700 dark:text-emerald-300">Pre-Arrival</span>
+          </div>
+          <p class="text-sm text-neutral-700 dark:text-neutral-300 font-mono bg-white dark:bg-neutral-800 p-3 rounded-lg">Welcome [[name]]! We are looking forward to your stay on [[date]]. Need airport transfer or early check-in?</p>
+        </div>
+        <div class="p-5 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="px-2 py-0.5 rounded text-xs font-medium bg-violet-100 dark:bg-violet-500/20 text-violet-700 dark:text-violet-300">Feedback Request</span>
+          </div>
+          <p class="text-sm text-neutral-700 dark:text-neutral-300 font-mono bg-white dark:bg-neutral-800 p-3 rounded-lg">Thank you for staying with us, [[name]]! How was your experience? Reply 1-5 stars.</p>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <h2 id="best-practices">Best Practices</h2>
+      </div>
+
+      <!-- Best Practices Grid -->
+      <div class="not-prose my-10 grid sm:grid-cols-2 gap-4">
+        <div class="flex gap-3 p-4 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background-color: #10b981;">
+            <Clock class="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p class="font-medium text-emerald-900 dark:text-emerald-100 text-sm">Respond within 24 hours</p>
+            <p class="text-xs text-emerald-700 dark:text-emerald-300">Free-form replies allowed in this window</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-4 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background-color: #3b82f6;">
+            <Send class="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p class="font-medium text-blue-900 dark:text-blue-100 text-sm">Use rich media</p>
+            <p class="text-xs text-blue-700 dark:text-blue-300">Photos, PDFs, location pins</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-4 rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background-color: #8b5cf6;">
+            <Shield class="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p class="font-medium text-violet-900 dark:text-violet-100 text-sm">Do not spam</p>
+            <p class="text-xs text-violet-700 dark:text-violet-300">Only relevant, valuable messages</p>
+          </div>
+        </div>
+        <div class="flex gap-3 p-4 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20">
+          <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background-color: #f97316;">
+            <Globe class="w-4 h-4 text-white" />
+          </div>
+          <div>
+            <p class="font-medium text-orange-900 dark:text-orange-100 text-sm">Offer human help</p>
+            <p class="text-xs text-orange-700 dark:text-orange-300">Always provide escalation option</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <h2 id="costs">WhatsApp Business API Costs</h2>
+      </div>
+
+      <!-- Pricing Box -->
+      <div class="not-prose my-10 p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+        <div class="grid sm:grid-cols-3 gap-6 text-center">
+          <div>
+            <p class="text-3xl font-bold text-emerald-600 dark:text-emerald-400">1,000</p>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">Free conversations/month</p>
+          </div>
+          <div>
+            <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">$0.01-0.05</p>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">Per conversation (varies by country)</p>
+          </div>
+          <div>
+            <p class="text-3xl font-bold text-neutral-600 dark:text-neutral-400">$50-200</p>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">Typical monthly cost (high volume)</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <h2 id="faq">Frequently Asked Questions</h2>
+
+        <h3>Can I use my existing WhatsApp number?</h3>
+        <p>Yes, but you will need to migrate it from personal/regular WhatsApp to Business API. This is a one-way migration.</p>
+
+        <h3>Do I need a developer to set this up?</h3>
+        <p>For the API itself, some technical knowledge helps. But hotel chatbot platforms like Jack The Butler handle the technical integration — you just need to create the Meta Business account and get credentials.</p>
+
+        <h3>Can guests message me from any country?</h3>
+        <p>Yes, WhatsApp works globally. This is a major advantage over SMS for international guests.</p>
+
+        <h3>What happens if my chatbot cannot answer?</h3>
+        <p>Good hotel chatbots escalate to staff when they cannot help. The guest gets a smooth handoff without needing to repeat their question.</p>
+      </div>
+
+      <!-- CTA Box -->
+      <div class="not-prose my-12 p-8 rounded-2xl bg-gradient-to-r from-emerald-600 to-blue-600 text-white text-center">
+        <h3 class="text-2xl font-bold mb-3 text-white">Skip the Setup Hassle</h3>
+        <p class="text-white/90 mb-6 max-w-md mx-auto">
+          Jack The Butler has built-in WhatsApp integration. Just enter your API credentials and you are live.
+        </p>
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 font-semibold rounded-full hover:bg-neutral-100 transition-colors"
+        >
+          Get Jack The Butler Free
+          <Zap class="w-4 h-4" />
+        </a>
+      </div>
+
+      <!-- Bottom CTA -->
+      <div class="not-prose mt-16 pt-8 border-t border-neutral-200 dark:border-neutral-800">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
+          <div>
+            <h3 class="text-xl font-bold mb-2">Ready to automate WhatsApp?</h3>
+            <p class="text-neutral-600 dark:text-neutral-400">Deploy a hotel chatbot with built-in WhatsApp support.</p>
+          </div>
+          <a
+            href="/"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors whitespace-nowrap"
+          >
+            Get Started Free
+          </a>
+        </div>
+      </div>
+
+    </div>
+  </article>
+
+  <!-- Related Posts -->
+  <section class="px-6 pb-24 border-t border-neutral-200 dark:border-neutral-800">
+    <div class="max-w-3xl mx-auto pt-16">
+      <h2 class="text-2xl font-bold mb-8">Related Articles</h2>
+      <div class="grid sm:grid-cols-2 gap-6">
+        <a href="/blog/what-is-hotel-chatbot/" class="group block p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+          <h3 class="font-semibold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">What is a Hotel Chatbot?</h3>
+          <p class="text-neutral-600 dark:text-neutral-400 text-sm">Complete guide to hotel chatbots and how they work.</p>
+        </a>
+        <a href="/blog/free-hotel-chatbot-solutions/" class="group block p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+          <h3 class="font-semibold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Free Hotel Chatbot Solutions</h3>
+          <p class="text-neutral-600 dark:text-neutral-400 text-sm">Compare the best free options for your hotel.</p>
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <Footer />
+</Layout>
+
+<style>
+  .prose h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+  }
+  .prose h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+  .prose p {
+    color: rgb(82 82 82);
+    margin-bottom: 1rem;
+  }
+  .prose ul, .prose ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+    color: rgb(82 82 82);
+  }
+  .prose ul {
+    list-style-type: disc;
+  }
+  .prose ol {
+    list-style-type: decimal;
+  }
+  .prose ul li, .prose ol li {
+    margin-bottom: 0.5rem;
+  }
+  .prose strong {
+    color: rgb(23 23 23);
+  }
+  .prose a {
+    color: rgb(37 99 235);
+  }
+  .prose a:hover {
+    text-decoration: underline;
+  }
+  :global(.dark) .prose p,
+  :global(.dark) .prose ul,
+  :global(.dark) .prose ol {
+    color: rgb(163 163 163);
+  }
+  :global(.dark) .prose strong {
+    color: white;
+  }
+  :global(.dark) .prose a {
+    color: rgb(96 165 250);
+  }
+</style>
