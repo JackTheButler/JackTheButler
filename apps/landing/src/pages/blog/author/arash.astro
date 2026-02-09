@@ -2,7 +2,7 @@
 import Layout from '../../../layouts/Layout.astro'
 import Footer from '../../../components/Footer.astro'
 import { Calendar, Clock, ArrowRight, Linkedin } from '@lucide/astro'
-import { authors, blogPosts, formatDate } from '../../../data/blog-posts.ts'
+import { authors, blogPosts, formatDate } from '../../../data/blog-posts'
 
 const author = authors.arash
 const authorPosts = blogPosts.filter(post => post.author.slug === 'arash')
