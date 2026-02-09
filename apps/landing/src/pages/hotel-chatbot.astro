@@ -1,0 +1,421 @@
+---
+import Layout from '../layouts/Layout.astro'
+import { Github, ChevronRight, Check, MessageSquare, Clock, Shield, DollarSign, Zap, Globe } from '@lucide/astro'
+---
+
+<Layout
+  title="Free Hotel Chatbot - Open Source AI Guest Messaging | Jack The Butler"
+  description="Looking for a hotel chatbot? Jack is a free, open-source AI chatbot for hotels. Automate WhatsApp, SMS & email guest messaging 24/7. Self-hosted, no per-message fees."
+>
+  <!-- Hero Section -->
+  <section class="min-h-[80vh] flex items-center justify-center px-6 pt-28 pb-16 relative overflow-hidden">
+    <div class="absolute inset-0 -z-10 overflow-hidden">
+      <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-3xl"></div>
+      <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/20 dark:bg-emerald-500/10 rounded-full blur-3xl"></div>
+    </div>
+
+    <div class="max-w-4xl mx-auto text-center">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-sm font-medium mb-8">
+        <Check class="w-4 h-4" />
+        Free & Open Source
+      </div>
+
+      <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
+        The Free <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">Hotel Chatbot</span> That Actually Works
+      </h1>
+
+      <p class="text-lg sm:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-10">
+        Jack is an open-source AI chatbot for hotels that handles WhatsApp, SMS, and email automatically. No per-message fees. No expensive subscriptions. Self-hosted on your server.
+      </p>
+
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+        <a
+          href="https://railway.com/deploy/jack-the-butler"
+          class="inline-flex items-center gap-2 px-8 py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
+        >
+          Deploy Free Now
+          <ChevronRight class="w-4 h-4" />
+        </a>
+        <a
+          href="https://github.com/JackTheButler/JackTheButler"
+          class="inline-flex items-center gap-2 px-8 py-4 text-neutral-700 dark:text-neutral-300 font-semibold rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors"
+        >
+          <Github class="w-5 h-5" />
+          View on GitHub
+        </a>
+      </div>
+
+      <p class="text-lg text-neutral-700 dark:text-neutral-300">
+        Deploy in 5 minutes. Own your data.
+      </p>
+    </div>
+  </section>
+
+  <!-- What is a Hotel Chatbot -->
+  <section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
+    <div class="max-w-5xl mx-auto">
+      <div class="text-center mb-16">
+        <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 text-sm font-medium mb-6">
+          <MessageSquare class="w-4 h-4" />
+          Understanding Hotel Chatbots
+        </div>
+        <h2 class="text-3xl sm:text-4xl font-bold mb-4">
+          What is a Hotel Chatbot?
+        </h2>
+        <p class="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto">
+          A <strong class="text-neutral-900 dark:text-white">hotel chatbot</strong> is an AI-powered assistant that automatically responds to guest inquiries across messaging channels — providing instant answers 24/7.
+        </p>
+      </div>
+
+      <div class="grid md:grid-cols-2 gap-8 mb-12">
+        <!-- Left: Description -->
+        <div class="p-8 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Zap class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            How It Works
+          </h3>
+          <p class="text-neutral-600 dark:text-neutral-400 mb-4">
+            Modern hotel chatbots use artificial intelligence to understand guest questions and provide helpful, contextual responses — just like a real concierge, but available around the clock.
+          </p>
+          <p class="text-neutral-600 dark:text-neutral-400">
+            The best hotel chatbots know when to <strong class="text-neutral-900 dark:text-white">escalate complex issues</strong> to human staff, ensuring guests always get the help they need.
+          </p>
+        </div>
+
+        <!-- Right: What they handle -->
+        <div class="p-8 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+            <Check class="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+            What They Handle
+          </h3>
+          <ul class="space-y-3">
+            <li class="flex items-start gap-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 mt-2 shrink-0"></span>
+              <span class="text-neutral-600 dark:text-neutral-400">Check-in/check-out times and procedures</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 mt-2 shrink-0"></span>
+              <span class="text-neutral-600 dark:text-neutral-400">Room amenities and hotel facilities</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 mt-2 shrink-0"></span>
+              <span class="text-neutral-600 dark:text-neutral-400">Restaurant hours and menu information</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 mt-2 shrink-0"></span>
+              <span class="text-neutral-600 dark:text-neutral-400">Local recommendations and directions</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 mt-2 shrink-0"></span>
+              <span class="text-neutral-600 dark:text-neutral-400">Booking modifications and cancellations</span>
+            </li>
+            <li class="flex items-start gap-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 mt-2 shrink-0"></span>
+              <span class="text-neutral-600 dark:text-neutral-400">Special requests and room service</span>
+            </li>
+          </ul>
+        </div>
+      </div>
+
+      <!-- Bottom highlight -->
+      <div class="p-6 rounded-2xl bg-gradient-to-r from-blue-600 to-emerald-600 text-white text-center">
+        <p class="text-lg font-medium">
+          With a hotel chatbot, guests get instant answers at 3am — and your staff can focus on what matters most.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <!-- Why Jack -->
+  <section class="py-24 px-6">
+    <div class="max-w-5xl mx-auto">
+      <h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">
+        Why Choose Jack as Your Hotel Chatbot?
+      </h2>
+      <p class="text-neutral-600 dark:text-neutral-400 text-center mb-16 max-w-2xl mx-auto">
+        Most hotel chatbots charge $200-2000/month plus per-message fees. Jack is different.
+      </p>
+
+      <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="w-12 h-12 rounded-xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center mb-4">
+            <DollarSign class="w-6 h-6" />
+          </div>
+          <h3 class="text-lg font-semibold mb-2">100% Free</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">
+            No subscription fees. No per-message costs. No per-room pricing. Just pay for your server (~$5/month).
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
+            <Shield class="w-6 h-6" />
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Self-Hosted</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">
+            Your guest data stays on your server. Full GDPR compliance. No third-party data sharing.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="w-12 h-12 rounded-xl bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center mb-4">
+            <Clock class="w-6 h-6" />
+          </div>
+          <h3 class="text-lg font-semibold mb-2">24/7 Responses</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">
+            Guests get instant answers at 3am. No more missed messages or delayed responses.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="w-12 h-12 rounded-xl bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400 flex items-center justify-center mb-4">
+            <MessageSquare class="w-6 h-6" />
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Multi-Channel</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">
+            WhatsApp, SMS, email, and web chat — all in one unified inbox for your staff.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="w-12 h-12 rounded-xl bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400 flex items-center justify-center mb-4">
+            <Zap class="w-6 h-6" />
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Easy Setup</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">
+            Deploy in 5 minutes with one click. No technical expertise required.
+          </p>
+        </div>
+
+        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <div class="w-12 h-12 rounded-xl bg-cyan-100 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 flex items-center justify-center mb-4">
+            <Globe class="w-6 h-6" />
+          </div>
+          <h3 class="text-lg font-semibold mb-2">Open Source</h3>
+          <p class="text-neutral-600 dark:text-neutral-400">
+            Full transparency. Customize anything. No vendor lock-in. Community supported.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Comparison Table -->
+  <section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">
+        Jack vs Other Hotel Chatbots
+      </h2>
+      <p class="text-neutral-600 dark:text-neutral-400 text-center mb-12 max-w-2xl mx-auto">
+        See how Jack compares to expensive SaaS hotel chatbot solutions.
+      </p>
+
+      <div class="overflow-x-auto">
+        <table class="w-full text-left border-collapse">
+          <thead>
+            <tr class="border-b border-neutral-200 dark:border-neutral-700">
+              <th class="py-4 px-4 font-semibold">Feature</th>
+              <th class="py-4 px-4 font-semibold text-blue-600 dark:text-blue-400">Jack The Butler</th>
+              <th class="py-4 px-4 font-semibold text-neutral-500">Other Chatbots</th>
+            </tr>
+          </thead>
+          <tbody class="text-neutral-600 dark:text-neutral-400">
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">Monthly Price</td>
+              <td class="py-4 px-4 text-emerald-600 dark:text-emerald-400 font-semibold">Free</td>
+              <td class="py-4 px-4">$200 - $2,000</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">Per-Message Fees</td>
+              <td class="py-4 px-4 text-emerald-600 dark:text-emerald-400 font-semibold">None</td>
+              <td class="py-4 px-4">$0.01 - $0.10</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">Self-Hosted</td>
+              <td class="py-4 px-4 text-emerald-600 dark:text-emerald-400">✓ Yes</td>
+              <td class="py-4 px-4 text-red-500">✗ No</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">Open Source</td>
+              <td class="py-4 px-4 text-emerald-600 dark:text-emerald-400">✓ Yes</td>
+              <td class="py-4 px-4 text-red-500">✗ No</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">Data Ownership</td>
+              <td class="py-4 px-4 text-emerald-600 dark:text-emerald-400">100% Yours</td>
+              <td class="py-4 px-4">Vendor Servers</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">WhatsApp Support</td>
+              <td class="py-4 px-4 text-emerald-600 dark:text-emerald-400">✓ Yes</td>
+              <td class="py-4 px-4 text-emerald-600 dark:text-emerald-400">✓ Yes</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-4 px-4 font-medium">Local AI Option</td>
+              <td class="py-4 px-4 text-emerald-600 dark:text-emerald-400">✓ Yes</td>
+              <td class="py-4 px-4 text-red-500">✗ No</td>
+            </tr>
+            <tr>
+              <td class="py-4 px-4 font-medium">Setup Time</td>
+              <td class="py-4 px-4">5 minutes</td>
+              <td class="py-4 px-4">Days to weeks</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </div>
+  </section>
+
+  <!-- How It Works -->
+  <section class="py-24 px-6">
+    <div class="max-w-4xl mx-auto">
+      <h2 class="text-3xl sm:text-4xl font-bold text-center mb-16">
+        How Jack Works
+      </h2>
+
+      <div class="space-y-12">
+        <div class="flex gap-6">
+          <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">1</div>
+          <div>
+            <h3 class="text-xl font-semibold mb-2">Guest Sends a Message</h3>
+            <p class="text-neutral-600 dark:text-neutral-400">
+              A guest messages your hotel via WhatsApp, SMS, email, or web chat. Jack receives it instantly.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-6">
+          <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">2</div>
+          <div>
+            <h3 class="text-xl font-semibold mb-2">AI Understands the Request</h3>
+            <p class="text-neutral-600 dark:text-neutral-400">
+              Jack's AI analyzes the message, checks your hotel's knowledge base, and determines the best response.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-6">
+          <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">3</div>
+          <div>
+            <h3 class="text-xl font-semibold mb-2">Instant Response or Escalation</h3>
+            <p class="text-neutral-600 dark:text-neutral-400">
+              For routine questions, Jack responds instantly. For complex requests, it creates a task and notifies the right staff member.
+            </p>
+          </div>
+        </div>
+
+        <div class="flex gap-6">
+          <div class="w-12 h-12 rounded-full bg-blue-600 text-white flex items-center justify-center font-bold shrink-0">4</div>
+          <div>
+            <h3 class="text-xl font-semibold mb-2">Staff Stays in Control</h3>
+            <p class="text-neutral-600 dark:text-neutral-400">
+              Your team monitors conversations in a unified dashboard, jumping in when needed. Full visibility, no surprises.
+            </p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FAQ -->
+  <section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
+    <div class="max-w-3xl mx-auto">
+      <h2 class="text-3xl sm:text-4xl font-bold text-center mb-16">
+        Hotel Chatbot FAQ
+      </h2>
+
+      <div class="space-y-4">
+        <details class="group p-6 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold">
+            How much does a hotel chatbot cost?
+            <ChevronRight class="w-5 h-5 text-neutral-500 group-open:rotate-90 transition-transform" />
+          </summary>
+          <p class="mt-4 text-neutral-600 dark:text-neutral-400">
+            Most hotel chatbots charge $200-2000/month plus per-message fees. Jack The Butler is completely free — you only pay for server hosting (~$5/month) and optional AI API usage (~$10-20/month depending on volume).
+          </p>
+        </details>
+
+        <details class="group p-6 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold">
+            Can a hotel chatbot handle WhatsApp?
+            <ChevronRight class="w-5 h-5 text-neutral-500 group-open:rotate-90 transition-transform" />
+          </summary>
+          <p class="mt-4 text-neutral-600 dark:text-neutral-400">
+            Yes! Jack supports WhatsApp Business API integration. Guests can message your hotel directly on WhatsApp and receive instant AI-powered responses 24/7.
+          </p>
+        </details>
+
+        <details class="group p-6 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold">
+            Is a self-hosted chatbot secure?
+            <ChevronRight class="w-5 h-5 text-neutral-500 group-open:rotate-90 transition-transform" />
+          </summary>
+          <p class="mt-4 text-neutral-600 dark:text-neutral-400">
+            Self-hosted is actually more secure than SaaS solutions. Your guest data never leaves your server. You have full control over security, backups, and compliance. Jack is fully GDPR compliant by design.
+          </p>
+        </details>
+
+        <details class="group p-6 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold">
+            What AI does the chatbot use?
+            <ChevronRight class="w-5 h-5 text-neutral-500 group-open:rotate-90 transition-transform" />
+          </summary>
+          <p class="mt-4 text-neutral-600 dark:text-neutral-400">
+            Jack supports multiple AI providers: Anthropic Claude, OpenAI GPT, Ollama for local models, and built-in local AI that runs entirely on your server with no API costs.
+          </p>
+        </details>
+
+        <details class="group p-6 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold">
+            How long does it take to set up?
+            <ChevronRight class="w-5 h-5 text-neutral-500 group-open:rotate-90 transition-transform" />
+          </summary>
+          <p class="mt-4 text-neutral-600 dark:text-neutral-400">
+            Jack can be deployed in about 5 minutes using our one-click deploy buttons. The setup wizard guides you through configuring your property info, AI provider, and knowledge base.
+          </p>
+        </details>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA -->
+  <section class="py-24 px-6">
+    <div class="max-w-4xl mx-auto text-center">
+      <h2 class="text-3xl sm:text-4xl font-bold mb-4">
+        Ready to Deploy Your Hotel Chatbot?
+      </h2>
+      <p class="text-neutral-600 dark:text-neutral-400 mb-8 max-w-xl mx-auto">
+        Join hotels using Jack to automate guest communication. Free forever, deploy in 5 minutes.
+      </p>
+      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+        <a
+          href="https://railway.com/deploy/jack-the-butler"
+          class="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full transition-colors"
+        >
+          Deploy Free on Railway
+          <ChevronRight class="w-4 h-4" />
+        </a>
+        <a
+          href="/"
+          class="inline-flex items-center gap-2 px-8 py-4 text-neutral-700 dark:text-neutral-300 font-semibold rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors"
+        >
+          Learn More About Jack
+        </a>
+      </div>
+    </div>
+  </section>
+
+  <!-- Footer -->
+  <footer class="py-12 px-6 border-t border-neutral-200 dark:border-neutral-800">
+    <div class="max-w-4xl mx-auto text-center">
+      <p class="text-sm text-neutral-500 dark:text-neutral-400 mb-4">
+        Jack The Butler — The free, open-source hotel chatbot
+      </p>
+      <div class="flex flex-wrap items-center justify-center gap-6 text-sm text-neutral-500 dark:text-neutral-400">
+        <a href="/" class="hover:text-neutral-900 dark:hover:text-white transition-colors">Home</a>
+        <a href="https://github.com/JackTheButler/JackTheButler" class="hover:text-neutral-900 dark:hover:text-white transition-colors">GitHub</a>
+        <a href="https://github.com/JackTheButler/JackTheButler/tree/main/docs" class="hover:text-neutral-900 dark:hover:text-white transition-colors">Documentation</a>
+      </div>
+    </div>
+  </footer>
+</Layout>

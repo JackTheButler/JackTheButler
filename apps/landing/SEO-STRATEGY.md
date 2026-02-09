@@ -5,8 +5,8 @@
 ### Today (Quick Wins)
 - [x] Submit sitemap to Google Search Console ✅
 - [x] Verify site ownership in Search Console ✅
-- [x] Test rich results at search.google.com/test/rich-results
-- [x] Test OG image at developers.facebook.com/tools/debug
+- [x] Test rich results at search.google.com/test/rich-results ✅
+- [x] Test OG image at developers.facebook.com/tools/debug ✅
 - [ ] Create Product Hunt upcoming page
 - [ ] List on AlternativeTo as alternative to HiJiffy, Asksuite
 - [ ] Post on Reddit r/selfhosted
@@ -25,8 +25,8 @@
 - [ ] Write blog post: "What is a Hotel Chatbot? Complete Guide"
 - [ ] Write blog post: "Free Hotel Chatbot Solutions"
 - [ ] Add blog section to website
-- [ ] Create /hotel-chatbot landing page
-- [ ] Add lazy loading to below-fold images
+- [x] Create /hotel-chatbot landing page ✅
+- [x] Add lazy loading to below-fold images ✅
 - [ ] Build 10 backlinks
 - [ ] Set up Ahrefs/SEMrush trial to track rankings
 
@@ -119,7 +119,7 @@
 ### To Improve
 - [x] Add "hotel chatbot" to H1 or subtitle ✅
 - [x] Add more keyword-rich content sections ✅
-- [ ] Create dedicated landing pages for each keyword
+- [x] Create dedicated landing pages for each keyword ✅ (/hotel-chatbot)
 - [ ] Add blog section
 
 ---
@@ -201,8 +201,8 @@
 ### Site Speed
 - [x] Static site (Astro) - fast by default
 - [x] Images optimized
-- [ ] Add lazy loading to below-fold images
-- [ ] Preconnect to external domains
+- [x] Add lazy loading to below-fold images ✅
+- [x] Preconnect to external domains ✅ (GTM)
 
 ### Mobile
 - [x] Responsive design
@@ -319,7 +319,7 @@ Do these today:
 - [x] Submit sitemap to Google Search Console ✅
 - [ ] Create Product Hunt upcoming page
 - [ ] List on AlternativeTo
-- [ ] Optimize GitHub README
+- [x] Optimize GitHub README ✅
 - [ ] Post on Reddit r/selfhosted
 - [ ] Share on Hacker News
 - [ ] Answer 1 Quora question about hotel chatbots
