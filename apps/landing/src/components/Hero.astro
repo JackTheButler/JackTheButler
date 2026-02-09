@@ -16,15 +16,15 @@ import { Github, ChevronRight } from '@lucide/astro'
 
   <div class="max-w-4xl mx-auto text-center">
     <!-- Trust badges -->
-    <div class="hero-animate delay-1 flex items-center justify-center gap-4 mb-8 text-sm text-neutral-500 dark:text-neutral-400">
-      <span class="flex items-center gap-1.5">
+    <div class="hero-animate delay-1 flex flex-wrap items-center justify-center gap-4 mb-8 text-sm text-neutral-500 dark:text-neutral-400">
+      <span class="flex items-center gap-1.5 whitespace-nowrap">
         <Github class="w-4 h-4" />
         Open Source
       </span>
       <span class="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700"></span>
-      <span>Self-Hosted</span>
+      <span class="whitespace-nowrap">Self-Hosted</span>
       <span class="w-1 h-1 rounded-full bg-neutral-300 dark:bg-neutral-700"></span>
-      <span>Free Forever</span>
+      <span class="whitespace-nowrap">Free Forever</span>
     </div>
 
     <!-- Headline -->
@@ -37,12 +37,11 @@ import { Github, ChevronRight } from '@lucide/astro'
 
     <!-- Sub-headline -->
     <p class="hero-animate delay-3 text-lg sm:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-10">
-      Handle WhatsApp, SMS, and email inquiries automatically.<br />
-      Deploy in 5 minutes. Own your data.
+      The open-source hotel chatbot that handles WhatsApp, SMS, and email automatically.
     </p>
 
     <!-- CTAs -->
-    <div class="hero-animate delay-4 flex flex-col sm:flex-row items-center justify-center gap-4">
+    <div class="hero-animate delay-4 flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
       <a
         href="https://railway.com/deploy/jack-the-butler"
         class="inline-flex items-center gap-2 px-8 py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
@@ -62,13 +61,18 @@ import { Github, ChevronRight } from '@lucide/astro'
       </a>
     </div>
 
+    <!-- Sub-CTA text -->
+    <p class="hero-animate delay-4 text-lg text-neutral-700 dark:text-neutral-300 mb-6">
+      Deploy in 5 minutes. Own your data.
+    </p>
+
     <!-- Product visual -->
     <div class="hero-animate delay-4 mt-16 relative" style="animation-delay: 600ms;">
       <div class="absolute inset-0 bg-gradient-to-t from-white dark:from-neutral-950 to-transparent z-10 pointer-events-none"></div>
       <div class="rounded-xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900/50 p-4 shadow-2xl shadow-neutral-200/50 dark:shadow-neutral-900/50">
         <img
           src={`${import.meta.env.BASE_URL}dashboard.jpg`}
-          alt="Jack The Butler Dashboard"
+          alt="Jack The Butler - AI Hotel Chatbot Dashboard"
           class="rounded-lg w-full"
         />
       </div>

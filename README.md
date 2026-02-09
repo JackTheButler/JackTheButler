@@ -1,34 +1,47 @@
 # Jack The Butler
 
+### The Open-Source Hotel Chatbot That Never Sleeps
+
 > **Jack** - Joint AI Control Kernel
-> A self-hosted AI assistant for the hospitality industry
+> A free, self-hosted AI concierge for hotels and hospitality
 
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic--2.0-blue.svg)](LICENSE.txt)
+[![Website](https://img.shields.io/badge/Website-JackTheButler.com-blue)](https://jackthebutler.com)
+[![Deploy on Railway](https://img.shields.io/badge/Deploy-Railway-blueviolet)](https://railway.com/deploy/jack-the-butler)
 
-**Website**: [JackTheButler.com](https://jackthebutler.com)
+**Website**: [https://jackthebutler.com](https://jackthebutler.com)
 
 ---
 
 ## What is Jack?
 
-Jack The Butler is a self-hosted AI assistant platform designed specifically for hotels and hospitality businesses. It acts as a central orchestration hub that connects:
+Jack The Butler is a **free, open-source hotel chatbot** that handles guest communication 24/7 across WhatsApp, SMS, email, and web chat. Unlike expensive SaaS solutions, Jack is **self-hosted** — your data stays on your server.
 
-- **Guest communication channels** (WhatsApp, SMS, web chat, email)
+**Perfect for:**
+- Hotels looking for an **AI concierge** without per-message fees
+- Properties wanting to **automate guest messaging** on WhatsApp
+- Hospitality businesses needing **24/7 automated responses**
+
+Jack acts as a central hub connecting:
+
+- **Guest channels** (WhatsApp, SMS, web chat, email)
 - **Staff interfaces** (dashboard, internal messaging)
 - **Hotel systems** (PMS, POS, housekeeping, maintenance)
 
-Jack handles routine guest requests autonomously while intelligently routing complex issues to the right staff members with full context.
+The AI chatbot handles routine guest requests autonomously while intelligently routing complex issues to the right staff members with full context.
 
 ---
 
 ## Features
 
-- **Multi-channel messaging** - WhatsApp, SMS, Email, Web Chat
-- **AI-powered responses** - Anthropic Claude, OpenAI, or local models
+- **Hotel chatbot** - Automated guest messaging 24/7
+- **Multi-channel inbox** - WhatsApp, SMS, Email, Web Chat in one dashboard
+- **AI-powered responses** - Claude, GPT, or local models (no API costs)
 - **Knowledge base** - Semantic search over your hotel information
-- **Task routing** - Automatically create and assign tasks to staff
-- **Self-hosted** - Your data stays on your infrastructure
-- **Easy setup** - Single SQLite database, no external services required
+- **Smart escalation** - Routes complex requests to staff automatically
+- **Self-hosted** - Your data stays on your server, GDPR compliant
+- **Free forever** - No per-message fees, no per-room pricing
+- **Easy setup** - Deploy in 5 minutes, single SQLite database
 
 ---
 
@@ -249,9 +262,26 @@ By submitting a PR, you agree to the terms in [CLA.md](CLA.md).
 
 ## Support
 
+- **Website**: [https://jackthebutler.com](https://jackthebutler.com)
 - **Issues**: [GitHub Issues](https://github.com/JackTheButler/JackTheButler/issues)
-- **Website**: [JackTheButler.com](https://jackthebutler.com)
+- **Documentation**: [docs/](docs/)
 
 ---
 
-Built with care for the hospitality industry.
+## Why Jack?
+
+| Feature | Jack | Other Hotel Chatbots |
+|---------|------|---------------------|
+| **Price** | Free | $200-2000/month |
+| **Per-message fees** | None | $0.01-0.10/message |
+| **Self-hosted** | ✅ | ❌ |
+| **Open source** | ✅ | ❌ |
+| **Data ownership** | 100% yours | Vendor servers |
+| **WhatsApp support** | ✅ | ✅ |
+| **Local AI option** | ✅ | ❌ |
+
+---
+
+**Keywords**: hotel chatbot, AI hotel concierge, hotel WhatsApp automation, guest messaging software, hotel virtual assistant, self-hosted hotel software, open source hotel chatbot, AI for hospitality
+
+Built with ❤️ for the hospitality industry — [https://jackthebutler.com](https://jackthebutler.com)
