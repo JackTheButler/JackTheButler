@@ -1,7 +1,15 @@
 import type { APIRoute } from 'astro'
-import { blogPosts, authors } from '@/data/blog-posts'
 
 const site = 'https://jackthebutler.com'
+
+// Sitemap data - update when adding new blog posts
+const blogSlugs = [
+  { slug: 'free-hotel-chatbot-solutions', date: '2026-02-09' },
+  { slug: 'what-is-hotel-chatbot', date: '2026-02-08' },
+  { slug: 'hotel-whatsapp-automation', date: '2026-02-07' },
+]
+
+const authorSlugs = ['arash']
 
 export const GET: APIRoute = () => {
   const today = new Date().toISOString().split('T')[0]
@@ -12,15 +20,15 @@ export const GET: APIRoute = () => {
     { url: '/blog/', changefreq: 'weekly', priority: '0.8' },
   ]
 
-  const blogPages = blogPosts.map(post => ({
+  const blogPages = blogSlugs.map(post => ({
     url: `/blog/${post.slug}/`,
     changefreq: 'monthly',
     priority: '0.7',
     lastmod: post.date,
   }))
 
-  const authorPages = Object.values(authors).map(author => ({
-    url: `/blog/author/${author.slug}/`,
+  const authorPages = authorSlugs.map(slug => ({
+    url: `/blog/author/${slug}/`,
     changefreq: 'monthly',
     priority: '0.6',
   }))
