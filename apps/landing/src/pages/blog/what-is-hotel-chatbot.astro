@@ -1,31 +1,27 @@
 ---
 import Layout from '../../layouts/Layout.astro'
 import Footer from '../../components/Footer.astro'
-import { Calendar, Clock, ArrowLeft, Check, MessageSquare, Bot, Users, Zap } from '@lucide/astro'
-import { getPost, formatDate } from '../../data/blog-posts'
+import ArticleHeader from '../../components/blog/ArticleHeader.astro'
+import ArticleSchema from '../../components/blog/ArticleSchema.astro'
+import ArticleBottomCTA from '../../components/blog/ArticleBottomCTA.astro'
+import RelatedPosts from '../../components/blog/RelatedPosts.astro'
+import { Check, MessageSquare, Bot, Users, Zap } from '@lucide/astro'
+import { getPost } from '../../data/blog-posts'
 
 const post = getPost('what-is-hotel-chatbot')!
 
-const articleSchema = {
-  "@context": "https://schema.org",
-  "@type": "Article",
-  "headline": post.title,
-  "description": post.description,
-  "datePublished": post.date,
-  "author": {
-    "@type": "Person",
-    "name": post.author.name,
-    "description": post.author.bio,
-    "image": `https://jackthebutler.com${post.author.avatar}`,
-    "url": `https://jackthebutler.com/blog/author/${post.author.slug}/`,
-    "sameAs": post.author.linkedin ? [post.author.linkedin] : []
+const relatedPosts = [
+  {
+    href: '/blog/free-hotel-chatbot-solutions/',
+    title: 'Free Hotel Chatbot Solutions',
+    description: 'Compare the best free options for your hotel.'
   },
-  "publisher": {
-    "@type": "Organization",
-    "name": "Jack The Butler",
-    "url": "https://jackthebutler.com"
+  {
+    href: '/blog/hotel-whatsapp-automation/',
+    title: 'WhatsApp for Hotels',
+    description: 'Set up WhatsApp Business automation.'
   }
-}
+]
 ---
 
 <Layout
@@ -35,42 +31,11 @@ const articleSchema = {
   author={post.author.name}
   publishedTime={post.date}
 >
-  <script type="application/ld+json" set:html={JSON.stringify(articleSchema)} />
+  <ArticleSchema post={post} />
 
   <article class="pt-32 pb-24 px-6">
     <div class="max-w-3xl mx-auto">
-      <!-- Back link -->
-      <a href="/blog/" class="inline-flex items-center gap-2 text-neutral-500 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors mb-8">
-        <ArrowLeft class="w-4 h-4" />
-        Back to Blog
-      </a>
-
-      <!-- Header -->
-      <header class="mb-12">
-        <span class="inline-block px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-sm font-medium mb-4">
-          {post.category}
-        </span>
-        <h1 class="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-6">
-          {post.title}
-        </h1>
-        <p class="text-xl text-neutral-600 dark:text-neutral-400 mb-6">
-          {post.description}
-        </p>
-        <div class="flex flex-wrap items-center gap-4 text-sm text-neutral-500 dark:text-neutral-400">
-          <a href={`/blog/author/${post.author.slug}/`} class="flex items-center gap-2 hover:text-neutral-900 dark:hover:text-white transition-colors">
-            <img src={post.author.avatar} alt={post.author.name} class="w-6 h-6 rounded-full object-cover" />
-            {post.author.name}
-          </a>
-          <span class="flex items-center gap-1.5">
-            <Calendar class="w-4 h-4" />
-            {formatDate(post.date)}
-          </span>
-          <span class="flex items-center gap-1.5">
-            <Clock class="w-4 h-4" />
-            {post.readTime}
-          </span>
-        </div>
-      </header>
+      <ArticleHeader post={post} />
 
       <!-- Content -->
       <div class="prose prose-lg dark:prose-invert max-w-none">
@@ -332,7 +297,6 @@ const articleSchema = {
         </div>
       </div>
 
-      <!-- CTA Box -->
       <div class="not-prose my-12 p-8 rounded-2xl bg-gradient-to-r from-blue-600 to-emerald-600 text-white text-center">
         <h3 class="text-2xl font-bold mb-3">Try Jack The Butler Free</h3>
         <p class="text-white/80 mb-6 max-w-md mx-auto">
@@ -378,41 +342,17 @@ const articleSchema = {
 
       </div>
 
-      <!-- Bottom CTA -->
-      <div class="not-prose mt-16 pt-8 border-t border-neutral-200 dark:border-neutral-800">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div>
-            <h3 class="text-xl font-bold mb-2">Ready to add a chatbot to your hotel?</h3>
-            <p class="text-neutral-600 dark:text-neutral-400">Compare the best free options available.</p>
-          </div>
-          <a
-            href="/blog/free-hotel-chatbot-solutions/"
-            class="inline-flex items-center gap-2 px-6 py-3 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors whitespace-nowrap"
-          >
-            Free Chatbot Options
-          </a>
-        </div>
-      </div>
+      <ArticleBottomCTA
+        title="Ready to add a chatbot to your hotel?"
+        description="Compare the best free options available."
+        buttonText="Free Chatbot Options"
+        buttonHref="/blog/free-hotel-chatbot-solutions/"
+      />
 
     </div>
   </article>
 
-  <!-- Related Posts -->
-  <section class="px-6 pb-24 border-t border-neutral-200 dark:border-neutral-800">
-    <div class="max-w-3xl mx-auto pt-16">
-      <h2 class="text-2xl font-bold mb-8">Related Articles</h2>
-      <div class="grid sm:grid-cols-2 gap-6">
-        <a href="/blog/free-hotel-chatbot-solutions/" class="group block p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
-          <h3 class="font-semibold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">Free Hotel Chatbot Solutions</h3>
-          <p class="text-neutral-600 dark:text-neutral-400 text-sm">Compare the best free options for your hotel.</p>
-        </a>
-        <a href="/blog/hotel-whatsapp-automation/" class="group block p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
-          <h3 class="font-semibold mb-2 group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors">WhatsApp for Hotels</h3>
-          <p class="text-neutral-600 dark:text-neutral-400 text-sm">Set up WhatsApp Business automation.</p>
-        </a>
-      </div>
-    </div>
-  </section>
+  <RelatedPosts posts={relatedPosts} />
 
   <Footer />
 </Layout>
