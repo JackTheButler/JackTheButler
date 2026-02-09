@@ -35,8 +35,7 @@ jobs:
           cache: pnpm
 
       - name: Install dependencies
-        run: pnpm install
-        working-directory: apps/landing
+        run: pnpm install --frozen-lockfile
 
       - name: Build landing page
         run: pnpm build

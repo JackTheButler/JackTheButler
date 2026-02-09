@@ -9,6 +9,9 @@ export default defineConfig({
   site: isProduction ? 'https://jackthebutler.com' : 'http://localhost:4321',
   base: '/',
   vite: {
-    plugins: [tailwindcss()]
+    plugins: [tailwindcss()],
+    resolve: {
+      extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.astro']
+    }
   }
 });
