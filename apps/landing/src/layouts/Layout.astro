@@ -21,6 +21,13 @@ const {
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
 
+    <!-- Google Tag Manager -->
+    <script is:inline>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
+    new Date().getTime(),event:'gtm.js'});var f=d.getElementsByTagName(s)[0],
+    j=d.createElement(s),dl=l!='dataLayer'?'&l='+l:'';j.async=true;j.src=
+    'https://www.googletagmanager.com/gtm.js?id='+i+dl;f.parentNode.insertBefore(j,f);
+    })(window,document,'script','dataLayer','GTM-K2SKD2W6');</script>
+
     <!-- Prevent flash of wrong theme -->
     <script is:inline>
       const theme = localStorage.getItem('theme') ||
@@ -50,6 +57,10 @@ const {
     <title>{title}</title>
   </head>
   <body class="bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 antialiased transition-colors">
+    <!-- Google Tag Manager (noscript) -->
+    <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2SKD2W6"
+    height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
+
     <Intro />
     <Header />
     <main class="opacity-0 animate-fadeIn">
