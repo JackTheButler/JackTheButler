@@ -22,32 +22,59 @@ const partners = [
     <div class="absolute right-0 top-0 bottom-0 w-24 bg-gradient-to-l from-white dark:from-neutral-950 to-transparent z-10 pointer-events-none"></div>
 
     <!-- Scrolling container -->
-    <div class="flex animate-scroll">
+    <div id="partners-scroll" class="flex w-max">
       <!-- First set of logos -->
-      {partners.map((partner) => (
-        <div class="flex items-center justify-center gap-3 px-8 shrink-0">
-          <img
-            src={partner.logo}
-            alt={partner.name}
-            class="h-8 w-auto opacity-70 dark:opacity-60 dark:invert grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
-          />
-          <span class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{partner.name}</span>
-        </div>
-      ))}
+      <div id="partners-set" class="flex">
+        {partners.map((partner) => (
+          <div class="flex items-center justify-center gap-3 px-8 shrink-0">
+            <img
+              src={partner.logo}
+              alt={partner.name}
+              class="h-8 w-auto opacity-70 dark:opacity-60 dark:invert grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+            />
+            <span class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{partner.name}</span>
+          </div>
+        ))}
+      </div>
       <!-- Duplicate set for seamless loop -->
-      {partners.map((partner) => (
-        <div class="flex items-center justify-center gap-3 px-8 shrink-0">
-          <img
-            src={partner.logo}
-            alt={partner.name}
-            class="h-8 w-auto opacity-70 dark:opacity-60 dark:invert grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
-          />
-          <span class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{partner.name}</span>
-        </div>
-      ))}
+      <div class="flex">
+        {partners.map((partner) => (
+          <div class="flex items-center justify-center gap-3 px-8 shrink-0">
+            <img
+              src={partner.logo}
+              alt={partner.name}
+              class="h-8 w-auto opacity-70 dark:opacity-60 dark:invert grayscale hover:grayscale-0 hover:opacity-100 transition-all duration-300"
+            />
+            <span class="text-sm font-medium text-neutral-500 dark:text-neutral-400">{partner.name}</span>
+          </div>
+        ))}
+      </div>
     </div>
   </div>
 </section>
+
+<script>
+  // Calculate exact width and set animation with pixel values
+  function initPartnersScroll() {
+    const scrollContainer = document.getElementById('partners-scroll');
+    const partnersSet = document.getElementById('partners-set');
+
+    if (!scrollContainer || !partnersSet) return;
+
+    const setWidth = partnersSet.offsetWidth;
+    // Speed: pixels per second (consistent across all screen sizes)
+    const speed = 50;
+    const duration = setWidth / speed;
+
+    scrollContainer.style.setProperty('--scroll-width', `-${setWidth}px`);
+    scrollContainer.style.setProperty('--scroll-duration', `${duration}s`);
+    scrollContainer.classList.add('animate-scroll');
+  }
+
+  // Run on load and resize
+  initPartnersScroll();
+  window.addEventListener('resize', initPartnersScroll);
+</script>
 
 <style>
   @keyframes scroll {
@@ -55,12 +82,12 @@ const partners = [
       transform: translateX(0);
     }
     100% {
-      transform: translateX(-50%);
+      transform: translateX(var(--scroll-width));
     }
   }
 
   .animate-scroll {
-    animation: scroll 30s linear infinite;
+    animation: scroll var(--scroll-duration, 30s) linear infinite;
   }
 
   .animate-scroll:hover {
