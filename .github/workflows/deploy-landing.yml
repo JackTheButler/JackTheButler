@@ -36,6 +36,7 @@ jobs:
 
       - name: Install dependencies
         run: pnpm install
+        working-directory: apps/landing
 
       - name: Build landing page
         run: pnpm build
