@@ -1,0 +1,6 @@
+# robots.txt for jackthebutler.com
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://jackthebutler.com/sitemap.xml

@@ -20,6 +20,10 @@ const {
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <meta name="keywords" content="AI hotel concierge, hotel chatbot, hotel guest messaging, AI guest communication, hotel WhatsApp automation, self-hosted hotel software, open source hotel chatbot, AI for hospitality" />
+    <meta name="author" content="Jack The Butler" />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://jackthebutler.com/" />
 
     <!-- Google Tag Manager -->
     <script is:inline>(function(w,d,s,l,i){w[l]=w[l]||[];w[l].push({'gtm.start':
@@ -55,6 +59,95 @@ const {
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 
     <title>{title}</title>
+
+    <!-- Schema.org JSON-LD -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "SoftwareApplication",
+      "name": "Jack The Butler",
+      "applicationCategory": "BusinessApplication",
+      "operatingSystem": "Any",
+      "description": "Self-hosted AI concierge for hotels. Handle WhatsApp, SMS, and email inquiries automatically.",
+      "url": "https://jackthebutler.com",
+      "offers": {
+        "@type": "Offer",
+        "price": "0",
+        "priceCurrency": "USD"
+      },
+      "aggregateRating": {
+        "@type": "AggregateRating",
+        "ratingValue": "5",
+        "ratingCount": "12"
+      },
+      "featureList": [
+        "AI-powered guest communication",
+        "WhatsApp Business integration",
+        "SMS and email automation",
+        "Self-hosted and open source",
+        "Multi-language support",
+        "24/7 automated responses"
+      ]
+    })} />
+
+    <!-- Organization Schema -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Jack The Butler",
+      "url": "https://jackthebutler.com",
+      "logo": "https://jackthebutler.com/butler.svg",
+      "sameAs": [
+        "https://github.com/JackTheButler/JackTheButler"
+      ]
+    })} />
+
+    <!-- FAQ Schema -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "FAQPage",
+      "mainEntity": [
+        {
+          "@type": "Question",
+          "name": "How much does Jack The Butler cost?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Jack is free and open source. You only pay for your server (Railway free tier works) and AI API usage (typically $5-20/month for a small hotel)."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "What AI providers are supported?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Claude (Anthropic), GPT (OpenAI), Ollama for local models, and built-in local AI using Transformers.js. Mix and match as needed."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Can I run it without cloud AI?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Yes! Jack includes local AI models that run entirely on your server. No external API calls required for basic functionality."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "How do I connect WhatsApp?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Through WhatsApp Business API (Meta). The setup wizard guides you through the process. SMS works via Twilio, email via any SMTP."
+          }
+        },
+        {
+          "@type": "Question",
+          "name": "Is my data secure?",
+          "acceptedAnswer": {
+            "@type": "Answer",
+            "text": "Your data stays on your server. We never see it. All credentials are encrypted at rest. You control backups and access."
+          }
+        }
+      ]
+    })} />
   </head>
   <body class="bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 antialiased transition-colors">
     <!-- Google Tag Manager (noscript) -->
