@@ -6,7 +6,7 @@ import ArticleSchema from '../../components/blog/ArticleSchema.astro'
 import ArticleBottomCTA from '../../components/blog/ArticleBottomCTA.astro'
 import RelatedPosts from '../../components/blog/RelatedPosts.astro'
 import { Check, MessageCircle, Zap, Smartphone, Settings, Send, Bot, Shield, Globe, Clock, X } from '@lucide/astro'
-import { getPost } from '../../data/blog-posts'
+import { getPost } from '../../data/blog-posts.ts'
 
 const post = getPost('hotel-whatsapp-automation')!
 
