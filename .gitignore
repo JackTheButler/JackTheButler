@@ -5,8 +5,8 @@ resources/
 # Build output
 dist/
 
-# Data (database, uploads)
-data/
+# Data (database, uploads) - only root data folder
+/data/
 
 # Environment
 .env
