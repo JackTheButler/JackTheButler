@@ -1,6 +1,6 @@
 ---
 // Header with logo, navigation, and theme toggle
-import { Github, Menu, X, Home, BookOpen, FileText, Rocket } from '@lucide/astro'
+import { Github, Menu, X, Home, BookOpen, FileText, Rocket, Play } from '@lucide/astro'
 
 const pathname = Astro.url.pathname
 const isActive = (href: string) => pathname.startsWith(href)
@@ -35,6 +35,9 @@ const linkClass = (href: string) => isActive(href)
       <nav class="hidden md:flex items-center gap-6 text-sm">
         <a href="/" class={pathname === '/' ? 'text-neutral-900 dark:text-white font-medium transition-colors' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors'}>
           Home
+        </a>
+        <a href="https://demo.jackthebutler.com/" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
+          Try Demo
         </a>
         <a href="/blog/" class={linkClass('/blog/')}>
           Blog
@@ -80,6 +83,10 @@ const linkClass = (href: string) => isActive(href)
       <a href="/" class={`flex items-center gap-2 ${pathname === '/' ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'} transition-colors`}>
         <Home class="w-4 h-4" />
         Home
+      </a>
+      <a href="https://demo.jackthebutler.com/" class="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
+        <Play class="w-4 h-4" />
+        Try Demo
       </a>
       <a href="/blog/" class={`flex items-center gap-2 ${isActive('/blog/') ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'} transition-colors`}>
         <BookOpen class="w-4 h-4" />
