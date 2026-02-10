@@ -1,0 +1,64 @@
+---
+import { Github, ChevronRight, Check } from '@lucide/astro'
+
+interface Props {
+  badge?: string
+  title: string
+  highlight: string
+  description: string
+  deployUrl?: string
+  deployText?: string
+}
+
+const {
+  badge = 'Free & Open Source',
+  title,
+  highlight,
+  description,
+  deployUrl = 'https://railway.com/deploy/jack-the-butler',
+  deployText = 'Deploy Free Now'
+} = Astro.props
+---
+
+<section class="min-h-[80vh] flex items-center justify-center px-6 pt-28 pb-16 relative overflow-hidden">
+  <div class="absolute inset-0 -z-10 overflow-hidden">
+    <div class="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 dark:bg-blue-500/10 rounded-full blur-3xl"></div>
+    <div class="absolute bottom-1/4 right-1/4 w-96 h-96 bg-emerald-500/20 dark:bg-emerald-500/10 rounded-full blur-3xl"></div>
+  </div>
+
+  <div class="max-w-4xl mx-auto text-center">
+    <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-sm font-medium mb-8">
+      <Check class="w-4 h-4" />
+      {badge}
+    </div>
+
+    <h1 class="text-4xl sm:text-5xl md:text-6xl font-bold tracking-tight mb-6">
+      The Free <span class="text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-emerald-600 dark:from-blue-400 dark:to-emerald-400">{highlight}</span> {title}
+    </h1>
+
+    <p class="text-lg sm:text-xl text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto mb-10">
+      {description}
+    </p>
+
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4 mb-4">
+      <a
+        href={deployUrl}
+        class="inline-flex items-center gap-2 px-8 py-4 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 font-semibold rounded-full hover:bg-neutral-800 dark:hover:bg-neutral-100 transition-colors"
+      >
+        {deployText}
+        <ChevronRight class="w-4 h-4" />
+      </a>
+      <a
+        href="https://github.com/JackTheButler/JackTheButler"
+        class="inline-flex items-center gap-2 px-8 py-4 text-neutral-700 dark:text-neutral-300 font-semibold rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors"
+      >
+        <Github class="w-5 h-5" />
+        View on GitHub
+      </a>
+    </div>
+
+    <p class="text-lg text-neutral-700 dark:text-neutral-300">
+      Deploy in 5 minutes. Own your data.
+    </p>
+  </div>
+</section>

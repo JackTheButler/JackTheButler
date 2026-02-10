@@ -9,6 +9,8 @@ export const GET: APIRoute = () => {
   const staticPages = [
     { url: '/', changefreq: 'weekly', priority: '1.0' },
     { url: '/hotel-chatbot/', changefreq: 'monthly', priority: '0.9' },
+    { url: '/airbnb-chatbot/', changefreq: 'monthly', priority: '0.9' },
+    { url: '/hostel-chatbot/', changefreq: 'monthly', priority: '0.9' },
     { url: '/blog/', changefreq: 'weekly', priority: '0.8' },
   ]
 

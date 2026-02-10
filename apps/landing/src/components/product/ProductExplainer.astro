@@ -1,0 +1,75 @@
+---
+import { MessageSquare, Zap, Check } from '@lucide/astro'
+
+interface Props {
+  badgeText: string
+  title: string
+  description: string
+  howItWorksText: string
+  howItWorksDescription: string
+  features: string[]
+  highlightText: string
+}
+
+const {
+  badgeText,
+  title,
+  description,
+  howItWorksText,
+  howItWorksDescription,
+  features,
+  highlightText
+} = Astro.props
+---
+
+<section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
+  <div class="max-w-5xl mx-auto">
+    <div class="text-center mb-16">
+      <div class="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-purple-100 dark:bg-purple-500/10 text-purple-700 dark:text-purple-400 text-sm font-medium mb-6">
+        <MessageSquare class="w-4 h-4" />
+        {badgeText}
+      </div>
+      <h2 class="text-3xl sm:text-4xl font-bold mb-4">
+        {title}
+      </h2>
+      <p class="text-lg text-neutral-600 dark:text-neutral-400 max-w-2xl mx-auto" set:html={description} />
+    </div>
+
+    <div class="grid md:grid-cols-2 gap-8 mb-12">
+      <!-- Left: Description -->
+      <div class="p-8 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+        <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Zap class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+          How It Works
+        </h3>
+        <p class="text-neutral-600 dark:text-neutral-400 mb-4">
+          {howItWorksText}
+        </p>
+        <p class="text-neutral-600 dark:text-neutral-400" set:html={howItWorksDescription} />
+      </div>
+
+      <!-- Right: What they handle -->
+      <div class="p-8 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+        <h3 class="text-xl font-semibold mb-4 flex items-center gap-2">
+          <Check class="w-5 h-5 text-emerald-600 dark:text-emerald-400" />
+          What It Handles
+        </h3>
+        <ul class="space-y-3">
+          {features.map((feature) => (
+            <li class="flex items-start gap-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-blue-600 dark:bg-blue-400 mt-2 shrink-0"></span>
+              <span class="text-neutral-600 dark:text-neutral-400">{feature}</span>
+            </li>
+          ))}
+        </ul>
+      </div>
+    </div>
+
+    <!-- Bottom highlight -->
+    <div class="p-6 rounded-2xl bg-gradient-to-r from-blue-600 to-emerald-600 text-white text-center">
+      <p class="text-lg font-medium">
+        {highlightText}
+      </p>
+    </div>
+  </div>
+</section>

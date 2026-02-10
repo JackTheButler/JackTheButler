@@ -1,0 +1,37 @@
+---
+import { ChevronRight } from '@lucide/astro'
+
+interface FAQItem {
+  question: string
+  answer: string
+}
+
+interface Props {
+  title: string
+  items: FAQItem[]
+}
+
+const { title, items } = Astro.props
+---
+
+<section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
+  <div class="max-w-3xl mx-auto">
+    <h2 class="text-3xl sm:text-4xl font-bold text-center mb-16">
+      {title}
+    </h2>
+
+    <div class="space-y-4">
+      {items.map((item) => (
+        <details class="group p-6 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <summary class="flex items-center justify-between cursor-pointer list-none font-semibold">
+            {item.question}
+            <ChevronRight class="w-5 h-5 text-neutral-500 group-open:rotate-90 transition-transform" />
+          </summary>
+          <p class="mt-4 text-neutral-600 dark:text-neutral-400">
+            {item.answer}
+          </p>
+        </details>
+      ))}
+    </div>
+  </div>
+</section>

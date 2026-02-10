@@ -1,0 +1,47 @@
+---
+import { ChevronRight } from '@lucide/astro'
+
+interface Props {
+  title: string
+  subtitle: string
+  primaryText?: string
+  primaryUrl?: string
+  secondaryText?: string
+  secondaryUrl?: string
+}
+
+const {
+  title,
+  subtitle,
+  primaryText = 'Deploy Free on Railway',
+  primaryUrl = 'https://railway.com/deploy/jack-the-butler',
+  secondaryText = 'Learn More About Jack',
+  secondaryUrl = '/'
+} = Astro.props
+---
+
+<section class="py-24 px-6">
+  <div class="max-w-4xl mx-auto text-center">
+    <h2 class="text-3xl sm:text-4xl font-bold mb-4">
+      {title}
+    </h2>
+    <p class="text-neutral-600 dark:text-neutral-400 mb-8 max-w-xl mx-auto">
+      {subtitle}
+    </p>
+    <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
+      <a
+        href={primaryUrl}
+        class="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-full transition-colors"
+      >
+        {primaryText}
+        <ChevronRight class="w-4 h-4" />
+      </a>
+      <a
+        href={secondaryUrl}
+        class="inline-flex items-center gap-2 px-8 py-4 text-neutral-700 dark:text-neutral-300 font-semibold rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 transition-colors"
+      >
+        {secondaryText}
+      </a>
+    </div>
+  </div>
+</section>

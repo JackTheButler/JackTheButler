@@ -1,0 +1,64 @@
+---
+import { DollarSign, Shield, Clock, MessageSquare, Zap, Globe } from '@lucide/astro'
+
+interface Feature {
+  icon: 'dollar' | 'shield' | 'clock' | 'message' | 'zap' | 'globe'
+  title: string
+  description: string
+  color: 'emerald' | 'blue' | 'purple' | 'orange' | 'red' | 'cyan'
+}
+
+interface Props {
+  title: string
+  subtitle: string
+  features: Feature[]
+}
+
+const { title, subtitle, features } = Astro.props
+
+const iconComponents = {
+  dollar: DollarSign,
+  shield: Shield,
+  clock: Clock,
+  message: MessageSquare,
+  zap: Zap,
+  globe: Globe
+}
+
+const colorClasses = {
+  emerald: 'bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400',
+  blue: 'bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400',
+  purple: 'bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400',
+  orange: 'bg-orange-100 dark:bg-orange-500/10 text-orange-600 dark:text-orange-400',
+  red: 'bg-red-100 dark:bg-red-500/10 text-red-600 dark:text-red-400',
+  cyan: 'bg-cyan-100 dark:bg-cyan-500/10 text-cyan-600 dark:text-cyan-400'
+}
+---
+
+<section class="py-24 px-6">
+  <div class="max-w-5xl mx-auto">
+    <h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">
+      {title}
+    </h2>
+    <p class="text-neutral-600 dark:text-neutral-400 text-center mb-16 max-w-2xl mx-auto">
+      {subtitle}
+    </p>
+
+    <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+      {features.map((feature) => {
+        const IconComponent = iconComponents[feature.icon]
+        return (
+          <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+            <div class={`w-12 h-12 rounded-xl ${colorClasses[feature.color]} flex items-center justify-center mb-4`}>
+              <IconComponent class="w-6 h-6" />
+            </div>
+            <h3 class="text-lg font-semibold mb-2">{feature.title}</h3>
+            <p class="text-neutral-600 dark:text-neutral-400">
+              {feature.description}
+            </p>
+          </div>
+        )
+      })}
+    </div>
+  </div>
+</section>

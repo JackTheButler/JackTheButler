@@ -1,0 +1,53 @@
+---
+interface ComparisonRow {
+  feature: string
+  jack: string
+  jackPositive?: boolean
+  others: string
+  othersPositive?: boolean
+}
+
+interface Props {
+  title: string
+  subtitle: string
+  rows: ComparisonRow[]
+}
+
+const { title, subtitle, rows } = Astro.props
+---
+
+<section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
+  <div class="max-w-4xl mx-auto">
+    <h2 class="text-3xl sm:text-4xl font-bold text-center mb-4">
+      {title}
+    </h2>
+    <p class="text-neutral-600 dark:text-neutral-400 text-center mb-12 max-w-2xl mx-auto">
+      {subtitle}
+    </p>
+
+    <div class="overflow-x-auto">
+      <table class="w-full text-left border-collapse">
+        <thead>
+          <tr class="border-b border-neutral-200 dark:border-neutral-700">
+            <th class="py-4 px-4 font-semibold">Feature</th>
+            <th class="py-4 px-4 font-semibold text-blue-600 dark:text-blue-400">Jack The Butler</th>
+            <th class="py-4 px-4 font-semibold text-neutral-500">Other Chatbots</th>
+          </tr>
+        </thead>
+        <tbody class="text-neutral-600 dark:text-neutral-400">
+          {rows.map((row, index) => (
+            <tr class={index < rows.length - 1 ? 'border-b border-neutral-200 dark:border-neutral-800' : ''}>
+              <td class="py-4 px-4 font-medium">{row.feature}</td>
+              <td class={`py-4 px-4 ${row.jackPositive !== false ? 'text-emerald-600 dark:text-emerald-400 font-semibold' : ''}`}>
+                {row.jack}
+              </td>
+              <td class={`py-4 px-4 ${row.othersPositive ? 'text-emerald-600 dark:text-emerald-400' : row.othersPositive === false ? 'text-red-500' : ''}`}>
+                {row.others}
+              </td>
+            </tr>
+          ))}
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
