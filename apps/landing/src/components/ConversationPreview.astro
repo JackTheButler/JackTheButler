@@ -73,8 +73,9 @@
 
       <!-- Caption -->
       <div class="text-center mt-6">
-        <p id="chat-caption" class="inline-flex text-sm text-neutral-100 dark:text-neutral-900 px-4 py-2 rounded-full bg-neutral-900 dark:bg-neutral-100 opacity-0 transition-opacity duration-500">
-          2:47 AM. Guest got instant answers. Staff slept peacefully.
+        <p id="chat-caption" class="inline-flex text-sm text-neutral-900 px-4 py-2 rounded-full opacity-0 transition-opacity duration-500 overflow-hidden relative caption-glow">
+          <span class="relative z-10">2:47 AM. Guest got instant answers. Staff slept peacefully.</span>
+          <span class="caption-shimmer"></span>
         </p>
       </div>
     </div>
@@ -107,6 +108,22 @@
     50% {
       transform: translateY(-4px);
     }
+  }
+
+  .caption-glow {
+    background: linear-gradient(270deg, #c7d2fe, #ddd6fe, #fbcfe8, #fecdd3, #c7d2fe);
+    background-size: 400% 100%;
+    animation: captionGlow 12s ease infinite;
+  }
+
+  @keyframes captionGlow {
+    0% { background-position: 0% 50%; }
+    50% { background-position: 100% 50%; }
+    100% { background-position: 0% 50%; }
+  }
+
+  .caption-shimmer {
+    display: none;
   }
 </style>
 
