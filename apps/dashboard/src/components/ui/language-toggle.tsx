@@ -8,7 +8,11 @@ import {
   DropdownMenuItem,
 } from '@/components/ui/dropdown-menu';
 
-export function LanguageToggle() {
+interface LanguageToggleProps {
+  iconOnly?: boolean;
+}
+
+export function LanguageToggle({ iconOnly }: LanguageToggleProps) {
   const { i18n } = useTranslation();
 
   const currentLanguage = SUPPORTED_LANGUAGES.find((l) => l.code === i18n.language) || SUPPORTED_LANGUAGES[0];
@@ -21,8 +25,12 @@ export function LanguageToggle() {
           aria-label="Change language"
         >
           <Globe className="h-4 w-4" />
-          <span className="text-sm">{currentLanguage.label}</span>
-          <ChevronDown className="h-3 w-3" />
+          {!iconOnly && (
+            <>
+              <span className="text-sm">{currentLanguage.label}</span>
+              <ChevronDown className="h-3 w-3" />
+            </>
+          )}
         </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">

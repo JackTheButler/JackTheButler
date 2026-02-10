@@ -679,7 +679,7 @@ function HeaderBar({
       {/* Home page: show theme/language toggles on all screen sizes */}
       {isHomePage && (
         <div className="flex sm:hidden items-center gap-2">
-          <LanguageToggle />
+          <LanguageToggle iconOnly />
           <ThemeToggle />
         </div>
       )}
