@@ -24,7 +24,6 @@ import { formatDate } from '@/lib/formatters';
 import { cn } from '@/lib/utils';
 import { Card, CardContent } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { Button } from '@/components/ui/button';
 import { Switch } from '@/components/ui/switch';
 import { FilterTabs } from '@/components/ui/filter-tabs';
 import { PageContainer, PageHeader, StatsBar, SearchInput, EmptyState } from '@/components';
