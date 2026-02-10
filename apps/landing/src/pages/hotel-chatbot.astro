@@ -6,7 +6,6 @@ import FeatureGrid from '../components/product/FeatureGrid.astro'
 import ComparisonTable from '../components/product/ComparisonTable.astro'
 import HowItWorks from '../components/product/HowItWorks.astro'
 import ProductFAQ from '../components/product/ProductFAQ.astro'
-import ProductCTA from '../components/product/ProductCTA.astro'
 import Footer from '../components/Footer.astro'
 import { productConfigs, sharedData } from '../data/product-pages'
 
@@ -54,11 +53,6 @@ const { features, comparisonRows } = sharedData
   <ProductFAQ
     title={config.faqTitle}
     items={config.faqItems}
-  />
-
-  <ProductCTA
-    title={config.ctaTitle}
-    subtitle={config.ctaSubtitle}
   />
 
   <Footer />
