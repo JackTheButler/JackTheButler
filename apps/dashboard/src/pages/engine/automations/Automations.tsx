@@ -193,15 +193,15 @@ export function AutomationsPage() {
   const triggerTypeFilters = getTriggerTypeFilters(t);
 
   useEffect(() => {
-    setActions(
-      <Link to="/engine/automations/generate">
-        <Button size="sm">
-          <Sparkles className="w-4 h-4 me-1.5" />
-          {t('automations.newRule')}
-        </Button>
-      </Link>
-    );
-    return () => setActions(null);
+    setActions([
+      {
+        id: 'new-rule',
+        label: t('automations.newRule'),
+        icon: Sparkles,
+        href: '/engine/automations/generate',
+      },
+    ]);
+    return () => setActions([]);
   }, [setActions, t]);
 
   const { data, isLoading, error } = useQuery({

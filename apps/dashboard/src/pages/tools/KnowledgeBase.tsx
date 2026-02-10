@@ -162,27 +162,28 @@ export function KnowledgeBasePage() {
   };
 
   useEffect(() => {
-    setActions(
-      !isAddingNew && !editingEntry ? (
-        <div className="flex gap-2">
-          <Button
-            size="sm"
-            variant="outline"
-            onClick={() => providers?.embedding ? setShowReindexConfirm(true) : setShowEmbeddingWarning(true)}
-            disabled={reindexing}
-          >
-            <RefreshCw className={cn('w-4 h-4 me-1.5', reindexing && 'animate-spin')} />
-            {t('knowledge.reindex')}
-          </Button>
-          <Button size="sm" onClick={startAdd}>
-            <Plus className="w-4 h-4 me-1.5" />
-            {t('knowledge.addEntry')}
-          </Button>
-        </div>
-      ) : null
-    );
-    return () => setActions(null);
-  }, [setActions, isAddingNew, editingEntry, reindexing, t]);
+    if (!isAddingNew && !editingEntry) {
+      setActions([
+        {
+          id: 'reindex',
+          label: t('knowledge.reindex'),
+          icon: RefreshCw,
+          variant: 'outline',
+          onClick: () => providers?.embedding ? setShowReindexConfirm(true) : setShowEmbeddingWarning(true),
+          disabled: reindexing,
+        },
+        {
+          id: 'add-entry',
+          label: t('knowledge.addEntry'),
+          icon: Plus,
+          onClick: startAdd,
+        },
+      ]);
+    } else {
+      setActions([]);
+    }
+    return () => setActions([]);
+  }, [setActions, isAddingNew, editingEntry, reindexing, t, providers?.embedding]);
 
   useEffect(() => {
     fetchEntries();

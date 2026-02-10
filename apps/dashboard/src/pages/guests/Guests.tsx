@@ -38,15 +38,15 @@ export function GuestsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setActions(
-      <Link to="/guests/new">
-        <Button size="sm">
-          <Plus className="w-4 h-4 me-1.5" />
-          {t('guests.addGuest')}
-        </Button>
-      </Link>
-    );
-    return () => setActions(null);
+    setActions([
+      {
+        id: 'add-guest',
+        label: t('guests.addGuest'),
+        icon: Plus,
+        href: '/guests/new',
+      },
+    ]);
+    return () => setActions([]);
   }, [setActions, t]);
 
   const { data: stats } = useQuery({

@@ -4,7 +4,8 @@ import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
 import { useWebSocket } from '@/hooks/useWebSocket';
-import { PageActionsProvider, usePageActions } from '@/contexts/PageActionsContext';
+import { PageActionsProvider, usePageActions, PageAction } from '@/contexts/PageActionsContext';
+import { Button } from '@/components/ui/button';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import {
@@ -26,6 +27,9 @@ import {
   BookOpen,
   PanelLeft,
   Network,
+  Menu,
+  X,
+  MoreVertical,
 } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -62,6 +66,18 @@ export function Layout() {
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved === 'true';
   });
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isMobile, setIsMobile] = useState(() => window.innerWidth < 640);
+
+  // Track mobile breakpoint
+  useEffect(() => {
+    const handleResize = () => setIsMobile(window.innerWidth < 640);
+    window.addEventListener('resize', handleResize);
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+
+  // Effective collapsed state - always expanded on mobile
+  const effectiveCollapsed = !isMobile && collapsed;
   const [expandedSections, setExpandedSections] = useState<Record<string, boolean>>(() => {
     const saved = localStorage.getItem('sidebar-expanded-sections');
     return saved ? JSON.parse(saved) : { content: false, engine: false };
@@ -219,6 +235,11 @@ export function Layout() {
     };
   }, [updateIndicator]);
 
+  // Close mobile menu when navigating
+  useEffect(() => {
+    setMobileMenuOpen(false);
+  }, [location.pathname]);
+
   // Auto-expand active section and collapse others when navigating
   useEffect(() => {
     const collapsibleSections = [
@@ -316,15 +337,28 @@ export function Layout() {
 
   return (
     <div className="h-screen bg-background flex overflow-hidden relative">
+      {/* Mobile backdrop */}
+      {mobileMenuOpen && (
+        <div
+          className="fixed inset-0 bg-black/50 z-40 sm:hidden"
+          onClick={() => setMobileMenuOpen(false)}
+        />
+      )}
+
       {/* Sidebar */}
       <aside
-        className={`bg-card border-e flex flex-col h-screen flex-shrink-0 transition-all duration-200 ${
-          collapsed ? 'w-16' : 'w-56'
-        }`}
+        className={cn(
+          'bg-card border-e flex flex-col h-screen flex-shrink-0 transition-all duration-200',
+          // Mobile: fixed overlay
+          'fixed sm:relative z-50 sm:z-auto',
+          mobileMenuOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0',
+          // Width based on collapsed state
+          effectiveCollapsed ? 'w-56 sm:w-16' : 'w-56'
+        )}
       >
         {/* Logo */}
         <div className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b">
-          {!collapsed ? (
+          {!effectiveCollapsed ? (
             <div className="flex items-center gap-2">
               <img src="/logo.svg" alt={t('layout.butler')} className="w-6 h-6 dark:invert" />
               <span className="font-semibold text-foreground">{t('layout.butler')}</span>
@@ -360,7 +394,7 @@ export function Layout() {
                 {section.title && section.collapsible ? (
                   // Collapsible section header
                   <>
-                    {!collapsed ? (
+                    {!effectiveCollapsed ? (
                       <button
                         onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
                         className={`flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg transition-colors ${
@@ -391,14 +425,14 @@ export function Layout() {
                 ) : section.title ? (
                   // Non-collapsible section header (just a label)
                   <>
-                    {!collapsed && (
+                    {!effectiveCollapsed && (
                       <div className="px-4 mb-2">
                         <span className="text-xs font-medium text-muted-foreground/70 uppercase tracking-wider">
                           {section.title}
                         </span>
                       </div>
                     )}
-                    {collapsed && <div className="mx-3 mb-2 border-t border-border" />}
+                    {effectiveCollapsed && <div className="mx-3 mb-2 border-t border-border" />}
                   </>
                 ) : null}
 
@@ -410,14 +444,14 @@ export function Layout() {
                       : ''
                   }
                 >
-                  <ul className={`space-y-1 ${section.collapsible ? 'overflow-hidden mt-1' : ''} ${section.collapsible && !collapsed ? 'ms-5' : ''}`}>
+                  <ul className={`space-y-1 ${section.collapsible ? 'overflow-hidden mt-1' : ''} ${section.collapsible && !effectiveCollapsed ? 'ms-5' : ''}`}>
                     {(() => {
                       const activeIndex = section.items.findIndex((item) => isActive(item.path));
                       return section.items.map((item, index) => {
                         const active = isActive(item.path);
-                        const showLine = section.collapsible && !collapsed && activeIndex >= 0 && index <= activeIndex;
+                        const showLine = section.collapsible && !effectiveCollapsed && activeIndex >= 0 && index <= activeIndex;
                         return (
-                          <li key={item.path} className={section.collapsible && !collapsed ? 'relative' : ''}>
+                          <li key={item.path} className={section.collapsible && !effectiveCollapsed ? 'relative' : ''}>
                             {/* Vertical line segment - only show up to active item */}
                             {showLine && (
                               <div
@@ -429,10 +463,10 @@ export function Layout() {
                               />
                             )}
                             {/* Horizontal connector to active item */}
-                            {section.collapsible && !collapsed && active && (
+                            {section.collapsible && !effectiveCollapsed && active && (
                               <div className="absolute start-2.5 top-1/2 -translate-y-1/2 w-5 h-px bg-foreground" />
                             )}
-                            <Tooltip content={collapsed ? item.label : null} side="right">
+                            <Tooltip content={effectiveCollapsed ? item.label : null} side="right">
                               <Link
                                 to={item.path}
                                 data-nav-active={active || undefined}
@@ -440,12 +474,12 @@ export function Layout() {
                                   active
                                     ? 'text-primary-foreground'
                                     : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                } ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !collapsed ? 'ms-5' : ''}`}
+                                } ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !effectiveCollapsed ? 'ms-5' : ''}`}
                               >
-                                {(!section.collapsible || collapsed) && (
+                                {(!section.collapsible || effectiveCollapsed) && (
                                   <span className={`relative ${active ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
                                     {item.icon}
-                                    {collapsed && item.badge && item.badge > 0 && (
+                                    {effectiveCollapsed && item.badge && item.badge > 0 && (
                                       <span className={`absolute -top-1 -end-1 min-w-[16px] h-4 px-1 text-[10px] font-medium rounded-full flex items-center justify-center ${
                                         active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
                                       }`}>
@@ -454,7 +488,7 @@ export function Layout() {
                                     )}
                                   </span>
                                 )}
-                                {!collapsed && (
+                                {!effectiveCollapsed && (
                                   <>
                                     <span className="text-sm font-medium">{item.label}</span>
                                     {item.badge && item.badge > 0 && (
@@ -473,7 +507,7 @@ export function Layout() {
                       });
                     })()}
                     {/* Divider after submenu in collapsed mode */}
-                    {section.collapsible && collapsed && (
+                    {section.collapsible && effectiveCollapsed && (
                       <li className="pt-1 mt-1 border-t border-border mx-4" />
                     )}
                   </ul>
@@ -486,15 +520,15 @@ export function Layout() {
         {/* User section */}
         <div className="flex-shrink-0" ref={userMenuRef}>
           <div className={`overflow-hidden transition-all duration-200 space-y-1 py-1 ${userMenuOpen ? 'max-h-64 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]' : 'max-h-0'}`}>
-            <DropdownMenu className={collapsed ? 'flex justify-center' : 'block w-full'}>
-              <Tooltip content={collapsed ? t('common.language') : undefined} side="right">
-                <span className={collapsed ? 'flex justify-center' : 'block'}>
+            <DropdownMenu className={effectiveCollapsed ? 'flex justify-center' : 'block w-full'}>
+              <Tooltip content={effectiveCollapsed ? t('common.language') : undefined} side="right">
+                <span className={effectiveCollapsed ? 'flex justify-center' : 'block'}>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                      className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
                     >
                       <Globe size={20} />
-                      {!collapsed && <span className="text-sm font-medium">{currentLanguage.label}</span>}
+                      {!effectiveCollapsed && <span className="text-sm font-medium">{currentLanguage.label}</span>}
                     </button>
                   </DropdownMenuTrigger>
                 </span>
@@ -511,51 +545,51 @@ export function Layout() {
                 ))}
               </DropdownMenuContent>
             </DropdownMenu>
-            <Tooltip content={collapsed ? (isDark ? t('common.switchToLight') : t('common.switchToDark')) : undefined} side="right">
+            <Tooltip content={effectiveCollapsed ? (isDark ? t('common.switchToLight') : t('common.switchToDark')) : undefined} side="right">
               <div
                 onClick={toggleTheme}
-                className={`flex items-center gap-3 rounded-lg cursor-pointer transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                className={`flex items-center gap-3 rounded-lg cursor-pointer transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
               >
                 <span ref={themeToggleRef}>
                   <ThemeToggle size="sm" iconOnly />
                 </span>
-                {!collapsed && <span className="text-sm font-medium">{isDark ? t('common.switchToLight') : t('common.switchToDark')}</span>}
+                {!effectiveCollapsed && <span className="text-sm font-medium">{isDark ? t('common.switchToLight') : t('common.switchToDark')}</span>}
               </div>
             </Tooltip>
-            <Tooltip content={collapsed ? t('common.settings') : undefined} side="right">
+            <Tooltip content={effectiveCollapsed ? t('common.settings') : undefined} side="right">
               <button
                 onClick={() => {
                   setUserMenuOpen(false);
                   navigate('/engine');
                 }}
-                className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
               >
                 <Settings size={20} />
-                {!collapsed && <span className="text-sm font-medium">{t('common.settings')}</span>}
+                {!effectiveCollapsed && <span className="text-sm font-medium">{t('common.settings')}</span>}
               </button>
             </Tooltip>
-            <Tooltip content={collapsed ? t('common.logout') : undefined} side="right">
+            <Tooltip content={effectiveCollapsed ? t('common.logout') : undefined} side="right">
               <button
                 onClick={() => {
                   setUserMenuOpen(false);
                   handleLogout();
                 }}
-                className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${collapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
               >
                 <Power size={20} />
-                {!collapsed && <span className="text-sm font-medium">{t('common.logout')}</span>}
+                {!effectiveCollapsed && <span className="text-sm font-medium">{t('common.logout')}</span>}
               </button>
             </Tooltip>
           </div>
-          <Tooltip content={collapsed ? user?.name : undefined} side="right">
+          <Tooltip content={effectiveCollapsed ? user?.name : undefined} side="right">
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className={`flex items-center gap-2 w-full p-3 border-t text-muted-foreground hover:bg-muted transition-colors ${collapsed ? 'justify-center' : ''}`}
+              className={`flex items-center gap-2 w-full p-3 border-t text-muted-foreground hover:bg-muted transition-colors ${effectiveCollapsed ? 'justify-center' : ''}`}
             >
               <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                 <User size={14} className="text-muted-foreground" />
               </div>
-              {!collapsed && (
+              {!effectiveCollapsed && (
                 <>
                   <span className="flex-1 text-start text-sm truncate">{user?.name}</span>
                   <ChevronUp size={14} className={`text-muted-foreground transition-transform ${userMenuOpen ? 'rotate-180' : ''}`} />
@@ -566,20 +600,26 @@ export function Layout() {
         </div>
       </aside>
 
-      {/* Sidebar toggle button - positioned on border at header level */}
+      {/* Sidebar toggle button - positioned on border at header level (desktop only) */}
       <button
         onClick={toggleCollapsed}
-        className="absolute w-6 h-6 flex items-center justify-center bg-card border rounded-full shadow-sm text-muted-foreground hover:text-foreground z-10 transition-all duration-200"
-        style={{ insetInlineStart: collapsed ? 'calc(4rem - 12px)' : 'calc(14rem - 12px)', top: 'calc(1.75rem - 12px)' }}
-        title={collapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')}
+        className="hidden sm:flex absolute w-6 h-6 items-center justify-center bg-card border rounded-full shadow-sm text-muted-foreground hover:text-foreground z-10 transition-all duration-200"
+        style={{ insetInlineStart: effectiveCollapsed ? 'calc(4rem - 12px)' : 'calc(14rem - 12px)', top: 'calc(1.75rem - 12px)' }}
+        title={effectiveCollapsed ? t('layout.expandSidebar') : t('layout.collapseSidebar')}
       >
-        <PanelLeft size={14} className={cn('transition-transform duration-200', collapsed ? 'rotate-180 rtl:rotate-0' : 'rtl:rotate-180')} />
+        <PanelLeft size={14} className={cn('transition-transform duration-200', effectiveCollapsed ? 'rotate-180 rtl:rotate-0' : 'rtl:rotate-180')} />
       </button>
 
       {/* Main content */}
       <div className="flex-1 flex flex-col min-w-0 h-screen">
         <PageActionsProvider>
-          <HeaderBar navSections={navSections} isActive={isActive} t={t} />
+          <HeaderBar
+            navSections={navSections}
+            isActive={isActive}
+            t={t}
+            mobileMenuOpen={mobileMenuOpen}
+            setMobileMenuOpen={setMobileMenuOpen}
+          />
           {/* Page content */}
           <main className="flex-1 overflow-auto">
             <Outlet />
@@ -593,13 +633,17 @@ export function Layout() {
 function HeaderBar({
   navSections,
   isActive,
-  t
+  t,
+  mobileMenuOpen,
+  setMobileMenuOpen,
 }: {
   navSections: NavSection[];
   isActive: (path: string) => boolean;
   t: (key: string) => string;
+  mobileMenuOpen: boolean;
+  setMobileMenuOpen: (open: boolean) => void;
 }) {
-  const { actions } = usePageActions();
+  const { actions } = usePageActions() as { actions: PageAction[] };
   const location = useLocation();
   const isHomePage = location.pathname === '/';
   const isSettingsPage = location.pathname === '/engine';
@@ -615,22 +659,97 @@ function HeaderBar({
   };
 
   return (
-    <header className="bg-card border-b h-14 flex-shrink-0 flex items-center justify-between px-6">
-      <h1 className="text-lg font-medium text-foreground flex items-center gap-2">
-        {activeItem && (
-          <span className="text-muted-foreground">{activeItem.icon}</span>
-        )}
-        {getPageTitle()}
-      </h1>
-      <div className="flex items-center gap-2">
+    <header className="bg-card border-b h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+      <div className="flex items-center gap-3">
+        {/* Mobile menu toggle */}
+        <button
+          onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+          className="sm:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors"
+          aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
+        >
+          {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
+        </button>
+        <h1 className="text-lg font-medium text-foreground items-center gap-2 hidden sm:flex">
+          {activeItem && (
+            <span className="text-muted-foreground">{activeItem.icon}</span>
+          )}
+          {getPageTitle()}
+        </h1>
+      </div>
+      {/* Home page: show theme/language toggles on all screen sizes */}
+      {isHomePage && (
+        <div className="flex sm:hidden items-center gap-2">
+          <LanguageToggle />
+          <ThemeToggle />
+        </div>
+      )}
+
+      {/* Desktop: show actions inline */}
+      <div className="hidden sm:flex items-center gap-2">
         {isHomePage && (
           <>
             <LanguageToggle />
             <ThemeToggle />
           </>
         )}
-        {actions}
+        {actions.map((action) => {
+          const ActionIcon = action.icon;
+          const button = (
+            <Button
+              key={action.id}
+              size="sm"
+              variant={action.variant || 'default'}
+              onClick={action.href ? undefined : action.onClick}
+              disabled={action.disabled}
+              loading={action.loading}
+            >
+              {ActionIcon && <ActionIcon className="w-4 h-4 me-1.5" />}
+              {action.label}
+            </Button>
+          );
+          return action.href ? (
+            <Link key={action.id} to={action.href}>{button}</Link>
+          ) : (
+            button
+          );
+        })}
       </div>
+
+      {/* Mobile: show actions in dropdown */}
+      {actions.length > 0 && (
+        <DropdownMenu className="sm:hidden">
+          <DropdownMenuTrigger asChild>
+            <button className="p-2 text-muted-foreground hover:text-foreground transition-colors">
+              <MoreVertical size={20} />
+            </button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end" className="min-w-[180px]">
+            {[...actions].reverse().map((action) => {
+              const ActionIcon = action.icon;
+              if (action.href) {
+                return (
+                  <Link key={action.id} to={action.href}>
+                    <DropdownMenuItem disabled={action.disabled}>
+                      {ActionIcon && <ActionIcon className="w-4 h-4 me-2" />}
+                      {action.label}
+                    </DropdownMenuItem>
+                  </Link>
+                );
+              }
+              return (
+                <DropdownMenuItem
+                  key={action.id}
+                  onClick={action.onClick}
+                  disabled={action.disabled}
+                >
+                  {ActionIcon && <ActionIcon className="w-4 h-4 me-2" />}
+                  {action.label}
+                </DropdownMenuItem>
+              );
+            })}
+          </DropdownMenuContent>
+        </DropdownMenu>
+      )}
     </header>
   );
 }

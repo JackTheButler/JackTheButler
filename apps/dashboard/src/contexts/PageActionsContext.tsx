@@ -1,14 +1,26 @@
 import { createContext, useContext, useState, ReactNode } from 'react';
+import { LucideIcon } from 'lucide-react';
+
+export interface PageAction {
+  id: string;
+  label: string;
+  icon?: LucideIcon;
+  onClick?: () => void;
+  href?: string;
+  variant?: 'default' | 'outline';
+  disabled?: boolean;
+  loading?: boolean;
+}
 
 interface PageActionsContextType {
-  actions: ReactNode;
-  setActions: (actions: ReactNode) => void;
+  actions: PageAction[];
+  setActions: (actions: PageAction[]) => void;
 }
 
 const PageActionsContext = createContext<PageActionsContextType | null>(null);
 
 export function PageActionsProvider({ children }: { children: ReactNode }) {
-  const [actions, setActions] = useState<ReactNode>(null);
+  const [actions, setActions] = useState<PageAction[]>([]);
 
   return (
     <PageActionsContext.Provider value={{ actions, setActions }}>

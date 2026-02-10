@@ -116,8 +116,8 @@ export function DropdownMenuContent({ children, align = 'end', side = 'bottom', 
   const { open, triggerRef, dropdownId } = React.useContext(DropdownMenuContext);
   const [position, setPosition] = React.useState({ top: 0, left: 0, transform: '' });
 
-  React.useEffect(() => {
-    if (open && triggerRef.current) {
+  const updatePosition = React.useCallback(() => {
+    if (triggerRef.current) {
       const rect = triggerRef.current.getBoundingClientRect();
       const isRtl = document.documentElement.dir === 'rtl';
 
@@ -177,7 +177,19 @@ export function DropdownMenuContent({ children, align = 'end', side = 'bottom', 
         transform,
       });
     }
-  }, [open, align, side, triggerRef]);
+  }, [align, side, triggerRef]);
+
+  React.useEffect(() => {
+    if (open) {
+      updatePosition();
+      window.addEventListener('resize', updatePosition);
+      window.addEventListener('scroll', updatePosition, true);
+      return () => {
+        window.removeEventListener('resize', updatePosition);
+        window.removeEventListener('scroll', updatePosition, true);
+      };
+    }
+  }, [open, updatePosition]);
 
   if (!open) return null;
 
@@ -216,7 +228,7 @@ export function DropdownMenuItem({ children, onClick, className, disabled }: Dro
       onClick={handleClick}
       disabled={disabled}
       className={cn(
-        'block w-full px-3 py-1.5 text-sm text-start hover:bg-muted transition-colors whitespace-nowrap',
+        'flex items-center w-full px-3 py-1.5 text-sm text-start hover:bg-muted transition-colors whitespace-nowrap',
         disabled && 'opacity-50 cursor-not-allowed',
         className
       )}

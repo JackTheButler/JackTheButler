@@ -203,28 +203,25 @@ export function AutonomyPage() {
   const { mutate: reset, isPending: isResetting } = resetMutation;
 
   useEffect(() => {
-    setActions(
-      <div className="flex items-center gap-2">
-        <Button
-          variant="outline"
-          size="sm"
-          onClick={() => reset()}
-          disabled={isResetting}
-        >
-          <RefreshCw className={cn('w-3.5 h-3.5 me-1.5', isResetting && 'animate-spin')} />
-          {t('autonomy.resetToDefaults')}
-        </Button>
-        <Button
-          size="sm"
-          onClick={() => settings && save(settings)}
-          disabled={!hasChanges}
-          loading={isSaving}
-        >
-          {t('autonomy.saveChanges')}
-        </Button>
-      </div>
-    );
-    return () => setActions(null);
+    setActions([
+      {
+        id: 'reset',
+        label: t('autonomy.resetToDefaults'),
+        icon: RefreshCw,
+        variant: 'outline',
+        onClick: () => reset(),
+        disabled: isResetting,
+        loading: isResetting,
+      },
+      {
+        id: 'save',
+        label: t('autonomy.saveChanges'),
+        onClick: () => settings && save(settings),
+        disabled: !hasChanges,
+        loading: isSaving,
+      },
+    ]);
+    return () => setActions([]);
   }, [setActions, t, hasChanges, settings, save, reset, isSaving, isResetting]);
 
   if (isLoading) {
