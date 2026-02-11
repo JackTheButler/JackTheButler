@@ -63,6 +63,12 @@ Deploy Jack with one click - no installation needed:
 
 Your Jack will be live at a public URL with automatic HTTPS.
 
+> **Important:** Add a **persistent volume** mounted at `/app/data` to keep your database across deployments. Without this, your data resets on each deploy.
+>
+> - **Railway:** Service → Settings → Volumes → Add Volume → Mount path: `/app/data`
+> - **Render:** Disks → Add Disk → Mount path: `/app/data`
+> - **Zeabur:** Service → Storage → Add → Path: `/app/data`
+
 > **Pricing:** All providers have free tiers. For production use, expect ~$5-10/month.
 
 ---
