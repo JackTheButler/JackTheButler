@@ -13,6 +13,7 @@ export const GET: APIRoute = () => {
     { url: '/hostel-chatbot/', changefreq: 'monthly', priority: '0.9' },
     { url: '/blog/', changefreq: 'weekly', priority: '0.8' },
     { url: '/docs/', changefreq: 'weekly', priority: '0.8' },
+    { url: '/apps/', changefreq: 'weekly', priority: '0.8' },
   ]
 
   const docsPages = [

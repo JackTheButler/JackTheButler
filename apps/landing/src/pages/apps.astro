@@ -1,0 +1,247 @@
+---
+import '../styles/global.css'
+import Header from '../components/Header.astro'
+import Footer from '../components/Footer.astro'
+import { apps, categoryLabels, type AppCategory } from '../data/apps'
+import { Search, Package, Sparkles, MessageSquare, Building2, Calendar, CreditCard, Zap, Briefcase } from '@lucide/astro'
+
+const title = 'Apps & Integrations - Jack The Butler'
+const description = 'Browse all apps and integrations available for Jack The Butler. Connect AI providers, messaging channels, property management systems, and more.'
+
+// Group apps by category
+const categories = Object.keys(categoryLabels) as AppCategory[]
+
+const categoryIcons: Record<AppCategory, any> = {
+  'ai-provider': Sparkles,
+  'messaging': MessageSquare,
+  'pms': Building2,
+  'booking': Calendar,
+  'payment': CreditCard,
+  'automation': Zap,
+  'productivity': Briefcase,
+}
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href="https://jackthebutler.com/apps/" />
+
+    <script is:inline>
+      const theme = localStorage.getItem('theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    </script>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={title} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="website" />
+    <meta property="og:url" content="https://jackthebutler.com/apps/" />
+    <meta property="og:image" content="https://jackthebutler.com/og-image.png" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={title} />
+    <meta name="twitter:description" content={description} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+
+    <title>{title}</title>
+  </head>
+  <body class="bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 antialiased">
+    <Header />
+
+    <main class="pt-24 pb-16">
+      <!-- Hero -->
+      <div class="max-w-6xl mx-auto px-6 mb-12">
+        <div class="text-center max-w-3xl mx-auto">
+          <h1 class="text-4xl sm:text-5xl font-bold mb-4">Apps & Integrations</h1>
+          <p class="text-lg text-neutral-600 dark:text-neutral-400 mb-8">
+            Connect Jack to your favorite tools. AI providers, messaging channels, property management systems, and more.
+          </p>
+
+          <!-- Search -->
+          <div class="relative max-w-md mx-auto">
+            <Search class="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-neutral-400" />
+            <input
+              type="text"
+              id="app-search"
+              placeholder="Search apps..."
+              class="w-full pl-12 pr-4 py-3 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+            />
+          </div>
+        </div>
+      </div>
+
+      <!-- Category filters -->
+      <div class="max-w-6xl mx-auto px-6 mb-8">
+        <div class="flex flex-wrap justify-center gap-2">
+          <button
+            data-category="all"
+            class="category-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-blue-600 text-white"
+          >
+            All Apps
+          </button>
+          {categories.map((category) => {
+            const Icon = categoryIcons[category]
+            return (
+              <button
+                data-category={category}
+                class="category-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+              >
+                {categoryLabels[category]}
+              </button>
+            )
+          })}
+        </div>
+      </div>
+
+      <!-- Stats -->
+      <div class="max-w-6xl mx-auto px-6 mb-8">
+        <p class="text-center text-sm text-neutral-500">
+          <span id="app-count">{apps.length}</span> apps
+        </p>
+      </div>
+
+      <!-- Apps Grid -->
+      <div class="max-w-6xl mx-auto px-6">
+        <div id="apps-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+          {apps.map((app) => {
+            const Icon = categoryIcons[app.category]
+            return (
+              <div
+                class="app-card group p-5 rounded-xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-lg transition-all"
+                data-category={app.category}
+                data-status={app.status}
+                data-name={app.name.toLowerCase()}
+                data-summary={app.summary.toLowerCase()}
+              >
+                <div class="flex items-start gap-4">
+                  <!-- Logo -->
+                  <div class="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0 overflow-hidden">
+                    {app.logo ? (
+                      <img src={app.logo} alt={app.name} class="w-8 h-8 object-contain" />
+                    ) : (
+                      <Icon class="w-6 h-6 text-neutral-400" />
+                    )}
+                  </div>
+
+                  <div class="flex-1 min-w-0">
+                    <h3 class="font-semibold text-neutral-900 dark:text-white truncate mb-1">{app.name}</h3>
+                    <p class="text-xs text-blue-600 dark:text-blue-400 mb-2">{categoryLabels[app.category]}</p>
+                    <p class="text-sm text-neutral-600 dark:text-neutral-400 line-clamp-2">{app.summary}</p>
+                  </div>
+                </div>
+              </div>
+            )
+          })}
+        </div>
+
+        <!-- No results -->
+        <div id="no-results" class="hidden text-center py-16">
+          <Package class="w-12 h-12 text-neutral-300 dark:text-neutral-700 mx-auto mb-4" />
+          <p class="text-neutral-500">No apps found matching your search.</p>
+        </div>
+      </div>
+
+      <!-- CTA -->
+      <div class="max-w-6xl mx-auto px-6 mt-16">
+        <div class="text-center p-8 rounded-2xl bg-neutral-50 dark:bg-neutral-900 border border-neutral-200 dark:border-neutral-800">
+          <h2 class="text-2xl font-bold mb-2">Missing an integration?</h2>
+          <p class="text-neutral-600 dark:text-neutral-400 mb-4">
+            Let us know which apps you'd like to see integrated with Jack.
+          </p>
+          <a
+            href="https://github.com/JackTheButler/JackTheButler/discussions"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-2 px-6 py-3 rounded-lg bg-blue-600 hover:bg-blue-700 text-white font-medium transition-colors"
+          >
+            Request an Integration
+          </a>
+        </div>
+      </div>
+    </main>
+
+    <Footer />
+
+    <script>
+      const searchInput = document.getElementById('app-search') as HTMLInputElement
+      const appsGrid = document.getElementById('apps-grid')
+      const appCards = document.querySelectorAll('.app-card')
+      const categoryBtns = document.querySelectorAll('.category-btn')
+      const noResults = document.getElementById('no-results')
+      const appCount = document.getElementById('app-count')
+
+      let currentCategory = 'all'
+      let searchQuery = ''
+
+      function filterApps() {
+        let visibleCount = 0
+
+        appCards.forEach((card) => {
+          const cardCategory = card.getAttribute('data-category')
+          const cardName = card.getAttribute('data-name') || ''
+          const cardSummary = card.getAttribute('data-summary') || ''
+
+          const matchesCategory = currentCategory === 'all' || cardCategory === currentCategory
+          const matchesSearch = searchQuery === '' ||
+            cardName.includes(searchQuery) ||
+            cardSummary.includes(searchQuery)
+
+          if (matchesCategory && matchesSearch) {
+            ;(card as HTMLElement).style.display = 'block'
+            visibleCount++
+          } else {
+            ;(card as HTMLElement).style.display = 'none'
+          }
+        })
+
+        // Show/hide no results
+        if (noResults) {
+          noResults.classList.toggle('hidden', visibleCount > 0)
+        }
+        if (appsGrid) {
+          appsGrid.classList.toggle('hidden', visibleCount === 0)
+        }
+        if (appCount) {
+          appCount.textContent = visibleCount.toString()
+        }
+      }
+
+      // Search handler
+      searchInput?.addEventListener('input', (e) => {
+        searchQuery = (e.target as HTMLInputElement).value.toLowerCase()
+        filterApps()
+      })
+
+      // Category filter handlers
+      categoryBtns.forEach((btn) => {
+        btn.addEventListener('click', () => {
+          currentCategory = btn.getAttribute('data-category') || 'all'
+
+          // Update button styles
+          categoryBtns.forEach((b) => {
+            if (b.getAttribute('data-category') === currentCategory) {
+              b.classList.remove('bg-neutral-100', 'dark:bg-neutral-800', 'text-neutral-700', 'dark:text-neutral-300')
+              b.classList.add('bg-blue-600', 'text-white')
+            } else {
+              b.classList.add('bg-neutral-100', 'dark:bg-neutral-800', 'text-neutral-700', 'dark:text-neutral-300')
+              b.classList.remove('bg-blue-600', 'text-white')
+            }
+          })
+
+          filterApps()
+        })
+      })
+
+    </script>
+  </body>
+</html>
