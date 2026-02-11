@@ -3,7 +3,7 @@ import '../styles/global.css'
 import Header from '../components/Header.astro'
 import Footer from '../components/Footer.astro'
 import { apps, categoryLabels, type AppCategory } from '../data/apps'
-import { Search, Package, Sparkles, MessageSquare, Building2, Calendar, CreditCard, Zap, Briefcase, Globe, Key, TrendingUp, Heart, Wrench, Star, MapPin } from '@lucide/astro'
+import { Search, Package, Sparkles, MessageSquare, Building2, CreditCard, Zap, Globe, Key, TrendingUp, Heart, Wrench } from '@lucide/astro'
 
 const title = 'Apps & Integrations - Jack The Butler'
 const description = 'Browse all apps and integrations available for Jack The Butler. Connect AI providers, messaging channels, property management systems, and more.'
@@ -13,19 +13,15 @@ const categories = Object.keys(categoryLabels) as AppCategory[]
 
 const categoryIcons: Record<AppCategory, any> = {
   'ai-provider': Sparkles,
-  'messaging': MessageSquare,
   'pms': Building2,
-  'channel-manager': Globe,
-  'booking': Calendar,
   'smart-lock': Key,
+  'messaging': MessageSquare,
+  'distribution': Globe,
   'revenue': TrendingUp,
   'guest-experience': Heart,
   'operations': Wrench,
-  'reviews': Star,
-  'concierge': MapPin,
   'payment': CreditCard,
   'automation': Zap,
-  'productivity': Briefcase,
 }
 ---
 
@@ -88,11 +84,15 @@ const categoryIcons: Record<AppCategory, any> = {
       </div>
 
       <!-- Category filters -->
-      <div class="max-w-6xl mx-auto px-6 mb-8">
-        <div class="flex flex-wrap justify-center gap-2">
+      <div class="max-w-6xl mx-auto mb-8 relative">
+        <!-- Fade edges on mobile -->
+        <div class="absolute left-0 top-0 bottom-0 w-6 bg-gradient-to-r from-white dark:from-neutral-950 to-transparent z-10 pointer-events-none md:hidden"></div>
+        <div class="absolute right-0 top-0 bottom-0 w-6 bg-gradient-to-l from-white dark:from-neutral-950 to-transparent z-10 pointer-events-none md:hidden"></div>
+
+        <div class="flex gap-2 overflow-x-auto px-6 pb-2 scrollbar-hide md:flex-wrap md:justify-center md:overflow-visible">
           <button
             data-category="all"
-            class="category-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-blue-600 text-white"
+            class="category-btn shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors bg-blue-600 text-white"
           >
             All Apps
           </button>
@@ -101,7 +101,7 @@ const categoryIcons: Record<AppCategory, any> = {
             return (
               <button
                 data-category={category}
-                class="category-btn px-4 py-2 rounded-full text-sm font-medium transition-colors bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
+                class="category-btn shrink-0 px-4 py-2 rounded-full text-sm font-medium transition-colors bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 hover:bg-neutral-200 dark:hover:bg-neutral-700"
               >
                 {categoryLabels[category]}
               </button>

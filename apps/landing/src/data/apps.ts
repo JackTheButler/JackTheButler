@@ -13,32 +13,24 @@ export type AppCategory =
   | 'pms'
   | 'smart-lock'
   | 'messaging'
-  | 'channel-manager'
-  | 'booking'
+  | 'distribution'
   | 'revenue'
   | 'guest-experience'
   | 'operations'
-  | 'reviews'
-  | 'concierge'
   | 'payment'
   | 'automation'
-  | 'productivity'
 
 export const categoryLabels: Record<AppCategory, string> = {
   'ai-provider': 'AI Provider',
   'pms': 'Property Management',
   'smart-lock': 'Smart Lock',
   'messaging': 'Messaging',
-  'channel-manager': 'Channel Manager',
-  'booking': 'Booking Platform',
+  'distribution': 'Distribution',
   'revenue': 'Revenue Management',
   'guest-experience': 'Guest Experience',
   'operations': 'Operations',
-  'reviews': 'Reviews',
-  'concierge': 'Concierge',
   'payment': 'Payment',
   'automation': 'Automation',
-  'productivity': 'Productivity',
 }
 
 export const apps: App[] = [
@@ -293,7 +285,7 @@ export const apps: App[] = [
     id: 'siteminder',
     name: 'SiteMinder',
     slug: 'siteminder',
-    category: 'channel-manager',
+    category: 'distribution',
     summary: 'Leading channel manager connecting to 450+ booking sites.',
     status: 'planned',
   },
@@ -301,7 +293,7 @@ export const apps: App[] = [
     id: 'rentals-united',
     name: 'Rentals United',
     slug: 'rentals-united',
-    category: 'channel-manager',
+    category: 'distribution',
     summary: 'Channel manager for vacation rental properties.',
     status: 'planned',
   },
@@ -311,7 +303,7 @@ export const apps: App[] = [
     id: 'booking-com',
     name: 'Booking.com',
     slug: 'booking-com',
-    category: 'booking',
+    category: 'distribution',
     summary: 'Sync reservations and guest data from Booking.com.',
     status: 'planned',
   },
@@ -319,7 +311,7 @@ export const apps: App[] = [
     id: 'airbnb',
     name: 'Airbnb',
     slug: 'airbnb',
-    category: 'booking',
+    category: 'distribution',
     summary: 'Import Airbnb reservations and guest information.',
     status: 'planned',
   },
@@ -327,7 +319,7 @@ export const apps: App[] = [
     id: 'expedia',
     name: 'Expedia',
     slug: 'expedia',
-    category: 'booking',
+    category: 'distribution',
     summary: 'Connect with Expedia for reservation management.',
     status: 'planned',
   },
@@ -335,7 +327,7 @@ export const apps: App[] = [
     id: 'vrbo',
     name: 'VRBO',
     slug: 'vrbo',
-    category: 'booking',
+    category: 'distribution',
     summary: 'Sync vacation rental bookings from VRBO.',
     status: 'planned',
   },
@@ -465,7 +457,7 @@ export const apps: App[] = [
     id: 'trustyou',
     name: 'TrustYou',
     slug: 'trustyou',
-    category: 'reviews',
+    category: 'operations',
     summary: 'Guest feedback and reputation management.',
     status: 'planned',
   },
@@ -473,7 +465,7 @@ export const apps: App[] = [
     id: 'reviewpro',
     name: 'ReviewPro',
     slug: 'reviewpro',
-    category: 'reviews',
+    category: 'operations',
     summary: 'Guest intelligence and review management.',
     status: 'planned',
   },
@@ -483,7 +475,7 @@ export const apps: App[] = [
     id: 'viator',
     name: 'Viator',
     slug: 'viator',
-    category: 'concierge',
+    category: 'guest-experience',
     summary: 'Book tours and activities for guests.',
     status: 'planned',
   },
@@ -491,7 +483,7 @@ export const apps: App[] = [
     id: 'getyourguide',
     name: 'GetYourGuide',
     slug: 'getyourguide',
-    category: 'concierge',
+    category: 'guest-experience',
     summary: 'Local experiences and attraction bookings.',
     status: 'planned',
   },
@@ -553,7 +545,7 @@ export const apps: App[] = [
     id: 'slack',
     name: 'Slack',
     slug: 'slack',
-    category: 'productivity',
+    category: 'automation',
     summary: 'Get notifications and manage tasks from Slack.',
     status: 'coming-soon',
   },
@@ -561,7 +553,7 @@ export const apps: App[] = [
     id: 'microsoft-teams',
     name: 'Microsoft Teams',
     slug: 'microsoft-teams',
-    category: 'productivity',
+    category: 'automation',
     summary: 'Integrate with Teams for staff collaboration.',
     status: 'planned',
   },
@@ -569,7 +561,7 @@ export const apps: App[] = [
     id: 'google-calendar',
     name: 'Google Calendar',
     slug: 'google-calendar',
-    category: 'productivity',
+    category: 'automation',
     summary: 'Sync tasks and appointments with Google Calendar.',
     status: 'planned',
   },
@@ -577,7 +569,7 @@ export const apps: App[] = [
     id: 'google-sheets',
     name: 'Google Sheets',
     slug: 'google-sheets',
-    category: 'productivity',
+    category: 'automation',
     summary: 'Export reports and data to Google Sheets.',
     status: 'planned',
   },

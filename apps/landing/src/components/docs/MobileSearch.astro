@@ -1,0 +1,214 @@
+---
+// Mobile floating search button with full-screen overlay
+import { Search as SearchIcon, X, Loader2 } from '@lucide/astro'
+---
+
+<!-- Floating search button (mobile only) -->
+<button
+  id="mobile-search-trigger"
+  type="button"
+  class="lg:hidden fixed bottom-6 right-6 z-50 w-14 h-14 bg-neutral-100 dark:bg-neutral-800 hover:bg-neutral-200 dark:hover:bg-neutral-700 text-neutral-600 dark:text-neutral-300 rounded-full border border-neutral-200 dark:border-neutral-700 flex items-center justify-center transition-all duration-300 animate-glow-pulse"
+  aria-label="Search documentation"
+>
+  <SearchIcon class="w-6 h-6" />
+</button>
+
+<!-- Full-screen search overlay -->
+<div id="mobile-search-modal" class="hidden lg:hidden fixed inset-0 z-[100] bg-white dark:bg-neutral-950">
+  <!-- Header -->
+  <div class="flex items-center gap-3 px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
+    <SearchIcon class="w-5 h-5 text-neutral-400" />
+    <input
+      id="mobile-search-input"
+      type="text"
+      placeholder="Search documentation..."
+      class="flex-1 bg-transparent text-base outline-none placeholder:text-neutral-400"
+      autocomplete="off"
+    />
+    <button id="mobile-search-close" class="p-2 -mr-2 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors">
+      <X class="w-6 h-6" />
+    </button>
+  </div>
+
+  <!-- Results -->
+  <div id="mobile-search-results" class="flex-1 overflow-y-auto">
+    <!-- Loading state -->
+    <div id="mobile-search-loading" class="hidden flex items-center justify-center py-16 text-neutral-400">
+      <Loader2 class="w-6 h-6 animate-spin" />
+    </div>
+
+    <!-- Empty state -->
+    <div id="mobile-search-empty" class="hidden py-16 text-center text-neutral-500">
+      <p>No results found</p>
+    </div>
+
+    <!-- Initial state -->
+    <div id="mobile-search-initial" class="py-16 text-center text-neutral-400 text-sm">
+      <p>Start typing to search...</p>
+    </div>
+
+    <!-- Results list -->
+    <ul id="mobile-search-list" class="divide-y divide-neutral-100 dark:divide-neutral-800"></ul>
+  </div>
+</div>
+
+<script is:inline>
+  (function() {
+    var pagefind = null;
+    var searchTimeout = null;
+    var results = [];
+    var lastScrollY = 0;
+
+    var trigger = document.getElementById('mobile-search-trigger');
+    var modal = document.getElementById('mobile-search-modal');
+    var closeBtn = document.getElementById('mobile-search-close');
+    var input = document.getElementById('mobile-search-input');
+    var resultsList = document.getElementById('mobile-search-list');
+    var loadingEl = document.getElementById('mobile-search-loading');
+    var emptyEl = document.getElementById('mobile-search-empty');
+    var initialEl = document.getElementById('mobile-search-initial');
+
+    if (!trigger || !modal) return;
+
+    // Auto-hide on scroll down, show on scroll up
+    function handleScroll() {
+      var currentScrollY = window.scrollY;
+      if (currentScrollY > lastScrollY && currentScrollY > 100) {
+        // Scrolling down - hide
+        trigger.style.transform = 'translateY(100px)';
+        trigger.style.opacity = '0';
+      } else {
+        // Scrolling up - show
+        trigger.style.transform = 'translateY(0)';
+        trigger.style.opacity = '1';
+      }
+      lastScrollY = currentScrollY;
+    }
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+
+    function openSearch() {
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      input.focus();
+      loadPagefind();
+    }
+
+    function closeSearch() {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      input.value = '';
+      resultsList.innerHTML = '';
+      showInitial();
+    }
+
+    async function loadPagefind() {
+      if (pagefind) return;
+      try {
+        pagefind = await import('/pagefind/pagefind.js');
+        await pagefind.options({
+          highlightParam: 'highlight'
+        });
+        await pagefind.init();
+      } catch (e) {
+        console.warn('Pagefind not available (run build first)');
+      }
+    }
+
+    function showLoading() {
+      loadingEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      initialEl.classList.add('hidden');
+      resultsList.innerHTML = '';
+    }
+
+    function showEmpty() {
+      loadingEl.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+      initialEl.classList.add('hidden');
+    }
+
+    function showInitial() {
+      loadingEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      initialEl.classList.remove('hidden');
+    }
+
+    function showResults() {
+      loadingEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      initialEl.classList.add('hidden');
+    }
+
+    async function search(query) {
+      if (!query.trim()) {
+        showInitial();
+        results = [];
+        return;
+      }
+
+      if (!pagefind) {
+        showEmpty();
+        return;
+      }
+
+      showLoading();
+
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(async function() {
+        var searchResults = await pagefind.search(query);
+        results = await Promise.all(
+          searchResults.results.slice(0, 10).map(function(r) { return r.data(); })
+        );
+
+        if (results.length === 0) {
+          showEmpty();
+          return;
+        }
+
+        showResults();
+        renderResults();
+      }, 150);
+    }
+
+    function renderResults() {
+      resultsList.innerHTML = results.map(function(result) {
+        var title = (result.meta && result.meta.title) || 'Untitled';
+        var excerpt = result.excerpt || '';
+        return '<li>' +
+          '<a href="' + result.url + '" class="flex items-start gap-3 px-4 py-4 hover:bg-neutral-50 dark:hover:bg-neutral-900 transition-colors">' +
+            '<svg class="w-5 h-5 text-neutral-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />' +
+            '</svg>' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="font-medium text-neutral-900 dark:text-white">' + title + '</div>' +
+              '<div class="text-sm text-neutral-500 line-clamp-2 mt-1">' + excerpt + '</div>' +
+            '</div>' +
+          '</a>' +
+        '</li>';
+      }).join('');
+    }
+
+    trigger.addEventListener('click', openSearch);
+    closeBtn.addEventListener('click', closeSearch);
+
+    input.addEventListener('input', function(e) {
+      search(e.target.value);
+    });
+
+    // Close on escape
+    document.addEventListener('keydown', function(e) {
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeSearch();
+      }
+    });
+
+    // Close when clicking a result
+    resultsList.addEventListener('click', function(e) {
+      var link = e.target.closest('a');
+      if (link) {
+        closeSearch();
+      }
+    });
+  })();
+</script>

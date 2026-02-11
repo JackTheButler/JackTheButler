@@ -2,6 +2,7 @@
 import '../styles/global.css'
 import Header from '../components/Header.astro'
 import Search from '../components/docs/Search.astro'
+import MobileSearch from '../components/docs/MobileSearch.astro'
 import { ChevronRight, Book, Rocket, Server, Sparkles, Settings, Code, HelpCircle } from '@lucide/astro'
 
 interface Props {
@@ -160,6 +161,9 @@ const nextPage = currentIndex < allPages.length - 1 ? allPages[currentIndex + 1]
   </head>
   <body class="bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 antialiased">
     <Header />
+
+    <!-- Mobile floating search button -->
+    <MobileSearch />
 
     <div class="pt-20 min-h-screen flex">
       <!-- Sidebar -->
