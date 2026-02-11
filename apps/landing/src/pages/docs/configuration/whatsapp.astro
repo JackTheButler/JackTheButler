@@ -1,0 +1,178 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="WhatsApp Setup"
+  description="Connect Jack to WhatsApp Business API for guest messaging."
+  section="Configuration"
+>
+  <p>
+    WhatsApp is the most popular messaging platform for international guests. This guide walks you through connecting Jack to the WhatsApp Business API.
+  </p>
+
+  <h2 id="overview">Overview</h2>
+
+  <p>WhatsApp Business API requires:</p>
+
+  <ul>
+    <li>A Meta Business account</li>
+    <li>A verified business</li>
+    <li>A phone number dedicated to WhatsApp Business</li>
+  </ul>
+
+  <div class="not-prose my-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <p class="text-sm text-blue-800 dark:text-blue-200">
+      <strong>Note:</strong> The setup process takes 1-3 business days for Meta's verification. Plan accordingly.
+    </p>
+  </div>
+
+  <h2 id="step-1">Step 1: Create Meta Business Account</h2>
+
+  <ol>
+    <li>Go to <a href="https://business.facebook.com" target="_blank" rel="noopener">business.facebook.com</a></li>
+    <li>Click <strong>Create Account</strong></li>
+    <li>Enter your business name, your name, and email</li>
+    <li>Follow the prompts to complete setup</li>
+  </ol>
+
+  <h2 id="step-2">Step 2: Create WhatsApp Business App</h2>
+
+  <ol>
+    <li>Go to <a href="https://developers.facebook.com" target="_blank" rel="noopener">developers.facebook.com</a></li>
+    <li>Click <strong>My Apps</strong> → <strong>Create App</strong></li>
+    <li>Select <strong>Business</strong> as the app type</li>
+    <li>Enter an app name and select your business account</li>
+    <li>On the app dashboard, find <strong>WhatsApp</strong> and click <strong>Set Up</strong></li>
+  </ol>
+
+  <h2 id="step-3">Step 3: Add Phone Number</h2>
+
+  <ol>
+    <li>In the WhatsApp section, go to <strong>Getting Started</strong></li>
+    <li>Click <strong>Add Phone Number</strong></li>
+    <li>Enter a phone number that:
+      <ul>
+        <li>Is not already registered with WhatsApp</li>
+        <li>Can receive SMS or voice calls for verification</li>
+      </ul>
+    </li>
+    <li>Verify the number via SMS or voice call</li>
+  </ol>
+
+  <div class="not-prose my-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+    <p class="text-sm text-amber-800 dark:text-amber-200">
+      <strong>Important:</strong> Once a number is used for WhatsApp Business API, it cannot be used with the regular WhatsApp app. Use a dedicated business line.
+    </p>
+  </div>
+
+  <h2 id="step-4">Step 4: Get API Credentials</h2>
+
+  <ol>
+    <li>In the WhatsApp section, go to <strong>API Setup</strong></li>
+    <li>Note your <strong>Phone Number ID</strong></li>
+    <li>Note your <strong>WhatsApp Business Account ID</strong></li>
+    <li>Generate a permanent access token:
+      <ul>
+        <li>Go to <strong>Business Settings</strong> → <strong>System Users</strong></li>
+        <li>Create a system user with admin access</li>
+        <li>Generate a token with <code>whatsapp_business_messaging</code> permission</li>
+      </ul>
+    </li>
+  </ol>
+
+  <h2 id="step-5">Step 5: Configure Webhook</h2>
+
+  <ol>
+    <li>In the WhatsApp section, go to <strong>Configuration</strong></li>
+    <li>Click <strong>Edit</strong> next to Webhook</li>
+    <li>Enter your callback URL: <code>https://your-jack-domain.com/api/v1/webhooks/whatsapp</code></li>
+    <li>Enter a verify token (any random string you choose)</li>
+    <li>Click <strong>Verify and Save</strong></li>
+    <li>Subscribe to webhook fields: <code>messages</code></li>
+  </ol>
+
+  <h2 id="step-6">Step 6: Configure Jack</h2>
+
+  <ol>
+    <li>In Jack's dashboard, go to <strong>Settings → Apps</strong></li>
+    <li>Find <strong>WhatsApp</strong> and click <strong>Configure</strong></li>
+    <li>Enter:
+      <ul>
+        <li><strong>Phone Number ID</strong> — From step 4</li>
+        <li><strong>Business Account ID</strong> — From step 4</li>
+        <li><strong>Access Token</strong> — From step 4</li>
+        <li><strong>Webhook Verify Token</strong> — The token you chose in step 5</li>
+      </ul>
+    </li>
+    <li>Click <strong>Save</strong> and then <strong>Enable</strong></li>
+  </ol>
+
+  <h2 id="testing">Testing</h2>
+
+  <p>
+    Send a message to your WhatsApp Business number from a personal WhatsApp account. You should see the message appear in Jack's inbox within seconds.
+  </p>
+
+  <h2 id="templates">Message Templates</h2>
+
+  <p>
+    WhatsApp requires pre-approved templates for business-initiated messages (when you message a guest first). Templates are not needed for replies within 24 hours.
+  </p>
+
+  <h3>Creating templates</h3>
+
+  <ol>
+    <li>Go to <a href="https://business.facebook.com/wa/manage/message-templates" target="_blank" rel="noopener">WhatsApp Manager</a></li>
+    <li>Click <strong>Create Template</strong></li>
+    <li>Choose a category and enter your message</li>
+    <li>Submit for approval (usually takes 24-48 hours)</li>
+  </ol>
+
+  <h3>Common templates</h3>
+
+  <ul>
+    <li><strong>Booking confirmation</strong> — Confirm reservation details</li>
+    <li><strong>Pre-arrival</strong> — Send check-in information</li>
+    <li><strong>Post-checkout</strong> — Thank guest and request review</li>
+  </ul>
+
+  <h2 id="costs">Costs</h2>
+
+  <div class="not-prose my-6 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+    <ul class="space-y-2 text-sm">
+      <li class="flex justify-between">
+        <span>First 1,000 conversations/month</span>
+        <span class="text-green-600 dark:text-green-400 font-medium">Free</span>
+      </li>
+      <li class="flex justify-between">
+        <span>Additional conversations</span>
+        <span class="text-neutral-600 dark:text-neutral-400">$0.005-0.15 each (varies by country)</span>
+      </li>
+    </ul>
+    <p class="text-xs text-neutral-500 mt-3">A "conversation" is a 24-hour messaging window, not per-message.</p>
+  </div>
+
+  <h2 id="troubleshooting">Troubleshooting</h2>
+
+  <h3>Messages not arriving</h3>
+  <ul>
+    <li>Verify webhook URL is correct and accessible</li>
+    <li>Check that webhook subscription includes "messages"</li>
+    <li>Verify access token has correct permissions</li>
+  </ul>
+
+  <h3>Webhook verification fails</h3>
+  <ul>
+    <li>Ensure Jack is running and accessible from the internet</li>
+    <li>Check the verify token matches exactly</li>
+    <li>Try without trailing slash in the URL</li>
+  </ul>
+
+  <h3>Sending fails</h3>
+  <ul>
+    <li>Check you're replying within 24 hours OR using an approved template</li>
+    <li>Verify the phone number ID is correct</li>
+    <li>Check access token hasn't expired</li>
+  </ul>
+</DocsLayout>

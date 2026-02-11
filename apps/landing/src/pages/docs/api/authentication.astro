@@ -1,0 +1,175 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Authentication"
+  description="Authenticate with Jack's API using JWT tokens."
+  section="API Reference"
+>
+  <p>
+    Jack uses JWT (JSON Web Tokens) for API authentication. This page explains how to obtain and use tokens.
+  </p>
+
+  <h2 id="overview">Overview</h2>
+
+  <p>
+    All API requests (except login) require an <code>Authorization</code> header with a valid JWT token:
+  </p>
+
+  <pre><code>Authorization: Bearer &lt;your-jwt-token&gt;</code></pre>
+
+  <h2 id="obtaining-token">Obtaining a Token</h2>
+
+  <p>Get a token by authenticating with valid credentials:</p>
+
+  <pre><code>POST /api/v1/auth/login
+Content-Type: application/json
+
+&#123;
+  "email": "staff@yourhotel.com",
+  "password": "your-password"
+&#125;</code></pre>
+
+  <p>Response:</p>
+
+  <pre><code>&#123;
+  "success": true,
+  "data": &#123;
+    "token": "eyJhbGciOiJIUzI1NiIs...",
+    "expiresAt": "2024-01-15T12:00:00Z",
+    "user": &#123;
+      "id": "staff-123",
+      "name": "John Smith",
+      "email": "staff@yourhotel.com",
+      "role": "staff"
+    &#125;
+  &#125;
+&#125;</code></pre>
+
+  <h2 id="using-token">Using the Token</h2>
+
+  <p>Include the token in all subsequent requests:</p>
+
+  <pre><code>GET /api/v1/conversations
+Authorization: Bearer eyJhbGciOiJIUzI1NiIs...
+Content-Type: application/json</code></pre>
+
+  <h2 id="token-expiration">Token Expiration</h2>
+
+  <p>
+    Tokens expire after 24 hours by default. The expiration time is included in the login response.
+  </p>
+
+  <p>When a token expires, you'll receive:</p>
+
+  <pre><code>&#123;
+  "success": false,
+  "error": &#123;
+    "code": "TOKEN_EXPIRED",
+    "message": "Your session has expired. Please login again."
+  &#125;
+&#125;</code></pre>
+
+  <h2 id="refresh-token">Refreshing Tokens</h2>
+
+  <p>Refresh a token before it expires:</p>
+
+  <pre><code>POST /api/v1/auth/refresh
+Authorization: Bearer &lt;current-token&gt;</code></pre>
+
+  <p>Response includes a new token with extended expiration.</p>
+
+  <h2 id="logout">Logging Out</h2>
+
+  <p>Invalidate a token:</p>
+
+  <pre><code>POST /api/v1/auth/logout
+Authorization: Bearer &lt;token-to-invalidate&gt;</code></pre>
+
+  <h2 id="roles">User Roles</h2>
+
+  <p>Tokens include the user's role, which determines API access:</p>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Role</th>
+          <th class="text-left py-2 font-semibold">Access</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>admin</code></td>
+          <td class="py-2">Full access to all endpoints including settings and user management</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>manager</code></td>
+          <td class="py-2">Access to conversations, tasks, guests, and reports</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4"><code>staff</code></td>
+          <td class="py-2">Access to assigned conversations and tasks only</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="api-keys">API Keys (Coming Soon)</h2>
+
+  <p>
+    For server-to-server integrations, API keys provide non-expiring authentication. This feature is planned for a future release.
+  </p>
+
+  <h2 id="security">Security Best Practices</h2>
+
+  <ul>
+    <li><strong>Store tokens securely</strong> — Never expose tokens in URLs or client-side code</li>
+    <li><strong>Use HTTPS</strong> — Always use encrypted connections</li>
+    <li><strong>Rotate secrets</strong> — Change <code>JWT_SECRET</code> periodically</li>
+    <li><strong>Minimize token lifetime</strong> — Shorter expiration = smaller attack window</li>
+    <li><strong>Validate on server</strong> — Never trust client-side token validation alone</li>
+  </ul>
+
+  <h2 id="errors">Authentication Errors</h2>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Code</th>
+          <th class="text-left py-2 pr-4 font-semibold">Status</th>
+          <th class="text-left py-2 font-semibold">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>INVALID_CREDENTIALS</code></td>
+          <td class="py-2 pr-4">401</td>
+          <td class="py-2">Email or password is incorrect</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>TOKEN_EXPIRED</code></td>
+          <td class="py-2 pr-4">401</td>
+          <td class="py-2">Token has expired, login again</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>TOKEN_INVALID</code></td>
+          <td class="py-2 pr-4">401</td>
+          <td class="py-2">Token is malformed or tampered</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>TOKEN_MISSING</code></td>
+          <td class="py-2 pr-4">401</td>
+          <td class="py-2">No Authorization header provided</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4"><code>FORBIDDEN</code></td>
+          <td class="py-2 pr-4">403</td>
+          <td class="py-2">User lacks permission for this action</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</DocsLayout>

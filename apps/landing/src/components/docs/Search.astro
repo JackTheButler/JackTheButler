@@ -1,0 +1,265 @@
+---
+// Search component using Pagefind
+import { Search as SearchIcon, X, FileText, Loader2 } from '@lucide/astro'
+---
+
+<div class="relative">
+  <!-- Search trigger button -->
+  <button
+    id="search-trigger"
+    type="button"
+    class="flex items-center gap-2 w-full px-3 py-2 text-sm text-neutral-500 bg-neutral-100 dark:bg-neutral-800 rounded-lg hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors"
+  >
+    <SearchIcon class="w-4 h-4" />
+    <span class="flex-1 text-left">Search docs...</span>
+    <kbd class="hidden sm:inline-flex items-center gap-1 px-1.5 py-0.5 text-xs bg-neutral-200 dark:bg-neutral-700 rounded">
+      <span class="text-xs">⌘</span>K
+    </kbd>
+  </button>
+</div>
+
+<!-- Search modal -->
+<div id="search-modal" class="hidden fixed inset-0 z-[100]">
+  <!-- Backdrop -->
+  <div id="search-backdrop" class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+  <!-- Modal content -->
+  <div class="relative flex items-start justify-center pt-[10vh] px-4">
+    <div class="w-full max-w-xl bg-white dark:bg-neutral-900 rounded-xl shadow-2xl border border-neutral-200 dark:border-neutral-800 overflow-hidden">
+      <!-- Search input -->
+      <div class="flex items-center gap-3 px-4 py-3 border-b border-neutral-200 dark:border-neutral-800">
+        <SearchIcon class="w-5 h-5 text-neutral-400" />
+        <input
+          id="search-input"
+          type="text"
+          placeholder="Search documentation..."
+          class="flex-1 bg-transparent text-base outline-none placeholder:text-neutral-400"
+          autocomplete="off"
+        />
+        <button id="search-close" class="p-1 text-neutral-400 hover:text-neutral-600 dark:hover:text-neutral-200 transition-colors">
+          <X class="w-5 h-5" />
+        </button>
+      </div>
+
+      <!-- Results -->
+      <div id="search-results" class="max-h-[60vh] overflow-y-auto">
+        <!-- Loading state -->
+        <div id="search-loading" class="hidden flex items-center justify-center py-12 text-neutral-400">
+          <Loader2 class="w-6 h-6 animate-spin" />
+        </div>
+
+        <!-- Empty state -->
+        <div id="search-empty" class="hidden py-12 text-center text-neutral-500">
+          <p>No results found</p>
+        </div>
+
+        <!-- Initial state -->
+        <div id="search-initial" class="py-8 text-center text-neutral-400 text-sm">
+          <p>Start typing to search...</p>
+        </div>
+
+        <!-- Results list -->
+        <ul id="search-list" class="divide-y divide-neutral-100 dark:divide-neutral-800"></ul>
+      </div>
+
+      <!-- Footer -->
+      <div class="flex items-center justify-between px-4 py-2 border-t border-neutral-200 dark:border-neutral-800 text-xs text-neutral-400">
+        <div class="flex items-center gap-3">
+          <span class="flex items-center gap-1">
+            <kbd class="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">↵</kbd>
+            to select
+          </span>
+          <span class="flex items-center gap-1">
+            <kbd class="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">↑</kbd>
+            <kbd class="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">↓</kbd>
+            to navigate
+          </span>
+        </div>
+        <span class="flex items-center gap-1">
+          <kbd class="px-1.5 py-0.5 bg-neutral-100 dark:bg-neutral-800 rounded">esc</kbd>
+          to close
+        </span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script is:inline>
+  (function() {
+    var pagefind = null;
+    var selectedIndex = 0;
+    var results = [];
+    var searchTimeout = null;
+
+    var modal = document.getElementById('search-modal');
+    var backdrop = document.getElementById('search-backdrop');
+    var trigger = document.getElementById('search-trigger');
+    var closeBtn = document.getElementById('search-close');
+    var input = document.getElementById('search-input');
+    var resultsList = document.getElementById('search-list');
+    var loadingEl = document.getElementById('search-loading');
+    var emptyEl = document.getElementById('search-empty');
+    var initialEl = document.getElementById('search-initial');
+
+    function openSearch() {
+      modal.classList.remove('hidden');
+      document.body.style.overflow = 'hidden';
+      input.focus();
+      loadPagefind();
+    }
+
+    function closeSearch() {
+      modal.classList.add('hidden');
+      document.body.style.overflow = '';
+      input.value = '';
+      resultsList.innerHTML = '';
+      showInitial();
+    }
+
+    async function loadPagefind() {
+      if (pagefind) return;
+      try {
+        pagefind = await import('/pagefind/pagefind.js');
+        await pagefind.options({
+          highlightParam: 'highlight'
+        });
+        await pagefind.init();
+      } catch (e) {
+        console.warn('Pagefind not available (run build first)');
+      }
+    }
+
+    function showLoading() {
+      loadingEl.classList.remove('hidden');
+      emptyEl.classList.add('hidden');
+      initialEl.classList.add('hidden');
+      resultsList.innerHTML = '';
+    }
+
+    function showEmpty() {
+      loadingEl.classList.add('hidden');
+      emptyEl.classList.remove('hidden');
+      initialEl.classList.add('hidden');
+    }
+
+    function showInitial() {
+      loadingEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      initialEl.classList.remove('hidden');
+    }
+
+    function showResults() {
+      loadingEl.classList.add('hidden');
+      emptyEl.classList.add('hidden');
+      initialEl.classList.add('hidden');
+    }
+
+    async function search(query) {
+      if (!query.trim()) {
+        showInitial();
+        results = [];
+        return;
+      }
+
+      if (!pagefind) {
+        showEmpty();
+        return;
+      }
+
+      showLoading();
+
+      clearTimeout(searchTimeout);
+      searchTimeout = setTimeout(async function() {
+        var searchResults = await pagefind.search(query);
+        results = await Promise.all(
+          searchResults.results.slice(0, 10).map(function(r) { return r.data(); })
+        );
+
+        if (results.length === 0) {
+          showEmpty();
+          return;
+        }
+
+        showResults();
+        selectedIndex = 0;
+        renderResults();
+      }, 150);
+    }
+
+    function renderResults() {
+      resultsList.innerHTML = results.map(function(result, i) {
+        var isSelected = i === selectedIndex ? 'bg-neutral-50 dark:bg-neutral-800' : '';
+        var title = (result.meta && result.meta.title) || 'Untitled';
+        var excerpt = result.excerpt || '';
+        return '<li>' +
+          '<a href="' + result.url + '" class="flex items-start gap-3 px-4 py-3 hover:bg-neutral-50 dark:hover:bg-neutral-800 transition-colors ' + isSelected + '" data-index="' + i + '">' +
+            '<svg class="w-5 h-5 text-neutral-400 mt-0.5 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">' +
+              '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />' +
+            '</svg>' +
+            '<div class="flex-1 min-w-0">' +
+              '<div class="font-medium text-neutral-900 dark:text-white truncate">' + title + '</div>' +
+              '<div class="text-sm text-neutral-500 line-clamp-2">' + excerpt + '</div>' +
+            '</div>' +
+          '</a>' +
+        '</li>';
+      }).join('');
+    }
+
+    function updateSelection(newIndex) {
+      if (results.length === 0) return;
+      selectedIndex = Math.max(0, Math.min(newIndex, results.length - 1));
+      renderResults();
+    }
+
+    function navigateToSelected() {
+      if (results.length === 0) return;
+      var result = results[selectedIndex];
+      if (result && result.url) {
+        window.location.href = result.url;
+      }
+    }
+
+    trigger.addEventListener('click', openSearch);
+    closeBtn.addEventListener('click', closeSearch);
+    backdrop.addEventListener('click', closeSearch);
+
+    input.addEventListener('input', function(e) {
+      search(e.target.value);
+    });
+
+    document.addEventListener('keydown', function(e) {
+      if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+        e.preventDefault();
+        if (modal.classList.contains('hidden')) {
+          openSearch();
+        } else {
+          closeSearch();
+        }
+      }
+
+      if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+        closeSearch();
+      }
+
+      if (!modal.classList.contains('hidden')) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault();
+          updateSelection(selectedIndex + 1);
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault();
+          updateSelection(selectedIndex - 1);
+        } else if (e.key === 'Enter') {
+          e.preventDefault();
+          navigateToSelected();
+        }
+      }
+    });
+
+    resultsList.addEventListener('click', function(e) {
+      var link = e.target.closest('a');
+      if (link) {
+        closeSearch();
+      }
+    });
+  })();
+</script>

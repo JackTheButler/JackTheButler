@@ -1,0 +1,314 @@
+---
+import '../styles/global.css'
+import Header from '../components/Header.astro'
+import Search from '../components/docs/Search.astro'
+import { ChevronRight, Book, Rocket, Server, Sparkles, Settings, Code, HelpCircle } from '@lucide/astro'
+
+interface Props {
+  title: string
+  description?: string
+  section?: string
+  currentPath?: string
+}
+
+const {
+  title,
+  description = 'Documentation for Jack The Butler - the open-source hotel chatbot.',
+  section,
+  currentPath = Astro.url.pathname
+} = Astro.props
+
+const fullTitle = `${title} - Jack The Butler Docs`
+
+// Navigation structure
+const navigation = [
+  {
+    title: 'Getting Started',
+    icon: Rocket,
+    items: [
+      { title: 'Introduction', href: '/docs/getting-started/introduction/' },
+      { title: 'Quick Start', href: '/docs/getting-started/quick-start/' },
+      { title: 'Setup Wizard', href: '/docs/getting-started/setup-wizard/' },
+    ]
+  },
+  {
+    title: 'Installation',
+    icon: Server,
+    items: [
+      { title: 'Cloud Deployment', href: '/docs/installation/cloud/' },
+      { title: 'Docker', href: '/docs/installation/docker/' },
+      { title: 'From Source', href: '/docs/installation/source/' },
+    ]
+  },
+  {
+    title: 'Features',
+    icon: Sparkles,
+    items: [
+      { title: 'AI Responses', href: '/docs/features/ai-responses/' },
+      { title: 'Knowledge Base', href: '/docs/features/knowledge-base/' },
+      { title: 'Channels', href: '/docs/features/channels/' },
+      { title: 'Tasks & Escalation', href: '/docs/features/tasks/' },
+      { title: 'Automations', href: '/docs/features/automations/' },
+    ]
+  },
+  {
+    title: 'Configuration',
+    icon: Settings,
+    items: [
+      { title: 'AI Providers', href: '/docs/configuration/ai-providers/' },
+      { title: 'WhatsApp Setup', href: '/docs/configuration/whatsapp/' },
+      { title: 'SMS Setup', href: '/docs/configuration/sms/' },
+      { title: 'Email Setup', href: '/docs/configuration/email/' },
+    ]
+  },
+  {
+    title: 'API Reference',
+    icon: Code,
+    items: [
+      { title: 'Authentication', href: '/docs/api/authentication/' },
+      { title: 'REST API', href: '/docs/api/rest/' },
+      { title: 'Webhooks', href: '/docs/api/webhooks/' },
+    ]
+  },
+  {
+    title: 'Help',
+    icon: HelpCircle,
+    items: [
+      { title: 'FAQ', href: '/docs/help/faq/' },
+      { title: 'Troubleshooting', href: '/docs/help/troubleshooting/' },
+    ]
+  },
+]
+
+// Find current section and flatten for prev/next
+const allPages = navigation.flatMap(section => section.items)
+const currentIndex = allPages.findIndex(page => currentPath.startsWith(page.href.replace(/\/$/, '')))
+const prevPage = currentIndex > 0 ? allPages[currentIndex - 1] : null
+const nextPage = currentIndex < allPages.length - 1 ? allPages[currentIndex + 1] : null
+---
+
+<!doctype html>
+<html lang="en" class="scroll-smooth">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <meta name="robots" content="index, follow" />
+    <link rel="canonical" href={`https://jackthebutler.com${currentPath}`} />
+
+    <!-- Prevent flash of wrong theme -->
+    <script is:inline>
+      const theme = localStorage.getItem('theme') ||
+        (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+      if (theme === 'dark') document.documentElement.classList.add('dark');
+    </script>
+
+    <!-- Open Graph -->
+    <meta property="og:title" content={fullTitle} />
+    <meta property="og:description" content={description} />
+    <meta property="og:type" content="article" />
+    <meta property="og:url" content={`https://jackthebutler.com${currentPath}`} />
+    <meta property="og:image" content="https://jackthebutler.com/og-image.png" />
+    <meta property="og:site_name" content="Jack The Butler" />
+
+    <!-- Twitter Card -->
+    <meta name="twitter:card" content="summary_large_image" />
+    <meta name="twitter:title" content={fullTitle} />
+    <meta name="twitter:description" content={description} />
+    <meta name="twitter:image" content="https://jackthebutler.com/og-image.png" />
+
+    <!-- JSON-LD Structured Data -->
+    <script type="application/ld+json" set:html={JSON.stringify({
+      "@context": "https://schema.org",
+      "@type": "TechArticle",
+      "headline": title,
+      "description": description,
+      "url": `https://jackthebutler.com${currentPath}`,
+      "image": "https://jackthebutler.com/og-image.png",
+      "author": {
+        "@type": "Organization",
+        "name": "Jack The Butler",
+        "url": "https://jackthebutler.com"
+      },
+      "publisher": {
+        "@type": "Organization",
+        "name": "Jack The Butler",
+        "url": "https://jackthebutler.com",
+        "logo": {
+          "@type": "ImageObject",
+          "url": "https://jackthebutler.com/favicon-32x32.png"
+        }
+      },
+      "mainEntityOfPage": {
+        "@type": "WebPage",
+        "@id": `https://jackthebutler.com${currentPath}`
+      },
+      "isPartOf": {
+        "@type": "WebSite",
+        "name": "Jack The Butler Documentation",
+        "url": "https://jackthebutler.com/docs/"
+      }
+    })} />
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/x-icon" href="/favicon.ico" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32x32.png" />
+    <link rel="icon" type="image/png" sizes="16x16" href="/favicon-16x16.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+
+    <title>{fullTitle}</title>
+  </head>
+  <body class="bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 antialiased">
+    <Header />
+
+    <div class="pt-20 min-h-screen flex">
+      <!-- Sidebar -->
+      <aside data-pagefind-ignore class="hidden lg:block w-64 shrink-0 border-r border-neutral-200 dark:border-neutral-800">
+        <nav class="sticky top-20 h-[calc(100vh-5rem)] overflow-y-auto p-6">
+          <a href="/docs/" class="flex items-center gap-2 mb-4 text-sm font-semibold text-neutral-900 dark:text-white">
+            <Book class="w-5 h-5" />
+            Documentation
+          </a>
+
+          <!-- Search -->
+          <div class="mb-6">
+            <Search />
+          </div>
+
+          {navigation.map((section) => {
+            const Icon = section.icon
+            const isCurrentSection = section.items.some(item => currentPath.startsWith(item.href.replace(/\/$/, '')))
+
+            return (
+              <div class="mb-6">
+                <h3 class="flex items-center gap-2 text-sm font-semibold text-neutral-900 dark:text-white mb-2">
+                  <Icon class="w-4 h-4 text-neutral-500" />
+                  {section.title}
+                </h3>
+                <ul class="space-y-1 ml-6 border-l border-neutral-200 dark:border-neutral-800">
+                  {section.items.map((item) => {
+                    const isActive = currentPath.startsWith(item.href.replace(/\/$/, ''))
+                    return (
+                      <li>
+                        <a
+                          href={item.href}
+                          class:list={[
+                            'block py-1.5 pl-4 -ml-px text-sm border-l transition-colors',
+                            isActive
+                              ? 'border-blue-600 text-blue-600 dark:text-blue-400 font-medium'
+                              : 'border-transparent text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white hover:border-neutral-300 dark:hover:border-neutral-600'
+                          ]}
+                        >
+                          {item.title}
+                        </a>
+                      </li>
+                    )
+                  })}
+                </ul>
+              </div>
+            )
+          })}
+        </nav>
+      </aside>
+
+      <!-- Main content -->
+      <main class="flex-1 min-w-0">
+        <div class="max-w-3xl mx-auto px-6 py-12">
+          <!-- Breadcrumb -->
+          {section && (
+            <nav class="flex items-center gap-2 text-sm text-neutral-500 mb-6">
+              <a href="/docs/" class="hover:text-neutral-900 dark:hover:text-white transition-colors">Docs</a>
+              <ChevronRight class="w-4 h-4" />
+              <span class="text-neutral-900 dark:text-white">{section}</span>
+            </nav>
+          )}
+
+          <!-- Page title -->
+          <h1 class="text-3xl sm:text-4xl font-bold mb-4">{title}</h1>
+
+          {description && (
+            <p class="text-lg text-neutral-600 dark:text-neutral-400 mb-8">{description}</p>
+          )}
+
+          <!-- Content -->
+          <article data-pagefind-body class="prose prose-neutral dark:prose-invert max-w-none
+            prose-headings:scroll-mt-24
+            prose-a:text-blue-600 dark:prose-a:text-blue-400 prose-a:no-underline hover:prose-a:underline
+            prose-code:bg-neutral-100 dark:prose-code:bg-neutral-800 prose-code:px-1.5 prose-code:py-0.5 prose-code:rounded prose-code:text-sm prose-code:before:content-none prose-code:after:content-none
+            prose-pre:bg-neutral-900 dark:prose-pre:bg-neutral-900 prose-pre:border prose-pre:border-neutral-800
+            prose-img:rounded-lg prose-img:border prose-img:border-neutral-200 dark:prose-img:border-neutral-800
+          ">
+            <slot />
+          </article>
+
+          <!-- Prev/Next navigation -->
+          <nav class="mt-16 pt-8 border-t border-neutral-200 dark:border-neutral-800 flex items-center justify-between gap-4">
+            {prevPage ? (
+              <a href={prevPage.href} class="group flex flex-col items-start">
+                <span class="text-sm text-neutral-500 mb-1">Previous</span>
+                <span class="text-blue-600 dark:text-blue-400 group-hover:underline">{prevPage.title}</span>
+              </a>
+            ) : <div />}
+
+            {nextPage ? (
+              <a href={nextPage.href} class="group flex flex-col items-end text-right">
+                <span class="text-sm text-neutral-500 mb-1">Next</span>
+                <span class="text-blue-600 dark:text-blue-400 group-hover:underline">{nextPage.title}</span>
+              </a>
+            ) : <div />}
+          </nav>
+        </div>
+      </main>
+
+      <!-- Table of Contents (right sidebar) -->
+      <aside data-pagefind-ignore class="hidden xl:block w-56 shrink-0">
+        <div class="sticky top-20 p-6">
+          <h4 class="text-sm font-semibold text-neutral-900 dark:text-white mb-4">On this page</h4>
+          <nav id="toc" class="text-sm space-y-2">
+            <!-- Populated by JS -->
+          </nav>
+        </div>
+      </aside>
+    </div>
+
+    <!-- Pagefind highlight script -->
+    <script is:inline type="module">
+      const params = new URLSearchParams(window.location.search);
+      const highlights = params.getAll('highlight');
+      if (highlights.length) {
+        const { default: PagefindHighlight } = await import('/pagefind/pagefind-highlight.js');
+        new PagefindHighlight({
+          highlightParam: 'highlight',
+          addStyles: false
+        });
+        // Scroll to first highlight
+        setTimeout(() => {
+          const mark = document.querySelector('mark.pagefind-highlight');
+          if (mark) {
+            mark.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        }, 50);
+      }
+    </script>
+
+    <!-- Mobile nav toggle -->
+    <script>
+      // Generate table of contents from headings
+      const article = document.querySelector('article');
+      const toc = document.getElementById('toc');
+
+      if (article && toc) {
+        const headings = article.querySelectorAll('h2, h3');
+        headings.forEach((heading) => {
+          const link = document.createElement('a');
+          link.href = `#${heading.id}`;
+          link.textContent = heading.textContent;
+          link.className = heading.tagName === 'H3'
+            ? 'block pl-4 text-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors'
+            : 'block text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors';
+          toc.appendChild(link);
+        });
+      }
+    </script>
+  </body>
+</html>

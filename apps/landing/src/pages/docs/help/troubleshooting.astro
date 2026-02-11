@@ -1,0 +1,243 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Troubleshooting"
+  description="Solutions to common issues with Jack The Butler."
+  section="Help"
+>
+  <p>
+    Having issues? Find solutions to common problems below.
+  </p>
+
+  <h2 id="installation">Installation Issues</h2>
+
+  <h3>Database resets after redeployment</h3>
+  <p>
+    <strong>Cause:</strong> No persistent volume configured.
+  </p>
+  <p>
+    <strong>Solution:</strong> Mount a volume to <code>/app/data</code>. See <a href="/docs/installation/cloud/#volume-config">Volume Configuration</a>.
+  </p>
+
+  <h3>"Cannot find module" error on startup</h3>
+  <p>
+    <strong>Cause:</strong> Dependencies not installed.
+  </p>
+  <p>
+    <strong>Solution:</strong> Run <code>pnpm install</code> or rebuild Docker image.
+  </p>
+
+  <h3>Port already in use</h3>
+  <p>
+    <strong>Cause:</strong> Another process using port 3000.
+  </p>
+  <p>
+    <strong>Solution:</strong> Change the <code>PORT</code> environment variable or stop the other process.
+  </p>
+
+  <h2 id="login">Login Issues</h2>
+
+  <h3>Can't login with default credentials</h3>
+  <p>
+    <strong>Default credentials:</strong>
+  </p>
+  <ul>
+    <li>Email: <code>admin@butler.com</code></li>
+    <li>Password: <code>admin123</code></li>
+  </ul>
+  <p>
+    If these don't work, the default admin may have been disabled. You'll need to:
+  </p>
+  <ol>
+    <li>Access the database directly (SQLite)</li>
+    <li>Reset the admin password or create a new admin</li>
+  </ol>
+
+  <h3>Forgot password</h3>
+  <p>
+    Jack doesn't have email-based password reset. Ask an admin to reset your password in <strong>Settings → Staff</strong>, or access the database directly.
+  </p>
+
+  <h3>Session keeps expiring</h3>
+  <p>
+    <strong>Cause:</strong> JWT tokens expire after 24 hours.
+  </p>
+  <p>
+    <strong>Solution:</strong> This is expected behavior. Login again to get a new token.
+  </p>
+
+  <h2 id="ai">AI Issues</h2>
+
+  <h3>AI responses are slow</h3>
+  <p>
+    <strong>Causes and solutions:</strong>
+  </p>
+  <ul>
+    <li><strong>Local AI first load</strong> — Models load on first use. Subsequent responses are faster.</li>
+    <li><strong>Cloud AI latency</strong> — Check your internet connection. Consider using a smaller model (Haiku/mini).</li>
+    <li><strong>Large knowledge base</strong> — Optimize entries, remove duplicates.</li>
+  </ul>
+
+  <h3>AI gives wrong information</h3>
+  <p>
+    <strong>Solutions:</strong>
+  </p>
+  <ul>
+    <li>Check your knowledge base for incorrect entries</li>
+    <li>Add more specific entries for the topic</li>
+    <li>Use "Suggest" mode to review responses before sending</li>
+  </ul>
+
+  <h3>"API key invalid" error</h3>
+  <p>
+    <strong>Causes:</strong>
+  </p>
+  <ul>
+    <li>Key copied incorrectly (extra spaces)</li>
+    <li>Key expired or revoked</li>
+    <li>Insufficient API credits</li>
+  </ul>
+  <p>
+    <strong>Solution:</strong> Generate a new API key and reconfigure in Settings → Apps.
+  </p>
+
+  <h3>Local AI not working</h3>
+  <p>
+    <strong>Causes:</strong>
+  </p>
+  <ul>
+    <li>Insufficient RAM (needs ~2GB)</li>
+    <li>Model download failed</li>
+  </ul>
+  <p>
+    <strong>Solution:</strong> Check server has enough memory. Restart Jack to retry model download.
+  </p>
+
+  <h2 id="channels">Channel Issues</h2>
+
+  <h3>WhatsApp messages not arriving</h3>
+  <p>
+    <strong>Check:</strong>
+  </p>
+  <ul>
+    <li>Webhook URL is correct in Meta Business settings</li>
+    <li>Webhook subscription includes "messages" field</li>
+    <li>Access token hasn't expired</li>
+    <li>Jack is accessible from the internet (HTTPS required)</li>
+  </ul>
+
+  <h3>WhatsApp sending fails</h3>
+  <p>
+    <strong>Causes:</strong>
+  </p>
+  <ul>
+    <li>Replying after 24-hour window (need message template)</li>
+    <li>Phone number format incorrect</li>
+    <li>Business verification incomplete</li>
+  </ul>
+
+  <h3>SMS not working</h3>
+  <p>
+    <strong>Check:</strong>
+  </p>
+  <ul>
+    <li>Twilio credentials are correct</li>
+    <li>Twilio account has sufficient funds</li>
+    <li>Phone number has SMS capability</li>
+    <li>Webhook URL configured in Twilio</li>
+  </ul>
+
+  <h3>Email connection fails</h3>
+  <p>
+    <strong>Solutions:</strong>
+  </p>
+  <ul>
+    <li>Verify IMAP/SMTP settings from your provider</li>
+    <li>Use app password (not regular password) for Gmail/Outlook</li>
+    <li>Ensure IMAP is enabled in email settings</li>
+    <li>Check firewall allows outbound connections on ports 993/587</li>
+  </ul>
+
+  <h2 id="dashboard">Dashboard Issues</h2>
+
+  <h3>Dashboard won't load</h3>
+  <p>
+    <strong>Check:</strong>
+  </p>
+  <ul>
+    <li>Clear browser cache and cookies</li>
+    <li>Try incognito/private mode</li>
+    <li>Check browser console for errors</li>
+    <li>Verify Jack is running (<code>curl http://localhost:3000/health</code>)</li>
+  </ul>
+
+  <h3>Real-time updates not working</h3>
+  <p>
+    <strong>Cause:</strong> WebSocket connection failed.
+  </p>
+  <p>
+    <strong>Solutions:</strong>
+  </p>
+  <ul>
+    <li>Check reverse proxy passes WebSocket headers</li>
+    <li>Verify firewall allows WebSocket connections</li>
+    <li>Try refreshing the page</li>
+  </ul>
+
+  <h3>Search returns no results</h3>
+  <p>
+    <strong>Cause:</strong> Search index not built.
+  </p>
+  <p>
+    <strong>Solution:</strong> Search indexes after build. Wait for indexing to complete after adding content.
+  </p>
+
+  <h2 id="performance">Performance Issues</h2>
+
+  <h3>High memory usage</h3>
+  <p>
+    <strong>Causes:</strong>
+  </p>
+  <ul>
+    <li>Local AI models loaded (normal, ~2GB)</li>
+    <li>Large conversation history</li>
+    <li>Memory leak (report as bug)</li>
+  </ul>
+  <p>
+    <strong>Solutions:</strong>
+  </p>
+  <ul>
+    <li>Use cloud AI instead of local</li>
+    <li>Archive old conversations</li>
+    <li>Increase server RAM</li>
+  </ul>
+
+  <h3>Database growing too large</h3>
+  <p>
+    <strong>Solutions:</strong>
+  </p>
+  <ul>
+    <li>Archive or delete old conversations</li>
+    <li>Remove unused knowledge base entries</li>
+    <li>Run <code>VACUUM</code> on SQLite database</li>
+  </ul>
+
+  <h2 id="getting-help">Getting More Help</h2>
+
+  <p>If your issue isn't listed here:</p>
+
+  <ol>
+    <li>Check <a href="https://github.com/JackTheButler/JackTheButler/discussions" target="_blank" rel="noopener">GitHub Discussions</a> for similar issues</li>
+    <li>Search <a href="https://github.com/JackTheButler/JackTheButler/issues" target="_blank" rel="noopener">GitHub Issues</a></li>
+    <li>Open a new issue with:
+      <ul>
+        <li>Jack version</li>
+        <li>Deployment method (Docker, cloud, source)</li>
+        <li>Steps to reproduce</li>
+        <li>Error messages or logs</li>
+      </ul>
+    </li>
+  </ol>
+</DocsLayout>

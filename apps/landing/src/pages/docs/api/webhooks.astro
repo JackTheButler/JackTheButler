@@ -1,0 +1,247 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Webhooks"
+  description="Receive real-time notifications when events occur in Jack."
+  section="API Reference"
+>
+  <p>
+    Webhooks let external systems receive notifications when events happen in Jack—new messages, task updates, guest check-ins, and more.
+  </p>
+
+  <h2 id="overview">Overview</h2>
+
+  <p>When an event occurs, Jack sends an HTTP POST request to your configured URL with event data.</p>
+
+  <h2 id="setup">Setting Up Webhooks</h2>
+
+  <ol>
+    <li>Go to <strong>Settings → Integrations → Webhooks</strong></li>
+    <li>Click <strong>Add Webhook</strong></li>
+    <li>Enter your endpoint URL</li>
+    <li>Select events to subscribe to</li>
+    <li>Optionally set a secret for signature verification</li>
+    <li>Click <strong>Save</strong></li>
+  </ol>
+
+  <h2 id="payload-format">Payload Format</h2>
+
+  <p>All webhook payloads follow this structure:</p>
+
+  <pre><code>&#123;
+  "event": "conversation.message.created",
+  "timestamp": "2024-01-15T10:30:00Z",
+  "data": &#123;
+    "conversationId": "conv-123",
+    "message": &#123;
+      "id": "msg-456",
+      "content": "Hello, what time is breakfast?",
+      "direction": "inbound",
+      "channel": "whatsapp"
+    &#125;,
+    "guest": &#123;
+      "id": "guest-789",
+      "name": "John Smith"
+    &#125;
+  &#125;
+&#125;</code></pre>
+
+  <h2 id="events">Available Events</h2>
+
+  <h3>Conversation Events</h3>
+
+  <div class="not-prose my-4">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Event</th>
+          <th class="text-left py-2 font-semibold">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>conversation.created</code></td>
+          <td class="py-2">New conversation started</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>conversation.message.created</code></td>
+          <td class="py-2">New message in conversation</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>conversation.assigned</code></td>
+          <td class="py-2">Conversation assigned to staff</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4"><code>conversation.closed</code></td>
+          <td class="py-2">Conversation marked closed</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Task Events</h3>
+
+  <div class="not-prose my-4">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Event</th>
+          <th class="text-left py-2 font-semibold">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>task.created</code></td>
+          <td class="py-2">New task created</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>task.assigned</code></td>
+          <td class="py-2">Task assigned to staff</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>task.updated</code></td>
+          <td class="py-2">Task status or details changed</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4"><code>task.completed</code></td>
+          <td class="py-2">Task marked complete</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h3>Guest Events</h3>
+
+  <div class="not-prose my-4">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Event</th>
+          <th class="text-left py-2 font-semibold">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>guest.created</code></td>
+          <td class="py-2">New guest profile created</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4"><code>guest.updated</code></td>
+          <td class="py-2">Guest profile updated</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="security">Verifying Webhooks</h2>
+
+  <p>
+    Jack signs webhook payloads with HMAC-SHA256. Verify the signature to ensure requests are authentic.
+  </p>
+
+  <h3>Signature header</h3>
+
+  <pre><code>X-Jack-Signature: sha256=a1b2c3d4e5f6...</code></pre>
+
+  <h3>Verification example (Node.js)</h3>
+
+  <pre><code>const crypto = require('crypto');
+
+function verifyWebhook(payload, signature, secret) &#123;
+  const expected = 'sha256=' + crypto
+    .createHmac('sha256', secret)
+    .update(payload)
+    .digest('hex');
+
+  return crypto.timingSafeEqual(
+    Buffer.from(signature),
+    Buffer.from(expected)
+  );
+&#125;</code></pre>
+
+  <h2 id="retries">Retry Policy</h2>
+
+  <p>
+    If your endpoint returns an error (non-2xx status), Jack retries with exponential backoff:
+  </p>
+
+  <ul>
+    <li>1st retry: 1 minute</li>
+    <li>2nd retry: 5 minutes</li>
+    <li>3rd retry: 30 minutes</li>
+    <li>4th retry: 2 hours</li>
+    <li>5th retry: 24 hours</li>
+  </ul>
+
+  <p>After 5 failed attempts, the webhook is marked as failed and disabled.</p>
+
+  <h2 id="best-practices">Best Practices</h2>
+
+  <h3>Respond quickly</h3>
+  <p>
+    Return a 2xx response within 5 seconds. Process the payload asynchronously if needed.
+  </p>
+
+  <pre><code>// Good: Acknowledge immediately, process later
+app.post('/webhook', (req, res) =&gt; &#123;
+  res.status(200).send('OK');
+  processWebhookAsync(req.body);
+&#125;);</code></pre>
+
+  <h3>Handle duplicates</h3>
+  <p>
+    Webhooks may be delivered more than once. Use the event ID to deduplicate:
+  </p>
+
+  <pre><code>if (await alreadyProcessed(event.id)) &#123;
+  return;
+&#125;
+await markAsProcessed(event.id);
+// Process event...</code></pre>
+
+  <h3>Verify signatures</h3>
+  <p>
+    Always verify the signature header to prevent spoofed requests.
+  </p>
+
+  <h2 id="testing">Testing Webhooks</h2>
+
+  <p>Use tools like <a href="https://webhook.site" target="_blank" rel="noopener">webhook.site</a> or ngrok to test webhooks locally:</p>
+
+  <ol>
+    <li>Get a test URL from webhook.site</li>
+    <li>Configure it as a webhook endpoint in Jack</li>
+    <li>Trigger an event (send a test message)</li>
+    <li>View the received payload on webhook.site</li>
+  </ol>
+
+  <h2 id="logs">Webhook Logs</h2>
+
+  <p>
+    View delivery history in <strong>Settings → Integrations → Webhooks</strong>. Logs include:
+  </p>
+
+  <ul>
+    <li>Request payload</li>
+    <li>Response status and body</li>
+    <li>Delivery time</li>
+    <li>Retry attempts</li>
+  </ul>
+
+  <h2 id="troubleshooting">Troubleshooting</h2>
+
+  <h3>Webhooks not arriving</h3>
+  <ul>
+    <li>Check endpoint URL is correct and publicly accessible</li>
+    <li>Verify SSL certificate is valid (self-signed won't work)</li>
+    <li>Check firewall allows incoming connections</li>
+  </ul>
+
+  <h3>Signature verification fails</h3>
+  <ul>
+    <li>Ensure secret matches exactly (no extra whitespace)</li>
+    <li>Verify you're hashing the raw request body, not parsed JSON</li>
+  </ul>
+</DocsLayout>

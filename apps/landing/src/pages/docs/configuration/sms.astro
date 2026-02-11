@@ -1,0 +1,175 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="SMS Setup"
+  description="Connect Jack to Twilio for SMS messaging with guests."
+  section="Configuration"
+>
+  <p>
+    SMS provides universal reach—every phone can receive texts. This guide covers setting up SMS via Twilio.
+  </p>
+
+  <h2 id="overview">Overview</h2>
+
+  <p>You'll need:</p>
+
+  <ul>
+    <li>A Twilio account</li>
+    <li>A Twilio phone number</li>
+    <li>Your Account SID and Auth Token</li>
+  </ul>
+
+  <h2 id="step-1">Step 1: Create Twilio Account</h2>
+
+  <ol>
+    <li>Sign up at <a href="https://www.twilio.com/try-twilio" target="_blank" rel="noopener">twilio.com/try-twilio</a></li>
+    <li>Verify your email and phone number</li>
+    <li>Complete the onboarding questions</li>
+  </ol>
+
+  <p>
+    Twilio provides trial credit for testing. For production, you'll need to upgrade and add funds.
+  </p>
+
+  <h2 id="step-2">Step 2: Get a Phone Number</h2>
+
+  <ol>
+    <li>In Twilio Console, go to <strong>Phone Numbers → Buy a Number</strong></li>
+    <li>Search for a number in your country/region</li>
+    <li>Ensure it has SMS capability (check the "SMS" column)</li>
+    <li>Click <strong>Buy</strong></li>
+  </ol>
+
+  <div class="not-prose my-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <p class="text-sm text-blue-800 dark:text-blue-200">
+      <strong>Tip:</strong> Choose a local number for your area. Guests are more likely to respond to local numbers.
+    </p>
+  </div>
+
+  <h2 id="step-3">Step 3: Get API Credentials</h2>
+
+  <ol>
+    <li>Go to <a href="https://www.twilio.com/console" target="_blank" rel="noopener">Twilio Console</a></li>
+    <li>Find your <strong>Account SID</strong> on the dashboard</li>
+    <li>Click on <strong>Auth Token</strong> to reveal it, then copy</li>
+  </ol>
+
+  <h2 id="step-4">Step 4: Configure Webhook</h2>
+
+  <ol>
+    <li>Go to <strong>Phone Numbers → Manage → Active Numbers</strong></li>
+    <li>Click on your number</li>
+    <li>Scroll to <strong>Messaging Configuration</strong></li>
+    <li>Under "A message comes in", select <strong>Webhook</strong></li>
+    <li>Enter: <code>https://your-jack-domain.com/api/v1/webhooks/twilio</code></li>
+    <li>Set HTTP method to <strong>POST</strong></li>
+    <li>Click <strong>Save</strong></li>
+  </ol>
+
+  <h2 id="step-5">Step 5: Configure Jack</h2>
+
+  <ol>
+    <li>In Jack's dashboard, go to <strong>Settings → Apps</strong></li>
+    <li>Find <strong>Twilio SMS</strong> and click <strong>Configure</strong></li>
+    <li>Enter:
+      <ul>
+        <li><strong>Account SID</strong> — From step 3</li>
+        <li><strong>Auth Token</strong> — From step 3</li>
+        <li><strong>Phone Number</strong> — Your Twilio number (e.g., +15551234567)</li>
+      </ul>
+    </li>
+    <li>Click <strong>Save</strong> and then <strong>Enable</strong></li>
+  </ol>
+
+  <h2 id="testing">Testing</h2>
+
+  <p>
+    Send a text message to your Twilio number from your personal phone. It should appear in Jack's inbox.
+  </p>
+
+  <h2 id="costs">Costs</h2>
+
+  <div class="not-prose my-6 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+    <p class="font-medium text-sm mb-3">United States pricing:</p>
+    <ul class="space-y-2 text-sm">
+      <li class="flex justify-between">
+        <span>Phone number</span>
+        <span class="text-neutral-600 dark:text-neutral-400">$1.15/month</span>
+      </li>
+      <li class="flex justify-between">
+        <span>Outbound SMS</span>
+        <span class="text-neutral-600 dark:text-neutral-400">$0.0079/message</span>
+      </li>
+      <li class="flex justify-between">
+        <span>Inbound SMS</span>
+        <span class="text-neutral-600 dark:text-neutral-400">$0.0075/message</span>
+      </li>
+    </ul>
+    <p class="text-xs text-neutral-500 mt-3">Prices vary by country. See <a href="https://www.twilio.com/sms/pricing" target="_blank" rel="noopener" class="text-blue-600">Twilio pricing</a>.</p>
+  </div>
+
+  <p>
+    For a hotel with ~200 SMS conversations/month, expect ~$3-5/month in SMS costs.
+  </p>
+
+  <h2 id="best-practices">Best Practices</h2>
+
+  <h3>Keep messages short</h3>
+  <p>
+    SMS has a 160 character limit per segment. Longer messages are split and charged separately. Jack handles this automatically, but shorter is better.
+  </p>
+
+  <h3>Include opt-out</h3>
+  <p>
+    For marketing messages, include "Reply STOP to unsubscribe" to comply with regulations.
+  </p>
+
+  <h3>Respect quiet hours</h3>
+  <p>
+    Avoid sending automated SMS late at night. Use automations to schedule messages during business hours.
+  </p>
+
+  <h2 id="a2p-registration">A2P 10DLC Registration (US)</h2>
+
+  <p>
+    If sending SMS in the United States, you need to register for A2P (Application-to-Person) messaging:
+  </p>
+
+  <ol>
+    <li>Go to <strong>Messaging → Trust Hub</strong> in Twilio Console</li>
+    <li>Complete the <strong>A2P 10DLC Registration</strong></li>
+    <li>Register your business and campaign</li>
+    <li>Wait for approval (1-2 weeks)</li>
+  </ol>
+
+  <div class="not-prose my-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+    <p class="text-sm text-amber-800 dark:text-amber-200">
+      <strong>Important:</strong> Unregistered numbers have significantly lower throughput and higher filtering rates. Register before going to production.
+    </p>
+  </div>
+
+  <h2 id="troubleshooting">Troubleshooting</h2>
+
+  <h3>Messages not arriving</h3>
+  <ul>
+    <li>Check webhook URL is correct in Twilio</li>
+    <li>Verify Jack is accessible from the internet</li>
+    <li>Check Twilio webhook logs for errors</li>
+  </ul>
+
+  <h3>Outbound messages fail</h3>
+  <ul>
+    <li>Verify Account SID and Auth Token are correct</li>
+    <li>Check Twilio account has sufficient funds</li>
+    <li>Ensure phone number format includes country code (+1...)</li>
+  </ul>
+
+  <h3>Messages filtered/blocked</h3>
+  <ul>
+    <li>Register for A2P 10DLC (US)</li>
+    <li>Avoid spam trigger words</li>
+    <li>Ensure recipients have opted in</li>
+  </ul>
+</DocsLayout>

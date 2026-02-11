@@ -1,0 +1,195 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Email Setup"
+  description="Connect Jack to your email for guest communication."
+  section="Configuration"
+>
+  <p>
+    Connect your property's email to Jack for automated responses and unified inbox management.
+  </p>
+
+  <h2 id="overview">Overview</h2>
+
+  <p>Email integration requires:</p>
+
+  <ul>
+    <li><strong>IMAP</strong> — For reading incoming emails</li>
+    <li><strong>SMTP</strong> — For sending outgoing emails</li>
+  </ul>
+
+  <p>
+    Most email providers support both. You'll need the server settings from your email provider.
+  </p>
+
+  <h2 id="common-providers">Common Provider Settings</h2>
+
+  <h3>Gmail / Google Workspace</h3>
+
+  <div class="not-prose my-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm">
+    <p class="font-medium mb-2">IMAP Settings:</p>
+    <ul class="space-y-1 text-neutral-600 dark:text-neutral-400">
+      <li>Server: <code>imap.gmail.com</code></li>
+      <li>Port: <code>993</code></li>
+      <li>Security: SSL/TLS</li>
+    </ul>
+    <p class="font-medium mt-4 mb-2">SMTP Settings:</p>
+    <ul class="space-y-1 text-neutral-600 dark:text-neutral-400">
+      <li>Server: <code>smtp.gmail.com</code></li>
+      <li>Port: <code>587</code></li>
+      <li>Security: STARTTLS</li>
+    </ul>
+  </div>
+
+  <div class="not-prose my-4 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+    <p class="text-sm text-amber-800 dark:text-amber-200">
+      <strong>Gmail requirement:</strong> You must create an "App Password" instead of using your regular password. Go to Google Account → Security → 2-Step Verification → App Passwords.
+    </p>
+  </div>
+
+  <h3>Microsoft 365 / Outlook</h3>
+
+  <div class="not-prose my-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm">
+    <p class="font-medium mb-2">IMAP Settings:</p>
+    <ul class="space-y-1 text-neutral-600 dark:text-neutral-400">
+      <li>Server: <code>outlook.office365.com</code></li>
+      <li>Port: <code>993</code></li>
+      <li>Security: SSL/TLS</li>
+    </ul>
+    <p class="font-medium mt-4 mb-2">SMTP Settings:</p>
+    <ul class="space-y-1 text-neutral-600 dark:text-neutral-400">
+      <li>Server: <code>smtp.office365.com</code></li>
+      <li>Port: <code>587</code></li>
+      <li>Security: STARTTLS</li>
+    </ul>
+  </div>
+
+  <h3>Custom / Self-hosted</h3>
+
+  <p>Contact your email administrator for IMAP and SMTP settings.</p>
+
+  <h2 id="setup">Setup Steps</h2>
+
+  <ol>
+    <li>In Jack's dashboard, go to <strong>Settings → Apps</strong></li>
+    <li>Find <strong>Email</strong> and click <strong>Configure</strong></li>
+    <li>Enter your IMAP settings:
+      <ul>
+        <li>Server hostname</li>
+        <li>Port (usually 993)</li>
+        <li>Username (your email address)</li>
+        <li>Password (or app password)</li>
+      </ul>
+    </li>
+    <li>Enter your SMTP settings:
+      <ul>
+        <li>Server hostname</li>
+        <li>Port (usually 587)</li>
+        <li>Username and password</li>
+      </ul>
+    </li>
+    <li>Click <strong>Test Connection</strong></li>
+    <li>If successful, click <strong>Save</strong> and <strong>Enable</strong></li>
+  </ol>
+
+  <h2 id="how-it-works">How It Works</h2>
+
+  <h3>Incoming emails</h3>
+  <ol>
+    <li>Jack polls your inbox every 60 seconds</li>
+    <li>New emails are imported as conversations</li>
+    <li>AI processes and optionally responds</li>
+    <li>Emails are marked as read (not deleted)</li>
+  </ol>
+
+  <h3>Outgoing emails</h3>
+  <ol>
+    <li>Staff or AI drafts a response</li>
+    <li>Email is sent via SMTP</li>
+    <li>Copy saved to your Sent folder</li>
+  </ol>
+
+  <h2 id="filtering">Email Filtering</h2>
+
+  <p>Configure which emails Jack processes:</p>
+
+  <ul>
+    <li><strong>Include folder</strong> — Monitor specific folders (default: INBOX)</li>
+    <li><strong>Exclude senders</strong> — Ignore emails from certain addresses (e.g., newsletters)</li>
+    <li><strong>Subject filters</strong> — Only process emails matching keywords</li>
+  </ul>
+
+  <div class="not-prose my-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <p class="text-sm text-blue-800 dark:text-blue-200">
+      <strong>Tip:</strong> Create a dedicated inbox folder (e.g., "Guest Inquiries") and set up email rules to route guest emails there. Then configure Jack to only monitor that folder.
+    </p>
+  </div>
+
+  <h2 id="threading">Email Threading</h2>
+
+  <p>
+    Jack groups related emails into conversation threads using:
+  </p>
+
+  <ul>
+    <li>Message-ID and In-Reply-To headers</li>
+    <li>Subject line matching</li>
+    <li>Sender email address</li>
+  </ul>
+
+  <p>
+    This means replies stay grouped with the original inquiry.
+  </p>
+
+  <h2 id="signature">Email Signature</h2>
+
+  <p>Configure an email signature in <strong>Settings → Email → Signature</strong>:</p>
+
+  <pre class="text-neutral-900 dark:text-neutral-100"><code>Best regards,
+Jack | Guest Services
+The Grand Hotel
++1 555-123-4567</code></pre>
+
+  <p>The signature is automatically appended to outgoing emails.</p>
+
+  <h2 id="costs">Costs</h2>
+
+  <p>
+    Email integration uses your existing email account—no additional costs. If you need higher volume, consider a dedicated transactional email service like SendGrid or Postmark.
+  </p>
+
+  <h2 id="security">Security Considerations</h2>
+
+  <ul>
+    <li>Use app passwords instead of main account passwords</li>
+    <li>Enable 2FA on your email account</li>
+    <li>Consider a dedicated email address for Jack</li>
+    <li>Credentials are encrypted in Jack's database</li>
+  </ul>
+
+  <h2 id="troubleshooting">Troubleshooting</h2>
+
+  <h3>Connection fails</h3>
+  <ul>
+    <li>Verify server hostname and port</li>
+    <li>Check username is the full email address</li>
+    <li>Use app password for Gmail/Outlook</li>
+    <li>Ensure IMAP is enabled in email settings</li>
+  </ul>
+
+  <h3>Emails not appearing</h3>
+  <ul>
+    <li>Check the monitored folder setting</li>
+    <li>Verify emails aren't filtered by exclusion rules</li>
+    <li>Wait up to 60 seconds for polling cycle</li>
+  </ul>
+
+  <h3>Sending fails</h3>
+  <ul>
+    <li>Verify SMTP settings separately from IMAP</li>
+    <li>Check for sending limits on your email provider</li>
+    <li>Ensure "From" address matches authenticated account</li>
+  </ul>
+</DocsLayout>

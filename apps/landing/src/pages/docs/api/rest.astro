@@ -1,0 +1,261 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="REST API"
+  description="Jack's REST API endpoints for integrations and automation."
+  section="API Reference"
+>
+  <p>
+    Jack provides a REST API for managing conversations, guests, tasks, and more. All endpoints use JSON.
+  </p>
+
+  <h2 id="base-url">Base URL</h2>
+
+  <pre><code>https://your-jack-domain.com/api/v1</code></pre>
+
+  <h2 id="response-format">Response Format</h2>
+
+  <p>All responses follow this structure:</p>
+
+  <pre><code>&#123;
+  "success": true,
+  "data": &#123; ... &#125;,
+  "meta": &#123;
+    "page": 1,
+    "limit": 20,
+    "total": 150
+  &#125;
+&#125;</code></pre>
+
+  <p>Error responses:</p>
+
+  <pre><code>&#123;
+  "success": false,
+  "error": &#123;
+    "code": "NOT_FOUND",
+    "message": "Conversation not found"
+  &#125;
+&#125;</code></pre>
+
+  <h2 id="conversations">Conversations</h2>
+
+  <h3>List conversations</h3>
+  <pre><code>GET /conversations
+GET /conversations?status=open&amp;channel=whatsapp&amp;limit=20</code></pre>
+
+  <p>Query parameters:</p>
+  <ul>
+    <li><code>status</code> — open, closed, pending</li>
+    <li><code>channel</code> — whatsapp, sms, email, web</li>
+    <li><code>assignee</code> — Staff ID or "unassigned"</li>
+    <li><code>limit</code> — Results per page (default: 20)</li>
+    <li><code>page</code> — Page number</li>
+  </ul>
+
+  <h3>Get conversation</h3>
+  <pre><code>GET /conversations/:id</code></pre>
+
+  <h3>Get messages</h3>
+  <pre><code>GET /conversations/:id/messages</code></pre>
+
+  <h3>Send message</h3>
+  <pre><code>POST /conversations/:id/messages
+&#123;
+  "content": "Hello! How can I help you today?",
+  "type": "text"
+&#125;</code></pre>
+
+  <h3>Update conversation</h3>
+  <pre><code>PATCH /conversations/:id
+&#123;
+  "status": "closed",
+  "assignee": "staff-123"
+&#125;</code></pre>
+
+  <h2 id="guests">Guests</h2>
+
+  <h3>List guests</h3>
+  <pre><code>GET /guests
+GET /guests?search=john&amp;tag=vip</code></pre>
+
+  <h3>Get guest</h3>
+  <pre><code>GET /guests/:id</code></pre>
+
+  <h3>Create guest</h3>
+  <pre><code>POST /guests
+&#123;
+  "name": "John Smith",
+  "email": "john@example.com",
+  "phone": "+15551234567"
+&#125;</code></pre>
+
+  <h3>Update guest</h3>
+  <pre><code>PATCH /guests/:id
+&#123;
+  "tags": ["vip", "returning"],
+  "notes": "Prefers quiet room"
+&#125;</code></pre>
+
+  <h2 id="tasks">Tasks</h2>
+
+  <h3>List tasks</h3>
+  <pre><code>GET /tasks
+GET /tasks?status=open&amp;priority=urgent&amp;department=housekeeping</code></pre>
+
+  <h3>Get task</h3>
+  <pre><code>GET /tasks/:id</code></pre>
+
+  <h3>Create task</h3>
+  <pre><code>POST /tasks
+&#123;
+  "title": "Extra towels for room 302",
+  "description": "Guest requested 2 extra bath towels",
+  "department": "housekeeping",
+  "priority": "normal",
+  "guestId": "guest-123"
+&#125;</code></pre>
+
+  <h3>Update task</h3>
+  <pre><code>PATCH /tasks/:id
+&#123;
+  "status": "completed",
+  "notes": "Delivered at 3:45 PM"
+&#125;</code></pre>
+
+  <h2 id="knowledge">Knowledge Base</h2>
+
+  <h3>List entries</h3>
+  <pre><code>GET /knowledge
+GET /knowledge?category=policy</code></pre>
+
+  <h3>Get entry</h3>
+  <pre><code>GET /knowledge/:id</code></pre>
+
+  <h3>Create entry</h3>
+  <pre><code>POST /knowledge
+&#123;
+  "title": "Pool Hours",
+  "content": "The pool is open daily from 6 AM to 10 PM...",
+  "category": "amenity"
+&#125;</code></pre>
+
+  <h3>Update entry</h3>
+  <pre><code>PUT /knowledge/:id
+&#123;
+  "title": "Pool Hours (Updated)",
+  "content": "The pool is open daily from 7 AM to 9 PM..."
+&#125;</code></pre>
+
+  <h3>Delete entry</h3>
+  <pre><code>DELETE /knowledge/:id</code></pre>
+
+  <h2 id="staff">Staff</h2>
+
+  <h3>List staff</h3>
+  <pre><code>GET /staff</code></pre>
+
+  <h3>Get staff member</h3>
+  <pre><code>GET /staff/:id</code></pre>
+
+  <h3>Create staff (Admin only)</h3>
+  <pre><code>POST /staff
+&#123;
+  "name": "Jane Doe",
+  "email": "jane@hotel.com",
+  "role": "staff",
+  "department": "front-desk"
+&#125;</code></pre>
+
+  <h2 id="settings">Settings</h2>
+
+  <h3>Get settings</h3>
+  <pre><code>GET /settings/:key</code></pre>
+
+  <h3>Update settings (Admin only)</h3>
+  <pre><code>PUT /settings/:key
+&#123;
+  "value": &#123; ... &#125;
+&#125;</code></pre>
+
+  <h2 id="pagination">Pagination</h2>
+
+  <p>List endpoints support pagination:</p>
+
+  <pre><code>GET /conversations?page=2&amp;limit=50</code></pre>
+
+  <p>Response includes metadata:</p>
+
+  <pre><code>&#123;
+  "success": true,
+  "data": [...],
+  "meta": &#123;
+    "page": 2,
+    "limit": 50,
+    "total": 150,
+    "pages": 3
+  &#125;
+&#125;</code></pre>
+
+  <h2 id="rate-limits">Rate Limits</h2>
+
+  <p>API requests are rate-limited:</p>
+
+  <ul>
+    <li><strong>Standard:</strong> 100 requests per minute</li>
+    <li><strong>Bulk operations:</strong> 10 requests per minute</li>
+  </ul>
+
+  <p>Rate limit headers are included in responses:</p>
+
+  <pre><code>X-RateLimit-Limit: 100
+X-RateLimit-Remaining: 95
+X-RateLimit-Reset: 1704067200</code></pre>
+
+  <h2 id="errors">Error Codes</h2>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Status</th>
+          <th class="text-left py-2 pr-4 font-semibold">Code</th>
+          <th class="text-left py-2 font-semibold">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4">400</td>
+          <td class="py-2 pr-4"><code>VALIDATION_ERROR</code></td>
+          <td class="py-2">Invalid request data</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4">401</td>
+          <td class="py-2 pr-4"><code>UNAUTHORIZED</code></td>
+          <td class="py-2">Missing or invalid auth</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4">403</td>
+          <td class="py-2 pr-4"><code>FORBIDDEN</code></td>
+          <td class="py-2">Insufficient permissions</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4">404</td>
+          <td class="py-2 pr-4"><code>NOT_FOUND</code></td>
+          <td class="py-2">Resource doesn't exist</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4">429</td>
+          <td class="py-2 pr-4"><code>RATE_LIMITED</code></td>
+          <td class="py-2">Too many requests</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4">500</td>
+          <td class="py-2 pr-4"><code>INTERNAL_ERROR</code></td>
+          <td class="py-2">Server error</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</DocsLayout>

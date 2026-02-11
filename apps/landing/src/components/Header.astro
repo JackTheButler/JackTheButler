@@ -42,7 +42,7 @@ const linkClass = (href: string) => isActive(href)
         <a href="/blog/" class={linkClass('/blog/')}>
           Blog
         </a>
-        <a href="https://github.com/JackTheButler/JackTheButler/tree/main/docs" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
+        <a href="/docs/" class={linkClass('/docs/')}>
           Docs
         </a>
         <a href="https://github.com/JackTheButler/JackTheButler" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
@@ -92,7 +92,7 @@ const linkClass = (href: string) => isActive(href)
         <BookOpen class="w-4 h-4" />
         Blog
       </a>
-      <a href="https://github.com/JackTheButler/JackTheButler/tree/main/docs" class="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
+      <a href="/docs/" class={`flex items-center gap-2 ${isActive('/docs/') ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'} transition-colors`}>
         <FileText class="w-4 h-4" />
         Docs
       </a>

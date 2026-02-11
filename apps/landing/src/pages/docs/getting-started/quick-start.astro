@@ -1,0 +1,132 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Quick Start"
+  description="Deploy Jack The Butler in 5 minutes with one-click cloud deployment."
+  section="Getting Started"
+>
+  <p>
+    Get Jack The Butler running in minutes. Choose the deployment method that works best for you.
+  </p>
+
+  <h2 id="one-click-deploy">One-Click Cloud Deploy</h2>
+
+  <p>The fastest way to get started. No server setup required.</p>
+
+  <div class="not-prose grid grid-cols-1 sm:grid-cols-3 gap-4 my-6">
+    <a
+      href="https://railway.com/deploy/W82qDp?referralCode=Aizkfk"
+      class="flex items-center justify-center gap-3 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
+    >
+      <svg class="w-6 h-6" viewBox="0 0 1024 1024" fill="currentColor">
+        <path d="M4.756 438.175A520.713 520.713 0 0 0 0 489.735h777.799c-2.716-5.306-6.365-10.09-10.045-14.772-132.97-171.791-204.498-156.896-306.819-161.26-34.114-1.403-57.249-1.967-193.037-1.967-72.677 0-151.688.185-228.628.39-9.96 26.884-19.566 52.942-24.243 74.14h398.571v51.909H4.756ZM783.93 541.696H.399c.82 13.851 2.112 27.517 3.978 40.999h723.39c32.248 0 50.299-18.297 56.162-40.999ZM45.017 724.306S164.941 1018.77 511.46 1024c207.112 0 385.071-123.006 465.907-299.694H45.017Z"/>
+        <path d="M511.454 0C319.953 0 153.311 105.16 65.31 260.612c68.771-.144 202.704-.226 202.704-.226h.031v-.051c158.309 0 164.193.707 195.118 1.998l19.149.706c66.7 2.224 148.683 9.384 213.19 58.19 35.015 26.471 85.571 84.896 115.708 126.52 27.861 38.499 35.876 82.756 16.933 125.158-17.436 38.97-54.952 62.215-100.383 62.215H16.69s4.233 17.944 10.58 37.751h970.632A510.385 510.385 0 0 0 1024 512.218C1024.01 229.355 794.532 0 511.454 0Z"/>
+      </svg>
+      <span class="font-medium">Railway</span>
+    </a>
+    <a
+      href="https://render.com/deploy?repo=https://github.com/JackTheButler/JackTheButler"
+      class="flex items-center justify-center gap-3 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
+    >
+      <svg class="w-6 h-6" viewBox="0 0 21 21" fill="currentColor">
+        <path d="M15.6491 0.00582604C12.9679 -0.120371 10.7133 1.81847 10.3286 4.373C10.3134 4.49154 10.2905 4.60627 10.2715 4.72099C9.67356 7.90268 6.88955 10.3119 3.5457 10.3119C2.35364 10.3119 1.23395 10.006 0.258977 9.47058C0.140914 9.40557 0 9.4897 0 9.62354V10.3081V20.6218H10.2677V12.8894C10.2677 11.4668 11.4178 10.3119 12.8346 10.3119H15.4015C18.3074 10.3119 20.6458 7.89121 20.5315 4.94662C20.4287 2.29649 18.2884 0.132023 15.6491 0.00582604Z"/>
+      </svg>
+      <span class="font-medium">Render</span>
+    </a>
+    <a
+      href="https://zeabur.com/templates?repo=JackTheButler/JackTheButler"
+      class="flex items-center justify-center gap-3 p-4 rounded-lg border border-neutral-200 dark:border-neutral-800 hover:border-blue-500 dark:hover:border-blue-500 transition-colors"
+    >
+      <svg class="w-6 h-6" viewBox="0 0 80 70" fill="currentColor">
+        <path d="M68.9474 61.6842H48.0899L79.5 8.31579H60.3056L28.5 61.6842V70H68.9474V61.6842Z"/>
+        <path d="M11.0526 8.31579H31.9101L0.5 61.6842H19.6944L51.5 8.31579V0H11.0526V8.31579Z"/>
+      </svg>
+      <span class="font-medium">Zeabur</span>
+    </a>
+  </div>
+
+  <ol>
+    <li>Click one of the deploy buttons above</li>
+    <li>Sign up with email or Google (no GitHub required)</li>
+    <li>Click <strong>Deploy</strong></li>
+    <li>Wait for the build to complete (~3-5 minutes)</li>
+    <li>Click the provided URL to access your dashboard</li>
+  </ol>
+
+  <div class="not-prose my-6 p-4 bg-amber-50 dark:bg-amber-950/50 border border-amber-200 dark:border-amber-800 rounded-lg">
+    <p class="text-sm text-amber-800 dark:text-amber-200">
+      <strong>Important:</strong> Add a persistent volume mounted at <code class="bg-amber-100 dark:bg-amber-900 px-1 py-0.5 rounded">/app/data</code> to keep your database across deployments.
+    </p>
+    <ul class="mt-2 text-sm text-amber-700 dark:text-amber-300 list-disc list-inside space-y-1">
+      <li><strong>Railway:</strong> Service → Settings → Volumes → Mount path: <code>/app/data</code></li>
+      <li><strong>Render:</strong> Disks → Add Disk → Mount path: <code>/app/data</code></li>
+      <li><strong>Zeabur:</strong> Service → Storage → Path: <code>/app/data</code></li>
+    </ul>
+  </div>
+
+  <h2 id="setup-wizard">Complete the Setup Wizard</h2>
+
+  <p>
+    When you first open Jack, the Setup Wizard guides you through configuration:
+  </p>
+
+  <ol>
+    <li>
+      <strong>Property Info</strong> — Enter your property name and type (hotel, B&B, vacation rental)
+    </li>
+    <li>
+      <strong>AI Provider</strong> — Choose Local AI (free) or configure Claude/OpenAI
+    </li>
+    <li>
+      <strong>Knowledge Base</strong> — Import information from your website or add manually
+    </li>
+    <li>
+      <strong>Admin Account</strong> — Create your login credentials
+    </li>
+  </ol>
+
+  <p>
+    After setup, you'll be redirected to the login page. Use the credentials you just created.
+  </p>
+
+  <h2 id="default-credentials">Skip Setup (Development Only)</h2>
+
+  <p>
+    If you skip the setup wizard, you can log in with the default credentials:
+  </p>
+
+  <ul>
+    <li><strong>Email:</strong> <code>admin@butler.com</code></li>
+    <li><strong>Password:</strong> <code>pa$$word2026</code></li>
+  </ul>
+
+  <div class="not-prose my-6 p-4 bg-red-50 dark:bg-red-950/50 border border-red-200 dark:border-red-800 rounded-lg">
+    <p class="text-sm text-red-800 dark:text-red-200">
+      <strong>Warning:</strong> Change these credentials immediately in production. The setup wizard automatically disables the default admin account.
+    </p>
+  </div>
+
+  <h2 id="next-steps">Next Steps</h2>
+
+  <p>Once you're logged in, here's what to do next:</p>
+
+  <ol>
+    <li>
+      <a href="/docs/features/knowledge-base/">Add knowledge</a> — Train Jack on your property's information
+    </li>
+    <li>
+      <a href="/docs/configuration/whatsapp/">Connect WhatsApp</a> — Set up guest messaging
+    </li>
+    <li>
+      <a href="/docs/configuration/ai-providers/">Configure AI</a> — Optimize your AI provider settings
+    </li>
+  </ol>
+
+  <h2 id="try-the-demo">Try the Demo</h2>
+
+  <p>
+    Want to explore before deploying? Check out our <a href="https://demo.jackthebutler.com">live demo</a> to see Jack in action.
+  </p>
+</DocsLayout>

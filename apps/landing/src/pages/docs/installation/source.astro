@@ -1,0 +1,193 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Install from Source"
+  description="Build and run Jack The Butler from source code for development or customization."
+  section="Installation"
+>
+  <p>
+    Installing from source gives you full control over the codebase. This approach is ideal for developers who want to customize Jack or contribute to the project.
+  </p>
+
+  <h2 id="prerequisites">Prerequisites</h2>
+
+  <ul>
+    <li><strong>Node.js 22+</strong> — Required for modern JavaScript features</li>
+    <li><strong>pnpm 9+</strong> — Package manager (faster than npm)</li>
+    <li><strong>Git</strong> — For cloning the repository</li>
+  </ul>
+
+  <p>Install pnpm if you haven't:</p>
+
+  <pre><code>npm install -g pnpm</code></pre>
+
+  <h2 id="clone">Clone the Repository</h2>
+
+  <pre><code>git clone https://github.com/JackTheButler/JackTheButler.git
+cd JackTheButler</code></pre>
+
+  <h2 id="install">Install Dependencies</h2>
+
+  <pre><code>pnpm install</code></pre>
+
+  <p>This installs dependencies for all workspaces (backend, dashboard, and landing page).</p>
+
+  <h2 id="configure">Configure Environment</h2>
+
+  <p>Copy the example environment file:</p>
+
+  <pre><code>cp .env.example .env</code></pre>
+
+  <p>Edit <code>.env</code> with your settings:</p>
+
+  <pre><code># Core settings
+NODE_ENV=development
+PORT=3000
+DATABASE_PATH=./data/jack.db
+
+# Security (generate with: openssl rand -base64 32)
+JWT_SECRET=your-jwt-secret-minimum-32-characters-long
+ENCRYPTION_KEY=your-encryption-key-minimum-32-chars</code></pre>
+
+  <h2 id="database">Initialize Database</h2>
+
+  <p>Run migrations to create the database schema:</p>
+
+  <pre><code>pnpm db:migrate</code></pre>
+
+  <p>Optionally, seed with sample data for development:</p>
+
+  <pre><code>pnpm db:seed</code></pre>
+
+  <h2 id="development">Development Mode</h2>
+
+  <p>Start the development server with hot reload:</p>
+
+  <pre><code>pnpm dev</code></pre>
+
+  <p>This starts:</p>
+  <ul>
+    <li>Backend API at <code>http://localhost:3000</code></li>
+    <li>Dashboard at <code>http://localhost:5173</code></li>
+  </ul>
+
+  <p>You can also run components separately:</p>
+
+  <pre><code># Backend only
+pnpm dev:gateway
+
+# Dashboard only
+pnpm dev:dashboard</code></pre>
+
+  <h2 id="production">Production Build</h2>
+
+  <p>Build for production:</p>
+
+  <pre><code>pnpm build</code></pre>
+
+  <p>Start the production server:</p>
+
+  <pre><code>pnpm start</code></pre>
+
+  <h2 id="project-structure">Project Structure</h2>
+
+  <pre><code>JackTheButler/
+├── src/
+│   ├── core/           # Business logic (message processing, routing)
+│   ├── apps/           # Adapters (AI providers, channels, PMS)
+│   ├── gateway/        # HTTP/WebSocket server (Hono)
+│   ├── services/       # State management services
+│   ├── db/             # Database schema and migrations
+│   └── types/          # TypeScript definitions
+├── apps/
+│   ├── dashboard/      # React staff dashboard
+│   └── widget/         # Guest web chat widget
+├── data/               # SQLite database (gitignored)
+├── tests/              # Test files
+└── docs/               # Technical documentation</code></pre>
+
+  <h2 id="useful-commands">Useful Commands</h2>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Command</th>
+          <th class="text-left py-2 font-semibold">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>pnpm dev</code></td>
+          <td class="py-2">Start development server</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>pnpm build</code></td>
+          <td class="py-2">Build for production</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>pnpm test</code></td>
+          <td class="py-2">Run tests</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>pnpm lint</code></td>
+          <td class="py-2">Run linter</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>pnpm typecheck</code></td>
+          <td class="py-2">TypeScript type checking</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>pnpm db:studio</code></td>
+          <td class="py-2">Open Drizzle Studio (database GUI)</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>pnpm db:generate</code></td>
+          <td class="py-2">Generate migrations from schema</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4"><code>pnpm db:migrate</code></td>
+          <td class="py-2">Run database migrations</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="customization">Customization</h2>
+
+  <h3>Adding a new AI provider</h3>
+  <p>
+    Create a new adapter in <code>src/apps/ai/providers/</code> following the pattern in <code>anthropic.ts</code>.
+  </p>
+
+  <h3>Adding a new channel</h3>
+  <p>
+    Create a new channel adapter in <code>src/apps/channels/</code> following the pattern in <code>sms/twilio.ts</code>.
+  </p>
+
+  <h3>Modifying the dashboard</h3>
+  <p>
+    The React dashboard is in <code>apps/dashboard/</code>. It uses Vite, React Router, and Tailwind CSS.
+  </p>
+
+  <h2 id="contributing">Contributing</h2>
+
+  <p>We welcome contributions! See the <a href="https://github.com/JackTheButler/JackTheButler/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing Guide</a> for:</p>
+
+  <ul>
+    <li>Code style guidelines</li>
+    <li>Pull request process</li>
+    <li>Testing requirements</li>
+    <li>Issue reporting</li>
+  </ul>
+
+  <h2 id="next-steps">Next Steps</h2>
+
+  <ol>
+    <li>Complete the <a href="/docs/getting-started/setup-wizard/">Setup Wizard</a></li>
+    <li>Review the <a href="https://github.com/JackTheButler/JackTheButler/tree/main/docs" target="_blank" rel="noopener">technical documentation</a> on GitHub</li>
+    <li>Join the community on <a href="https://github.com/JackTheButler/JackTheButler/discussions" target="_blank" rel="noopener">GitHub Discussions</a></li>
+  </ol>
+</DocsLayout>

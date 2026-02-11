@@ -1,0 +1,158 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Knowledge Base"
+  description="Train Jack on your property's information for accurate guest responses."
+  section="Features"
+>
+  <p>
+    The knowledge base is Jack's memory of your property. It stores information about rooms, policies, amenities, and local recommendations that Jack uses to answer guest questions accurately.
+  </p>
+
+  <h2 id="how-it-works">How It Works</h2>
+
+  <ol>
+    <li><strong>You add information</strong> — Text about your property, policies, FAQs</li>
+    <li><strong>Jack creates embeddings</strong> — Converts text to searchable vectors</li>
+    <li><strong>Guest asks a question</strong> — "What time is breakfast?"</li>
+    <li><strong>Jack retrieves relevant info</strong> — Finds breakfast-related entries</li>
+    <li><strong>AI generates response</strong> — Uses retrieved info to answer accurately</li>
+  </ol>
+
+  <h2 id="entry-types">Entry Types</h2>
+
+  <p>Organize your knowledge with these categories:</p>
+
+  <div class="not-prose my-6 grid grid-cols-1 sm:grid-cols-2 gap-3">
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Room Types</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Room descriptions, amenities, bed configurations, capacity</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Policies</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Check-in/out, cancellation, pets, smoking, noise</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Amenities</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Pool, gym, spa, parking, WiFi, breakfast</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Services</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Room service, laundry, concierge, transportation</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Local Info</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Restaurants, attractions, directions, transport</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">FAQ</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Common questions with your specific answers</p>
+    </div>
+  </div>
+
+  <h2 id="adding-content">Adding Content</h2>
+
+  <h3>Manual entry</h3>
+  <p>Go to <strong>Knowledge Base</strong> in the dashboard and click <strong>Add Entry</strong>:</p>
+
+  <ol>
+    <li>Select a category</li>
+    <li>Enter a title (e.g., "Parking Information")</li>
+    <li>Write the content in natural language</li>
+    <li>Save the entry</li>
+  </ol>
+
+  <div class="not-prose my-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <p class="text-sm text-blue-800 dark:text-blue-200">
+      <strong>Tip:</strong> Write as if explaining to a guest. Include specific details like hours, prices, and locations.
+    </p>
+  </div>
+
+  <h3>Website import</h3>
+  <p>
+    Import content from your website during <a href="/docs/getting-started/setup-wizard/">setup</a> or from <strong>Knowledge Base → Import from URL</strong>. Jack extracts relevant information automatically.
+  </p>
+
+  <h3>Bulk import</h3>
+  <p>
+    For large knowledge bases, you can import via the API. See <a href="/docs/api/rest/">REST API documentation</a>.
+  </p>
+
+  <h2 id="best-practices">Best Practices</h2>
+
+  <h3>Be specific</h3>
+  <div class="not-prose my-4">
+    <div class="p-3 rounded-lg bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 mb-2">
+      <p class="text-sm text-red-800 dark:text-red-200">❌ "We have parking available."</p>
+    </div>
+    <div class="p-3 rounded-lg bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800">
+      <p class="text-sm text-green-800 dark:text-green-200">✓ "Free parking is available in our lot behind the hotel. Enter from Oak Street. We have 30 spaces available first-come, first-served. Valet parking is also available for $25/night."</p>
+    </div>
+  </div>
+
+  <h3>Include common variations</h3>
+  <p>
+    Guests ask things differently. Include variations in your content:
+  </p>
+  <ul>
+    <li>"WiFi password" / "Internet access" / "wireless network"</li>
+    <li>"Check-in time" / "When can I arrive" / "Early arrival"</li>
+  </ul>
+
+  <h3>Update regularly</h3>
+  <p>
+    Keep information current—especially hours, prices, and seasonal services. Outdated info leads to guest complaints.
+  </p>
+
+  <h3>Test with real questions</h3>
+  <p>
+    After adding content, test by asking Jack the questions guests typically ask. Refine entries based on response quality.
+  </p>
+
+  <h2 id="managing-entries">Managing Entries</h2>
+
+  <p>From the Knowledge Base page, you can:</p>
+
+  <ul>
+    <li><strong>Edit</strong> — Update content while preserving history</li>
+    <li><strong>Delete</strong> — Remove outdated or incorrect information</li>
+    <li><strong>Search</strong> — Find specific entries by keyword</li>
+    <li><strong>Filter</strong> — View entries by category</li>
+  </ul>
+
+  <h2 id="embeddings">Understanding Embeddings</h2>
+
+  <p>
+    Jack uses vector embeddings to find relevant information. When you save an entry:
+  </p>
+
+  <ol>
+    <li>Text is converted to a numerical vector (embedding)</li>
+    <li>The embedding captures semantic meaning</li>
+    <li>Similar content has similar embeddings</li>
+    <li>Guest questions are also converted to embeddings</li>
+    <li>Jack finds entries with the most similar embeddings</li>
+  </ol>
+
+  <p>
+    This means Jack understands meaning, not just keywords. "What time do you serve breakfast?" matches entries about "morning dining hours" even without the word "breakfast."
+  </p>
+
+  <h2 id="limits">Storage Limits</h2>
+
+  <p>
+    Jack has no hard limit on knowledge base size, but keep in mind:
+  </p>
+
+  <ul>
+    <li>More entries = larger database = more storage needed</li>
+    <li>Very large knowledge bases may slow down retrieval slightly</li>
+    <li>Quality matters more than quantity—focused, accurate entries work better than exhaustive content</li>
+  </ul>
+
+  <p>
+    Most properties need 20-50 entries to cover common guest questions effectively.
+  </p>
+</DocsLayout>

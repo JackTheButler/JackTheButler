@@ -4,3 +4,6 @@ Allow: /
 
 # Sitemap location
 Sitemap: https://jackthebutler.com/sitemap.xml
+
+# AI/LLM agent information
+# See https://jackthebutler.com/llms.txt for AI-friendly documentation

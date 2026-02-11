@@ -1,0 +1,178 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Cloud Deployment"
+  description="Deploy Jack The Butler to Railway, Render, or Zeabur in minutes."
+  section="Installation"
+>
+  <p>
+    Cloud platforms offer the fastest way to get Jack running. One-click deployment handles server provisioning, SSL, and automatic restarts.
+  </p>
+
+  <h2 id="one-click-deploy">One-Click Deploy</h2>
+
+  <p>Click any button below to deploy Jack to your preferred platform:</p>
+
+  <div class="not-prose my-6 flex flex-wrap gap-4">
+    <a
+      href="https://railway.app/new/template?template=https://github.com/JackTheButler/JackTheButler"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg hover:opacity-90 transition-opacity"
+    >
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M.113 16.52L9.553.212a.377.377 0 0 1 .652 0l3.514 6.07a.375.375 0 0 1 0 .377L4.28 23.746a.378.378 0 0 1-.652 0L.112 16.895a.376.376 0 0 1 0-.376zm10.166-9.9l6.058 10.48a.376.376 0 0 1 0 .377l-3.514 6.07a.377.377 0 0 1-.652 0l-6.058-10.48a.375.375 0 0 1 0-.376l3.514-6.07a.377.377 0 0 1 .652 0zm6.72 0l6.886 11.903a.376.376 0 0 1-.326.564H13.16a.376.376 0 0 1-.326-.564l6.886-11.903a.378.378 0 0 1 .652 0z"/>
+      </svg>
+      Deploy on Railway
+    </a>
+
+    <a
+      href="https://render.com/deploy?repo=https://github.com/JackTheButler/JackTheButler"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg hover:opacity-90 transition-opacity"
+    >
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12.025 0a6.088 6.088 0 00-6.08 6.08c0 2.574 1.59 4.769 3.843 5.667v10.09a.997.997 0 001.659.753l5.545-4.871a1 1 0 10-1.319-1.502l-3.885 3.414V11.12a.999.999 0 00-.685-.949 4.083 4.083 0 01-2.158-5.56 4.088 4.088 0 017.887 1.47 4.04 4.04 0 01-.903 2.55 1 1 0 101.55 1.262 6.039 6.039 0 001.353-3.813A6.088 6.088 0 0012.025 0z"/>
+      </svg>
+      Deploy on Render
+    </a>
+
+    <a
+      href="https://zeabur.com/templates/JACK-BUTLER"
+      target="_blank"
+      rel="noopener noreferrer"
+      class="inline-flex items-center gap-2 px-4 py-2 bg-neutral-900 dark:bg-white text-white dark:text-neutral-900 rounded-lg hover:opacity-90 transition-opacity"
+    >
+      <svg class="w-5 h-5" viewBox="0 0 24 24" fill="currentColor">
+        <path d="M12 2L2 19.5h20L12 2zm0 4l6.5 11.5h-13L12 6z"/>
+      </svg>
+      Deploy on Zeabur
+    </a>
+  </div>
+
+  <h2 id="volume-config">Volume Configuration</h2>
+
+  <div class="not-prose my-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+    <p class="text-sm text-amber-800 dark:text-amber-200">
+      <strong>Important:</strong> Configure a persistent volume to prevent data loss on redeployment. Without a volume, your database resets each time you deploy.
+    </p>
+  </div>
+
+  <p>
+    Jack stores its SQLite database in the <code>/app/data</code> directory. You need to mount a persistent volume to this path:
+  </p>
+
+  <h3 id="railway-volume">Railway</h3>
+  <ol>
+    <li>Go to your deployed service</li>
+    <li>Click <strong>Settings</strong> → <strong>Volumes</strong></li>
+    <li>Click <strong>Add Volume</strong></li>
+    <li>Set mount path to <code>/app/data</code></li>
+    <li>Click <strong>Create Volume</strong></li>
+    <li>Redeploy the service</li>
+  </ol>
+
+  <h3 id="render-volume">Render</h3>
+  <ol>
+    <li>Go to your service dashboard</li>
+    <li>Click <strong>Disks</strong> in the left sidebar</li>
+    <li>Click <strong>Add Disk</strong></li>
+    <li>Set mount path to <code>/app/data</code></li>
+    <li>Choose size (1GB is sufficient for most properties)</li>
+    <li>Click <strong>Save</strong></li>
+  </ol>
+
+  <h3 id="zeabur-volume">Zeabur</h3>
+  <ol>
+    <li>Open your service settings</li>
+    <li>Go to <strong>Volumes</strong> section</li>
+    <li>Add a volume mounted at <code>/app/data</code></li>
+    <li>Save and redeploy</li>
+  </ol>
+
+  <h2 id="environment-variables">Environment Variables</h2>
+
+  <p>
+    Jack requires two environment variables for security. These should be set automatically during deployment, but verify they exist:
+  </p>
+
+  <table class="not-prose my-6 w-full text-sm">
+    <thead>
+      <tr class="border-b border-neutral-200 dark:border-neutral-800">
+        <th class="text-left py-2 pr-4 font-semibold">Variable</th>
+        <th class="text-left py-2 font-semibold">Description</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr class="border-b border-neutral-200 dark:border-neutral-800">
+        <td class="py-2 pr-4"><code>JWT_SECRET</code></td>
+        <td class="py-2">Secret for signing auth tokens (min 32 chars)</td>
+      </tr>
+      <tr class="border-b border-neutral-200 dark:border-neutral-800">
+        <td class="py-2 pr-4"><code>ENCRYPTION_KEY</code></td>
+        <td class="py-2">Key for encrypting sensitive data (min 32 chars)</td>
+      </tr>
+      <tr class="border-b border-neutral-200 dark:border-neutral-800">
+        <td class="py-2 pr-4"><code>DATABASE_PATH</code></td>
+        <td class="py-2">Path to SQLite database (default: <code>./data/jack.db</code>)</td>
+      </tr>
+      <tr>
+        <td class="py-2 pr-4"><code>PORT</code></td>
+        <td class="py-2">Server port (default: 3000)</td>
+      </tr>
+    </tbody>
+  </table>
+
+  <p>
+    Generate secure secrets with:
+  </p>
+
+  <pre><code>openssl rand -base64 32</code></pre>
+
+  <h2 id="custom-domain">Custom Domain</h2>
+
+  <p>
+    Each platform supports custom domains. After deployment:
+  </p>
+
+  <ol>
+    <li>Add your domain in the platform's settings</li>
+    <li>Configure DNS (usually a CNAME record to the platform URL)</li>
+    <li>SSL certificate is provisioned automatically</li>
+  </ol>
+
+  <h2 id="costs">Expected Costs</h2>
+
+  <div class="not-prose my-6 space-y-3">
+    <div class="flex justify-between p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+      <span class="font-medium">Railway</span>
+      <span class="text-neutral-600 dark:text-neutral-400">~$5/month (usage-based)</span>
+    </div>
+    <div class="flex justify-between p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+      <span class="font-medium">Render</span>
+      <span class="text-neutral-600 dark:text-neutral-400">Free tier available, $7/month for always-on</span>
+    </div>
+    <div class="flex justify-between p-3 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+      <span class="font-medium">Zeabur</span>
+      <span class="text-neutral-600 dark:text-neutral-400">~$5/month (usage-based)</span>
+    </div>
+  </div>
+
+  <p>
+    All platforms offer free tiers suitable for testing. Production deployments with persistent storage typically cost $5-10/month.
+  </p>
+
+  <h2 id="next-steps">Next Steps</h2>
+
+  <p>After deployment:</p>
+
+  <ol>
+    <li>Access your deployment URL</li>
+    <li>Complete the <a href="/docs/getting-started/setup-wizard/">Setup Wizard</a></li>
+    <li>Configure your <a href="/docs/configuration/ai-providers/">AI provider</a></li>
+    <li>Connect <a href="/docs/features/channels/">communication channels</a></li>
+  </ol>
+</DocsLayout>

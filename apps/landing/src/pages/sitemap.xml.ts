@@ -12,6 +12,36 @@ export const GET: APIRoute = () => {
     { url: '/airbnb-chatbot/', changefreq: 'monthly', priority: '0.9' },
     { url: '/hostel-chatbot/', changefreq: 'monthly', priority: '0.9' },
     { url: '/blog/', changefreq: 'weekly', priority: '0.8' },
+    { url: '/docs/', changefreq: 'weekly', priority: '0.8' },
+  ]
+
+  const docsPages = [
+    // Getting Started
+    { url: '/docs/getting-started/introduction/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/getting-started/quick-start/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/getting-started/setup-wizard/', changefreq: 'monthly', priority: '0.7' },
+    // Installation
+    { url: '/docs/installation/cloud/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/installation/docker/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/installation/source/', changefreq: 'monthly', priority: '0.7' },
+    // Features
+    { url: '/docs/features/ai-responses/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/features/knowledge-base/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/features/channels/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/features/tasks/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/features/automations/', changefreq: 'monthly', priority: '0.7' },
+    // Configuration
+    { url: '/docs/configuration/ai-providers/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/configuration/whatsapp/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/configuration/sms/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/configuration/email/', changefreq: 'monthly', priority: '0.7' },
+    // API Reference
+    { url: '/docs/api/authentication/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/api/rest/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/api/webhooks/', changefreq: 'monthly', priority: '0.7' },
+    // Help
+    { url: '/docs/help/faq/', changefreq: 'monthly', priority: '0.7' },
+    { url: '/docs/help/troubleshooting/', changefreq: 'monthly', priority: '0.7' },
   ]
 
   const blogPages = blogPosts.map(post => ({
@@ -27,7 +57,7 @@ export const GET: APIRoute = () => {
     priority: '0.6',
   }))
 
-  const allPages = [...staticPages, ...blogPages, ...authorPages]
+  const allPages = [...staticPages, ...docsPages, ...blogPages, ...authorPages]
 
   const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">

@@ -1,0 +1,157 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="FAQ"
+  description="Frequently asked questions about Jack The Butler."
+  section="Help"
+>
+  <h2 id="general">General</h2>
+
+  <h3>What is Jack The Butler?</h3>
+  <p>
+    Jack is a free, open-source AI chatbot for hotels and hospitality businesses. It handles guest communication across WhatsApp, SMS, email, and web chat while keeping your data private on your own server.
+  </p>
+
+  <h3>Is Jack really free?</h3>
+  <p>
+    Yes! Jack is 100% open source under the MIT license. You only pay for:
+  </p>
+  <ul>
+    <li>Hosting (~$5-10/month for a small property)</li>
+    <li>AI API usage (~$5-20/month, or $0 with local AI)</li>
+    <li>SMS if using Twilio (pay-per-message)</li>
+  </ul>
+
+  <h3>Do I need technical skills to use Jack?</h3>
+  <p>
+    For one-click cloud deployment, no technical skills are needed. For self-hosting with Docker or custom setups, basic server administration knowledge helps.
+  </p>
+
+  <h3>What languages does Jack support?</h3>
+  <p>
+    Jack can respond in any language supported by your AI provider. Claude and GPT support 90+ languages. The dashboard interface is available in English, Spanish, Arabic, Chinese, Hindi, and Russian.
+  </p>
+
+  <h2 id="ai">AI & Responses</h2>
+
+  <h3>Which AI provider should I choose?</h3>
+  <ul>
+    <li><strong>Claude (Anthropic)</strong> — Best for nuanced conversations and complex requests</li>
+    <li><strong>GPT (OpenAI)</strong> — Fast and reliable, good for high volume</li>
+    <li><strong>Local AI</strong> — Free and private, but simpler responses</li>
+  </ul>
+  <p>
+    Start with Local AI (it's free), then upgrade if you need better quality.
+  </p>
+
+  <h3>Can Jack make mistakes?</h3>
+  <p>
+    Yes. Like all AI, Jack can occasionally provide incorrect information. That's why:
+  </p>
+  <ul>
+    <li>Keep your knowledge base accurate and up-to-date</li>
+    <li>Review AI responses initially (use "Suggest" mode)</li>
+    <li>Jack automatically escalates when uncertain</li>
+  </ul>
+
+  <h3>How do I make Jack's responses better?</h3>
+  <ul>
+    <li>Add more detailed entries to your knowledge base</li>
+    <li>Include common variations of questions</li>
+    <li>Upgrade to Claude or GPT for complex conversations</li>
+    <li>Review and correct AI responses to train over time</li>
+  </ul>
+
+  <h3>Can Jack handle multiple properties?</h3>
+  <p>
+    Currently, each Jack instance serves one property. For multiple properties, deploy separate instances. Multi-property support is planned for a future release.
+  </p>
+
+  <h2 id="channels">Channels</h2>
+
+  <h3>Do I need all channels (WhatsApp, SMS, Email)?</h3>
+  <p>
+    No, you can use any combination. Web chat works out of the box. Add other channels based on how your guests prefer to communicate.
+  </p>
+
+  <h3>Can guests switch between channels?</h3>
+  <p>
+    Yes. If Jack knows a guest's phone and email, it links their conversations across channels automatically.
+  </p>
+
+  <h3>What happens if a channel goes down?</h3>
+  <p>
+    Other channels continue working. Messages to the affected channel queue until service is restored.
+  </p>
+
+  <h2 id="privacy">Privacy & Data</h2>
+
+  <h3>Where is my data stored?</h3>
+  <p>
+    All data stays on your server in a SQLite database. Jack never sends guest data to third parties (except for AI processing if using cloud AI).
+  </p>
+
+  <h3>Is Jack GDPR compliant?</h3>
+  <p>
+    Jack is designed for GDPR compliance:
+  </p>
+  <ul>
+    <li>Data stored on your server (you control location)</li>
+    <li>Guest data can be exported or deleted</li>
+    <li>Conversation history can be purged</li>
+  </ul>
+  <p>
+    You're responsible for your property's overall GDPR compliance.
+  </p>
+
+  <h3>Can I use local AI to avoid sending data externally?</h3>
+  <p>
+    Yes! Local AI processes everything on your server. No guest messages are sent to external services.
+  </p>
+
+  <h2 id="technical">Technical</h2>
+
+  <h3>What are the server requirements?</h3>
+  <ul>
+    <li>1 CPU core (2+ recommended)</li>
+    <li>1GB RAM (2GB+ for local AI)</li>
+    <li>500MB disk space (plus database growth)</li>
+    <li>Node.js 22+ (for source installs)</li>
+  </ul>
+
+  <h3>Can Jack integrate with my PMS?</h3>
+  <p>
+    PMS integrations are on the roadmap. Currently, you can use the REST API and webhooks to build custom integrations.
+  </p>
+
+  <h3>How do I backup my data?</h3>
+  <p>
+    Copy the SQLite database file (<code>jack.db</code>). For Docker deployments, backup the data volume. See the <a href="/docs/installation/docker/#backup">Docker backup guide</a>.
+  </p>
+
+  <h3>Can I customize the AI's personality?</h3>
+  <p>
+    Yes, via the system prompt in <strong>Settings → AI</strong>. Define Jack's tone, language style, and how it represents your property.
+  </p>
+
+  <h2 id="support">Support</h2>
+
+  <h3>How do I get help?</h3>
+  <ul>
+    <li>Check the <a href="/docs/help/troubleshooting/">Troubleshooting guide</a></li>
+    <li>Search <a href="https://github.com/JackTheButler/JackTheButler/discussions" target="_blank" rel="noopener">GitHub Discussions</a></li>
+    <li>Open an <a href="https://github.com/JackTheButler/JackTheButler/issues" target="_blank" rel="noopener">issue on GitHub</a></li>
+  </ul>
+
+  <h3>Is there commercial support?</h3>
+  <p>
+    Not currently. Jack is a community project. For custom development or hosting, post in GitHub Discussions to find contributors.
+  </p>
+
+  <h3>How can I contribute?</h3>
+  <p>
+    We welcome contributions! See the <a href="https://github.com/JackTheButler/JackTheButler/blob/main/CONTRIBUTING.md" target="_blank" rel="noopener">Contributing Guide</a>.
+  </p>
+</DocsLayout>

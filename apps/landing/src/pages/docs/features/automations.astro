@@ -1,0 +1,191 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Automations"
+  description="Set up automated workflows to handle routine tasks and communications."
+  section="Features"
+>
+  <p>
+    Automations let you create rules that trigger actions automatically. Send welcome messages, follow up after checkout, or notify staff based on conditions.
+  </p>
+
+  <h2 id="how-automations-work">How Automations Work</h2>
+
+  <p>Each automation has three parts:</p>
+
+  <ol>
+    <li><strong>Trigger</strong> — What starts the automation</li>
+    <li><strong>Conditions</strong> — Optional filters to narrow when it runs</li>
+    <li><strong>Actions</strong> — What happens when triggered</li>
+  </ol>
+
+  <h2 id="triggers">Available Triggers</h2>
+
+  <div class="not-prose my-6 space-y-3">
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">New Conversation</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">When a guest sends their first message</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Check-in Date</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">On the day a guest is scheduled to arrive</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Check-out Date</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">On the day a guest is scheduled to leave</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Task Created</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">When a new task is created from a guest request</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Task Completed</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">When a task is marked as done</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Scheduled Time</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">At a specific time (daily, weekly, etc.)</p>
+    </div>
+  </div>
+
+  <h2 id="actions">Available Actions</h2>
+
+  <div class="not-prose my-6 space-y-3">
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Send Message</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Send a message to the guest via their channel</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Create Task</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Create a task for staff with specified details</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Notify Staff</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Send a notification to specific staff or departments</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Update Guest Profile</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Add tags, notes, or update guest information</p>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-sm text-neutral-900 dark:text-white">Webhook</h3>
+      <p class="text-xs text-neutral-600 dark:text-neutral-400 mt-1">Send data to an external URL (for integrations)</p>
+    </div>
+  </div>
+
+  <h2 id="examples">Common Automation Examples</h2>
+
+  <h3>Welcome message</h3>
+  <div class="not-prose my-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm">
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Trigger:</strong> New conversation</p>
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Action:</strong> Send message</p>
+    <p class="text-neutral-600 dark:text-neutral-400"><strong>Message:</strong> "Hello! Welcome to [Hotel Name]. I'm Jack, your AI assistant. How can I help you today?"</p>
+  </div>
+
+  <h3>Pre-arrival information</h3>
+  <div class="not-prose my-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm">
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Trigger:</strong> 1 day before check-in</p>
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Action:</strong> Send message</p>
+    <p class="text-neutral-600 dark:text-neutral-400"><strong>Message:</strong> "Hi &#123;guest_name&#125;, we're looking forward to your arrival tomorrow! Check-in starts at 3 PM. Need anything before you arrive?"</p>
+  </div>
+
+  <h3>Post-checkout follow-up</h3>
+  <div class="not-prose my-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm">
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Trigger:</strong> 1 day after check-out</p>
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Action:</strong> Send message</p>
+    <p class="text-neutral-600 dark:text-neutral-400"><strong>Message:</strong> "Thank you for staying with us! We'd love to hear about your experience. Would you take a moment to leave a review?"</p>
+  </div>
+
+  <h3>VIP guest notification</h3>
+  <div class="not-prose my-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm">
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Trigger:</strong> New conversation</p>
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Condition:</strong> Guest has "VIP" tag</p>
+    <p class="text-neutral-600 dark:text-neutral-400"><strong>Action:</strong> Notify staff (Front Desk Manager)</p>
+  </div>
+
+  <h3>Urgent issue alert</h3>
+  <div class="not-prose my-4 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg text-sm">
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Trigger:</strong> Task created</p>
+    <p class="text-neutral-600 dark:text-neutral-400 mb-2"><strong>Condition:</strong> Priority is "Urgent"</p>
+    <p class="text-neutral-600 dark:text-neutral-400"><strong>Action:</strong> Notify staff (On-duty Manager)</p>
+  </div>
+
+  <h2 id="variables">Message Variables</h2>
+
+  <p>Use these placeholders in automated messages:</p>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Variable</th>
+          <th class="text-left py-2 font-semibold">Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>&#123;guest_name&#125;</code></td>
+          <td class="py-2">Guest's full name</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>&#123;first_name&#125;</code></td>
+          <td class="py-2">Guest's first name</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>&#123;room_number&#125;</code></td>
+          <td class="py-2">Assigned room number</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>&#123;check_in_date&#125;</code></td>
+          <td class="py-2">Check-in date</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><code>&#123;check_out_date&#125;</code></td>
+          <td class="py-2">Check-out date</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4"><code>&#123;hotel_name&#125;</code></td>
+          <td class="py-2">Your property name</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="creating-automations">Creating Automations</h2>
+
+  <ol>
+    <li>Go to <strong>Automations</strong> in the dashboard</li>
+    <li>Click <strong>New Automation</strong></li>
+    <li>Name your automation</li>
+    <li>Select a trigger</li>
+    <li>Add conditions (optional)</li>
+    <li>Add one or more actions</li>
+    <li>Save and enable</li>
+  </ol>
+
+  <h2 id="testing">Testing Automations</h2>
+
+  <p>Before enabling an automation:</p>
+
+  <ul>
+    <li>Use the <strong>Test</strong> button to preview what would happen</li>
+    <li>Start with a small scope (e.g., one guest tag) before rolling out broadly</li>
+    <li>Check the automation logs for execution history</li>
+  </ul>
+
+  <div class="not-prose my-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+    <p class="text-sm text-amber-800 dark:text-amber-200">
+      <strong>Tip:</strong> Be careful with message-sending automations. Test thoroughly to avoid spamming guests with unintended messages.
+    </p>
+  </div>
+
+  <h2 id="limits">Automation Limits</h2>
+
+  <ul>
+    <li>No hard limit on number of automations</li>
+    <li>Actions are rate-limited to prevent runaway loops</li>
+    <li>Message actions respect channel rate limits (e.g., WhatsApp rules)</li>
+  </ul>
+</DocsLayout>

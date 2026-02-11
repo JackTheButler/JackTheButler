@@ -1,0 +1,180 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="AI Responses"
+  description="How Jack uses AI to understand and respond to guest messages."
+  section="Features"
+>
+  <p>
+    Jack uses AI to understand guest intent, generate natural responses, and decide when to escalate to staff. This page explains how the AI system works.
+  </p>
+
+  <h2 id="how-it-works">How It Works</h2>
+
+  <p>When a guest sends a message, Jack:</p>
+
+  <ol>
+    <li><strong>Classifies intent</strong> — Determines what the guest wants (question, request, complaint, etc.)</li>
+    <li><strong>Retrieves context</strong> — Searches the knowledge base for relevant information</li>
+    <li><strong>Generates response</strong> — Creates a natural reply using the AI model</li>
+    <li><strong>Decides routing</strong> — Either sends the response or escalates to staff</li>
+  </ol>
+
+  <h2 id="providers">Supported Providers</h2>
+
+  <div class="not-prose my-6 space-y-4">
+    <div class="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 rounded-lg bg-orange-100 dark:bg-orange-900/30 flex items-center justify-center">
+          <span class="text-orange-600 dark:text-orange-400 font-bold text-sm">A</span>
+        </div>
+        <h3 class="font-semibold text-neutral-900 dark:text-white m-0">Anthropic Claude</h3>
+      </div>
+      <p class="text-sm text-neutral-600 dark:text-neutral-400">
+        Excellent at understanding context and nuance. Great for complex guest requests and natural conversations. Recommended for most deployments.
+      </p>
+      <p class="text-xs text-neutral-500 mt-2">Models: Claude 3.5 Sonnet, Claude 3 Haiku</p>
+    </div>
+
+    <div class="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+          <span class="text-green-600 dark:text-green-400 font-bold text-sm">O</span>
+        </div>
+        <h3 class="font-semibold text-neutral-900 dark:text-white m-0">OpenAI GPT</h3>
+      </div>
+      <p class="text-sm text-neutral-600 dark:text-neutral-400">
+        Fast and reliable. Good balance of quality and speed. Well-suited for high message volumes.
+      </p>
+      <p class="text-xs text-neutral-500 mt-2">Models: GPT-4o, GPT-4o-mini</p>
+    </div>
+
+    <div class="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 rounded-lg bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center">
+          <span class="text-purple-600 dark:text-purple-400 font-bold text-sm">L</span>
+        </div>
+        <h3 class="font-semibold text-neutral-900 dark:text-white m-0">Local AI</h3>
+      </div>
+      <p class="text-sm text-neutral-600 dark:text-neutral-400">
+        Runs entirely on your server using Transformers.js. No API costs, complete privacy, works offline. Best for privacy-focused deployments.
+      </p>
+      <p class="text-xs text-neutral-500 mt-2">Uses: Xenova models via Transformers.js</p>
+    </div>
+
+    <div class="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <div class="flex items-center gap-3 mb-2">
+        <div class="w-8 h-8 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+          <span class="text-blue-600 dark:text-blue-400 font-bold text-sm">O</span>
+        </div>
+        <h3 class="font-semibold text-neutral-900 dark:text-white m-0">Ollama</h3>
+      </div>
+      <p class="text-sm text-neutral-600 dark:text-neutral-400">
+        Run open-source models locally with more power than Transformers.js. Requires Ollama server running separately.
+      </p>
+      <p class="text-xs text-neutral-500 mt-2">Models: Llama 3, Mistral, and others</p>
+    </div>
+  </div>
+
+  <h2 id="autonomy-levels">Autonomy Levels</h2>
+
+  <p>
+    Control how independently Jack responds to guests:
+  </p>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Level</th>
+          <th class="text-left py-2 font-semibold">Behavior</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4 font-medium">Full Auto</td>
+          <td class="py-2">Jack responds to all messages automatically. Only escalates when confidence is low or guest explicitly asks for staff.</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4 font-medium">Suggest</td>
+          <td class="py-2">Jack drafts responses but waits for staff approval before sending. Good for training and quality control.</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4 font-medium">Off</td>
+          <td class="py-2">AI is disabled. All messages go directly to staff. Use during sensitive situations or high-stakes conversations.</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <p>
+    Change autonomy level in <strong>Settings → AI → Autonomy</strong> or per-conversation from the inbox.
+  </p>
+
+  <h2 id="knowledge-integration">Knowledge Integration</h2>
+
+  <p>
+    Jack uses RAG (Retrieval-Augmented Generation) to provide accurate, property-specific responses:
+  </p>
+
+  <ol>
+    <li>Guest message is converted to an embedding (vector representation)</li>
+    <li>Similar content is retrieved from your <a href="/docs/features/knowledge-base/">knowledge base</a></li>
+    <li>Retrieved context is included in the AI prompt</li>
+    <li>AI generates a response grounded in your property's information</li>
+  </ol>
+
+  <p>
+    This ensures Jack gives accurate answers about your specific check-in times, amenities, policies, and local recommendations.
+  </p>
+
+  <h2 id="response-quality">Response Quality</h2>
+
+  <h3>What Jack handles well</h3>
+  <ul>
+    <li>Frequently asked questions (check-in, WiFi, parking)</li>
+    <li>Room and amenity inquiries</li>
+    <li>Local recommendations</li>
+    <li>Simple requests (extra towels, late checkout)</li>
+    <li>Booking confirmations and directions</li>
+  </ul>
+
+  <h3>What gets escalated</h3>
+  <ul>
+    <li>Complaints and negative feedback</li>
+    <li>Billing and payment issues</li>
+    <li>Requests outside knowledge base</li>
+    <li>Complex or unusual requests</li>
+    <li>Guest explicitly asks for a human</li>
+  </ul>
+
+  <h2 id="costs">Cost Estimates</h2>
+
+  <p>AI API costs depend on usage:</p>
+
+  <div class="not-prose my-6 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+    <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-3">Typical costs for a 20-room hotel with ~500 messages/month:</p>
+    <ul class="space-y-2 text-sm">
+      <li class="flex justify-between">
+        <span>Claude (Sonnet)</span>
+        <span class="font-medium">~$5-15/month</span>
+      </li>
+      <li class="flex justify-between">
+        <span>OpenAI (GPT-4o-mini)</span>
+        <span class="font-medium">~$3-10/month</span>
+      </li>
+      <li class="flex justify-between">
+        <span>Local AI</span>
+        <span class="font-medium text-green-600 dark:text-green-400">$0</span>
+      </li>
+    </ul>
+  </div>
+
+  <h2 id="configuration">Configuration</h2>
+
+  <p>
+    See <a href="/docs/configuration/ai-providers/">AI Providers Configuration</a> for setup instructions.
+  </p>
+</DocsLayout>

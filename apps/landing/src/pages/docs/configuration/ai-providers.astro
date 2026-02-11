@@ -1,0 +1,203 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="AI Providers"
+  description="Configure Anthropic Claude, OpenAI, or Local AI for Jack's responses."
+  section="Configuration"
+>
+  <p>
+    Jack supports multiple AI providers. Choose based on your needs for quality, privacy, and cost.
+  </p>
+
+  <h2 id="anthropic">Anthropic Claude</h2>
+
+  <p>
+    Claude excels at nuanced conversations and understanding context. Recommended for most deployments.
+  </p>
+
+  <h3>Setup</h3>
+
+  <ol>
+    <li>Create an account at <a href="https://console.anthropic.com" target="_blank" rel="noopener">console.anthropic.com</a></li>
+    <li>Go to <strong>API Keys</strong> and create a new key</li>
+    <li>Copy the key (you won't see it again)</li>
+    <li>In Jack's dashboard, go to <strong>Settings → Apps</strong></li>
+    <li>Find <strong>Anthropic</strong> and click <strong>Configure</strong></li>
+    <li>Paste your API key and save</li>
+  </ol>
+
+  <h3>Available Models</h3>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Model</th>
+          <th class="text-left py-2 pr-4 font-semibold">Best For</th>
+          <th class="text-left py-2 font-semibold">Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4">Claude 3.5 Sonnet</td>
+          <td class="py-2 pr-4">Complex reasoning, nuanced responses</td>
+          <td class="py-2">$3/$15 per 1M tokens</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4">Claude 3 Haiku</td>
+          <td class="py-2 pr-4">Fast responses, high volume</td>
+          <td class="py-2">$0.25/$1.25 per 1M tokens</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="openai">OpenAI GPT</h2>
+
+  <p>
+    Fast and reliable with extensive language support.
+  </p>
+
+  <h3>Setup</h3>
+
+  <ol>
+    <li>Create an account at <a href="https://platform.openai.com" target="_blank" rel="noopener">platform.openai.com</a></li>
+    <li>Go to <strong>API Keys</strong> and create a new secret key</li>
+    <li>Copy the key</li>
+    <li>In Jack's dashboard, go to <strong>Settings → Apps</strong></li>
+    <li>Find <strong>OpenAI</strong> and click <strong>Configure</strong></li>
+    <li>Paste your API key and save</li>
+  </ol>
+
+  <h3>Available Models</h3>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Model</th>
+          <th class="text-left py-2 pr-4 font-semibold">Best For</th>
+          <th class="text-left py-2 font-semibold">Cost</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4">GPT-4o</td>
+          <td class="py-2 pr-4">Best quality, multimodal</td>
+          <td class="py-2">$5/$15 per 1M tokens</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4">GPT-4o-mini</td>
+          <td class="py-2 pr-4">Good balance, lower cost</td>
+          <td class="py-2">$0.15/$0.60 per 1M tokens</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="local">Local AI</h2>
+
+  <p>
+    Run AI entirely on your server. No API costs, complete privacy, works offline.
+  </p>
+
+  <h3>Setup</h3>
+
+  <p>Local AI is enabled by default. No configuration needed.</p>
+
+  <p>
+    Jack uses Transformers.js with the <code>Xenova/all-MiniLM-L6-v2</code> model for embeddings. For text generation, it uses a lightweight model that runs in Node.js.
+  </p>
+
+  <h3>Considerations</h3>
+
+  <ul>
+    <li><strong>Quality</strong> — Responses are simpler than cloud AI</li>
+    <li><strong>Speed</strong> — First response may be slow as models load</li>
+    <li><strong>Resources</strong> — Requires more RAM (~2GB for models)</li>
+    <li><strong>Privacy</strong> — All processing stays on your server</li>
+  </ul>
+
+  <div class="not-prose my-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <p class="text-sm text-blue-800 dark:text-blue-200">
+      <strong>Tip:</strong> Local AI works best for simple questions with clear answers in your knowledge base. For complex conversations, consider a cloud provider.
+    </p>
+  </div>
+
+  <h2 id="ollama">Ollama (Self-Hosted)</h2>
+
+  <p>
+    Run powerful open-source models locally with better quality than Transformers.js.
+  </p>
+
+  <h3>Setup</h3>
+
+  <ol>
+    <li>Install Ollama from <a href="https://ollama.ai" target="_blank" rel="noopener">ollama.ai</a></li>
+    <li>Pull a model: <code>ollama pull llama3</code></li>
+    <li>Start Ollama: <code>ollama serve</code></li>
+    <li>In Jack's dashboard, go to <strong>Settings → Apps</strong></li>
+    <li>Find <strong>Ollama</strong> and click <strong>Configure</strong></li>
+    <li>Enter the Ollama server URL (default: <code>http://localhost:11434</code>)</li>
+    <li>Select your model and save</li>
+  </ol>
+
+  <h3>Recommended Models</h3>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Model</th>
+          <th class="text-left py-2 pr-4 font-semibold">Size</th>
+          <th class="text-left py-2 font-semibold">RAM Needed</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4">llama3:8b</td>
+          <td class="py-2 pr-4">4.7 GB</td>
+          <td class="py-2">8 GB</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4">mistral:7b</td>
+          <td class="py-2 pr-4">4.1 GB</td>
+          <td class="py-2">8 GB</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4">phi3:mini</td>
+          <td class="py-2 pr-4">2.3 GB</td>
+          <td class="py-2">4 GB</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="switching">Switching Providers</h2>
+
+  <p>
+    You can switch AI providers anytime:
+  </p>
+
+  <ol>
+    <li>Go to <strong>Settings → Apps</strong></li>
+    <li>Configure the new provider with credentials</li>
+    <li>Go to <strong>Settings → AI</strong></li>
+    <li>Select the new provider as active</li>
+  </ol>
+
+  <p>
+    Existing conversations continue seamlessly with the new provider.
+  </p>
+
+  <h2 id="cost-optimization">Cost Optimization</h2>
+
+  <ul>
+    <li><strong>Use smaller models</strong> — GPT-4o-mini or Claude Haiku for routine questions</li>
+    <li><strong>Optimize knowledge base</strong> — Better retrieval means shorter prompts</li>
+    <li><strong>Set autonomy to "Suggest"</strong> — Review before sending reduces unnecessary API calls</li>
+    <li><strong>Use Local AI for simple queries</strong> — Route only complex questions to cloud AI</li>
+  </ul>
+</DocsLayout>

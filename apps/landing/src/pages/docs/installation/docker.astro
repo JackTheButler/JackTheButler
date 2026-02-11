@@ -1,0 +1,199 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Docker Installation"
+  description="Run Jack The Butler with Docker for self-hosted deployments."
+  section="Installation"
+>
+  <p>
+    Docker provides a consistent environment for running Jack on any server. This is the recommended approach for self-hosted production deployments.
+  </p>
+
+  <h2 id="prerequisites">Prerequisites</h2>
+
+  <ul>
+    <li>Docker Engine 20.10+ or Docker Desktop</li>
+    <li>Docker Compose v2 (optional but recommended)</li>
+    <li>At least 1GB RAM</li>
+    <li>500MB disk space (plus storage for database)</li>
+  </ul>
+
+  <h2 id="quick-start">Quick Start</h2>
+
+  <p>Pull and run the official image:</p>
+
+  <pre><code>docker run -d \
+  --name jack-butler \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  -e JWT_SECRET="your-secret-min-32-chars" \
+  -e ENCRYPTION_KEY="your-encryption-key-32-chars" \
+  ghcr.io/jackthebutler/jackthebutler:latest</code></pre>
+
+  <p>
+    Access the dashboard at <code>http://localhost:3000</code>
+  </p>
+
+  <h2 id="docker-compose">Docker Compose</h2>
+
+  <p>For easier management, create a <code>docker-compose.yml</code> file:</p>
+
+  <pre><code>version: '3.8'
+
+services:
+  jack:
+    image: ghcr.io/jackthebutler/jackthebutler:latest
+    container_name: jack-butler
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    volumes:
+      - jack-data:/app/data
+    environment:
+      - NODE_ENV=production
+      - JWT_SECRET=&#36;&#123;JWT_SECRET&#125;
+      - ENCRYPTION_KEY=&#36;&#123;ENCRYPTION_KEY&#125;
+      - DATABASE_PATH=/app/data/jack.db
+
+volumes:
+  jack-data:</code></pre>
+
+  <p>Create a <code>.env</code> file with your secrets:</p>
+
+  <pre><code>JWT_SECRET=your-secret-key-minimum-32-characters-long
+ENCRYPTION_KEY=your-encryption-key-minimum-32-chars</code></pre>
+
+  <p>Then start the service:</p>
+
+  <pre><code>docker compose up -d</code></pre>
+
+  <h2 id="generate-secrets">Generating Secrets</h2>
+
+  <p>Generate secure random secrets:</p>
+
+  <pre><code># Using openssl
+openssl rand -base64 32
+
+# Or using /dev/urandom
+head -c 32 /dev/urandom | base64</code></pre>
+
+  <div class="not-prose my-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+    <p class="text-sm text-amber-800 dark:text-amber-200">
+      <strong>Security:</strong> Never commit your <code>.env</code> file to version control. Add it to <code>.gitignore</code>.
+    </p>
+  </div>
+
+  <h2 id="reverse-proxy">Reverse Proxy with Nginx</h2>
+
+  <p>
+    For production, run Jack behind a reverse proxy with SSL. Example Nginx configuration:
+  </p>
+
+  <pre><code>server &#123;
+    listen 80;
+    server_name jack.yourhotel.com;
+    return 301 https://&#36;server_name&#36;request_uri;
+&#125;
+
+server &#123;
+    listen 443 ssl http2;
+    server_name jack.yourhotel.com;
+
+    ssl_certificate /etc/letsencrypt/live/jack.yourhotel.com/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/jack.yourhotel.com/privkey.pem;
+
+    location / &#123;
+        proxy_pass http://localhost:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade &#36;http_upgrade;
+        proxy_set_header Connection "upgrade";
+        proxy_set_header Host &#36;host;
+        proxy_set_header X-Real-IP &#36;remote_addr;
+        proxy_set_header X-Forwarded-For &#36;proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto &#36;scheme;
+    &#125;
+&#125;</code></pre>
+
+  <p>
+    The WebSocket upgrade headers are important for real-time updates in the dashboard.
+  </p>
+
+  <h2 id="updating">Updating Jack</h2>
+
+  <p>To update to the latest version:</p>
+
+  <pre><code># Pull the latest image
+docker compose pull
+
+# Restart with the new image
+docker compose up -d</code></pre>
+
+  <p>Your data is preserved in the named volume.</p>
+
+  <h2 id="backup">Backup & Restore</h2>
+
+  <h3>Backup</h3>
+
+  <p>Copy the SQLite database from the volume:</p>
+
+  <pre><code># Stop the container first for consistency
+docker compose stop
+
+# Copy the database
+docker cp jack-butler:/app/data/jack.db ./backup-&#36;(date +%Y%m%d).db
+
+# Restart
+docker compose start</code></pre>
+
+  <p>Or backup without stopping (less consistent but no downtime):</p>
+
+  <pre><code>docker exec jack-butler sqlite3 /app/data/jack.db ".backup /app/data/backup.db"
+docker cp jack-butler:/app/data/backup.db ./backup-&#36;(date +%Y%m%d).db</code></pre>
+
+  <h3>Restore</h3>
+
+  <pre><code># Stop the container
+docker compose stop
+
+# Copy backup into container
+docker cp ./backup.db jack-butler:/app/data/jack.db
+
+# Start the container
+docker compose start</code></pre>
+
+  <h2 id="logs">Viewing Logs</h2>
+
+  <pre><code># View recent logs
+docker compose logs jack
+
+# Follow logs in real-time
+docker compose logs -f jack
+
+# View last 100 lines
+docker compose logs --tail 100 jack</code></pre>
+
+  <h2 id="troubleshooting">Troubleshooting</h2>
+
+  <h3>Container won't start</h3>
+  <p>Check logs for errors:</p>
+  <pre><code>docker compose logs jack</code></pre>
+
+  <h3>Permission denied on volume</h3>
+  <p>The container runs as a non-root user. Ensure volume permissions:</p>
+  <pre><code>docker exec jack-butler chown -R node:node /app/data</code></pre>
+
+  <h3>Database locked errors</h3>
+  <p>
+    SQLite can have issues with concurrent writes. Ensure only one instance of Jack is running and that the volume is not mounted by multiple containers.
+  </p>
+
+  <h2 id="next-steps">Next Steps</h2>
+
+  <ol>
+    <li>Complete the <a href="/docs/getting-started/setup-wizard/">Setup Wizard</a></li>
+    <li>Configure <a href="/docs/configuration/ai-providers/">AI providers</a></li>
+    <li>Set up <a href="/docs/configuration/whatsapp/">WhatsApp</a> or other channels</li>
+  </ol>
+</DocsLayout>

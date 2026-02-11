@@ -1,0 +1,70 @@
+# Jack The Butler - AI Agent Information
+
+> Jack The Butler is a free, open-source AI-powered chatbot for hotels and hospitality businesses. It handles guest communication across WhatsApp, SMS, email, and web chat.
+
+## Overview
+
+Jack The Butler (Joint AI Control Kernel) is a self-hosted AI assistant designed for hotels, Airbnbs, hostels, and vacation rentals. It automates guest communication while keeping data private on your own server.
+
+## Key Features
+
+- Multi-channel support: WhatsApp, SMS, Email, Web Chat
+- AI-powered responses using Claude, GPT, or local AI
+- Knowledge base for property-specific information
+- Task creation and staff escalation
+- Automated workflows and scheduled messages
+- Self-hosted with SQLite database
+- 100% open source (MIT license)
+
+## Documentation Structure
+
+/docs/getting-started/introduction/ - What is Jack, who it's for
+/docs/getting-started/quick-start/ - 5-minute deployment guide
+/docs/getting-started/setup-wizard/ - Initial configuration walkthrough
+
+/docs/installation/cloud/ - One-click cloud deployment (Railway, Render, Zeabur)
+/docs/installation/docker/ - Self-hosted Docker setup
+/docs/installation/source/ - Building from source
+
+/docs/features/ai-responses/ - How AI responses work
+/docs/features/knowledge-base/ - Training Jack on your property
+/docs/features/channels/ - Communication channel setup
+/docs/features/tasks/ - Task routing and escalation
+/docs/features/automations/ - Automated workflows
+
+/docs/configuration/ai-providers/ - Claude, OpenAI, Local AI setup
+/docs/configuration/whatsapp/ - WhatsApp Business API
+/docs/configuration/sms/ - Twilio SMS configuration
+/docs/configuration/email/ - SMTP/IMAP email setup
+
+/docs/api/authentication/ - JWT token authentication
+/docs/api/rest/ - REST API endpoints
+/docs/api/webhooks/ - Webhook integration
+
+/docs/help/faq/ - Frequently asked questions
+/docs/help/troubleshooting/ - Common issues and fixes
+
+## Quick Links
+
+- Website: https://jackthebutler.com
+- Documentation: https://jackthebutler.com/docs/
+- GitHub: https://github.com/JackTheButler/JackTheButler
+- License: MIT
+
+## Target Audience
+
+- Hotel managers and owners
+- Airbnb and vacation rental hosts
+- Hostel operators
+- Hospitality technology teams
+
+## Technical Requirements
+
+- Node.js 22+
+- 1GB RAM minimum (2GB for local AI)
+- SQLite database (included)
+- Docker support available
+
+## Contact
+
+For questions about Jack The Butler, visit the GitHub repository or documentation.

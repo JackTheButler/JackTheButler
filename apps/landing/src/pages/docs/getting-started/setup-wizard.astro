@@ -1,0 +1,165 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Setup Wizard"
+  description="Configure your property with Jack's interactive setup wizard."
+  section="Getting Started"
+>
+  <p>
+    After deploying Jack, the setup wizard guides you through configuring your property. This conversational interface makes it easy to get started without diving into settings.
+  </p>
+
+  <h2 id="accessing-setup">Accessing the Setup Wizard</h2>
+
+  <p>
+    The setup wizard appears automatically on first login. If you need to run it again, you can access it from <strong>Settings → Run Setup Wizard</strong>.
+  </p>
+
+  <h2 id="step-1-property">Step 1: Property Information</h2>
+
+  <p>Jack will ask for basic information about your property:</p>
+
+  <ul>
+    <li><strong>Property name</strong> — Your hotel or rental name</li>
+    <li><strong>Property type</strong> — Hotel, B&B, vacation rental, or hostel</li>
+  </ul>
+
+  <p>
+    This information helps Jack personalize responses and understand your context.
+  </p>
+
+  <h2 id="step-2-ai">Step 2: AI Provider</h2>
+
+  <p>Choose how Jack generates responses:</p>
+
+  <div class="not-prose my-6 space-y-4">
+    <div class="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-neutral-900 dark:text-white">Local AI (Default)</h3>
+      <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+        Runs on your server using Transformers.js. Free, private, works offline. Best for: privacy-focused deployments, low message volume.
+      </p>
+    </div>
+
+    <div class="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-neutral-900 dark:text-white">Anthropic Claude</h3>
+      <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+        Excellent reasoning, natural conversations. Requires API key (~$5-20/month). Best for: complex guest requests, nuanced responses.
+      </p>
+    </div>
+
+    <div class="p-4 rounded-lg border border-neutral-200 dark:border-neutral-800">
+      <h3 class="font-semibold text-neutral-900 dark:text-white">OpenAI GPT</h3>
+      <p class="text-sm text-neutral-600 dark:text-neutral-400 mt-1">
+        Fast, reliable responses. Requires API key (~$5-20/month). Best for: high volume, quick responses.
+      </p>
+    </div>
+  </div>
+
+  <p>
+    You can change your AI provider anytime in <strong>Settings → Apps → AI</strong>.
+  </p>
+
+  <h2 id="step-3-knowledge">Step 3: Knowledge Base</h2>
+
+  <p>
+    Jack needs to learn about your property to answer guest questions accurately. The wizard offers two ways to build your knowledge base:
+  </p>
+
+  <h3 id="website-import">Option A: Website Import</h3>
+
+  <p>
+    Provide your website URL and Jack will automatically extract:
+  </p>
+
+  <ul>
+    <li>Check-in/check-out times</li>
+    <li>Room types and amenities</li>
+    <li>Contact information</li>
+    <li>Location and directions</li>
+    <li>Policies (cancellation, pets, parking, etc.)</li>
+  </ul>
+
+  <p>
+    You can add multiple URLs if your information is spread across pages.
+  </p>
+
+  <h3 id="manual-entry">Option B: Manual Entry</h3>
+
+  <p>
+    If you don't have a website or prefer to enter information directly, the wizard will prompt you for essential details:
+  </p>
+
+  <ol>
+    <li>Check-in and check-out times</li>
+    <li>At least one room type with description</li>
+    <li>Contact phone and email</li>
+    <li>Property address</li>
+  </ol>
+
+  <div class="not-prose my-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <p class="text-sm text-blue-800 dark:text-blue-200">
+      <strong>Tip:</strong> You can always add more knowledge later from the <strong>Knowledge Base</strong> page. The wizard just ensures Jack has the basics to start helping guests.
+    </p>
+  </div>
+
+  <h2 id="step-4-admin">Step 4: Admin Account</h2>
+
+  <p>
+    Create your admin account to secure access to the dashboard:
+  </p>
+
+  <ul>
+    <li><strong>Name</strong> — Your display name</li>
+    <li><strong>Email</strong> — Used for login</li>
+    <li><strong>Password</strong> — Minimum 8 characters</li>
+  </ul>
+
+  <p>
+    This replaces the default admin account (<code>admin@butler.com</code>) which is disabled after setup.
+  </p>
+
+  <div class="not-prose my-6 p-4 bg-amber-50 dark:bg-amber-900/20 border border-amber-200 dark:border-amber-800 rounded-lg">
+    <p class="text-sm text-amber-800 dark:text-amber-200">
+      <strong>Important:</strong> Remember your credentials! If you lose access, you'll need to reset the database or manually update the staff table.
+    </p>
+  </div>
+
+  <h2 id="after-setup">After Setup</h2>
+
+  <p>
+    Once setup is complete, you'll be redirected to the login page. Sign in with your new admin account to access the dashboard.
+  </p>
+
+  <p>From there, you can:</p>
+
+  <ul>
+    <li><a href="/docs/features/knowledge-base/">Expand your knowledge base</a> with more details</li>
+    <li><a href="/docs/features/channels/">Connect communication channels</a> (WhatsApp, SMS, Email)</li>
+    <li><a href="/docs/features/automations/">Set up automations</a> for common scenarios</li>
+    <li>Invite additional staff members</li>
+  </ul>
+
+  <h2 id="troubleshooting">Troubleshooting</h2>
+
+  <h3>Setup wizard doesn't appear</h3>
+  <p>
+    If you're not seeing the setup wizard on first login, check that the database was properly initialized. You may need to reset the database or check the <code>setup_state</code> table.
+  </p>
+
+  <h3>Website import not finding information</h3>
+  <p>
+    The scraper works best with well-structured websites. If import fails, try:
+  </p>
+  <ul>
+    <li>Adding specific page URLs (e.g., /rooms, /contact) instead of just the homepage</li>
+    <li>Using manual entry for missing information</li>
+    <li>Checking that your website doesn't block bots</li>
+  </ul>
+
+  <h3>AI provider connection fails</h3>
+  <p>
+    Verify your API key is correct and has sufficient credits. You can test the connection in <strong>Settings → Apps → AI</strong>.
+  </p>
+</DocsLayout>

@@ -1,0 +1,183 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Tasks & Escalation"
+  description="How Jack creates tasks and routes requests to the right staff members."
+  section="Features"
+>
+  <p>
+    When guests make requests that require action, Jack creates tasks and routes them to the appropriate staff. This ensures nothing falls through the cracks.
+  </p>
+
+  <h2 id="how-tasks-work">How Tasks Work</h2>
+
+  <ol>
+    <li><strong>Guest makes a request</strong> — "Can I get extra towels?"</li>
+    <li><strong>Jack classifies the request</strong> — Identifies it as a housekeeping task</li>
+    <li><strong>Task is created</strong> — With details, priority, and department</li>
+    <li><strong>Staff is notified</strong> — Via dashboard and optional push notifications</li>
+    <li><strong>Task is completed</strong> — Staff marks it done, guest is updated</li>
+  </ol>
+
+  <h2 id="task-types">Task Types</h2>
+
+  <div class="not-prose my-6 space-y-3">
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+      <div class="w-8 h-8 rounded bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+        <span class="text-blue-600 dark:text-blue-400">🛏️</span>
+      </div>
+      <div>
+        <h3 class="font-semibold text-sm text-neutral-900 dark:text-white m-0">Housekeeping</h3>
+        <p class="text-xs text-neutral-500">Extra towels, room cleaning, amenity requests</p>
+      </div>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+      <div class="w-8 h-8 rounded bg-amber-100 dark:bg-amber-900/30 flex items-center justify-center shrink-0">
+        <span class="text-amber-600 dark:text-amber-400">🔧</span>
+      </div>
+      <div>
+        <h3 class="font-semibold text-sm text-neutral-900 dark:text-white m-0">Maintenance</h3>
+        <p class="text-xs text-neutral-500">AC issues, plumbing, electrical, repairs</p>
+      </div>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+      <div class="w-8 h-8 rounded bg-purple-100 dark:bg-purple-900/30 flex items-center justify-center shrink-0">
+        <span class="text-purple-600 dark:text-purple-400">🍽️</span>
+      </div>
+      <div>
+        <h3 class="font-semibold text-sm text-neutral-900 dark:text-white m-0">Food & Beverage</h3>
+        <p class="text-xs text-neutral-500">Room service, restaurant reservations, special dietary needs</p>
+      </div>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+      <div class="w-8 h-8 rounded bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+        <span class="text-green-600 dark:text-green-400">🎫</span>
+      </div>
+      <div>
+        <h3 class="font-semibold text-sm text-neutral-900 dark:text-white m-0">Concierge</h3>
+        <p class="text-xs text-neutral-500">Reservations, tickets, transportation, recommendations</p>
+      </div>
+    </div>
+    <div class="p-3 rounded-lg border border-neutral-200 dark:border-neutral-800 flex items-center gap-3">
+      <div class="w-8 h-8 rounded bg-red-100 dark:bg-red-900/30 flex items-center justify-center shrink-0">
+        <span class="text-red-600 dark:text-red-400">⚠️</span>
+      </div>
+      <div>
+        <h3 class="font-semibold text-sm text-neutral-900 dark:text-white m-0">Complaint</h3>
+        <p class="text-xs text-neutral-500">Issues requiring management attention</p>
+      </div>
+    </div>
+  </div>
+
+  <h2 id="escalation-rules">Escalation Rules</h2>
+
+  <p>Jack automatically escalates conversations to staff when:</p>
+
+  <ul>
+    <li><strong>Low confidence</strong> — AI isn't sure about the appropriate response</li>
+    <li><strong>Request requires action</strong> — Guest needs something delivered or done</li>
+    <li><strong>Negative sentiment</strong> — Guest appears upset or frustrated</li>
+    <li><strong>Explicit request</strong> — Guest asks to speak with a human</li>
+    <li><strong>Outside knowledge</strong> — Question not covered by knowledge base</li>
+    <li><strong>Sensitive topics</strong> — Billing, complaints, special needs</li>
+  </ul>
+
+  <h2 id="priority-levels">Priority Levels</h2>
+
+  <div class="not-prose my-6">
+    <table class="w-full text-sm">
+      <thead>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <th class="text-left py-2 pr-4 font-semibold">Priority</th>
+          <th class="text-left py-2 pr-4 font-semibold">Response Time</th>
+          <th class="text-left py-2 font-semibold">Examples</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><span class="px-2 py-0.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-300 rounded text-xs font-medium">Urgent</span></td>
+          <td class="py-2 pr-4">Immediate</td>
+          <td class="py-2">Safety issues, room lockout, no hot water</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><span class="px-2 py-0.5 bg-amber-100 dark:bg-amber-900/30 text-amber-700 dark:text-amber-300 rounded text-xs font-medium">High</span></td>
+          <td class="py-2 pr-4">Within 30 min</td>
+          <td class="py-2">Complaints, AC not working, missing reservation</td>
+        </tr>
+        <tr class="border-b border-neutral-200 dark:border-neutral-800">
+          <td class="py-2 pr-4"><span class="px-2 py-0.5 bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-300 rounded text-xs font-medium">Normal</span></td>
+          <td class="py-2 pr-4">Within 2 hours</td>
+          <td class="py-2">Extra towels, restaurant reservation</td>
+        </tr>
+        <tr>
+          <td class="py-2 pr-4"><span class="px-2 py-0.5 bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300 rounded text-xs font-medium">Low</span></td>
+          <td class="py-2 pr-4">Within 24 hours</td>
+          <td class="py-2">Feedback, general inquiries, suggestions</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <h2 id="task-dashboard">Task Dashboard</h2>
+
+  <p>Staff manage tasks from the dashboard:</p>
+
+  <ul>
+    <li><strong>Task list</strong> — View all open tasks, filter by department/priority</li>
+    <li><strong>Assignment</strong> — Assign tasks to specific staff members</li>
+    <li><strong>Status updates</strong> — Mark tasks as in-progress, completed, or blocked</li>
+    <li><strong>Notes</strong> — Add internal notes for handoffs</li>
+    <li><strong>Guest communication</strong> — Reply to guest directly from the task</li>
+  </ul>
+
+  <h2 id="notifications">Notifications</h2>
+
+  <p>Staff receive notifications for:</p>
+
+  <ul>
+    <li>New tasks assigned to them</li>
+    <li>Urgent escalations</li>
+    <li>Task reminders (overdue tasks)</li>
+    <li>Guest replies on their tasks</li>
+  </ul>
+
+  <p>
+    Notifications appear in the dashboard and can optionally be sent via email or browser push notifications.
+  </p>
+
+  <h2 id="task-lifecycle">Task Lifecycle</h2>
+
+  <pre class="not-prose"><code>New → Assigned → In Progress → Completed
+         ↓
+      Blocked → (Resolved) → In Progress</code></pre>
+
+  <p>
+    Completed tasks are archived but remain searchable for reporting and guest history.
+  </p>
+
+  <h2 id="routing-configuration">Routing Configuration</h2>
+
+  <p>
+    Customize how tasks are routed in <strong>Settings → Task Routing</strong>:
+  </p>
+
+  <ul>
+    <li>Map task types to departments</li>
+    <li>Set default assignees by department</li>
+    <li>Configure escalation thresholds</li>
+    <li>Define business hours for routing</li>
+  </ul>
+
+  <h2 id="metrics">Task Metrics</h2>
+
+  <p>Track performance in the Analytics section:</p>
+
+  <ul>
+    <li>Average response time by task type</li>
+    <li>Tasks completed per day/week</li>
+    <li>Escalation rate (AI vs staff handled)</li>
+    <li>Guest satisfaction by resolution type</li>
+  </ul>
+</DocsLayout>
