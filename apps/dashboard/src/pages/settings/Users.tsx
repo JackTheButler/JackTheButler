@@ -83,11 +83,13 @@ export function UsersContent() {
   // Fetch staff list
   const { data, isLoading } = useQuery({
     queryKey: ['staff', statusFilter, searchQuery],
-    queryFn: () =>
-      api.get<{ staff: StaffMember[]; total: number }>('/staff', {
-        status: statusFilter !== 'all' ? statusFilter : undefined,
-        search: searchQuery || undefined,
-      }),
+    queryFn: () => {
+      const params = new URLSearchParams();
+      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (searchQuery) params.set('search', searchQuery);
+      const qs = params.toString();
+      return api.get<{ staff: StaffMember[]; total: number }>(`/staff${qs ? `?${qs}` : ''}`);
+    },
   });
 
   // Fetch roles for dropdown

@@ -8,7 +8,8 @@ export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElemen
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, checked, indeterminate, onCheckedChange, onClick, ...props }, ref) => {
+  ({ className, checked, indeterminate, onCheckedChange, onClick: _onClick, ...props }, ref) => {
+    const onClick = _onClick as unknown as React.MouseEventHandler<HTMLLabelElement> | undefined;
     const innerRef = React.useRef<HTMLInputElement>(null);
 
     React.useImperativeHandle(ref, () => innerRef.current!);
