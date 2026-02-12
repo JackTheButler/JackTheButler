@@ -158,6 +158,48 @@
       "title": "快速设置",
       "description": "帮助您配置系统的设置向导。即使在主页关闭后，这些向导也始终在此可用。"
     },
+    "security": {
+      "title": "安全",
+      "description": "配置注册、邮箱验证和账户审批设置。",
+      "registration": "注册",
+      "openRegistration": "开放注册",
+      "openRegistrationDesc": "允许新用户通过注册页面创建账户。",
+      "defaultRole": "默认角色",
+      "selectRole": "选择角色...",
+      "adminApproval": "需要管理员审批",
+      "adminApprovalDesc": "新账户必须经管理员批准后才能获得访问权限。",
+      "emailVerification": "邮箱验证",
+      "verificationMode": "验证模式",
+      "instant": "即时",
+      "instantDesc": "用户必须验证邮箱后才能登录。",
+      "grace": "宽限期",
+      "graceDesc": "用户可以立即登录，但必须在宽限期内完成验证。",
+      "gracePeriodDays": "宽限期（天）",
+      "saved": "安全设置已保存",
+      "saveError": "保存安全设置失败",
+      "emailTemplates": "邮件模板",
+      "emailTemplatesDesc": "自定义身份验证事件发送的邮件。使用 {{variables}} 作为占位符。",
+      "templateSubject": "主题",
+      "templateBody": "正文",
+      "resetToDefault": "恢复默认",
+      "templateSaved": "邮件模板已保存",
+      "templateSaveError": "保存邮件模板失败",
+      "templates": {
+        "passwordReset": "密码重置",
+        "emailVerification": "邮箱验证",
+        "approvalRequest": "审批请求",
+        "approvalResult": "审批结果"
+      },
+      "variables": {
+        "title": "可用变量",
+        "name": "用户姓名",
+        "link": "操作链接（重置或验证URL）",
+        "hotelName": "酒店名称",
+        "newUserName": "新用户姓名",
+        "newUserEmail": "新用户邮箱",
+        "status": "已批准或已拒绝"
+      }
+    },
     "dangerZone": {
       "title": "危险区域",
       "description": "无法撤销的破坏性操作",

@@ -81,6 +81,7 @@ describe('Permission Middleware', () => {
     });
 
     // Create test users with different roles
+    const passwordHash = await authService.hashPassword('test123');
     await db.insert(staff).values([
       {
         id: adminUserId,
@@ -88,7 +89,7 @@ describe('Permission Middleware', () => {
         name: 'Admin User',
         roleId: SYSTEM_ROLE_IDS.ADMIN,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash,
       },
       {
         id: staffUserId,
@@ -96,7 +97,7 @@ describe('Permission Middleware', () => {
         name: 'Staff User',
         roleId: SYSTEM_ROLE_IDS.STAFF,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash,
       },
       {
         id: viewerUserId,
@@ -104,7 +105,7 @@ describe('Permission Middleware', () => {
         name: 'Viewer User',
         roleId: SYSTEM_ROLE_IDS.VIEWER,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash,
       },
       {
         id: customUserId,
@@ -112,7 +113,7 @@ describe('Permission Middleware', () => {
         name: 'Custom User',
         roleId: customRoleId,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash,
       },
     ]);
 

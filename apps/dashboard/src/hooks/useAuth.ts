@@ -18,6 +18,8 @@ interface User {
   name: string;
   role: UserRole;
   permissions: string[];
+  emailVerified: boolean;
+  emailVerificationDeadline: string | null;
 }
 
 /**
@@ -30,6 +32,8 @@ interface UserResponse {
   roleId: string;
   roleName: string;
   permissions: string[];
+  emailVerified: boolean;
+  emailVerificationDeadline: string | null;
 }
 
 /**
@@ -66,6 +70,8 @@ function transformUser(response: UserResponse): User {
       name: response.roleName,
     },
     permissions: response.permissions,
+    emailVerified: response.emailVerified,
+    emailVerificationDeadline: response.emailVerificationDeadline,
   };
 }
 

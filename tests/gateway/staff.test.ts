@@ -28,6 +28,7 @@ describe('Staff API', () => {
     await db.delete(staff).where(eq(staff.id, targetUserId));
 
     // Create test users
+    const passwordHash = await authService.hashPassword('test123');
     await db.insert(staff).values([
       {
         id: adminUserId,
@@ -35,7 +36,7 @@ describe('Staff API', () => {
         name: 'Admin User',
         roleId: SYSTEM_ROLE_IDS.ADMIN,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash,
       },
       {
         id: staffUserId,
@@ -43,7 +44,7 @@ describe('Staff API', () => {
         name: 'Staff User',
         roleId: SYSTEM_ROLE_IDS.STAFF,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash,
       },
       {
         id: targetUserId,
@@ -51,7 +52,7 @@ describe('Staff API', () => {
         name: 'Target User',
         roleId: SYSTEM_ROLE_IDS.VIEWER,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash,
       },
     ]);
 

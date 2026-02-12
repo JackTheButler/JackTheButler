@@ -6,6 +6,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import { db, staff, roles } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { StaffService } from '@/services/staff.js';
+import { authService } from '@/services/auth.js';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
 
 describe('StaffService', () => {
@@ -21,6 +22,7 @@ describe('StaffService', () => {
     await db.delete(staff).where(eq(staff.id, testStaffId));
 
     // Create test users
+    const passwordHash = await authService.hashPassword('test12345');
     await db.insert(staff).values([
       {
         id: testAdminId,
@@ -28,7 +30,7 @@ describe('StaffService', () => {
         name: 'Admin User',
         roleId: SYSTEM_ROLE_IDS.ADMIN,
         status: 'active',
-        passwordHash: 'test12345',
+        passwordHash,
       },
       {
         id: testStaffId,
@@ -37,7 +39,7 @@ describe('StaffService', () => {
         roleId: SYSTEM_ROLE_IDS.STAFF,
         department: 'Front Desk',
         status: 'active',
-        passwordHash: 'test12345',
+        passwordHash,
       },
     ]);
   });
@@ -255,9 +257,9 @@ describe('StaffService', () => {
     it('should update password', async () => {
       await service.updatePassword(testStaffId, 'newpassword123');
 
-      // Verify by checking the hash is updated (since we're not using bcrypt in dev)
+      // Verify the hash is a bcrypt hash
       const [user] = await db.select().from(staff).where(eq(staff.id, testStaffId)).limit(1);
-      expect(user.passwordHash).toBe('newpassword123');
+      expect(user.passwordHash).toMatch(/^\$2[aby]\$/);
 
       // Restore
       await service.updatePassword(testStaffId, 'test12345');

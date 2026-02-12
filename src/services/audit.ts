@@ -225,7 +225,7 @@ export function getAuditService(): AuditService {
  * Helper to log authentication events
  */
 export async function logAuthEvent(
-  action: 'login' | 'logout' | 'login_failed' | 'token_refresh',
+  action: 'login' | 'logout' | 'login_failed' | 'token_refresh' | 'register' | 'password_reset',
   staffId: string | undefined,
   details?: Record<string, unknown> | undefined,
   context?: { ip?: string | undefined; userAgent?: string | undefined } | undefined

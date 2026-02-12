@@ -1,6 +1,10 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
 import { LoginPage } from '@/pages/Login';
+import { ForgotPasswordPage } from '@/pages/ForgotPassword';
+import { ResetPasswordPage } from '@/pages/ResetPassword';
+import { RegisterPage } from '@/pages/Register';
+import { VerifyEmailPage } from '@/pages/VerifyEmail';
 import { SetupPage } from '@/pages/Setup';
 import { AccessDeniedPage } from '@/pages/AccessDenied';
 import { Layout } from '@/components/layout/Layout';
@@ -28,6 +32,10 @@ export function App() {
       <BrowserRouter>
         <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
+        <Route path="/reset-password" element={<ResetPasswordPage />} />
+        <Route path="/register" element={<RegisterPage />} />
+        <Route path="/verify-email" element={<VerifyEmailPage />} />
         <Route path="/setup" element={<SetupPage />} />
         <Route path="/access-denied" element={<AccessDeniedPage />} />
         <Route element={<Layout />}>

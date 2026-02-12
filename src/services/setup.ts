@@ -13,6 +13,7 @@ import { createLogger } from '@/utils/logger.js';
 import { appConfigService } from './app-config.js';
 import { getAppRegistry, getManifest } from '@/apps/index.js';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { authService } from './auth.js';
 
 const log = createLogger('service:setup');
 
@@ -365,7 +366,7 @@ export class SetupService {
       const adminId = `staff-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
       // Create the new admin account
-      // Note: Password is stored as-is for now (dev mode). In production, use bcrypt/argon2.
+      const passwordHash = await authService.hashPassword(password);
       await db
         .insert(staff)
         .values({
@@ -375,7 +376,7 @@ export class SetupService {
           roleId: SYSTEM_ROLE_IDS.ADMIN,
           permissions: JSON.stringify(['*']),
           status: 'active',
-          passwordHash: password, // TODO: Hash in production
+          passwordHash,
           createdAt: now,
           updatedAt: now,
         })

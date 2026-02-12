@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef, useLayoutEffect, useCallback } from 'react';
+import { useEffect, useState, useRef, useLayoutEffect, useCallback, useMemo } from 'react';
 import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
@@ -31,6 +31,7 @@ import {
   Menu,
   X,
   MoreVertical,
+  AlertTriangle,
 } from 'lucide-react';
 import { Tooltip } from '@/components/ui/tooltip';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
@@ -675,6 +676,7 @@ export function Layout() {
             mobileMenuOpen={mobileMenuOpen}
             setMobileMenuOpen={setMobileMenuOpen}
           />
+          <EmailVerificationBanner />
           {/* Page content */}
           <main className="flex-1 overflow-auto">
             <Outlet />
@@ -806,5 +808,69 @@ function HeaderBar({
         </DropdownMenu>
       )}
     </header>
+  );
+}
+
+function EmailVerificationBanner() {
+  const { t } = useTranslation();
+  const { user } = useAuth();
+  const [dismissed, setDismissed] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
+
+  const daysLeft = useMemo(() => {
+    if (!user?.emailVerificationDeadline) return null;
+    const deadline = new Date(user.emailVerificationDeadline).getTime();
+    const now = Date.now();
+    const days = Math.ceil((deadline - now) / (1000 * 60 * 60 * 24));
+    return Math.max(0, days);
+  }, [user?.emailVerificationDeadline]);
+
+  // Don't show if verified, dismissed, or no deadline (instant mode users can't log in anyway)
+  if (!user || user.emailVerified || dismissed || daysLeft === null) {
+    return null;
+  }
+
+  const handleResend = async () => {
+    setResending(true);
+    try {
+      await api.post('/auth/resend-verification', {});
+      setResent(true);
+    } catch {
+      // Silently fail - user can try again
+    } finally {
+      setResending(false);
+    }
+  };
+
+  return (
+    <div className="bg-warning border-b border-warning-border px-4 py-2 flex items-center justify-between gap-3 text-sm">
+      <div className="flex items-center gap-2 text-warning-foreground min-w-0">
+        <AlertTriangle size={16} className="flex-shrink-0" />
+        <span className="truncate">
+          {t('auth.verifyEmailBanner', { count: daysLeft })}
+        </span>
+      </div>
+      <div className="flex items-center gap-2 flex-shrink-0">
+        {resent ? (
+          <span className="text-xs text-muted-foreground">{t('auth.verificationResent')}</span>
+        ) : (
+          <button
+            onClick={handleResend}
+            disabled={resending}
+            className="text-xs text-primary hover:underline disabled:opacity-50"
+          >
+            {t('auth.resendVerification')}
+          </button>
+        )}
+        <button
+          onClick={() => setDismissed(true)}
+          className="text-muted-foreground hover:text-foreground p-0.5"
+          aria-label={t('common.dismiss')}
+        >
+          <X size={14} />
+        </button>
+      </div>
+    </div>
   );
 }

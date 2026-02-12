@@ -40,7 +40,8 @@
   "filters": {
     "all": "Все",
     "active": "Активные",
-    "inactive": "Неактивные"
+    "inactive": "Неактивные",
+    "pendingApproval": "Ожидают одобрения"
   },
   "empty": {
     "title": "Пользователи не найдены",
@@ -49,14 +50,18 @@
   },
   "status": {
     "active": "Активен",
-    "inactive": "Неактивен"
+    "inactive": "Неактивен",
+    "pendingApproval": "Ожидает",
+    "rejected": "Отклонён"
   },
   "never": "Никогда",
   "actions": {
     "edit": "Редактировать",
     "deactivate": "Деактивировать",
     "activate": "Активировать",
-    "delete": "Удалить"
+    "delete": "Удалить",
+    "approve": "Одобрить",
+    "reject": "Отклонить"
   },
   "confirm": {
     "deactivateTitle": "Деактивировать пользователя",

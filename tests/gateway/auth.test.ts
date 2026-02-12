@@ -8,6 +8,7 @@ import { db, staff, roles } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
+import { authService } from '@/services/auth.js';
 
 describe('Auth Routes', () => {
   const testUserId = 'staff-test-auth-001';
@@ -19,6 +20,7 @@ describe('Auth Routes', () => {
     await db.delete(staff).where(eq(staff.id, testUserId));
 
     // Create test user with admin role
+    const passwordHash = await authService.hashPassword('test123');
     await db.insert(staff).values({
       id: testUserId,
       email: testEmail,
@@ -26,7 +28,7 @@ describe('Auth Routes', () => {
       roleId: SYSTEM_ROLE_IDS.ADMIN,
       permissions: JSON.stringify([]),
       status: 'active',
-      passwordHash: 'test123',
+      passwordHash,
     });
   });
 

@@ -158,6 +158,48 @@
       "title": "Quick Setup",
       "description": "Setup wizards to help you configure your system. These are always available here even if dismissed from the home page."
     },
+    "security": {
+      "title": "Security",
+      "description": "Configure registration, email verification, and account approval settings.",
+      "registration": "Registration",
+      "openRegistration": "Open Registration",
+      "openRegistrationDesc": "Allow new users to create accounts through the registration page.",
+      "defaultRole": "Default Role",
+      "selectRole": "Select a role...",
+      "adminApproval": "Require Admin Approval",
+      "adminApprovalDesc": "New accounts must be approved by an admin before gaining access.",
+      "emailVerification": "Email Verification",
+      "verificationMode": "Verification Mode",
+      "instant": "Instant",
+      "instantDesc": "Users must verify their email before they can log in.",
+      "grace": "Grace Period",
+      "graceDesc": "Users can log in immediately but must verify within the grace period.",
+      "gracePeriodDays": "Grace Period (days)",
+      "saved": "Security settings saved",
+      "saveError": "Failed to save security settings",
+      "emailTemplates": "Email Templates",
+      "emailTemplatesDesc": "Customize the emails sent for authentication events. Use {{variables}} as placeholders.",
+      "templateSubject": "Subject",
+      "templateBody": "Body",
+      "resetToDefault": "Reset to default",
+      "templateSaved": "Email templates saved",
+      "templateSaveError": "Failed to save email templates",
+      "templates": {
+        "passwordReset": "Password Reset",
+        "emailVerification": "Email Verification",
+        "approvalRequest": "Approval Request",
+        "approvalResult": "Approval Result"
+      },
+      "variables": {
+        "title": "Available variables",
+        "name": "User's name",
+        "link": "Action link (reset or verify URL)",
+        "hotelName": "Hotel name",
+        "newUserName": "New user's name",
+        "newUserEmail": "New user's email",
+        "status": "approved or rejected"
+      }
+    },
     "dangerZone": {
       "title": "Danger Zone",
       "description": "Destructive actions that cannot be undone",

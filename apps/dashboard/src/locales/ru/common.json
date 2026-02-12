@@ -41,7 +41,8 @@
     "switchToDark": "Тёмная тема",
     "switchToLight": "Светлая тема",
     "goBack": "Назад",
-    "home": "Главная"
+    "home": "Главная",
+    "dismiss": "Скрыть"
   },
   "errors": {
     "accessDenied": "Доступ запрещён",

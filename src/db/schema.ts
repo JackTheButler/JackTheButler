@@ -210,6 +210,12 @@ export const staff = sqliteTable(
     // Auth (bcrypt hash)
     passwordHash: text('password_hash'),
 
+    // Email verification (default true for admin-created accounts)
+    emailVerified: integer('email_verified', { mode: 'boolean' }).notNull().default(true),
+
+    // Approval status: pending, approved, rejected (default approved for admin-created accounts)
+    approvalStatus: text('approval_status').notNull().default('approved'),
+
     createdAt: text('created_at')
       .notNull()
       .default(sql`(datetime('now'))`),
@@ -836,6 +842,48 @@ export const approvalQueue = sqliteTable(
 
 export type ApprovalQueueItem = typeof approvalQueue.$inferSelect;
 export type NewApprovalQueueItem = typeof approvalQueue.$inferInsert;
+
+// ===================
+// Auth Tokens
+// ===================
+
+/**
+ * Tokens for password reset and email verification
+ */
+export const authTokens = sqliteTable(
+  'auth_tokens',
+  {
+    id: text('id').primaryKey(),
+    staffId: text('staff_id')
+      .notNull()
+      .references(() => staff.id, { onDelete: 'cascade' }),
+
+    // Type: password_reset, email_verification
+    type: text('type').notNull(),
+
+    // Unique token string
+    token: text('token').notNull().unique(),
+
+    // Expiration
+    expiresAt: text('expires_at').notNull(),
+
+    // Usage tracking
+    usedAt: text('used_at'),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_auth_tokens_staff').on(table.staffId),
+    index('idx_auth_tokens_type').on(table.type),
+    index('idx_auth_tokens_token').on(table.token),
+    index('idx_auth_tokens_expires').on(table.expiresAt),
+  ]
+);
+
+export type AuthToken = typeof authTokens.$inferSelect;
+export type NewAuthToken = typeof authTokens.$inferInsert;
 
 // ===================
 // Setup State

@@ -5,10 +5,12 @@
  */
 
 import { SignJWT, jwtVerify } from 'jose';
+import bcrypt from 'bcrypt';
 import { eq } from 'drizzle-orm';
 import { db, staff, roles } from '@/db/index.js';
 import { loadConfig } from '@/config/index.js';
-import { UnauthorizedError, NotFoundError } from '@/errors/index.js';
+import { UnauthorizedError, NotFoundError, ForbiddenError } from '@/errors/index.js';
+import { authSettingsService } from './auth-settings.js';
 import { createLogger } from '@/utils/logger.js';
 import { WILDCARD_PERMISSION } from '@/core/permissions/index.js';
 
@@ -27,6 +29,8 @@ export interface UserInfo {
   roleId: string;
   roleName: string;
   permissions: string[];
+  emailVerified: boolean;
+  emailVerificationDeadline: string | null;
 }
 
 export class AuthService {
@@ -48,19 +52,46 @@ export class AuthService {
       throw new UnauthorizedError('Invalid credentials');
     }
 
-    if (user.status !== 'active') {
-      log.warn({ email, status: user.status }, 'Login attempt for inactive user');
-      throw new UnauthorizedError('Account is not active');
-    }
-
-    // For development, accept any password if no hash is set
-    // In production, we would verify against the hash
+    // Verify password
     if (user.passwordHash) {
       const isValid = await this.verifyPassword(password, user.passwordHash);
       if (!isValid) {
         log.warn({ email }, 'Invalid password attempt');
         throw new UnauthorizedError('Invalid credentials');
       }
+    }
+
+    // Check approval status
+    if (user.approvalStatus === 'pending') {
+      throw new ForbiddenError('Your account is pending approval');
+    }
+    if (user.approvalStatus === 'rejected') {
+      throw new ForbiddenError('Your account has been rejected');
+    }
+
+    // Check email verification
+    if (!user.emailVerified) {
+      const authSettings = await authSettingsService.get();
+
+      if (authSettings.emailVerification === 'instant') {
+        throw new ForbiddenError('Please verify your email before logging in', { reason: 'EMAIL_NOT_VERIFIED' });
+      }
+
+      if (authSettings.emailVerification === 'grace') {
+        const graceDays = authSettings.emailVerificationGraceDays;
+        const createdAt = new Date(user.createdAt).getTime();
+        const deadline = createdAt + graceDays * 24 * 60 * 60 * 1000;
+
+        if (Date.now() > deadline) {
+          throw new ForbiddenError('Email verification grace period has expired. Please verify your email.', { reason: 'EMAIL_NOT_VERIFIED' });
+        }
+      }
+    }
+
+    // Check account status (covers manually deactivated accounts)
+    if (user.status !== 'active') {
+      log.warn({ email, status: user.status }, 'Login attempt for inactive user');
+      throw new UnauthorizedError('Account is not active');
     }
 
     log.info({ userId: user.id, email, rememberMe }, 'User logged in');
@@ -124,6 +155,17 @@ export class AuthService {
     // Get permissions
     const permissions = await this.getUserPermissions(user.id, user.roleId);
 
+    // Calculate email verification deadline
+    let emailVerificationDeadline: string | null = null;
+    if (!user.emailVerified) {
+      const authSettings = await authSettingsService.get();
+      if (authSettings.emailVerification === 'grace') {
+        const createdAt = new Date(user.createdAt).getTime();
+        const deadline = createdAt + authSettings.emailVerificationGraceDays * 24 * 60 * 60 * 1000;
+        emailVerificationDeadline = new Date(deadline).toISOString();
+      }
+    }
+
     return {
       id: user.id,
       email: user.email,
@@ -131,6 +173,8 @@ export class AuthService {
       roleId: user.roleId,
       roleName: role?.name || 'Unknown',
       permissions,
+      emailVerified: user.emailVerified,
+      emailVerificationDeadline,
     };
   }
 
@@ -168,6 +212,18 @@ export class AuthService {
   }
 
   /**
+   * Generate tokens for a user by ID (used after email verification auto-login)
+   */
+  async generateTokensForUser(userId: string): Promise<TokenPair> {
+    const [user] = await db.select().from(staff).where(eq(staff.id, userId)).limit(1);
+    if (!user || user.status !== 'active') {
+      throw new UnauthorizedError('User not found or inactive');
+    }
+    const permissions = await this.getUserPermissions(user.id, user.roleId);
+    return this.generateTokens(user.id, user.roleId, permissions);
+  }
+
+  /**
    * Get permissions for a user (from role + user overrides)
    */
   private async getUserPermissions(userId: string, roleId: string): Promise<string[]> {
@@ -190,23 +246,17 @@ export class AuthService {
   }
 
   /**
-   * Verify password against hash
-   * Note: In production, use bcrypt or argon2
+   * Verify password against bcrypt hash
    */
   private async verifyPassword(password: string, hash: string): Promise<boolean> {
-    // Simple comparison for development
-    // TODO: Phase 6 will implement proper password hashing
-    return password === hash;
+    return bcrypt.compare(password, hash);
   }
 
   /**
-   * Hash a password
-   * Note: In production, use bcrypt or argon2
+   * Hash a password with bcrypt (cost factor 12)
    */
   async hashPassword(password: string): Promise<string> {
-    // Simple pass-through for development
-    // TODO: Phase 6 will implement proper password hashing
-    return password;
+    return bcrypt.hash(password, 12);
   }
 }
 

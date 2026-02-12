@@ -67,8 +67,8 @@ export class UnauthorizedError extends AppError {
  * Permission denied (403)
  */
 export class ForbiddenError extends AppError {
-  constructor(message = 'Permission denied') {
-    super(message, 'FORBIDDEN', 403);
+  constructor(message = 'Permission denied', details?: Record<string, unknown>) {
+    super(message, 'FORBIDDEN', 403, details);
     this.name = 'ForbiddenError';
   }
 }

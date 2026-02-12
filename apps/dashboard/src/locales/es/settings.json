@@ -158,6 +158,48 @@
       "title": "Configuración Rápida",
       "description": "Asistentes de configuración para ayudarte a configurar tu sistema. Siempre están disponibles aquí incluso si los cerraste en la página de inicio."
     },
+    "security": {
+      "title": "Seguridad",
+      "description": "Configurar registro, verificación de correo y aprobación de cuentas.",
+      "registration": "Registro",
+      "openRegistration": "Registro Abierto",
+      "openRegistrationDesc": "Permitir que nuevos usuarios creen cuentas a través de la página de registro.",
+      "defaultRole": "Rol Predeterminado",
+      "selectRole": "Seleccionar un rol...",
+      "adminApproval": "Requiere Aprobación del Admin",
+      "adminApprovalDesc": "Las nuevas cuentas deben ser aprobadas por un administrador antes de obtener acceso.",
+      "emailVerification": "Verificación de Correo",
+      "verificationMode": "Modo de Verificación",
+      "instant": "Instantáneo",
+      "instantDesc": "Los usuarios deben verificar su correo antes de poder iniciar sesión.",
+      "grace": "Período de Gracia",
+      "graceDesc": "Los usuarios pueden iniciar sesión inmediatamente pero deben verificar dentro del período de gracia.",
+      "gracePeriodDays": "Período de Gracia (días)",
+      "saved": "Configuración de seguridad guardada",
+      "saveError": "Error al guardar configuración de seguridad",
+      "emailTemplates": "Plantillas de Email",
+      "emailTemplatesDesc": "Personaliza los correos enviados para eventos de autenticación. Usa {{variables}} como marcadores.",
+      "templateSubject": "Asunto",
+      "templateBody": "Cuerpo",
+      "resetToDefault": "Restablecer por defecto",
+      "templateSaved": "Plantillas de email guardadas",
+      "templateSaveError": "Error al guardar plantillas de email",
+      "templates": {
+        "passwordReset": "Restablecimiento de Contraseña",
+        "emailVerification": "Verificación de Email",
+        "approvalRequest": "Solicitud de Aprobación",
+        "approvalResult": "Resultado de Aprobación"
+      },
+      "variables": {
+        "title": "Variables disponibles",
+        "name": "Nombre del usuario",
+        "link": "Enlace de acción (URL de restablecimiento o verificación)",
+        "hotelName": "Nombre del hotel",
+        "newUserName": "Nombre del nuevo usuario",
+        "newUserEmail": "Email del nuevo usuario",
+        "status": "aprobado o rechazado"
+      }
+    },
     "dangerZone": {
       "title": "Zona de Peligro",
       "description": "Acciones destructivas que no se pueden deshacer",

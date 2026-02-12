@@ -41,7 +41,8 @@
     "switchToDark": "Cambiar a oscuro",
     "switchToLight": "Cambiar a claro",
     "goBack": "Volver",
-    "home": "Inicio"
+    "home": "Inicio",
+    "dismiss": "Descartar"
   },
   "errors": {
     "accessDenied": "Acceso Denegado",

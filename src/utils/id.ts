@@ -30,6 +30,8 @@ export const ID_PREFIXES = {
   execution: 'exec',
   // Phase 9: Roles
   role: 'role',
+  // Phase 10: Auth
+  authToken: 'atok',
 } as const;
 
 export type IdPrefix = keyof typeof ID_PREFIXES;

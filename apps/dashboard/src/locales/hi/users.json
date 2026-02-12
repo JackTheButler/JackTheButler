@@ -40,7 +40,8 @@
   "filters": {
     "all": "सभी",
     "active": "सक्रिय",
-    "inactive": "निष्क्रिय"
+    "inactive": "निष्क्रिय",
+    "pendingApproval": "अनुमोदन लंबित"
   },
   "empty": {
     "title": "कोई उपयोगकर्ता नहीं मिला",
@@ -49,14 +50,18 @@
   },
   "status": {
     "active": "सक्रिय",
-    "inactive": "निष्क्रिय"
+    "inactive": "निष्क्रिय",
+    "pendingApproval": "लंबित",
+    "rejected": "अस्वीकृत"
   },
   "never": "कभी नहीं",
   "actions": {
     "edit": "संपादित करें",
     "deactivate": "निष्क्रिय करें",
     "activate": "सक्रिय करें",
-    "delete": "हटाएं"
+    "delete": "हटाएं",
+    "approve": "स्वीकृत करें",
+    "reject": "अस्वीकार करें"
   },
   "confirm": {
     "deactivateTitle": "उपयोगकर्ता निष्क्रिय करें",

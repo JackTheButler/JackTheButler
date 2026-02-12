@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
+import { ApiError } from '@/lib/api';
 import { Checkbox } from '@/components/ui/checkbox';
 import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription } from '@/components/ui/alert';
@@ -20,8 +21,12 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingSetup, setCheckingSetup] = useState(true);
+  const [registrationEnabled, setRegistrationEnabled] = useState(false);
+  const [needsVerification, setNeedsVerification] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resent, setResent] = useState(false);
 
-  // Check if setup is needed on mount
+  // Check if setup is needed and if registration is enabled on mount
   useEffect(() => {
     const checkSetupState = async () => {
       try {
@@ -36,6 +41,15 @@ export function LoginPage() {
       } catch {
         // On error, proceed to login (setup endpoint might not exist in older versions)
       }
+
+      try {
+        const res = await fetch('/api/v1/auth/registration-status');
+        const data = await res.json();
+        setRegistrationEnabled(data.registrationEnabled === true);
+      } catch {
+        // Default to hidden if endpoint unavailable
+      }
+
       setCheckingSetup(false);
     };
 
@@ -45,15 +59,37 @@ export function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError('');
+    setNeedsVerification(false);
+    setResent(false);
     setLoading(true);
 
     try {
       await login(email, password, rememberMe);
       navigate('/');
     } catch (err) {
+      if (err instanceof ApiError && err.details?.reason === 'EMAIL_NOT_VERIFIED') {
+        setNeedsVerification(true);
+      }
       setError(err instanceof Error ? err.message : t('auth.loginFailed'));
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleResendVerification = async () => {
+    setResending(true);
+    setResent(false);
+    try {
+      await fetch('/api/v1/auth/resend-verification-email', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email }),
+      });
+      setResent(true);
+    } catch {
+      // Silently fail — endpoint always returns success
+    } finally {
+      setResending(false);
     }
   };
 
@@ -88,7 +124,19 @@ export function LoginPage() {
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
-                <AlertDescription>{error}</AlertDescription>
+                <AlertDescription>
+                  <p>{error}</p>
+                  {needsVerification && (
+                    <button
+                      type="button"
+                      onClick={handleResendVerification}
+                      disabled={resending || resent}
+                      className="mt-2 text-sm underline hover:no-underline disabled:opacity-50"
+                    >
+                      {resent ? t('auth.verificationResent') : resending ? '...' : t('auth.resendVerification')}
+                    </button>
+                  )}
+                </AlertDescription>
               </Alert>
             )}
 
@@ -114,21 +162,35 @@ export function LoginPage() {
               />
             </div>
 
-            <div className="flex items-center gap-2">
-              <Checkbox
-                id="rememberMe"
-                checked={rememberMe}
-                onCheckedChange={setRememberMe}
-              />
-              <label htmlFor="rememberMe" className="text-sm text-muted-foreground cursor-pointer">
-                {t('auth.rememberMe')}
-              </label>
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-2">
+                <Checkbox
+                  id="rememberMe"
+                  checked={rememberMe}
+                  onCheckedChange={setRememberMe}
+                />
+                <label htmlFor="rememberMe" className="text-sm text-muted-foreground cursor-pointer">
+                  {t('auth.rememberMe')}
+                </label>
+              </div>
+              <Link to="/forgot-password" className="text-sm text-primary hover:underline">
+                {t('auth.forgotPassword')}
+              </Link>
             </div>
 
             <Button type="submit" loading={loading} className="w-full">
               {t('auth.signIn')}
             </Button>
           </form>
+
+          {registrationEnabled && (
+            <div className="mt-4 text-center text-sm text-muted-foreground">
+              {t('auth.noAccount')}{' '}
+              <Link to="/register" className="text-primary hover:underline">
+                {t('auth.createOneLink')}
+              </Link>
+            </div>
+          )}
         </div>
         <div className="absolute top-2 left-2 text-primary-foreground [&_button]:hover:bg-primary-foreground/20">
           <Tooltip content={isDark ? t('common.switchToLight') : t('common.switchToDark')} side="right">

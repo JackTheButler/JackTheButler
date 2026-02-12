@@ -28,6 +28,7 @@ describe('Roles API', () => {
     await db.delete(roles).where(eq(roles.id, customRoleId));
 
     // Create test users
+    const passwordHash = await authService.hashPassword('test123');
     await db.insert(staff).values([
       {
         id: adminUserId,
@@ -35,7 +36,7 @@ describe('Roles API', () => {
         name: 'Admin User',
         roleId: SYSTEM_ROLE_IDS.ADMIN,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash,
       },
       {
         id: staffUserId,
@@ -43,7 +44,7 @@ describe('Roles API', () => {
         name: 'Staff User',
         roleId: SYSTEM_ROLE_IDS.STAFF,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash,
       },
     ]);
 
@@ -370,13 +371,14 @@ describe('Roles API', () => {
 
       // Create a user with this role
       const testUserId = 'staff-delete-test-user';
+      const hashedPw = await authService.hashPassword('test123');
       await db.insert(staff).values({
         id: testUserId,
         email: 'delete-test@test.com',
         name: 'Delete Test User',
         roleId: role.id,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash: hashedPw,
       });
 
       // Try to delete - should fail

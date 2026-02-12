@@ -7,13 +7,18 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { staffService } from '@/services/staff.js';
+import { emailService } from '@/services/email.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
+import { createLogger } from '@/utils/logger.js';
+
+const log = createLogger('routes:staff');
 
 const listQuerySchema = z.object({
   status: z.enum(['active', 'inactive']).optional(),
   roleId: z.string().optional(),
+  approvalStatus: z.enum(['pending', 'approved', 'rejected']).optional(),
   search: z.string().optional(),
   limit: z.coerce.number().min(1).max(100).default(50),
   offset: z.coerce.number().min(0).default(0),
@@ -73,6 +78,7 @@ staffRouter.get(
     const staffList = await staffService.list({
       status: query.status,
       roleId: query.roleId,
+      approvalStatus: query.approvalStatus,
       search: query.search,
       limit: query.limit,
       offset: query.offset,
@@ -196,6 +202,42 @@ staffRouter.post('/:id/activate', requirePermission(PERMISSIONS.ADMIN_MANAGE), a
   const id = c.req.param('id');
 
   const member = await staffService.activate(id);
+  return c.json({ staff: member });
+});
+
+/**
+ * POST /api/v1/staff/:id/approve
+ * Approve a pending staff member
+ */
+staffRouter.post('/:id/approve', requirePermission(PERMISSIONS.ADMIN_MANAGE), async (c) => {
+  const id = c.req.param('id');
+
+  const { member, email, name } = await staffService.approve(id);
+
+  try {
+    await emailService.sendApprovalResultEmail(email, name, true);
+  } catch (err) {
+    log.warn({ staffId: id, error: err }, 'Failed to send approval email');
+  }
+
+  return c.json({ staff: member });
+});
+
+/**
+ * POST /api/v1/staff/:id/reject
+ * Reject a pending staff member
+ */
+staffRouter.post('/:id/reject', requirePermission(PERMISSIONS.ADMIN_MANAGE), async (c) => {
+  const id = c.req.param('id');
+
+  const { member, email, name } = await staffService.reject(id);
+
+  try {
+    await emailService.sendApprovalResultEmail(email, name, false);
+  } catch (err) {
+    log.warn({ staffId: id, error: err }, 'Failed to send rejection email');
+  }
+
   return c.json({ staff: member });
 });
 

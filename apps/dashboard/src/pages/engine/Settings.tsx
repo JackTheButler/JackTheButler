@@ -2,11 +2,12 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Sparkles, Building2, Users, Shield } from 'lucide-react';
+import { AlertTriangle, Sparkles, Building2, Users, Shield, Lock } from 'lucide-react';
 import { api } from '@/lib/api';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import { UsersContent } from '@/pages/settings/Users';
 import { RolesContent } from '@/pages/settings/Roles';
+import { SecurityContent } from '@/pages/settings/Security';
 import { PageContainer, ActionItems, DemoDataCard } from '@/components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -61,9 +62,9 @@ interface CountryOption {
   label: string;
 }
 
-type SettingsTab = 'profile' | 'users' | 'roles' | 'quick-setup' | 'danger-zone';
+type SettingsTab = 'profile' | 'users' | 'roles' | 'security' | 'quick-setup' | 'danger-zone';
 
-const VALID_TABS: SettingsTab[] = ['profile', 'users', 'roles', 'quick-setup', 'danger-zone'];
+const VALID_TABS: SettingsTab[] = ['profile', 'users', 'roles', 'security', 'quick-setup', 'danger-zone'];
 
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -81,6 +82,7 @@ export function SettingsPage() {
     profile: true,
     users: canViewAdmin,
     roles: canViewAdmin,
+    security: canViewAdmin,
     'quick-setup': canManageSettings,
     'danger-zone': canManageSettings,
   };
@@ -184,6 +186,7 @@ export function SettingsPage() {
     // Admin tabs (show but disable if no permission)
     { id: 'users' as const, label: t('nav.users'), icon: Users, disabled: !canViewAdmin },
     { id: 'roles' as const, label: t('nav.roles'), icon: Shield, disabled: !canViewAdmin },
+    { id: 'security' as const, label: t('settings.security.title'), icon: Lock, disabled: !canViewAdmin },
     { id: 'quick-setup' as const, label: t('settings.quickSetup.title'), icon: Sparkles, disabled: !canManageSettings },
     // Danger zone (show but disable if no permission)
     { id: 'danger-zone' as const, label: t('settings.dangerZone.title'), icon: AlertTriangle, variant: 'destructive' as const, disabled: !canManageSettings },
@@ -413,6 +416,9 @@ export function SettingsPage() {
 
           {/* Roles Tab */}
           {activeTab === 'roles' && <RolesContent />}
+
+          {/* Security Tab */}
+          {activeTab === 'security' && <SecurityContent />}
 
           {/* Quick Setup Tab */}
           {activeTab === 'quick-setup' && (

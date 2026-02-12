@@ -40,7 +40,8 @@
   "filters": {
     "all": "الكل",
     "active": "نشط",
-    "inactive": "غير نشط"
+    "inactive": "غير نشط",
+    "pendingApproval": "بانتظار الموافقة"
   },
   "empty": {
     "title": "لم يتم العثور على مستخدمين",
@@ -49,14 +50,18 @@
   },
   "status": {
     "active": "نشط",
-    "inactive": "غير نشط"
+    "inactive": "غير نشط",
+    "pendingApproval": "معلّق",
+    "rejected": "مرفوض"
   },
   "never": "أبداً",
   "actions": {
     "edit": "تعديل",
     "deactivate": "تعطيل",
     "activate": "تفعيل",
-    "delete": "حذف"
+    "delete": "حذف",
+    "approve": "موافقة",
+    "reject": "رفض"
   },
   "confirm": {
     "deactivateTitle": "تعطيل المستخدم",

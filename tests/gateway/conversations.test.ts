@@ -7,6 +7,7 @@ import { app } from '@/gateway/server.js';
 import { db, staff, conversations, messages, tasks, approvalQueue } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { authService } from '@/services/auth.js';
 
 describe('Conversation Routes', () => {
   let accessToken: string;
@@ -15,13 +16,14 @@ describe('Conversation Routes', () => {
   beforeAll(async () => {
     const existing = await db.select().from(staff).where(eq(staff.email, 'test@hotel.com')).limit(1);
     if (existing.length === 0) {
+      const passwordHash = await authService.hashPassword('test12345');
       await db.insert(staff).values({
         id: 'staff-test-001',
         email: 'test@hotel.com',
         name: 'Test User',
         roleId: SYSTEM_ROLE_IDS.ADMIN,
         status: 'active',
-        passwordHash: 'test12345',
+        passwordHash,
       });
     }
 

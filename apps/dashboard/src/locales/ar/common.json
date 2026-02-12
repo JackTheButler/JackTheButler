@@ -41,7 +41,8 @@
     "switchToDark": "التبديل إلى الداكن",
     "switchToLight": "التبديل إلى الفاتح",
     "goBack": "العودة",
-    "home": "الرئيسية"
+    "home": "الرئيسية",
+    "dismiss": "تجاهل"
   },
   "errors": {
     "accessDenied": "تم رفض الوصول",

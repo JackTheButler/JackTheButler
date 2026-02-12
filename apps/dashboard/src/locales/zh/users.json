@@ -40,7 +40,8 @@
   "filters": {
     "all": "全部",
     "active": "活跃",
-    "inactive": "未活跃"
+    "inactive": "未活跃",
+    "pendingApproval": "待审批"
   },
   "empty": {
     "title": "未找到用户",
@@ -49,14 +50,18 @@
   },
   "status": {
     "active": "活跃",
-    "inactive": "未活跃"
+    "inactive": "未活跃",
+    "pendingApproval": "待审批",
+    "rejected": "已拒绝"
   },
   "never": "从未",
   "actions": {
     "edit": "编辑",
     "deactivate": "停用",
     "activate": "启用",
-    "delete": "删除"
+    "delete": "删除",
+    "approve": "批准",
+    "reject": "拒绝"
   },
   "confirm": {
     "deactivateTitle": "停用用户",

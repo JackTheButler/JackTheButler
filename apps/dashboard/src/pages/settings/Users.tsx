@@ -36,6 +36,7 @@ interface StaffMember {
   roleId: string;
   roleName: string;
   status: 'active' | 'inactive';
+  approvalStatus: 'pending' | 'approved' | 'rejected';
   lastActiveAt: string | null;
   createdAt: string;
   isDeletable?: boolean;
@@ -52,7 +53,7 @@ interface Role {
   userCount: number;
 }
 
-type StatusFilter = 'all' | 'active' | 'inactive';
+type StatusFilter = 'all' | 'active' | 'inactive' | 'pending';
 
 /**
  * Users content component - can be used standalone or within Settings
@@ -78,6 +79,7 @@ export function UsersContent() {
     { value: 'all' as const, label: t('filters.all') },
     { value: 'active' as const, label: t('filters.active') },
     { value: 'inactive' as const, label: t('filters.inactive') },
+    { value: 'pending' as const, label: t('filters.pendingApproval') },
   ];
 
   // Fetch staff list
@@ -85,7 +87,11 @@ export function UsersContent() {
     queryKey: ['staff', statusFilter, searchQuery],
     queryFn: () => {
       const params = new URLSearchParams();
-      if (statusFilter !== 'all') params.set('status', statusFilter);
+      if (statusFilter === 'pending') {
+        params.set('approvalStatus', 'pending');
+      } else if (statusFilter !== 'all') {
+        params.set('status', statusFilter);
+      }
       if (searchQuery) params.set('search', searchQuery);
       const qs = params.toString();
       return api.get<{ staff: StaffMember[]; total: number }>(`/staff${qs ? `?${qs}` : ''}`);
@@ -127,6 +133,22 @@ export function UsersContent() {
     onError: (err: Error) => {
       setShowDeleteConfirm(false);
       setDeleteError(err.message || t('errors.deleteFailed'));
+    },
+  });
+
+  // Approve mutation
+  const approveMutation = useMutation({
+    mutationFn: (userId: string) => api.post(`/staff/${userId}/approve`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] });
+    },
+  });
+
+  // Reject mutation
+  const rejectMutation = useMutation({
+    mutationFn: (userId: string) => api.post(`/staff/${userId}/reject`, {}),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['staff'] });
     },
   });
 
@@ -189,9 +211,17 @@ export function UsersContent() {
       key: 'status',
       header: t('table.status'),
       render: (user) => (
-        <Badge variant={user.status === 'active' ? 'success' : 'secondary'}>
-          {t(`status.${user.status}`)}
-        </Badge>
+        <div className="flex items-center gap-1.5">
+          <Badge variant={user.status === 'active' ? 'success' : 'secondary'}>
+            {t(`status.${user.status}`)}
+          </Badge>
+          {user.approvalStatus === 'pending' && (
+            <Badge variant="warning">{t('status.pendingApproval')}</Badge>
+          )}
+          {user.approvalStatus === 'rejected' && (
+            <Badge variant="destructive">{t('status.rejected')}</Badge>
+          )}
+        </div>
       ),
     },
     {
@@ -218,6 +248,16 @@ export function UsersContent() {
                   </button>
                 </DropdownMenuTrigger>
                 <DropdownMenuContent>
+                  {user.approvalStatus === 'pending' && (
+                    <>
+                      <DropdownMenuItem onClick={() => approveMutation.mutate(user.id)}>
+                        {t('actions.approve')}
+                      </DropdownMenuItem>
+                      <DropdownMenuItem onClick={() => rejectMutation.mutate(user.id)}>
+                        {t('actions.reject')}
+                      </DropdownMenuItem>
+                    </>
+                  )}
                   <DropdownMenuItem onClick={() => handleEditUser(user)}>
                     {t('actions.edit')}
                   </DropdownMenuItem>

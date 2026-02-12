@@ -8,11 +8,10 @@ import { db, staff } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { resetAppRegistry, getAppRegistry } from '@/apps/registry.js';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
-import { AuthService } from '@/services/auth.js';
+import { AuthService, authService } from '@/services/auth.js';
 import type { AIAppManifest } from '@/apps/types.js';
 
 describe('System Status API', () => {
-  const authService = new AuthService();
   const testUserId = 'system-test-admin';
   let adminToken: string;
 
@@ -21,13 +20,14 @@ describe('System Status API', () => {
     await db.delete(staff).where(eq(staff.id, testUserId));
 
     // Create test user with admin role
+    const passwordHash = await authService.hashPassword('test12345');
     await db.insert(staff).values({
       id: testUserId,
       email: 'system-test-admin@test.com',
       name: 'System Test Admin',
       roleId: SYSTEM_ROLE_IDS.ADMIN,
       status: 'active',
-      passwordHash: 'test12345',
+      passwordHash,
     });
 
     // Get token

@@ -40,7 +40,8 @@
   "filters": {
     "all": "Todos",
     "active": "Activos",
-    "inactive": "Inactivos"
+    "inactive": "Inactivos",
+    "pendingApproval": "Pendientes"
   },
   "empty": {
     "title": "No se encontraron usuarios",
@@ -49,14 +50,18 @@
   },
   "status": {
     "active": "Activo",
-    "inactive": "Inactivo"
+    "inactive": "Inactivo",
+    "pendingApproval": "Pendiente",
+    "rejected": "Rechazado"
   },
   "never": "Nunca",
   "actions": {
     "edit": "Editar",
     "deactivate": "Desactivar",
     "activate": "Activar",
-    "delete": "Eliminar"
+    "delete": "Eliminar",
+    "approve": "Aprobar",
+    "reject": "Rechazar"
   },
   "confirm": {
     "deactivateTitle": "Desactivar Usuario",

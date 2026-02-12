@@ -1,5 +1,16 @@
 const API_BASE = '/api/v1';
 
+export class ApiError extends Error {
+  constructor(
+    message: string,
+    public code: string,
+    public details?: Record<string, unknown>
+  ) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
+
 class ApiClient {
   private accessToken: string | null = null;
   private refreshPromise: Promise<boolean> | null = null;
@@ -136,7 +147,8 @@ class ApiClient {
 
     if (!res.ok) {
       const error = await res.json().catch(() => ({ error: { message: 'Request failed' } }));
-      throw new Error(error.error?.message || 'Request failed');
+      const e = error.error || {};
+      throw new ApiError(e.message || 'Request failed', e.code || 'UNKNOWN', e.details);
     }
 
     return res.json();

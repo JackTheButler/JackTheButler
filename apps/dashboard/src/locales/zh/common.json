@@ -41,7 +41,8 @@
     "switchToDark": "切换到深色",
     "switchToLight": "切换到浅色",
     "goBack": "返回",
-    "home": "首页"
+    "home": "首页",
+    "dismiss": "关闭"
   },
   "errors": {
     "accessDenied": "访问被拒绝",

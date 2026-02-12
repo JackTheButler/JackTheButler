@@ -41,7 +41,8 @@
     "switchToDark": "डार्क में बदलें",
     "switchToLight": "लाइट में बदलें",
     "goBack": "वापस जाएं",
-    "home": "होम"
+    "home": "होम",
+    "dismiss": "खारिज करें"
   },
   "errors": {
     "accessDenied": "पहुंच अस्वीकृत",

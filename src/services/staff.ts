@@ -12,6 +12,7 @@ import { createLogger } from '@/utils/logger.js';
 import { NotFoundError, ValidationError, ForbiddenError } from '@/errors/index.js';
 import { WILDCARD_PERMISSION } from '@/core/permissions/index.js';
 import { authService } from './auth.js';
+import { authSettingsService } from './auth-settings.js';
 
 const log = createLogger('staff');
 
@@ -25,7 +26,8 @@ export interface StaffWithRole {
   roleId: string;
   roleName: string;
   permissions: string[];
-  status: string;
+  status: 'active' | 'inactive';
+  approvalStatus: 'pending' | 'approved' | 'rejected';
   lastActiveAt: string | null;
   createdAt: string;
   updatedAt: string;
@@ -50,6 +52,7 @@ export interface UpdateStaffInput {
 export interface ListStaffOptions {
   status?: StaffStatus | undefined;
   roleId?: string | undefined;
+  approvalStatus?: string | undefined;
   search?: string | undefined;
   limit?: number | undefined;
   offset?: number | undefined;
@@ -61,7 +64,7 @@ export class StaffService {
    * List staff with role information
    */
   async list(options: ListStaffOptions = {}): Promise<StaffWithRole[]> {
-    const { status, roleId, search, limit = 50, offset = 0, currentUserId } = options;
+    const { status, roleId, approvalStatus, search, limit = 50, offset = 0, currentUserId } = options;
 
     const conditions = [];
 
@@ -71,6 +74,10 @@ export class StaffService {
 
     if (roleId) {
       conditions.push(eq(staff.roleId, roleId));
+    }
+
+    if (approvalStatus) {
+      conditions.push(eq(staff.approvalStatus, approvalStatus));
     }
 
     if (search) {
@@ -91,6 +98,7 @@ export class StaffService {
         roleName: roles.name,
         permissions: staff.permissions,
         status: staff.status,
+        approvalStatus: staff.approvalStatus,
         lastActiveAt: staff.lastActiveAt,
         createdAt: staff.createdAt,
         updatedAt: staff.updatedAt,
@@ -106,6 +114,8 @@ export class StaffService {
       ...r,
       roleName: r.roleName || 'Unknown',
       permissions: JSON.parse(r.permissions) as string[],
+      status: r.status as StaffWithRole['status'],
+      approvalStatus: r.approvalStatus as StaffWithRole['approvalStatus'],
     }));
 
     // Compute isDeletable for each staff member
@@ -145,6 +155,7 @@ export class StaffService {
         roleName: roles.name,
         permissions: staff.permissions,
         status: staff.status,
+        approvalStatus: staff.approvalStatus,
         lastActiveAt: staff.lastActiveAt,
         createdAt: staff.createdAt,
         updatedAt: staff.updatedAt,
@@ -162,6 +173,8 @@ export class StaffService {
       ...result,
       roleName: result.roleName || 'Unknown',
       permissions: JSON.parse(result.permissions) as string[],
+      status: result.status as StaffWithRole['status'],
+      approvalStatus: result.approvalStatus as StaffWithRole['approvalStatus'],
     };
   }
 
@@ -179,6 +192,7 @@ export class StaffService {
         roleName: roles.name,
         permissions: staff.permissions,
         status: staff.status,
+        approvalStatus: staff.approvalStatus,
         lastActiveAt: staff.lastActiveAt,
         createdAt: staff.createdAt,
         updatedAt: staff.updatedAt,
@@ -196,6 +210,8 @@ export class StaffService {
       ...result,
       roleName: result.roleName || 'Unknown',
       permissions: JSON.parse(result.permissions) as string[],
+      status: result.status as StaffWithRole['status'],
+      approvalStatus: result.approvalStatus as StaffWithRole['approvalStatus'],
     };
   }
 
@@ -326,6 +342,67 @@ export class StaffService {
   async activate(id: string): Promise<StaffWithRole> {
     await this.getById(id); // Verify exists
     return this.update(id, { status: 'active' });
+  }
+
+  /**
+   * Approve a pending staff member
+   * Activates account if email is verified or verification mode is grace.
+   * Returns the updated member and contact info for notification.
+   */
+  async approve(id: string): Promise<{ member: StaffWithRole; email: string; name: string }> {
+    const [user] = await db.select().from(staff).where(eq(staff.id, id)).limit(1);
+    if (!user) {
+      throw new NotFoundError('Staff', id);
+    }
+    if (user.approvalStatus !== 'pending') {
+      throw new ValidationError('Staff member is not pending approval');
+    }
+
+    // Activate if email is verified, OR if verification mode is grace (grace = active immediately)
+    const authSettings = await authSettingsService.get();
+    const shouldActivate = user.emailVerified || authSettings.emailVerification === 'grace';
+
+    await db
+      .update(staff)
+      .set({
+        approvalStatus: 'approved',
+        ...(shouldActivate && { status: 'active' }),
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(staff.id, id));
+
+    log.info({ staffId: id, activated: shouldActivate }, 'Staff member approved');
+
+    const member = await this.getById(id);
+    return { member, email: user.email, name: user.name };
+  }
+
+  /**
+   * Reject a pending staff member
+   * Returns the raw staff record (email, name) for notification purposes.
+   */
+  async reject(id: string): Promise<{ member: StaffWithRole; email: string; name: string }> {
+    const [user] = await db.select().from(staff).where(eq(staff.id, id)).limit(1);
+    if (!user) {
+      throw new NotFoundError('Staff', id);
+    }
+    if (user.approvalStatus !== 'pending') {
+      throw new ValidationError('Staff member is not pending approval');
+    }
+
+    await db
+      .update(staff)
+      .set({
+        approvalStatus: 'rejected',
+        status: 'inactive',
+        updatedAt: new Date().toISOString(),
+      })
+      .where(eq(staff.id, id));
+
+    log.info({ staffId: id }, 'Staff member rejected');
+
+    const member = await this.getById(id);
+    return { member, email: user.email, name: user.name };
   }
 
   /**

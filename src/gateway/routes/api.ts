@@ -14,6 +14,7 @@ import { appRoutes } from './apps.js';
 import { automationRoutes } from './automation.js';
 import { autonomySettingsRoutes, approvalsRoutes } from './autonomy.js';
 import { hotelProfileRoutes } from './hotel-profile.js';
+import { authSettingsRoutes } from './auth-settings.js';
 import { knowledgeRoutes } from './knowledge.js';
 import { guestRoutes } from './guests.js';
 import { reservationRoutes } from './reservations.js';
@@ -48,6 +49,9 @@ api.route('/settings/autonomy', autonomySettingsRoutes);
 
 // Hotel profile settings routes
 api.route('/settings/hotel', hotelProfileRoutes);
+
+// Auth settings routes
+api.route('/settings/auth', authSettingsRoutes);
 
 // Approval queue routes
 api.route('/approvals', approvalsRoutes);
