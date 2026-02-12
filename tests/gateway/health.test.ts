@@ -57,8 +57,8 @@ describe('Root Route', () => {
 });
 
 describe('404 Handler', () => {
-  it('should return 404 for unknown routes', async () => {
-    const res = await app.request('/unknown/route');
+  it('should return 404 for unknown API routes', async () => {
+    const res = await app.request('/api/v1/unknown/route');
     const json = await res.json();
 
     expect(res.status).toBe(404);

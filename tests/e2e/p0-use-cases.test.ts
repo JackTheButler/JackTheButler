@@ -80,16 +80,32 @@ function createTestDb() {
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
+    CREATE TABLE IF NOT EXISTS roles (
+      id TEXT PRIMARY KEY,
+      name TEXT NOT NULL UNIQUE,
+      description TEXT,
+      permissions TEXT NOT NULL DEFAULT '[]',
+      is_system INTEGER NOT NULL DEFAULT 0,
+      created_at TEXT NOT NULL DEFAULT (datetime('now')),
+      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
+    );
+
+    INSERT OR IGNORE INTO roles (id, name, permissions, is_system) VALUES
+      ('role-admin', 'Admin', '["*"]', 1),
+      ('role-staff', 'Staff', '["conversations:view"]', 1);
+
     CREATE TABLE IF NOT EXISTS staff (
       id TEXT PRIMARY KEY,
       email TEXT NOT NULL UNIQUE,
       name TEXT NOT NULL,
       phone TEXT,
-      role TEXT NOT NULL,
+      role_id TEXT NOT NULL REFERENCES roles(id),
       permissions TEXT NOT NULL DEFAULT '[]',
       status TEXT NOT NULL DEFAULT 'active',
       last_active_at TEXT,
       password_hash TEXT,
+      email_verified INTEGER NOT NULL DEFAULT 1,
+      approval_status TEXT NOT NULL DEFAULT 'approved',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -161,10 +177,13 @@ function createTestDb() {
       trigger_config TEXT NOT NULL,
       action_type TEXT NOT NULL,
       action_config TEXT NOT NULL,
+      actions TEXT,
+      retry_config TEXT,
       enabled INTEGER NOT NULL DEFAULT 1,
       last_run_at TEXT,
       last_error TEXT,
       run_count INTEGER NOT NULL DEFAULT 0,
+      consecutive_failures INTEGER NOT NULL DEFAULT 0,
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -619,7 +638,7 @@ describe('P0 Use Cases', () => {
         id: staffId,
         email: 'agent@hotel.com',
         name: 'Agent Smith',
-        role: 'front_desk',
+        roleId: 'role-staff',
       });
 
       // Create conversation
@@ -659,8 +678,7 @@ describe('P0 Use Cases', () => {
         id: staffId,
         email: 'housekeeper@hotel.com',
         name: 'Maria Garcia',
-        role: 'housekeeping',
-        department: 'housekeeping',
+        roleId: 'role-staff',
       });
 
       // Create task

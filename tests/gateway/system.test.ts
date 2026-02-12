@@ -136,7 +136,7 @@ describe('System Status API', () => {
       registry.register(anthropicManifest);
       registry.register(localManifest);
       await registry.activate('anthropic', {});
-      await registry.activate('local', {});
+      await registry.activate('local', { embeddingModel: 'test-model' });
 
       const res = await app.request('/api/v1/system/status', {
         headers: { Authorization: `Bearer ${adminToken}` },
@@ -168,7 +168,7 @@ describe('System Status API', () => {
       };
 
       registry.register(localManifest);
-      await registry.activate('local', {});
+      await registry.activate('local', { completionModel: 'test-model', embeddingModel: 'test-model' });
 
       const res = await app.request('/api/v1/system/status', {
         headers: { Authorization: `Bearer ${adminToken}` },

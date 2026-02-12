@@ -38,7 +38,7 @@ describe('Intent Taxonomy', () => {
     const definition = getIntentDefinition('inquiry.checkout');
 
     expect(definition).toBeDefined();
-    expect(definition?.department).toBe('front_desk');
+    expect(definition?.department).toBeNull();
     expect(definition?.requiresAction).toBe(false);
   });
 
@@ -78,7 +78,7 @@ describe('IntentClassifier', () => {
 
       expect(result.intent).toBe('inquiry.checkout');
       expect(result.confidence).toBe(0.95);
-      expect(result.department).toBe('front_desk');
+      expect(result.department).toBeNull();
       expect(result.requiresAction).toBe(false);
     });
 

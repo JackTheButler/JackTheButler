@@ -37,7 +37,6 @@ describe('StaffService', () => {
         email: 'staff-svc-staff@test.com',
         name: 'Staff User',
         roleId: SYSTEM_ROLE_IDS.STAFF,
-        department: 'Front Desk',
         status: 'active',
         passwordHash,
       },
@@ -185,16 +184,13 @@ describe('StaffService', () => {
     it('should update staff fields', async () => {
       const result = await service.update(testStaffId, {
         name: 'Updated Staff',
-        department: 'Housekeeping',
       });
 
       expect(result.name).toBe('Updated Staff');
-      expect(result.department).toBe('Housekeeping');
 
       // Restore
       await service.update(testStaffId, {
         name: 'Staff User',
-        department: 'Front Desk',
       });
     });
 

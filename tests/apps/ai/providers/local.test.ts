@@ -129,7 +129,7 @@ describe('createLocalProvider', () => {
 describe('Local AI Manifest', () => {
   it('should have correct structure', () => {
     expect(manifest.id).toBe('local');
-    expect(manifest.name).toBe('Local AI (Built-in)');
+    expect(manifest.name).toBe('Local AI');
     expect(manifest.category).toBe('ai');
     expect(manifest.version).toBe('2.0.0');
   });

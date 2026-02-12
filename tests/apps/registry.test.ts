@@ -296,7 +296,7 @@ describe('AppRegistry', () => {
       testRegistry.register(noEmbeddingManifest);
       testRegistry.register(localManifest);
       await testRegistry.activate('anthropic', { apiKey: 'test' });
-      await testRegistry.activate('local', {});
+      await testRegistry.activate('local', { embeddingModel: 'test-model' });
 
       // Should get local for embeddings (anthropic doesn't support)
       const embeddingProvider = testRegistry.getEmbeddingProvider();

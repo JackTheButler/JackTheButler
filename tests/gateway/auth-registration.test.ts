@@ -94,7 +94,7 @@ describe('Auth Registration & Recovery', () => {
       expect(res.status).toBe(201);
       const json = await res.json();
       expect(json.success).toBe(true);
-      expect(json.requiresVerification).toBe(true);
+      expect(json.requiresVerification).toBe(false); // grace period = no immediate verification required
       expect(json.requiresApproval).toBe(false);
 
       // Verify user was created with correct fields
