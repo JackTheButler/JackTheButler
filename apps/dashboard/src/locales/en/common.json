@@ -39,7 +39,13 @@
     "logout": "Logout",
     "language": "Language",
     "switchToDark": "Switch to dark",
-    "switchToLight": "Switch to light"
+    "switchToLight": "Switch to light",
+    "goBack": "Go Back",
+    "home": "Home"
+  },
+  "errors": {
+    "accessDenied": "Access Denied",
+    "accessDeniedDescription": "You don't have permission to access this page. Contact your administrator if you believe this is an error."
   },
   "nav": {
     "home": "Home",
@@ -56,7 +62,10 @@
     "apps": "Apps",
     "automations": "Automations",
     "autonomy": "Autonomy",
-    "dangerZone": "Danger Zone"
+    "dangerZone": "Danger Zone",
+    "admin": "Admin",
+    "users": "Users",
+    "roles": "Roles"
   },
   "filters": {
     "all": "All",

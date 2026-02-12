@@ -12,8 +12,9 @@ import { eq, desc, sql, and, isNull, isNotNull } from 'drizzle-orm';
 import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
-import { validateBody } from '@/gateway/middleware/index.js';
+import { validateBody, requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { getAppRegistry } from '@/apps/index.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 import { KnowledgeService } from '@/ai/knowledge/index.js';
 import type { LLMProvider } from '@/ai/types.js';
 
@@ -46,6 +47,9 @@ type Variables = {
 };
 
 const knowledgeRoutes = new Hono<{ Variables: Variables }>();
+
+// Apply auth to all routes
+knowledgeRoutes.use('/*', requireAuth);
 
 /**
  * Valid categories for knowledge base entries
@@ -89,7 +93,7 @@ const updateEntrySchema = z.object({
  * GET /api/v1/knowledge
  * List all knowledge base entries with optional filtering
  */
-knowledgeRoutes.get('/', async (c) => {
+knowledgeRoutes.get('/', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), async (c) => {
   const category = c.req.query('category');
   const search = c.req.query('search');
   const source = c.req.query('source');
@@ -155,7 +159,7 @@ knowledgeRoutes.get('/', async (c) => {
  * GET /api/v1/knowledge/categories
  * Get list of valid categories with counts
  */
-knowledgeRoutes.get('/categories', async (c) => {
+knowledgeRoutes.get('/categories', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), async (c) => {
   const counts = await db
     .select({
       category: knowledgeBase.category,
@@ -188,7 +192,7 @@ const querySchema = z.object({
  * POST /api/v1/knowledge/search
  * Semantic search against the knowledge base - returns matches without AI response
  */
-knowledgeRoutes.post('/search', validateBody(querySchema), async (c) => {
+knowledgeRoutes.post('/search', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), validateBody(querySchema), async (c) => {
   const { query } = c.get('validatedBody') as z.infer<typeof querySchema>;
 
   log.info({ query: query.substring(0, 50) }, 'Searching knowledge base');
@@ -227,7 +231,7 @@ knowledgeRoutes.post('/search', validateBody(querySchema), async (c) => {
  * POST /api/v1/knowledge/ask
  * Test the knowledge base by asking a question and getting an AI response
  */
-knowledgeRoutes.post('/ask', validateBody(querySchema), async (c) => {
+knowledgeRoutes.post('/ask', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), validateBody(querySchema), async (c) => {
   const { query } = c.get('validatedBody') as z.infer<typeof querySchema>;
 
   log.info({ query: query.substring(0, 50) }, 'Testing knowledge base');
@@ -299,7 +303,7 @@ knowledgeRoutes.post('/ask', validateBody(querySchema), async (c) => {
  * POST /api/v1/knowledge/reindex
  * Regenerate embeddings for all knowledge base entries
  */
-knowledgeRoutes.post('/reindex', async (c) => {
+knowledgeRoutes.post('/reindex', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), async (c) => {
   // Get embedding provider
   const registry = getAppRegistry();
   const provider = registry.getEmbeddingProvider();
@@ -347,7 +351,7 @@ knowledgeRoutes.post('/reindex', async (c) => {
  * GET /api/v1/knowledge/:id
  * Get a single knowledge base entry
  */
-knowledgeRoutes.get('/:id', async (c) => {
+knowledgeRoutes.get('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), async (c) => {
   const id = c.req.param('id');
 
   const entry = await db
@@ -370,7 +374,7 @@ knowledgeRoutes.get('/:id', async (c) => {
  * POST /api/v1/knowledge
  * Create a new knowledge base entry
  */
-knowledgeRoutes.post('/', validateBody(createEntrySchema), async (c) => {
+knowledgeRoutes.post('/', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), validateBody(createEntrySchema), async (c) => {
   const data = c.get('validatedBody') as z.infer<typeof createEntrySchema>;
 
   const id = generateId('knowledge');
@@ -419,7 +423,7 @@ knowledgeRoutes.post('/', validateBody(createEntrySchema), async (c) => {
  * PUT /api/v1/knowledge/:id
  * Update a knowledge base entry
  */
-knowledgeRoutes.put('/:id', validateBody(updateEntrySchema), async (c) => {
+knowledgeRoutes.put('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), validateBody(updateEntrySchema), async (c) => {
   const id = c.req.param('id');
   const data = c.get('validatedBody') as z.infer<typeof updateEntrySchema>;
 
@@ -471,7 +475,7 @@ knowledgeRoutes.put('/:id', validateBody(updateEntrySchema), async (c) => {
  * DELETE /api/v1/knowledge/:id
  * Delete (archive) a knowledge base entry
  */
-knowledgeRoutes.delete('/:id', async (c) => {
+knowledgeRoutes.delete('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), async (c) => {
   const id = c.req.param('id');
   const permanent = c.req.query('permanent') === 'true';
 

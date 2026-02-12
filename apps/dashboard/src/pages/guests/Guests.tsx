@@ -19,6 +19,7 @@ import { api } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import { vipVariants, loyaltyVariants } from '@/lib/config';
 import { useFilteredQuery } from '@/hooks/useFilteredQuery';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import type { Guest } from '@/types/api';
 
 interface GuestStats {
@@ -32,21 +33,25 @@ export function GuestsPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const { setActions } = usePageActions();
+  const { can } = usePermissions();
+  const canManageGuests = can(PERMISSIONS.GUESTS_MANAGE);
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    setActions([
-      {
-        id: 'add-guest',
-        label: t('guests.addGuest'),
-        icon: Plus,
-        href: '/guests/new',
-      },
-    ]);
+    if (canManageGuests) {
+      setActions([
+        {
+          id: 'add-guest',
+          label: t('guests.addGuest'),
+          icon: Plus,
+          href: '/guests/new',
+        },
+      ]);
+    }
     return () => setActions([]);
-  }, [setActions, t]);
+  }, [setActions, t, canManageGuests]);
 
   const { data: stats } = useQuery({
     queryKey: ['guestStats'],

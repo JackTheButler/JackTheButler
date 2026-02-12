@@ -8,7 +8,8 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { taskService } from '@/services/task.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 
 const listQuerySchema = z.object({
   status: z.enum(['pending', 'assigned', 'in_progress', 'completed', 'cancelled']).optional(),
@@ -59,7 +60,7 @@ tasksRouter.use('/*', requireAuth);
  * GET /api/v1/tasks/stats
  * Get task counts by status
  */
-tasksRouter.get('/stats', async (c) => {
+tasksRouter.get('/stats', requirePermission(PERMISSIONS.TASKS_VIEW), async (c) => {
   const stats = await taskService.getStats();
   return c.json(stats);
 });
@@ -68,7 +69,7 @@ tasksRouter.get('/stats', async (c) => {
  * GET /api/v1/tasks
  * List tasks with optional filters
  */
-tasksRouter.get('/', validateQuery(listQuerySchema), async (c) => {
+tasksRouter.get('/', requirePermission(PERMISSIONS.TASKS_VIEW), validateQuery(listQuerySchema), async (c) => {
   const query = c.get('validatedQuery') as z.infer<typeof listQuerySchema>;
 
   const tasks = await taskService.list({
@@ -94,7 +95,7 @@ tasksRouter.get('/', validateQuery(listQuerySchema), async (c) => {
  * POST /api/v1/tasks
  * Create a new task
  */
-tasksRouter.post('/', validateBody(createBodySchema), async (c) => {
+tasksRouter.post('/', requirePermission(PERMISSIONS.TASKS_MANAGE), validateBody(createBodySchema), async (c) => {
   const body = c.get('validatedBody') as z.infer<typeof createBodySchema>;
 
   const task = await taskService.create(body);
@@ -106,7 +107,7 @@ tasksRouter.post('/', validateBody(createBodySchema), async (c) => {
  * GET /api/v1/tasks/:id
  * Get task details
  */
-tasksRouter.get('/:id', async (c) => {
+tasksRouter.get('/:id', requirePermission(PERMISSIONS.TASKS_VIEW), async (c) => {
   const id = c.req.param('id');
   const task = await taskService.getById(id);
   return c.json({ task });
@@ -116,7 +117,7 @@ tasksRouter.get('/:id', async (c) => {
  * PATCH /api/v1/tasks/:id
  * Update a task
  */
-tasksRouter.patch('/:id', validateBody(updateBodySchema), async (c) => {
+tasksRouter.patch('/:id', requirePermission(PERMISSIONS.TASKS_MANAGE), validateBody(updateBodySchema), async (c) => {
   const id = c.req.param('id');
   const body = c.get('validatedBody') as z.infer<typeof updateBodySchema>;
 
@@ -129,7 +130,7 @@ tasksRouter.patch('/:id', validateBody(updateBodySchema), async (c) => {
  * POST /api/v1/tasks/:id/claim
  * Claim a task (assign to self and start)
  */
-tasksRouter.post('/:id/claim', async (c) => {
+tasksRouter.post('/:id/claim', requirePermission(PERMISSIONS.TASKS_MANAGE), async (c) => {
   const id = c.req.param('id');
   const userId = c.get('userId');
 
@@ -142,7 +143,7 @@ tasksRouter.post('/:id/claim', async (c) => {
  * POST /api/v1/tasks/:id/complete
  * Complete a task
  */
-tasksRouter.post('/:id/complete', validateBody(completeBodySchema), async (c) => {
+tasksRouter.post('/:id/complete', requirePermission(PERMISSIONS.TASKS_MANAGE), validateBody(completeBodySchema), async (c) => {
   const id = c.req.param('id');
   const body = c.get('validatedBody') as z.infer<typeof completeBodySchema>;
 
@@ -155,7 +156,7 @@ tasksRouter.post('/:id/complete', validateBody(completeBodySchema), async (c) =>
  * POST /api/v1/tasks/:id/reopen
  * Reopen a completed or cancelled task
  */
-tasksRouter.post('/:id/reopen', async (c) => {
+tasksRouter.post('/:id/reopen', requirePermission(PERMISSIONS.TASKS_MANAGE), async (c) => {
   const id = c.req.param('id');
 
   const task = await taskService.reopen(id);

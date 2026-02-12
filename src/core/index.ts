@@ -68,3 +68,33 @@ export {
   type TaskPriority as RouterTaskPriority,
   type TaskSource,
 } from './task-router.js';
+
+// ============================================
+// Permissions
+// ============================================
+export {
+  PERMISSIONS,
+  WILDCARD_PERMISSION,
+  PERMISSION_DEFINITIONS,
+  PERMISSION_GROUPS,
+  hasPermission,
+  hasAnyPermission,
+  hasAllPermissions,
+  getAllPermissions,
+  type Permission,
+  type Role,
+  type RoleWithStats,
+  type CreateRoleInput,
+  type UpdateRoleInput,
+  type PermissionDefinition,
+  type PermissionGroup,
+} from './permissions/index.js';
+
+export {
+  DEFAULT_ROLES,
+  SYSTEM_ROLE_IDS,
+  getDefaultPermissionsForRole,
+  isSystemRole,
+  getSystemRoleIds,
+  expandPermissions,
+} from './permissions/defaults.js';

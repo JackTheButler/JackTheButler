@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { PageContainer } from '@/components';
+import { PageContainer, EmptyState } from '@/components';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -17,10 +17,11 @@ import {
   TableRow,
 } from '@/components/ui/table';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Plus, Trash2, Sparkles, Download, CheckCircle2, ArrowRight, AlertTriangle, ChevronDown, ChevronUp, Search, Check, Globe, RefreshCw } from 'lucide-react';
+import { Plus, Trash2, Sparkles, Download, CheckCircle2, ArrowRight, AlertTriangle, ChevronDown, ChevronUp, Search, Check, Globe, RefreshCw, Lock } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { api } from '@/lib/api';
 import { formatTimeAgo } from '@/lib/formatters';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 
 interface AIExtractedEntry {
   title: string;
@@ -81,6 +82,8 @@ interface ImportedSource {
 export function SiteScraperPage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const { can } = usePermissions();
+  const canManageKnowledge = can(PERMISSIONS.KNOWLEDGE_MANAGE);
   const [urls, setUrls] = useState<string[]>(['']);
   const [step, setStep] = useState<Step>('urls');
   const [entries, setEntries] = useState<ProcessedEntry[]>([]);
@@ -368,6 +371,17 @@ export function SiteScraperPage() {
       {/* Step 1: Enter URLs */}
       {step === 'urls' && (
         <div className="space-y-6">
+          {!canManageKnowledge ? (
+            <Card>
+              <CardContent className="py-12">
+                <EmptyState
+                  icon={Lock}
+                  title={t('siteScraper.noPermission')}
+                  description={t('siteScraper.noPermissionDesc')}
+                />
+              </CardContent>
+            </Card>
+          ) : (
           <Card>
             <CardHeader>
               <CardTitle>{t('siteScraper.enterUrls')}</CardTitle>
@@ -406,9 +420,10 @@ export function SiteScraperPage() {
               </div>
             </CardContent>
           </Card>
+          )}
 
           {/* Previously Imported */}
-          {sources.length > 0 && (
+          {canManageKnowledge && sources.length > 0 && (
             <Card>
               <CardHeader>
                 <CardTitle className="text-base">{t('siteScraper.previouslyImported')}</CardTitle>

@@ -1,0 +1,58 @@
+{
+  "title": "Roles",
+  "description": "Define permissions for different user types.",
+  "addRole": "Add Role",
+  "editRole": "Edit Role",
+  "table": {
+    "name": "Name",
+    "description": "Description",
+    "permissions": "Permissions",
+    "users": "Users"
+  },
+  "labels": {
+    "name": "Name",
+    "description": "Description (optional)",
+    "permissions": "Permissions"
+  },
+  "placeholders": {
+    "name": "e.g., Front Desk Manager",
+    "description": "Brief description of this role's purpose"
+  },
+  "helpText": {
+    "systemRoleLocked": "System role names cannot be changed.",
+    "permissionsInfo": "Select the permissions this role should have.",
+    "allPermissions": "This role has full administrative access (all permissions)."
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "permissionsRequired": "At least one permission is required"
+  },
+  "errors": {
+    "createFailed": "Failed to create role",
+    "updateFailed": "Failed to update role",
+    "deleteFailed": "Failed to delete role"
+  },
+  "empty": {
+    "title": "No roles found",
+    "description": "Roles define what permissions users have in the system."
+  },
+  "system": "System",
+  "allPermissions": "All permissions",
+  "permissionCount": "{{count}} permissions",
+  "permissionSelected_one": "{{count}} permission selected",
+  "permissionSelected_other": "{{count}} permissions selected",
+  "actions": {
+    "edit": "Edit",
+    "delete": "Delete"
+  },
+  "confirm": {
+    "deleteTitle": "Delete Role",
+    "deleteDescription": "Are you sure you want to delete the \"{{name}}\" role? This action cannot be undone.",
+    "deleteButton": "Delete"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes",
+    "createRole": "Create Role"
+  }
+}

@@ -46,7 +46,7 @@ export function DialogContent({ children, className, title }: DialogContentProps
       />
       <div
         className={cn(
-          'relative z-50 bg-card rounded-lg shadow-xl max-h-[85vh] overflow-auto',
+          'relative z-50 bg-card rounded-lg shadow-xl max-h-[85vh] flex flex-col overflow-hidden',
           'w-full max-w-lg mx-4',
           className
         )}

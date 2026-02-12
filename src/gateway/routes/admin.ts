@@ -9,7 +9,8 @@ import { Hono } from 'hono';
 import { scheduler } from '@/services/scheduler.js';
 import { pmsSyncService } from '@/services/pms-sync.js';
 import { createLogger } from '@/utils/logger.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 
 const log = createLogger('admin');
 
@@ -22,7 +23,7 @@ adminRouter.use('*', requireAuth);
  * GET /api/v1/admin/scheduler
  * Get scheduler status
  */
-adminRouter.get('/scheduler', (c) => {
+adminRouter.get('/scheduler', requirePermission(PERMISSIONS.SETTINGS_VIEW), (c) => {
   const status = scheduler.getStatus();
   return c.json(status);
 });
@@ -31,7 +32,7 @@ adminRouter.get('/scheduler', (c) => {
  * POST /api/v1/admin/sync/pms
  * Manually trigger PMS sync
  */
-adminRouter.post('/sync/pms', async (c) => {
+adminRouter.post('/sync/pms', requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (c) => {
   log.info('Manual PMS sync triggered via API');
 
   try {
@@ -56,7 +57,7 @@ adminRouter.post('/sync/pms', async (c) => {
  * POST /api/v1/admin/scheduler/:jobName/trigger
  * Manually trigger a specific scheduled job
  */
-adminRouter.post('/scheduler/:jobName/trigger', async (c) => {
+adminRouter.post('/scheduler/:jobName/trigger', requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (c) => {
   const jobName = c.req.param('jobName');
   log.info({ jobName }, 'Manual job trigger via API');
 

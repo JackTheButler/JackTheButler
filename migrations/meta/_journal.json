@@ -15,6 +15,27 @@
       "when": 1770405975210,
       "tag": "0001_thin_alice",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1770821574728,
+      "tag": "0002_slimy_komodo",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1770822155638,
+      "tag": "0003_chemical_mesmero",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1770828024191,
+      "tag": "0004_perfect_tempest",
+      "breakpoints": true
     }
   ]
 }

@@ -12,6 +12,7 @@ import { db, setupState, settings, knowledgeBase, staff } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { appConfigService } from './app-config.js';
 import { getAppRegistry, getManifest } from '@/apps/index.js';
+import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
 
 const log = createLogger('service:setup');
 
@@ -371,8 +372,7 @@ export class SetupService {
           id: adminId,
           email: email.toLowerCase().trim(),
           name: name.trim(),
-          role: 'admin',
-          department: 'management',
+          roleId: SYSTEM_ROLE_IDS.ADMIN,
           permissions: JSON.stringify(['*']),
           status: 'active',
           passwordHash: password, // TODO: Hash in production

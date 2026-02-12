@@ -1,0 +1,58 @@
+{
+  "title": "Roles",
+  "description": "Define permisos para diferentes tipos de usuario.",
+  "addRole": "Agregar Rol",
+  "editRole": "Editar Rol",
+  "table": {
+    "name": "Nombre",
+    "description": "Descripción",
+    "permissions": "Permisos",
+    "users": "Usuarios"
+  },
+  "labels": {
+    "name": "Nombre",
+    "description": "Descripción (opcional)",
+    "permissions": "Permisos"
+  },
+  "placeholders": {
+    "name": "ej., Gerente de Recepción",
+    "description": "Breve descripción del propósito de este rol"
+  },
+  "helpText": {
+    "systemRoleLocked": "Los nombres de roles del sistema no se pueden cambiar.",
+    "permissionsInfo": "Selecciona los permisos que debe tener este rol.",
+    "allPermissions": "Este rol tiene acceso administrativo completo (todos los permisos)."
+  },
+  "validation": {
+    "nameRequired": "El nombre es obligatorio",
+    "permissionsRequired": "Se requiere al menos un permiso"
+  },
+  "errors": {
+    "createFailed": "Error al crear rol",
+    "updateFailed": "Error al actualizar rol",
+    "deleteFailed": "Error al eliminar rol"
+  },
+  "empty": {
+    "title": "No se encontraron roles",
+    "description": "Los roles definen qué permisos tienen los usuarios en el sistema."
+  },
+  "system": "Sistema",
+  "allPermissions": "Todos los permisos",
+  "permissionCount": "{{count}} permisos",
+  "permissionSelected_one": "{{count}} permiso seleccionado",
+  "permissionSelected_other": "{{count}} permisos seleccionados",
+  "actions": {
+    "edit": "Editar",
+    "delete": "Eliminar"
+  },
+  "confirm": {
+    "deleteTitle": "Eliminar Rol",
+    "deleteDescription": "¿Estás seguro de que deseas eliminar el rol \"{{name}}\"? Esta acción no se puede deshacer.",
+    "deleteButton": "Eliminar"
+  },
+  "buttons": {
+    "cancel": "Cancelar",
+    "saveChanges": "Guardar Cambios",
+    "createRole": "Crear Rol"
+  }
+}

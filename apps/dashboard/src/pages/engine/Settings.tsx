@@ -1,8 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Sparkles, Building2 } from 'lucide-react';
+import { AlertTriangle, Sparkles, Building2, Users, Shield } from 'lucide-react';
 import { api } from '@/lib/api';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
+import { UsersContent } from '@/pages/settings/Users';
+import { RolesContent } from '@/pages/settings/Roles';
 import { PageContainer, ActionItems, DemoDataCard } from '@/components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -57,11 +61,42 @@ interface CountryOption {
   label: string;
 }
 
-type SettingsTab = 'hotel-profile' | 'quick-setup' | 'danger-zone';
+type SettingsTab = 'profile' | 'users' | 'roles' | 'quick-setup' | 'danger-zone';
+
+const VALID_TABS: SettingsTab[] = ['profile', 'users', 'roles', 'quick-setup', 'danger-zone'];
 
 export function SettingsPage() {
   const { t } = useTranslation();
-  const [activeTab, setActiveTab] = useState<SettingsTab>('hotel-profile');
+  const { tab } = useParams<{ tab?: string }>();
+  const navigate = useNavigate();
+  const { can } = usePermissions();
+  const canViewAdmin = can(PERMISSIONS.ADMIN_VIEW);
+  const canManageSettings = can(PERMISSIONS.SETTINGS_MANAGE);
+
+  // Get active tab from URL, default to 'profile'
+  const requestedTab: SettingsTab = VALID_TABS.includes(tab as SettingsTab) ? (tab as SettingsTab) : 'profile';
+
+  // Redirect to profile if user navigates directly to a tab they can't access
+  const tabPermissions: Record<SettingsTab, boolean> = {
+    profile: true,
+    users: canViewAdmin,
+    roles: canViewAdmin,
+    'quick-setup': canManageSettings,
+    'danger-zone': canManageSettings,
+  };
+
+  const activeTab: SettingsTab = tabPermissions[requestedTab] ? requestedTab : 'profile';
+
+  useEffect(() => {
+    if (requestedTab !== activeTab) {
+      navigate('/settings/profile', { replace: true });
+    }
+  }, [requestedTab, activeTab, navigate]);
+
+  const handleTabChange = (newTab: SettingsTab) => {
+    navigate(`/settings/${newTab}`, { replace: true });
+  };
+
   const [showConfirmDialog, setShowConfirmDialog] = useState(false);
   const [confirmText, setConfirmText] = useState('');
   const [resetComplete, setResetComplete] = useState(false);
@@ -145,9 +180,13 @@ export function SettingsPage() {
   const isConfirmValid = confirmText === 'RESET';
 
   const tabs = [
-    { id: 'hotel-profile' as const, label: t('settings.hotelProfile.title'), icon: Building2 },
-    { id: 'quick-setup' as const, label: t('settings.quickSetup.title'), icon: Sparkles },
-    { id: 'danger-zone' as const, label: t('settings.dangerZone.title'), icon: AlertTriangle, variant: 'destructive' },
+    { id: 'profile' as const, label: t('settings.hotelProfile.title'), icon: Building2 },
+    // Admin tabs (show but disable if no permission)
+    { id: 'users' as const, label: t('nav.users'), icon: Users, disabled: !canViewAdmin },
+    { id: 'roles' as const, label: t('nav.roles'), icon: Shield, disabled: !canViewAdmin },
+    { id: 'quick-setup' as const, label: t('settings.quickSetup.title'), icon: Sparkles, disabled: !canManageSettings },
+    // Danger zone (show but disable if no permission)
+    { id: 'danger-zone' as const, label: t('settings.dangerZone.title'), icon: AlertTriangle, variant: 'destructive' as const, disabled: !canManageSettings },
   ];
 
   return (
@@ -156,21 +195,24 @@ export function SettingsPage() {
         {/* Vertical Tab Navigation */}
         <nav className="w-48 flex-shrink-0">
           <ul className="space-y-1">
-            {tabs.map((tab) => (
-              <li key={tab.id}>
+            {tabs.map((tabItem) => (
+              <li key={tabItem.id}>
                 <button
-                  onClick={() => setActiveTab(tab.id)}
+                  onClick={() => !tabItem.disabled && handleTabChange(tabItem.id)}
+                  disabled={tabItem.disabled}
                   className={cn(
                     'w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors text-start',
-                    activeTab === tab.id
-                      ? tab.variant === 'destructive'
-                        ? 'bg-destructive/10 text-destructive'
-                        : 'bg-primary/10 text-primary'
-                      : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                    tabItem.disabled
+                      ? 'opacity-50 cursor-not-allowed text-muted-foreground'
+                      : activeTab === tabItem.id
+                        ? tabItem.variant === 'destructive'
+                          ? 'bg-destructive/10 text-destructive'
+                          : 'bg-primary/10 text-primary'
+                        : 'text-muted-foreground hover:text-foreground hover:bg-muted'
                   )}
                 >
-                  <tab.icon className="h-4 w-4" />
-                  {tab.label}
+                  <tabItem.icon className="h-4 w-4" />
+                  {tabItem.label}
                 </button>
               </li>
             ))}
@@ -180,7 +222,7 @@ export function SettingsPage() {
         {/* Tab Content */}
         <div className="flex-1 min-w-0">
           {/* Hotel Profile Tab */}
-          {activeTab === 'hotel-profile' && (
+          {activeTab === 'profile' && (
             <div className="space-y-6">
               <div>
                 <h2 className="text-lg font-semibold mb-1">{t('settings.hotelProfile.title')}</h2>
@@ -207,6 +249,7 @@ export function SettingsPage() {
                           value={profileForm.name}
                           onChange={(e) => handleProfileChange('name', e.target.value)}
                           placeholder={t('settings.hotelProfile.hotelNamePlaceholder')}
+                          disabled={!canManageSettings}
                         />
                       </div>
 
@@ -217,6 +260,7 @@ export function SettingsPage() {
                           value={profileForm.address || ''}
                           onChange={(e) => handleProfileChange('address', e.target.value)}
                           placeholder={t('settings.hotelProfile.addressPlaceholder')}
+                          disabled={!canManageSettings}
                         />
                       </div>
 
@@ -227,6 +271,7 @@ export function SettingsPage() {
                             id="city"
                             value={profileForm.city || ''}
                             onChange={(e) => handleProfileChange('city', e.target.value)}
+                            disabled={!canManageSettings}
                           />
                         </div>
                         <div className="grid gap-2">
@@ -238,6 +283,7 @@ export function SettingsPage() {
                             placeholder={t('settings.hotelProfile.selectCountry')}
                             searchPlaceholder={t('settings.hotelProfile.searchCountry')}
                             emptyText={t('settings.hotelProfile.noCountryFound')}
+                            disabled={!canManageSettings}
                           />
                         </div>
                       </div>
@@ -258,6 +304,7 @@ export function SettingsPage() {
                           placeholder={t('settings.hotelProfile.selectTimezone')}
                           searchPlaceholder={t('settings.hotelProfile.searchTimezone')}
                           emptyText={t('settings.hotelProfile.noTimezoneFound')}
+                          disabled={!canManageSettings}
                         />
                       </div>
                       <div className="grid gap-2">
@@ -269,6 +316,7 @@ export function SettingsPage() {
                           placeholder={t('settings.hotelProfile.selectCurrency')}
                           searchPlaceholder={t('settings.hotelProfile.searchCurrency')}
                           emptyText={t('settings.hotelProfile.noCurrencyFound')}
+                          disabled={!canManageSettings}
                         />
                       </div>
                     </div>
@@ -280,6 +328,7 @@ export function SettingsPage() {
                           value={profileForm.checkInTime}
                           onValueChange={(value) => handleProfileChange('checkInTime', value)}
                           placeholder={t('settings.hotelProfile.selectTime')}
+                          disabled={!canManageSettings}
                         />
                       </div>
                       <div className="grid gap-2">
@@ -288,6 +337,7 @@ export function SettingsPage() {
                           value={profileForm.checkOutTime}
                           onValueChange={(value) => handleProfileChange('checkOutTime', value)}
                           placeholder={t('settings.hotelProfile.selectTime')}
+                          disabled={!canManageSettings}
                         />
                       </div>
                     </div>
@@ -306,6 +356,7 @@ export function SettingsPage() {
                           value={profileForm.contactPhone || ''}
                           onChange={(e) => handleProfileChange('contactPhone', e.target.value)}
                           placeholder="+1 (555) 123-4567"
+                          disabled={!canManageSettings}
                         />
                       </div>
                       <div className="grid gap-2">
@@ -316,6 +367,7 @@ export function SettingsPage() {
                           value={profileForm.contactEmail || ''}
                           onChange={(e) => handleProfileChange('contactEmail', e.target.value)}
                           placeholder="contact@hotel.com"
+                          disabled={!canManageSettings}
                         />
                       </div>
                     </div>
@@ -328,30 +380,39 @@ export function SettingsPage() {
                         value={profileForm.website || ''}
                         onChange={(e) => handleProfileChange('website', e.target.value)}
                         placeholder="https://www.hotel.com"
+                        disabled={!canManageSettings}
                       />
                     </div>
                   </div>
 
                   {/* Save Button */}
-                  <div className="flex items-center gap-4 pt-4 border-t">
-                    <Button
-                      onClick={handleSaveProfile}
-                      disabled={!profileForm.name || !profileForm.timezone}
-                      loading={saveProfileMutation.isPending}
-                    >
-                      {t('common.save')}
-                    </Button>
-                    {profileSaved && (
-                      <span className="text-sm text-success-foreground">{t('settings.hotelProfile.saved')}</span>
-                    )}
-                    {saveProfileMutation.error && (
-                      <span className="text-sm text-destructive">{t('settings.hotelProfile.saveError')}</span>
-                    )}
-                  </div>
+                  {canManageSettings && (
+                    <div className="flex items-center gap-4 pt-4 border-t">
+                      <Button
+                        onClick={handleSaveProfile}
+                        disabled={!profileForm.name || !profileForm.timezone}
+                        loading={saveProfileMutation.isPending}
+                      >
+                        {t('common.save')}
+                      </Button>
+                      {profileSaved && (
+                        <span className="text-sm text-success-foreground">{t('settings.hotelProfile.saved')}</span>
+                      )}
+                      {saveProfileMutation.error && (
+                        <span className="text-sm text-destructive">{t('settings.hotelProfile.saveError')}</span>
+                      )}
+                    </div>
+                  )}
                 </div>
               )}
             </div>
           )}
+
+          {/* Users Tab */}
+          {activeTab === 'users' && <UsersContent />}
+
+          {/* Roles Tab */}
+          {activeTab === 'roles' && <RolesContent />}
 
           {/* Quick Setup Tab */}
           {activeTab === 'quick-setup' && (

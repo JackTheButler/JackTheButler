@@ -1,0 +1,74 @@
+{
+  "title": "उपयोगकर्ता",
+  "description": "टीम के सदस्यों और उनकी पहुंच का प्रबंधन करें।",
+  "addUser": "उपयोगकर्ता जोड़ें",
+  "editUser": "उपयोगकर्ता संपादित करें",
+  "searchPlaceholder": "नाम या ईमेल से खोजें...",
+  "table": {
+    "name": "नाम",
+    "role": "भूमिका",
+    "status": "स्थिति",
+    "lastActive": "अंतिम सक्रियता"
+  },
+  "labels": {
+    "name": "नाम",
+    "email": "ईमेल",
+    "password": "पासवर्ड",
+    "role": "भूमिका"
+  },
+  "placeholders": {
+    "name": "राज शर्मा",
+    "email": "raj@hotel.com",
+    "password": "न्यूनतम 8 अक्षर",
+    "role": "भूमिका चुनें"
+  },
+  "helpText": {
+    "emailLocked": "बनाने के बाद ईमेल बदला नहीं जा सकता।"
+  },
+  "validation": {
+    "nameRequired": "नाम आवश्यक है",
+    "emailRequired": "ईमेल आवश्यक है",
+    "passwordRequired": "पासवर्ड आवश्यक है",
+    "passwordMinLength": "पासवर्ड कम से कम 8 अक्षरों का होना चाहिए",
+    "roleRequired": "भूमिका आवश्यक है"
+  },
+  "errors": {
+    "createFailed": "उपयोगकर्ता बनाने में विफल",
+    "updateFailed": "उपयोगकर्ता अपडेट करने में विफल",
+    "deleteFailed": "उपयोगकर्ता हटाने में विफल"
+  },
+  "filters": {
+    "all": "सभी",
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय"
+  },
+  "empty": {
+    "title": "कोई उपयोगकर्ता नहीं मिला",
+    "description": "शुरू करने के लिए अपना पहला टीम सदस्य जोड़ें।",
+    "descriptionFiltered": "अपनी खोज या फिल्टर समायोजित करें।"
+  },
+  "status": {
+    "active": "सक्रिय",
+    "inactive": "निष्क्रिय"
+  },
+  "never": "कभी नहीं",
+  "actions": {
+    "edit": "संपादित करें",
+    "deactivate": "निष्क्रिय करें",
+    "activate": "सक्रिय करें",
+    "delete": "हटाएं"
+  },
+  "confirm": {
+    "deactivateTitle": "उपयोगकर्ता निष्क्रिय करें",
+    "deactivateDescription": "क्या आप {{name}} को निष्क्रिय करना चाहते हैं? वे अब लॉग इन नहीं कर पाएंगे।",
+    "deactivateButton": "निष्क्रिय करें",
+    "deleteTitle": "उपयोगकर्ता हटाएं",
+    "deleteDescription": "क्या आप {{name}} को स्थायी रूप से हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
+    "deleteButton": "हटाएं"
+  },
+  "buttons": {
+    "cancel": "रद्द करें",
+    "saveChanges": "परिवर्तन सहेजें",
+    "createUser": "उपयोगकर्ता बनाएं"
+  }
+}

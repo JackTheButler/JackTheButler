@@ -2,9 +2,12 @@ import { Bot, MessageSquare, Cpu, Plug, Book } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { PageContainer, PageHeader, StatsBar, ActionItems, DemoDataCard } from '@/components';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 
 export function HomePage() {
   const { t } = useTranslation();
+  const { can } = usePermissions();
+  const canManageSettings = can(PERMISSIONS.SETTINGS_MANAGE);
   const { providers, apps, knowledgeBase, isLoading } = useSystemStatus();
 
   const kbIndexed = (knowledgeBase?.total ?? 0) - (knowledgeBase?.withoutEmbeddings ?? 0);
@@ -55,12 +58,12 @@ export function HomePage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Getting Started - 2/3 */}
           <div className="lg:col-span-2">
-            <ActionItems />
+            <ActionItems disabled={!canManageSettings} />
           </div>
 
           {/* Demo Data - 1/3 */}
           <div>
-            <DemoDataCard />
+            <DemoDataCard disabled={!canManageSettings} />
           </div>
         </div>
       </div>

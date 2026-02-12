@@ -39,7 +39,13 @@
     "logout": "Cerrar sesión",
     "language": "Idioma",
     "switchToDark": "Cambiar a oscuro",
-    "switchToLight": "Cambiar a claro"
+    "switchToLight": "Cambiar a claro",
+    "goBack": "Volver",
+    "home": "Inicio"
+  },
+  "errors": {
+    "accessDenied": "Acceso Denegado",
+    "accessDeniedDescription": "No tienes permiso para acceder a esta página. Contacta a tu administrador si crees que esto es un error."
   },
   "nav": {
     "home": "Inicio",
@@ -56,7 +62,10 @@
     "apps": "Apps",
     "automations": "Automatizaciones",
     "autonomy": "Autonomía",
-    "dangerZone": "Zona de Peligro"
+    "dangerZone": "Zona de Peligro",
+    "admin": "Admin",
+    "users": "Usuarios",
+    "roles": "Roles"
   },
   "filters": {
     "all": "Todos",

@@ -7,6 +7,8 @@
  */
 
 import { Hono } from 'hono';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 import { getAppRegistry } from '@/apps/index.js';
 import type { AIAppManifest } from '@/apps/types.js';
 import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
@@ -65,6 +67,9 @@ interface SystemStatus {
 }
 
 const systemRoutes = new Hono();
+
+// Apply auth to all routes
+systemRoutes.use('/*', requireAuth);
 
 /**
  * GET /api/v1/system/status
@@ -221,7 +226,7 @@ systemRoutes.get('/status', async (c) => {
  * GET /api/v1/system/capabilities
  * Returns what capabilities are available based on configured providers
  */
-systemRoutes.get('/capabilities', async (c) => {
+systemRoutes.get('/capabilities', requirePermission(PERMISSIONS.SETTINGS_VIEW), async (c) => {
   const registry = getAppRegistry();
 
   const completionProvider = registry.getCompletionProvider();

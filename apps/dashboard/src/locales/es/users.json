@@ -1,0 +1,74 @@
+{
+  "title": "Usuarios",
+  "description": "Gestiona los miembros del equipo y su acceso.",
+  "addUser": "Agregar Usuario",
+  "editUser": "Editar Usuario",
+  "searchPlaceholder": "Buscar por nombre o correo...",
+  "table": {
+    "name": "Nombre",
+    "role": "Rol",
+    "status": "Estado",
+    "lastActive": "Última Actividad"
+  },
+  "labels": {
+    "name": "Nombre",
+    "email": "Correo Electrónico",
+    "password": "Contraseña",
+    "role": "Rol"
+  },
+  "placeholders": {
+    "name": "Juan García",
+    "email": "juan@hotel.com",
+    "password": "Mínimo 8 caracteres",
+    "role": "Seleccionar un rol"
+  },
+  "helpText": {
+    "emailLocked": "El correo no se puede cambiar después de la creación."
+  },
+  "validation": {
+    "nameRequired": "El nombre es obligatorio",
+    "emailRequired": "El correo es obligatorio",
+    "passwordRequired": "La contraseña es obligatoria",
+    "passwordMinLength": "La contraseña debe tener al menos 8 caracteres",
+    "roleRequired": "El rol es obligatorio"
+  },
+  "errors": {
+    "createFailed": "Error al crear usuario",
+    "updateFailed": "Error al actualizar usuario",
+    "deleteFailed": "Error al eliminar usuario"
+  },
+  "filters": {
+    "all": "Todos",
+    "active": "Activos",
+    "inactive": "Inactivos"
+  },
+  "empty": {
+    "title": "No se encontraron usuarios",
+    "description": "Agrega tu primer miembro del equipo para comenzar.",
+    "descriptionFiltered": "Intenta ajustar tu búsqueda o filtros."
+  },
+  "status": {
+    "active": "Activo",
+    "inactive": "Inactivo"
+  },
+  "never": "Nunca",
+  "actions": {
+    "edit": "Editar",
+    "deactivate": "Desactivar",
+    "activate": "Activar",
+    "delete": "Eliminar"
+  },
+  "confirm": {
+    "deactivateTitle": "Desactivar Usuario",
+    "deactivateDescription": "¿Estás seguro de que deseas desactivar a {{name}}? Ya no podrá iniciar sesión.",
+    "deactivateButton": "Desactivar",
+    "deleteTitle": "Eliminar Usuario",
+    "deleteDescription": "¿Estás seguro de que deseas eliminar permanentemente a {{name}}? Esta acción no se puede deshacer.",
+    "deleteButton": "Eliminar"
+  },
+  "buttons": {
+    "cancel": "Cancelar",
+    "saveChanges": "Guardar Cambios",
+    "createUser": "Crear Usuario"
+  }
+}

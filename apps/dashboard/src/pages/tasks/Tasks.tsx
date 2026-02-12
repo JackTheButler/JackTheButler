@@ -10,6 +10,7 @@ import {
   priorityVariants,
 } from '@/lib/config';
 import { useFilteredQuery } from '@/hooks/useFilteredQuery';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import type { Task, TaskStatus } from '@/types/api';
 import { PageContainer, EmptyState } from '@/components';
 import { DataTable, Column } from '@/components/DataTable';
@@ -21,6 +22,8 @@ import { FilterTabs } from '@/components/ui/filter-tabs';
 export function TasksPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { can } = usePermissions();
+  const canManageTasks = can(PERMISSIONS.TASKS_MANAGE);
   const [statusFilter, setStatusFilter] = useState<TaskStatus | 'all'>('all');
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
@@ -113,43 +116,47 @@ export function TasksPage() {
         <span className="text-sm text-muted-foreground">{task.assignedName || '-'}</span>
       ),
     },
-    {
-      key: 'status',
-      header: t('tasks.action'),
-      className: 'w-36',
-      render: (task) => (
-        <div onClick={(e) => e.stopPropagation()}>
-          {task.status === 'pending' && (
-            <Button
-              size="xs"
-              onClick={() => claimMutation.mutate(task.id)}
-              loading={claimMutation.isPending}
-            >
-              {t('tasks.claim')}
-            </Button>
-          )}
-          {task.status === 'in_progress' && (
-            <Button
-              size="xs"
-              onClick={() => completeMutation.mutate(task.id)}
-              loading={completeMutation.isPending}
-            >
-              {t('tasks.complete')}
-            </Button>
-          )}
-          {(task.status === 'completed' || task.status === 'cancelled') && (
-            <Button
-              variant="outline"
-              size="xs"
-              onClick={() => reopenMutation.mutate(task.id)}
-              loading={reopenMutation.isPending}
-            >
-              {t('tasks.reopen')}
-            </Button>
-          )}
-        </div>
-      ),
-    },
+    ...(canManageTasks
+      ? [
+          {
+            key: 'status',
+            header: t('tasks.action'),
+            className: 'w-36',
+            render: (task: Task) => (
+              <div onClick={(e) => e.stopPropagation()}>
+                {task.status === 'pending' && (
+                  <Button
+                    size="xs"
+                    onClick={() => claimMutation.mutate(task.id)}
+                    loading={claimMutation.isPending}
+                  >
+                    {t('tasks.claim')}
+                  </Button>
+                )}
+                {task.status === 'in_progress' && (
+                  <Button
+                    size="xs"
+                    onClick={() => completeMutation.mutate(task.id)}
+                    loading={completeMutation.isPending}
+                  >
+                    {t('tasks.complete')}
+                  </Button>
+                )}
+                {(task.status === 'completed' || task.status === 'cancelled') && (
+                  <Button
+                    variant="outline"
+                    size="xs"
+                    onClick={() => reopenMutation.mutate(task.id)}
+                    loading={reopenMutation.isPending}
+                  >
+                    {t('tasks.reopen')}
+                  </Button>
+                )}
+              </div>
+            ),
+          },
+        ]
+      : []),
   ];
 
   return (

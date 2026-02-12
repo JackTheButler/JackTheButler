@@ -6,6 +6,7 @@ import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { app } from '@/gateway/server.js';
 import { db, staff, conversations, messages, tasks, approvalQueue } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
+import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
 
 describe('Conversation Routes', () => {
   let accessToken: string;
@@ -18,18 +19,16 @@ describe('Conversation Routes', () => {
         id: 'staff-test-001',
         email: 'test@hotel.com',
         name: 'Test User',
-        role: 'admin',
-        department: 'testing',
-        permissions: JSON.stringify(['*']),
+        roleId: SYSTEM_ROLE_IDS.ADMIN,
         status: 'active',
-        passwordHash: 'test123',
+        passwordHash: 'test12345',
       });
     }
 
     const loginRes = await app.request('/api/v1/auth/login', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email: 'test@hotel.com', password: 'test123' }),
+      body: JSON.stringify({ email: 'test@hotel.com', password: 'test12345' }),
     });
     const { accessToken: token } = await loginRes.json();
     accessToken = token;

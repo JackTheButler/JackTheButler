@@ -1,0 +1,74 @@
+{
+  "title": "المستخدمون",
+  "description": "إدارة أعضاء الفريق وصلاحياتهم.",
+  "addUser": "إضافة مستخدم",
+  "editUser": "تعديل مستخدم",
+  "searchPlaceholder": "البحث بالاسم أو البريد الإلكتروني...",
+  "table": {
+    "name": "الاسم",
+    "role": "الدور",
+    "status": "الحالة",
+    "lastActive": "آخر نشاط"
+  },
+  "labels": {
+    "name": "الاسم",
+    "email": "البريد الإلكتروني",
+    "password": "كلمة المرور",
+    "role": "الدور"
+  },
+  "placeholders": {
+    "name": "أحمد محمد",
+    "email": "ahmed@hotel.com",
+    "password": "٨ أحرف على الأقل",
+    "role": "اختر دوراً"
+  },
+  "helpText": {
+    "emailLocked": "لا يمكن تغيير البريد الإلكتروني بعد الإنشاء."
+  },
+  "validation": {
+    "nameRequired": "الاسم مطلوب",
+    "emailRequired": "البريد الإلكتروني مطلوب",
+    "passwordRequired": "كلمة المرور مطلوبة",
+    "passwordMinLength": "يجب أن تكون كلمة المرور ٨ أحرف على الأقل",
+    "roleRequired": "الدور مطلوب"
+  },
+  "errors": {
+    "createFailed": "فشل في إنشاء المستخدم",
+    "updateFailed": "فشل في تحديث المستخدم",
+    "deleteFailed": "فشل في حذف المستخدم"
+  },
+  "filters": {
+    "all": "الكل",
+    "active": "نشط",
+    "inactive": "غير نشط"
+  },
+  "empty": {
+    "title": "لم يتم العثور على مستخدمين",
+    "description": "أضف أول عضو في الفريق للبدء.",
+    "descriptionFiltered": "حاول تعديل البحث أو الفلاتر."
+  },
+  "status": {
+    "active": "نشط",
+    "inactive": "غير نشط"
+  },
+  "never": "أبداً",
+  "actions": {
+    "edit": "تعديل",
+    "deactivate": "تعطيل",
+    "activate": "تفعيل",
+    "delete": "حذف"
+  },
+  "confirm": {
+    "deactivateTitle": "تعطيل المستخدم",
+    "deactivateDescription": "هل أنت متأكد من تعطيل {{name}}؟ لن يتمكن من تسجيل الدخول بعد الآن.",
+    "deactivateButton": "تعطيل",
+    "deleteTitle": "حذف المستخدم",
+    "deleteDescription": "هل أنت متأكد من حذف {{name}} نهائياً؟ لا يمكن التراجع عن هذا الإجراء.",
+    "deleteButton": "حذف"
+  },
+  "buttons": {
+    "cancel": "إلغاء",
+    "saveChanges": "حفظ التغييرات",
+    "createUser": "إنشاء مستخدم"
+  }
+}

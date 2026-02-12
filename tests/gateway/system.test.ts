@@ -2,17 +2,44 @@
  * System Status API Tests
  */
 
-import { describe, it, expect, beforeEach, afterEach } from 'vitest';
-import { Hono } from 'hono';
-import { systemRoutes } from '@/gateway/routes/system.js';
+import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { app } from '@/gateway/server.js';
+import { db, staff } from '@/db/index.js';
+import { eq } from 'drizzle-orm';
 import { resetAppRegistry, getAppRegistry } from '@/apps/registry.js';
+import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { AuthService } from '@/services/auth.js';
 import type { AIAppManifest } from '@/apps/types.js';
 
-// Create test app
-const app = new Hono();
-app.route('/system', systemRoutes);
-
 describe('System Status API', () => {
+  const authService = new AuthService();
+  const testUserId = 'system-test-admin';
+  let adminToken: string;
+
+  beforeAll(async () => {
+    // Clean up any existing test data
+    await db.delete(staff).where(eq(staff.id, testUserId));
+
+    // Create test user with admin role
+    await db.insert(staff).values({
+      id: testUserId,
+      email: 'system-test-admin@test.com',
+      name: 'System Test Admin',
+      roleId: SYSTEM_ROLE_IDS.ADMIN,
+      status: 'active',
+      passwordHash: 'test12345',
+    });
+
+    // Get token
+    const tokens = await authService.login('system-test-admin@test.com', 'test12345');
+    adminToken = tokens.accessToken;
+  });
+
+  afterAll(async () => {
+    // Clean up
+    await db.delete(staff).where(eq(staff.id, testUserId));
+  });
+
   beforeEach(() => {
     resetAppRegistry();
   });
@@ -21,9 +48,11 @@ describe('System Status API', () => {
     resetAppRegistry();
   });
 
-  describe('GET /system/status', () => {
+  describe('GET /api/v1/system/status', () => {
     it('should return unhealthy status when no providers configured', async () => {
-      const res = await app.request('/system/status');
+      const res = await app.request('/api/v1/system/status', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       expect(res.status).toBe(200);
 
       const data = await res.json();
@@ -56,7 +85,9 @@ describe('System Status API', () => {
       registry.register(mockManifest);
       await registry.activate('openai', {});
 
-      const res = await app.request('/system/status');
+      const res = await app.request('/api/v1/system/status', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       expect(res.status).toBe(200);
 
       const data = await res.json();
@@ -107,7 +138,9 @@ describe('System Status API', () => {
       await registry.activate('anthropic', {});
       await registry.activate('local', {});
 
-      const res = await app.request('/system/status');
+      const res = await app.request('/api/v1/system/status', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       const data = await res.json();
 
       expect(data.healthy).toBe(true);
@@ -137,7 +170,9 @@ describe('System Status API', () => {
       registry.register(localManifest);
       await registry.activate('local', {});
 
-      const res = await app.request('/system/status');
+      const res = await app.request('/api/v1/system/status', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       const data = await res.json();
 
       expect(data.providers.completion).toBe('local');
@@ -146,7 +181,9 @@ describe('System Status API', () => {
     });
 
     it('should include app counts', async () => {
-      const res = await app.request('/system/status');
+      const res = await app.request('/api/v1/system/status', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       const data = await res.json();
 
       expect(data.apps).toBeDefined();
@@ -157,9 +194,11 @@ describe('System Status API', () => {
     });
   });
 
-  describe('GET /system/capabilities', () => {
+  describe('GET /api/v1/system/capabilities', () => {
     it('should return capabilities based on configured providers', async () => {
-      const res = await app.request('/system/capabilities');
+      const res = await app.request('/api/v1/system/capabilities', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       expect(res.status).toBe(200);
 
       const data = await res.json();
@@ -190,10 +229,24 @@ describe('System Status API', () => {
       registry.register(streamingManifest);
       await registry.activate('streaming-ai', {});
 
-      const res = await app.request('/system/capabilities');
+      const res = await app.request('/api/v1/system/capabilities', {
+        headers: { Authorization: `Bearer ${adminToken}` },
+      });
       const data = await res.json();
 
       expect(data.capabilities.streaming).toBe(true);
+    });
+  });
+
+  describe('Authentication', () => {
+    it('should require authentication for /status', async () => {
+      const res = await app.request('/api/v1/system/status');
+      expect(res.status).toBe(401);
+    });
+
+    it('should require authentication for /capabilities', async () => {
+      const res = await app.request('/api/v1/system/capabilities');
+      expect(res.status).toBe(401);
     });
   });
 });

@@ -1,0 +1,58 @@
+{
+  "title": "Роли",
+  "description": "Определение разрешений для различных типов пользователей.",
+  "addRole": "Добавить роль",
+  "editRole": "Редактировать роль",
+  "table": {
+    "name": "Название",
+    "description": "Описание",
+    "permissions": "Разрешения",
+    "users": "Пользователи"
+  },
+  "labels": {
+    "name": "Название",
+    "description": "Описание (необязательно)",
+    "permissions": "Разрешения"
+  },
+  "placeholders": {
+    "name": "напр., Менеджер ресепшена",
+    "description": "Краткое описание назначения этой роли"
+  },
+  "helpText": {
+    "systemRoleLocked": "Названия системных ролей нельзя изменить.",
+    "permissionsInfo": "Выберите разрешения для этой роли.",
+    "allPermissions": "Эта роль имеет полный административный доступ (все разрешения)."
+  },
+  "validation": {
+    "nameRequired": "Название обязательно",
+    "permissionsRequired": "Необходимо хотя бы одно разрешение"
+  },
+  "errors": {
+    "createFailed": "Не удалось создать роль",
+    "updateFailed": "Не удалось обновить роль",
+    "deleteFailed": "Не удалось удалить роль"
+  },
+  "empty": {
+    "title": "Роли не найдены",
+    "description": "Роли определяют, какие разрешения имеют пользователи в системе."
+  },
+  "system": "Системная",
+  "allPermissions": "Все разрешения",
+  "permissionCount": "{{count}} разрешений",
+  "permissionSelected_one": "{{count}} разрешение выбрано",
+  "permissionSelected_other": "{{count}} разрешений выбрано",
+  "actions": {
+    "edit": "Редактировать",
+    "delete": "Удалить"
+  },
+  "confirm": {
+    "deleteTitle": "Удалить роль",
+    "deleteDescription": "Вы уверены, что хотите удалить роль \"{{name}}\"? Это действие нельзя отменить.",
+    "deleteButton": "Удалить"
+  },
+  "buttons": {
+    "cancel": "Отмена",
+    "saveChanges": "Сохранить изменения",
+    "createRole": "Создать роль"
+  }
+}

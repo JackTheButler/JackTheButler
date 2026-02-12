@@ -23,6 +23,7 @@ import { InlineAlert } from '@/components/ui/inline-alert';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatDateTime, formatTime } from '@/lib/formatters';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -126,9 +127,11 @@ const fieldLabelKeys: Record<string, string> = {
 function ConfigForm({
   app,
   onSaved,
+  canManage,
 }: {
   app: App;
   onSaved: () => void;
+  canManage: boolean;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -186,6 +189,7 @@ function ConfigForm({
                 id={field.key}
                 checked={formData[field.key] === true}
                 onCheckedChange={(checked) => setFormData({ ...formData, [field.key]: checked })}
+                disabled={!canManage}
               />
             </div>
           ) : (
@@ -200,6 +204,7 @@ function ConfigForm({
                   value={String(formData[field.key] || '')}
                   onValueChange={(value) => setFormData({ ...formData, [field.key]: value })}
                   required={field.required}
+                  disabled={!canManage}
                 >
                   <SelectTrigger id={field.key}>
                     <SelectValue placeholder={t('appEdit.select')} />
@@ -222,6 +227,7 @@ function ConfigForm({
                     placeholder={field.placeholder}
                     required={field.required}
                     className={field.type === 'password' ? 'pe-12' : ''}
+                    disabled={!canManage}
                   />
                   {field.type === 'password' && (
                     <button
@@ -248,24 +254,26 @@ function ConfigForm({
         );
       })}
 
-      <div className="pt-4 space-y-4">
-        <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
-          {saveMutation.isPending && <Spinner size="sm" className="me-2" />}
-          {t('appEdit.saveConfiguration')}
-        </Button>
+      {canManage && (
+        <div className="pt-4 space-y-4">
+          <Button type="submit" disabled={saveMutation.isPending} className="w-full sm:w-auto">
+            {saveMutation.isPending && <Spinner size="sm" className="me-2" />}
+            {t('appEdit.saveConfiguration')}
+          </Button>
 
-        {saveMutation.isError && (
-          <Toast type="error" message={(saveMutation.error as Error).message} />
-        )}
-        {saveMutation.isSuccess && (
-          <Toast type="success" message={t('appEdit.configSaved')} />
-        )}
-      </div>
+          {saveMutation.isError && (
+            <Toast type="error" message={(saveMutation.error as Error).message} />
+          )}
+          {saveMutation.isSuccess && (
+            <Toast type="success" message={t('appEdit.configSaved')} />
+          )}
+        </div>
+      )}
     </form>
   );
 }
 
-function ConnectionStatus({ app }: { app: App }) {
+function ConnectionStatus({ app, canManage }: { app: App; canManage: boolean }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const statusConfig = getStatusConfig(t);
@@ -321,48 +329,50 @@ function ConnectionStatus({ app }: { app: App }) {
             </p>
           )}
         </div>
-        <div className="flex gap-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => testMutation.mutate()}
-            disabled={testMutation.isPending || !app.config}
-          >
-            {testMutation.isPending ? (
-              <Spinner size="sm" className="me-2" />
-            ) : (
-              <Zap className="w-4 h-4 me-2" />
-            )}
-            {t('appEdit.testConnection')}
-          </Button>
-          {app.config && (
+        {canManage && (
+          <div className="flex gap-2">
             <Button
               variant="outline"
               size="sm"
-              onClick={() => toggleMutation.mutate(!app.enabled)}
-              disabled={toggleMutation.isPending}
-              className={cn(
-                app.enabled
-                  ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
-                  : 'text-green-600 hover:text-green-700 hover:bg-green-50'
-              )}
+              onClick={() => testMutation.mutate()}
+              disabled={testMutation.isPending || !app.config}
             >
-              {toggleMutation.isPending ? (
-                <Spinner size="sm" />
-              ) : app.enabled ? (
-                <>
-                  <PowerOff className="w-4 h-4 me-2" />
-                  {t('appEdit.disable')}
-                </>
+              {testMutation.isPending ? (
+                <Spinner size="sm" className="me-2" />
               ) : (
-                <>
-                  <Power className="w-4 h-4 me-2" />
-                  {t('appEdit.enable')}
-                </>
+                <Zap className="w-4 h-4 me-2" />
               )}
+              {t('appEdit.testConnection')}
             </Button>
-          )}
-        </div>
+            {app.config && (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => toggleMutation.mutate(!app.enabled)}
+                disabled={toggleMutation.isPending}
+                className={cn(
+                  app.enabled
+                    ? 'text-red-600 hover:text-red-700 hover:bg-red-50'
+                    : 'text-green-600 hover:text-green-700 hover:bg-green-50'
+                )}
+              >
+                {toggleMutation.isPending ? (
+                  <Spinner size="sm" />
+                ) : app.enabled ? (
+                  <>
+                    <PowerOff className="w-4 h-4 me-2" />
+                    {t('appEdit.disable')}
+                  </>
+                ) : (
+                  <>
+                    <Power className="w-4 h-4 me-2" />
+                    {t('appEdit.enable')}
+                  </>
+                )}
+              </Button>
+            )}
+          </div>
+        )}
       </div>
 
       {testMutation.isSuccess && (
@@ -439,6 +449,8 @@ export function AppEditPage() {
   const { t } = useTranslation();
   const { appId } = useParams<{ appId: string }>();
   const queryClient = useQueryClient();
+  const { can } = usePermissions();
+  const canManageSettings = can(PERMISSIONS.SETTINGS_MANAGE);
 
   const { data: app, isLoading, error } = useQuery({
     queryKey: ['app', appId],
@@ -521,7 +533,7 @@ export function AppEditPage() {
               <CardTitle className="text-base">{t('appEdit.connectionStatus')}</CardTitle>
             </CardHeader>
             <CardContent>
-              <ConnectionStatus app={app} />
+              <ConnectionStatus app={app} canManage={canManageSettings} />
             </CardContent>
           </Card>
         )}
@@ -536,6 +548,7 @@ export function AppEditPage() {
               key={app.id}
               app={app}
               onSaved={() => {}}
+              canManage={canManageSettings}
             />
           </CardContent>
         </Card>
@@ -556,7 +569,7 @@ export function AppEditPage() {
         )}
 
         {/* Danger Zone */}
-        {app.config && (
+        {app.config && canManageSettings && (
           <Card className="border-red-200">
             <CardHeader>
               <CardTitle className="text-base text-red-600">{t('appEdit.dangerZone')}</CardTitle>

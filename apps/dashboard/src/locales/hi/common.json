@@ -39,7 +39,13 @@
     "logout": "लॉग आउट",
     "language": "भाषा",
     "switchToDark": "डार्क में बदलें",
-    "switchToLight": "लाइट में बदलें"
+    "switchToLight": "लाइट में बदलें",
+    "goBack": "वापस जाएं",
+    "home": "होम"
+  },
+  "errors": {
+    "accessDenied": "पहुंच अस्वीकृत",
+    "accessDeniedDescription": "आपको इस पृष्ठ तक पहुंचने की अनुमति नहीं है। यदि आपको लगता है कि यह एक त्रुटि है तो अपने व्यवस्थापक से संपर्क करें।"
   },
   "nav": {
     "home": "होम",
@@ -56,7 +62,10 @@
     "apps": "ऐप्स",
     "automations": "स्वचालन",
     "autonomy": "स्वायत्तता",
-    "dangerZone": "खतरनाक क्षेत्र"
+    "dangerZone": "खतरनाक क्षेत्र",
+    "admin": "व्यवस्थापक",
+    "users": "उपयोगकर्ता",
+    "roles": "भूमिकाएं"
   },
   "filters": {
     "all": "सभी",

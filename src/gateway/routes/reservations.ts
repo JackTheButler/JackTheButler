@@ -9,6 +9,8 @@
 import { Hono } from 'hono';
 import { eq, desc, sql, and, gte } from 'drizzle-orm';
 import { db, reservations, guests, conversations, tasks } from '@/db/index.js';
+import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 
 // Define custom variables type for Hono context
 type Variables = {
@@ -17,11 +19,14 @@ type Variables = {
 
 const reservationRoutes = new Hono<{ Variables: Variables }>();
 
+// Apply auth to all routes
+reservationRoutes.use('/*', requireAuth);
+
 /**
  * GET /api/v1/reservations/today
  * Get today's activity summary
  */
-reservationRoutes.get('/today', async (c) => {
+reservationRoutes.get('/today', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
   const today = new Date();
   const todayStr: string = today.toISOString().split('T')[0]!;
 
@@ -81,7 +86,7 @@ reservationRoutes.get('/today', async (c) => {
  * GET /api/v1/reservations/arrivals
  * Get today's arrivals list
  */
-reservationRoutes.get('/arrivals', async (c) => {
+reservationRoutes.get('/arrivals', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
   const date: string = c.req.query('date') ?? new Date().toISOString().split('T')[0]!;
   const status = c.req.query('status'); // optional filter
 
@@ -124,7 +129,7 @@ reservationRoutes.get('/arrivals', async (c) => {
  * GET /api/v1/reservations/departures
  * Get today's departures list
  */
-reservationRoutes.get('/departures', async (c) => {
+reservationRoutes.get('/departures', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
   const date: string = c.req.query('date') ?? new Date().toISOString().split('T')[0]!;
   const status = c.req.query('status');
 
@@ -167,7 +172,7 @@ reservationRoutes.get('/departures', async (c) => {
  * GET /api/v1/reservations/in-house
  * Get current in-house guests
  */
-reservationRoutes.get('/in-house', async (c) => {
+reservationRoutes.get('/in-house', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
   const today: string = new Date().toISOString().split('T')[0]!;
 
   const results = await db
@@ -209,7 +214,7 @@ reservationRoutes.get('/in-house', async (c) => {
  * GET /api/v1/reservations
  * List all reservations with optional filtering
  */
-reservationRoutes.get('/', async (c) => {
+reservationRoutes.get('/', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
   const search = c.req.query('search');
   const status = c.req.query('status');
   const arrivalFrom = c.req.query('arrivalFrom');
@@ -309,7 +314,7 @@ reservationRoutes.get('/', async (c) => {
  * GET /api/v1/reservations/:id
  * Get a single reservation with full details
  */
-reservationRoutes.get('/:id', async (c) => {
+reservationRoutes.get('/:id', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
   const id = c.req.param('id');
 
   const result = await db

@@ -2,27 +2,37 @@
  * Authentication Routes Tests
  */
 
-import { describe, it, expect, beforeAll } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { app } from '@/gateway/server.js';
-import { db, staff } from '@/db/index.js';
+import { db, staff, roles } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
+import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 
 describe('Auth Routes', () => {
+  const testUserId = 'staff-test-auth-001';
+  const testEmail = 'test-auth@hotel.com';
+
   // Ensure test user exists
   beforeAll(async () => {
-    const existing = await db.select().from(staff).where(eq(staff.email, 'test@hotel.com')).limit(1);
-    if (existing.length === 0) {
-      await db.insert(staff).values({
-        id: 'staff-test-001',
-        email: 'test@hotel.com',
-        name: 'Test User',
-        role: 'admin',
-        department: 'testing',
-        permissions: JSON.stringify(['*']),
-        status: 'active',
-        passwordHash: 'test123',
-      });
-    }
+    // Clean up any existing test user
+    await db.delete(staff).where(eq(staff.id, testUserId));
+
+    // Create test user with admin role
+    await db.insert(staff).values({
+      id: testUserId,
+      email: testEmail,
+      name: 'Test User',
+      roleId: SYSTEM_ROLE_IDS.ADMIN,
+      permissions: JSON.stringify([]),
+      status: 'active',
+      passwordHash: 'test123',
+    });
+  });
+
+  afterAll(async () => {
+    // Clean up test user
+    await db.delete(staff).where(eq(staff.id, testUserId));
   });
 
   describe('POST /api/v1/auth/login', () => {
@@ -31,7 +41,7 @@ describe('Auth Routes', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: 'test@hotel.com',
+          email: testEmail,
           password: 'test123',
         }),
       });
@@ -48,7 +58,7 @@ describe('Auth Routes', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: 'test@hotel.com',
+          email: testEmail,
           password: 'wrongpassword',
         }),
       });
@@ -95,7 +105,7 @@ describe('Auth Routes', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: 'test@hotel.com',
+          email: testEmail,
           password: 'test123',
         }),
       });
@@ -108,8 +118,10 @@ describe('Auth Routes', () => {
       const json = await res.json();
 
       expect(res.status).toBe(200);
-      expect(json.user.email).toBe('test@hotel.com');
-      expect(json.user.role).toBe('admin');
+      expect(json.user.email).toBe(testEmail);
+      expect(json.user.roleId).toBe(SYSTEM_ROLE_IDS.ADMIN);
+      expect(json.user.roleName).toBe('Admin');
+      expect(json.user.permissions).toContain('*');
     });
 
     it('should return 401 without token', async () => {
@@ -138,7 +150,7 @@ describe('Auth Routes', () => {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          email: 'test@hotel.com',
+          email: testEmail,
           password: 'test123',
         }),
       });
@@ -167,6 +179,29 @@ describe('Auth Routes', () => {
 
       expect(res.status).toBe(401);
       expect(json.error.code).toBe('UNAUTHORIZED');
+    });
+  });
+
+  describe('Token includes permissions', () => {
+    it('should include permissions array in access token payload', async () => {
+      const loginRes = await app.request('/api/v1/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          email: testEmail,
+          password: 'test123',
+        }),
+      });
+      const { accessToken } = await loginRes.json();
+
+      // Decode JWT payload (without verification)
+      const payloadBase64 = accessToken.split('.')[1];
+      const payload = JSON.parse(Buffer.from(payloadBase64, 'base64').toString());
+
+      expect(payload.permissions).toBeDefined();
+      expect(Array.isArray(payload.permissions)).toBe(true);
+      expect(payload.permissions).toContain('*'); // Admin has wildcard
+      expect(payload.roleId).toBe(SYSTEM_ROLE_IDS.ADMIN);
     });
   });
 });

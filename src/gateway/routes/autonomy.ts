@@ -14,7 +14,8 @@ import {
 } from '@/core/autonomy.js';
 import { getApprovalQueue } from '@/core/approval-queue.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 
 // ===================
 // Schemas
@@ -67,7 +68,7 @@ settingsRouter.use('/*', requireAuth);
  * GET /api/v1/settings/autonomy
  * Get current autonomy settings
  */
-settingsRouter.get('/', async (c) => {
+settingsRouter.get('/', requirePermission(PERMISSIONS.SETTINGS_VIEW), async (c) => {
   const engine = getAutonomyEngine();
   await engine.ensureLoaded();
   const settings = engine.getSettings();
@@ -79,7 +80,7 @@ settingsRouter.get('/', async (c) => {
  * PUT /api/v1/settings/autonomy
  * Update autonomy settings
  */
-settingsRouter.put('/', validateBody(autonomySettingsSchema), async (c) => {
+settingsRouter.put('/', requirePermission(PERMISSIONS.SETTINGS_MANAGE), validateBody(autonomySettingsSchema), async (c) => {
   const body = c.get('validatedBody') as AutonomySettings;
 
   const engine = getAutonomyEngine();
@@ -95,7 +96,7 @@ settingsRouter.put('/', validateBody(autonomySettingsSchema), async (c) => {
  * GET /api/v1/settings/autonomy/defaults
  * Get default autonomy settings
  */
-settingsRouter.get('/defaults', (c) => {
+settingsRouter.get('/defaults', requirePermission(PERMISSIONS.SETTINGS_VIEW), (c) => {
   return c.json({ settings: DEFAULT_AUTONOMY_SETTINGS });
 });
 
@@ -103,7 +104,7 @@ settingsRouter.get('/defaults', (c) => {
  * POST /api/v1/settings/autonomy/reset
  * Reset autonomy settings to defaults
  */
-settingsRouter.post('/reset', async (c) => {
+settingsRouter.post('/reset', requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (c) => {
   const engine = getAutonomyEngine();
   await engine.resetToDefaults();
 
@@ -126,7 +127,7 @@ approvalsRouter.use('/*', requireAuth);
  * GET /api/v1/approvals
  * List approval items with optional filters
  */
-approvalsRouter.get('/', validateQuery(listApprovalsQuerySchema), async (c) => {
+approvalsRouter.get('/', requirePermission(PERMISSIONS.APPROVALS_VIEW), validateQuery(listApprovalsQuerySchema), async (c) => {
   const query = c.get('validatedQuery') as z.infer<typeof listApprovalsQuerySchema>;
 
   const queue = getApprovalQueue();
@@ -153,7 +154,7 @@ approvalsRouter.get('/', validateQuery(listApprovalsQuerySchema), async (c) => {
  * GET /api/v1/approvals/stats
  * Get approval statistics
  */
-approvalsRouter.get('/stats', async (c) => {
+approvalsRouter.get('/stats', requirePermission(PERMISSIONS.APPROVALS_VIEW), async (c) => {
   const queue = getApprovalQueue();
   const stats = await queue.getStats();
 
@@ -164,7 +165,7 @@ approvalsRouter.get('/stats', async (c) => {
  * GET /api/v1/approvals/:id
  * Get approval item details
  */
-approvalsRouter.get('/:id', async (c) => {
+approvalsRouter.get('/:id', requirePermission(PERMISSIONS.APPROVALS_VIEW), async (c) => {
   const id = c.req.param('id');
 
   const queue = getApprovalQueue();
@@ -177,7 +178,7 @@ approvalsRouter.get('/:id', async (c) => {
  * POST /api/v1/approvals/:id/approve
  * Approve an item
  */
-approvalsRouter.post('/:id/approve', async (c) => {
+approvalsRouter.post('/:id/approve', requirePermission(PERMISSIONS.APPROVALS_MANAGE), async (c) => {
   const id = c.req.param('id');
   const userId = c.get('userId');
 
@@ -197,7 +198,7 @@ approvalsRouter.post('/:id/approve', async (c) => {
  * POST /api/v1/approvals/:id/reject
  * Reject an item
  */
-approvalsRouter.post('/:id/reject', validateBody(rejectBodySchema), async (c) => {
+approvalsRouter.post('/:id/reject', requirePermission(PERMISSIONS.APPROVALS_MANAGE), validateBody(rejectBodySchema), async (c) => {
   const id = c.req.param('id');
   const userId = c.get('userId');
   const body = c.get('validatedBody') as z.infer<typeof rejectBodySchema>;

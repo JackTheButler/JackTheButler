@@ -17,6 +17,7 @@ import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
 import { PageContainer, EmptyState } from '@/components';
 import { usePageActions } from '@/contexts/PageActionsContext';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 
 type AutonomyLevel = 'L1' | 'L2';
 
@@ -59,11 +60,13 @@ function LevelSelector({
   onChange,
   compact = false,
   t,
+  disabled = false,
 }: {
   value: AutonomyLevel;
   onChange: (level: AutonomyLevel) => void;
   compact?: boolean;
   t: (key: string) => string;
+  disabled?: boolean;
 }) {
   const levels: AutonomyLevel[] = ['L1', 'L2'];
 
@@ -76,14 +79,16 @@ function LevelSelector({
         return compact ? (
           <button
             key={level}
-            onClick={() => onChange(level)}
+            onClick={() => !disabled && onChange(level)}
+            disabled={disabled}
             className={cn(
               'px-2 py-1 text-xs rounded font-medium transition-colors',
               isActive
                 ? level === 'L1'
                   ? 'bg-warning text-warning-foreground'
                   : 'bg-success text-success-foreground'
-                : 'bg-muted text-muted-foreground hover:bg-muted/80'
+                : 'bg-muted text-muted-foreground hover:bg-muted/80',
+              disabled && 'cursor-not-allowed opacity-50'
             )}
           >
             {level}
@@ -91,14 +96,16 @@ function LevelSelector({
         ) : (
           <button
             key={level}
-            onClick={() => onChange(level)}
+            onClick={() => !disabled && onChange(level)}
+            disabled={disabled}
             className={cn(
               'flex-1 p-4 rounded-lg border-2 transition-all text-start',
               isActive
                 ? level === 'L1'
                   ? 'border-warning-border bg-warning'
                   : 'border-success-border bg-success'
-                : 'border-border hover:border-border/80'
+                : 'border-border hover:border-border/80',
+              disabled && 'cursor-not-allowed opacity-50'
             )}
           >
             <div className="flex items-center gap-2 mb-1">
@@ -120,11 +127,13 @@ function ThresholdSlider({
   value,
   onChange,
   description,
+  disabled = false,
 }: {
   label: string;
   value: number;
   onChange: (value: number) => void;
   description: string;
+  disabled?: boolean;
 }) {
   return (
     <div className="space-y-2">
@@ -140,7 +149,11 @@ function ThresholdSlider({
         max="100"
         value={value * 100}
         onChange={(e) => onChange(Number(e.target.value) / 100)}
-        className="w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary"
+        disabled={disabled}
+        className={cn(
+          'w-full h-2 bg-muted rounded-lg appearance-none cursor-pointer accent-primary',
+          disabled && 'cursor-not-allowed opacity-50'
+        )}
       />
       <p className="text-xs text-muted-foreground">{description}</p>
     </div>
@@ -151,6 +164,8 @@ export function AutonomyPage() {
   const { t } = useTranslation();
   const { setActions } = usePageActions();
   const queryClient = useQueryClient();
+  const { can } = usePermissions();
+  const canManageSettings = can(PERMISSIONS.SETTINGS_MANAGE);
   const [hasChanges, setHasChanges] = useState(false);
 
   const { data, isLoading, error } = useQuery({
@@ -202,26 +217,28 @@ export function AutonomyPage() {
   const { mutate: reset, isPending: isResetting } = resetMutation;
 
   useEffect(() => {
-    setActions([
-      {
-        id: 'reset',
-        label: t('autonomy.resetToDefaults'),
-        icon: RefreshCw,
-        variant: 'outline',
-        onClick: () => reset(),
-        disabled: isResetting,
-        loading: isResetting,
-      },
-      {
-        id: 'save',
-        label: t('autonomy.saveChanges'),
-        onClick: () => settings && save(settings),
-        disabled: !hasChanges,
-        loading: isSaving,
-      },
-    ]);
+    if (canManageSettings) {
+      setActions([
+        {
+          id: 'reset',
+          label: t('autonomy.resetToDefaults'),
+          icon: RefreshCw,
+          variant: 'outline',
+          onClick: () => reset(),
+          disabled: isResetting,
+          loading: isResetting,
+        },
+        {
+          id: 'save',
+          label: t('autonomy.saveChanges'),
+          onClick: () => settings && save(settings),
+          disabled: !hasChanges,
+          loading: isSaving,
+        },
+      ]);
+    }
     return () => setActions([]);
-  }, [setActions, t, hasChanges, settings, save, reset, isSaving, isResetting]);
+  }, [setActions, t, hasChanges, settings, save, reset, isSaving, isResetting, canManageSettings]);
 
   if (isLoading) {
     return (
@@ -272,6 +289,7 @@ export function AutonomyPage() {
             value={settings.defaultLevel}
             onChange={(level) => updateSettings({ defaultLevel: level })}
             t={t}
+            disabled={!canManageSettings}
           />
         </CardContent>
       </Card>
@@ -314,6 +332,7 @@ export function AutonomyPage() {
                         onChange={(level) => updateAction(actionType, { level })}
                         compact
                         t={t}
+                        disabled={!canManageSettings}
                       />
                     )}
                   </div>
@@ -344,6 +363,7 @@ export function AutonomyPage() {
                 })
               }
               description={t('autonomy.approvalThresholdDesc')}
+              disabled={!canManageSettings}
             />
             <ThresholdSlider
               label={t('autonomy.urgentThreshold')}
@@ -354,6 +374,7 @@ export function AutonomyPage() {
                 })
               }
               description={t('autonomy.urgentThresholdDesc')}
+              disabled={!canManageSettings}
             />
           </div>
         </CardContent>

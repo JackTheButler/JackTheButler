@@ -9,7 +9,8 @@ import { z } from 'zod';
 import { conversationService } from '@/services/conversation.js';
 import { guestContextService } from '@/services/guest-context.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 import type { ContentType, ChannelType } from '@/types/index.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { createLogger } from '@/utils/logger.js';
@@ -56,7 +57,7 @@ conversationsRouter.use('/*', requireAuth);
  * GET /api/v1/conversations/stats
  * Get conversation counts by state
  */
-conversationsRouter.get('/stats', async (c) => {
+conversationsRouter.get('/stats', requirePermission(PERMISSIONS.CONVERSATIONS_VIEW), async (c) => {
   const stats = await conversationService.getStats();
   return c.json(stats);
 });
@@ -65,7 +66,7 @@ conversationsRouter.get('/stats', async (c) => {
  * GET /api/v1/conversations
  * List conversations with optional filters
  */
-conversationsRouter.get('/', validateQuery(listQuerySchema), async (c) => {
+conversationsRouter.get('/', requirePermission(PERMISSIONS.CONVERSATIONS_VIEW), validateQuery(listQuerySchema), async (c) => {
   const query = c.get('validatedQuery') as z.infer<typeof listQuerySchema>;
 
   const conversations = await conversationService.list({
@@ -89,7 +90,7 @@ conversationsRouter.get('/', validateQuery(listQuerySchema), async (c) => {
  * GET /api/v1/conversations/:id
  * Get conversation details
  */
-conversationsRouter.get('/:id', async (c) => {
+conversationsRouter.get('/:id', requirePermission(PERMISSIONS.CONVERSATIONS_VIEW), async (c) => {
   const id = c.req.param('id');
   const conversation = await conversationService.getDetails(id);
   return c.json({ conversation });
@@ -99,7 +100,7 @@ conversationsRouter.get('/:id', async (c) => {
  * PATCH /api/v1/conversations/:id
  * Update conversation (state, assignment, etc.)
  */
-conversationsRouter.patch('/:id', validateBody(updateBodySchema), async (c) => {
+conversationsRouter.patch('/:id', requirePermission(PERMISSIONS.CONVERSATIONS_MANAGE), validateBody(updateBodySchema), async (c) => {
   const id = c.req.param('id');
   const body = c.get('validatedBody') as z.infer<typeof updateBodySchema>;
 
@@ -117,7 +118,7 @@ conversationsRouter.patch('/:id', validateBody(updateBodySchema), async (c) => {
  * GET /api/v1/conversations/:id/guest
  * Get guest context for a conversation (profile + reservation)
  */
-conversationsRouter.get('/:id/guest', async (c) => {
+conversationsRouter.get('/:id/guest', requirePermission(PERMISSIONS.CONVERSATIONS_VIEW), async (c) => {
   const id = c.req.param('id');
   const guestContext = await guestContextService.getContextByConversation(id);
   return c.json({ guestContext });
@@ -127,7 +128,7 @@ conversationsRouter.get('/:id/guest', async (c) => {
  * GET /api/v1/conversations/:id/messages
  * Get messages for a conversation
  */
-conversationsRouter.get('/:id/messages', validateQuery(messagesQuerySchema), async (c) => {
+conversationsRouter.get('/:id/messages', requirePermission(PERMISSIONS.CONVERSATIONS_VIEW), validateQuery(messagesQuerySchema), async (c) => {
   const id = c.req.param('id');
   const query = c.get('validatedQuery') as z.infer<typeof messagesQuerySchema>;
 
@@ -149,7 +150,7 @@ conversationsRouter.get('/:id/messages', validateQuery(messagesQuerySchema), asy
  * POST /api/v1/conversations/:id/messages
  * Send a message as staff
  */
-conversationsRouter.post('/:id/messages', validateBody(sendMessageBodySchema), async (c) => {
+conversationsRouter.post('/:id/messages', requirePermission(PERMISSIONS.CONVERSATIONS_MANAGE), validateBody(sendMessageBodySchema), async (c) => {
   const id = c.req.param('id');
   const userId = c.get('userId');
   const body = c.get('validatedBody') as z.infer<typeof sendMessageBodySchema>;

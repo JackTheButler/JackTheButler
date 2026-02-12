@@ -20,6 +20,8 @@ import { reservationRoutes } from './reservations.js';
 import { siteScraperRoutes } from '@/apps/tools/site-scraper/routes.js';
 import { systemRoutes } from './system.js';
 import { seedRoutes } from './seed.js';
+import { rolesRouter, permissionsRouter } from './roles.js';
+import { staffRouter } from './staff.js';
 
 const api = new Hono();
 
@@ -67,6 +69,15 @@ api.route('/system', systemRoutes);
 
 // Seed/demo data routes
 api.route('/seed', seedRoutes);
+
+// Role management routes
+api.route('/roles', rolesRouter);
+
+// Permissions routes
+api.route('/permissions', permissionsRouter);
+
+// Staff management routes
+api.route('/staff', staffRouter);
 
 /**
  * GET /api/v1

@@ -12,8 +12,9 @@ import { eq, desc, sql } from 'drizzle-orm';
 import { db, guests, reservations, conversations } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
-import { validateBody } from '@/gateway/middleware/index.js';
+import { validateBody, requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { normalizePhone } from '@/services/guest.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 
 const log = createLogger('routes:guests');
 
@@ -24,6 +25,9 @@ type Variables = {
 };
 
 const guestRoutes = new Hono<{ Variables: Variables }>();
+
+// Apply auth to all routes
+guestRoutes.use('/*', requireAuth);
 
 /**
  * Valid VIP statuses
@@ -71,7 +75,7 @@ const updateGuestSchema = z.object({
  * GET /api/v1/guests/stats
  * Get aggregate guest statistics
  */
-guestRoutes.get('/stats', async (c) => {
+guestRoutes.get('/stats', requirePermission(PERMISSIONS.GUESTS_VIEW), async (c) => {
   const totalResult = await db
     .select({ count: sql<number>`count(*)` })
     .from(guests)
@@ -112,7 +116,7 @@ guestRoutes.get('/stats', async (c) => {
  * GET /api/v1/guests
  * List all guests with optional filtering
  */
-guestRoutes.get('/', async (c) => {
+guestRoutes.get('/', requirePermission(PERMISSIONS.GUESTS_VIEW), async (c) => {
   const search = c.req.query('search');
   const vipStatus = c.req.query('vipStatus');
   const loyaltyTier = c.req.query('loyaltyTier');
@@ -181,7 +185,7 @@ guestRoutes.get('/', async (c) => {
  * GET /api/v1/guests/:id
  * Get a single guest profile with related data
  */
-guestRoutes.get('/:id', async (c) => {
+guestRoutes.get('/:id', requirePermission(PERMISSIONS.GUESTS_VIEW), async (c) => {
   const id = c.req.param('id');
 
   const guest = await db
@@ -224,7 +228,7 @@ guestRoutes.get('/:id', async (c) => {
  * GET /api/v1/guests/:id/reservations
  * Get reservations for a guest
  */
-guestRoutes.get('/:id/reservations', async (c) => {
+guestRoutes.get('/:id/reservations', requirePermission(PERMISSIONS.GUESTS_VIEW), async (c) => {
   const id = c.req.param('id');
   const limit = Math.min(parseInt(c.req.query('limit') || '20', 10), 100);
   const offset = parseInt(c.req.query('offset') || '0', 10);
@@ -260,7 +264,7 @@ guestRoutes.get('/:id/reservations', async (c) => {
  * GET /api/v1/guests/:id/conversations
  * Get conversations for a guest
  */
-guestRoutes.get('/:id/conversations', async (c) => {
+guestRoutes.get('/:id/conversations', requirePermission(PERMISSIONS.GUESTS_VIEW), async (c) => {
   const id = c.req.param('id');
   const limit = Math.min(parseInt(c.req.query('limit') || '20', 10), 100);
   const offset = parseInt(c.req.query('offset') || '0', 10);
@@ -295,7 +299,7 @@ guestRoutes.get('/:id/conversations', async (c) => {
  * POST /api/v1/guests
  * Create a new guest
  */
-guestRoutes.post('/', validateBody(createGuestSchema), async (c) => {
+guestRoutes.post('/', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBody(createGuestSchema), async (c) => {
   const data = c.get('validatedBody') as z.infer<typeof createGuestSchema>;
 
   const id = generateId('guest');
@@ -342,7 +346,7 @@ guestRoutes.post('/', validateBody(createGuestSchema), async (c) => {
  * PUT /api/v1/guests/:id
  * Update a guest
  */
-guestRoutes.put('/:id', validateBody(updateGuestSchema), async (c) => {
+guestRoutes.put('/:id', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBody(updateGuestSchema), async (c) => {
   const id = c.req.param('id');
   const data = c.get('validatedBody') as z.infer<typeof updateGuestSchema>;
 
@@ -388,7 +392,7 @@ guestRoutes.put('/:id', validateBody(updateGuestSchema), async (c) => {
  * DELETE /api/v1/guests/:id
  * Delete a guest (soft delete by clearing PII, keeping for historical records)
  */
-guestRoutes.delete('/:id', async (c) => {
+guestRoutes.delete('/:id', requirePermission(PERMISSIONS.GUESTS_MANAGE), async (c) => {
   const id = c.req.param('id');
   const permanent = c.req.query('permanent') === 'true';
 

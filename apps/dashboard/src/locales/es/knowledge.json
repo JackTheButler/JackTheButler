@@ -100,6 +100,8 @@
     "progressFormulating": "Formulando preguntas de huéspedes...",
     "progressSaving": "Guardando entradas en base de conocimiento...",
     "progressEmbedding": "Generando embeddings...",
+    "noPermission": "Acceso Restringido",
+    "noPermissionDesc": "No tienes permiso para extraer sitios web. Contacta a tu administrador para solicitar acceso.",
     "categories": {
       "faq": "FAQ",
       "policy": "Política",

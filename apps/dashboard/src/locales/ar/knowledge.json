@@ -100,6 +100,8 @@
     "progressFormulating": "صياغة أسئلة الضيوف...",
     "progressSaving": "حفظ المدخلات في قاعدة المعرفة...",
     "progressEmbedding": "إنشاء التضمينات...",
+    "noPermission": "الوصول مقيّد",
+    "noPermissionDesc": "ليس لديك إذن لاستخراج المواقع الإلكترونية. تواصل مع المسؤول لطلب الوصول.",
     "categories": {
       "faq": "الأسئلة الشائعة",
       "policy": "السياسة",

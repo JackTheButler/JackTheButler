@@ -1,0 +1,74 @@
+{
+  "title": "Пользователи",
+  "description": "Управление сотрудниками и их доступом.",
+  "addUser": "Добавить пользователя",
+  "editUser": "Редактировать пользователя",
+  "searchPlaceholder": "Поиск по имени или email...",
+  "table": {
+    "name": "Имя",
+    "role": "Роль",
+    "status": "Статус",
+    "lastActive": "Последняя активность"
+  },
+  "labels": {
+    "name": "Имя",
+    "email": "Email",
+    "password": "Пароль",
+    "role": "Роль"
+  },
+  "placeholders": {
+    "name": "Иван Петров",
+    "email": "ivan@hotel.com",
+    "password": "Минимум 8 символов",
+    "role": "Выберите роль"
+  },
+  "helpText": {
+    "emailLocked": "Email нельзя изменить после создания."
+  },
+  "validation": {
+    "nameRequired": "Имя обязательно",
+    "emailRequired": "Email обязателен",
+    "passwordRequired": "Пароль обязателен",
+    "passwordMinLength": "Пароль должен содержать не менее 8 символов",
+    "roleRequired": "Роль обязательна"
+  },
+  "errors": {
+    "createFailed": "Не удалось создать пользователя",
+    "updateFailed": "Не удалось обновить пользователя",
+    "deleteFailed": "Не удалось удалить пользователя"
+  },
+  "filters": {
+    "all": "Все",
+    "active": "Активные",
+    "inactive": "Неактивные"
+  },
+  "empty": {
+    "title": "Пользователи не найдены",
+    "description": "Добавьте первого сотрудника, чтобы начать.",
+    "descriptionFiltered": "Попробуйте изменить поиск или фильтры."
+  },
+  "status": {
+    "active": "Активен",
+    "inactive": "Неактивен"
+  },
+  "never": "Никогда",
+  "actions": {
+    "edit": "Редактировать",
+    "deactivate": "Деактивировать",
+    "activate": "Активировать",
+    "delete": "Удалить"
+  },
+  "confirm": {
+    "deactivateTitle": "Деактивировать пользователя",
+    "deactivateDescription": "Вы уверены, что хотите деактивировать {{name}}? Они больше не смогут войти в систему.",
+    "deactivateButton": "Деактивировать",
+    "deleteTitle": "Удалить пользователя",
+    "deleteDescription": "Вы уверены, что хотите навсегда удалить {{name}}? Это действие нельзя отменить.",
+    "deleteButton": "Удалить"
+  },
+  "buttons": {
+    "cancel": "Отмена",
+    "saveChanges": "Сохранить изменения",
+    "createUser": "Создать пользователя"
+  }
+}

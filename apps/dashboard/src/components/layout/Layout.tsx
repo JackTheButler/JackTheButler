@@ -3,6 +3,7 @@ import { Outlet, useNavigate, Link, useLocation } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { useAuth } from '@/hooks/useAuth';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import { useWebSocket } from '@/hooks/useWebSocket';
 import { PageActionsProvider, usePageActions, PageAction } from '@/contexts/PageActionsContext';
 import { Button } from '@/components/ui/button';
@@ -48,6 +49,10 @@ interface NavItem {
   label: string;
   icon: React.ReactNode;
   badge?: number;
+  /** Permission required to see this item (optional) */
+  permission?: string;
+  /** Whether the item is disabled (computed from permission) */
+  disabled?: boolean;
 }
 
 interface NavSection {
@@ -56,12 +61,17 @@ interface NavSection {
   icon?: React.ReactNode;
   collapsible?: boolean;
   items: NavItem[];
+  /** Permission required to see this section (optional) */
+  permission?: string;
+  /** Whether the section is disabled (computed from permission) */
+  disabled?: boolean;
 }
 
 export function Layout() {
   const navigate = useNavigate();
   const location = useLocation();
   const { user, isLoading, isAuthenticated, logout, checkAuth } = useAuth();
+  const { can } = usePermissions();
   const [collapsed, setCollapsed] = useState(() => {
     const saved = localStorage.getItem('sidebar-collapsed');
     return saved === 'true';
@@ -293,16 +303,16 @@ export function Layout() {
     {
       items: [
         { path: '/', label: t('nav.home'), icon: <Home size={20} /> },
-        { path: '/inbox', label: t('nav.inbox'), icon: <MessageSquare size={20} />, badge: escalatedConversations },
-        { path: '/tasks', label: t('nav.tasks'), icon: <ClipboardList size={20} />, badge: pendingTasks },
-        { path: '/review-center', label: t('nav.approvals'), icon: <ListTodo size={20} />, badge: pendingApprovals },
+        { path: '/inbox', label: t('nav.inbox'), icon: <MessageSquare size={20} />, badge: escalatedConversations, permission: PERMISSIONS.CONVERSATIONS_VIEW },
+        { path: '/tasks', label: t('nav.tasks'), icon: <ClipboardList size={20} />, badge: pendingTasks, permission: PERMISSIONS.TASKS_VIEW },
+        { path: '/review-center', label: t('nav.approvals'), icon: <ListTodo size={20} />, badge: pendingApprovals, permission: PERMISSIONS.APPROVALS_VIEW },
       ],
     },
     {
       title: t('nav.operations'),
       items: [
-        { path: '/guests', label: t('nav.guests'), icon: <Users size={20} /> },
-        { path: '/reservations', label: t('nav.reservations'), icon: <CalendarDays size={20} /> },
+        { path: '/guests', label: t('nav.guests'), icon: <Users size={20} />, permission: PERMISSIONS.GUESTS_VIEW },
+        { path: '/reservations', label: t('nav.reservations'), icon: <CalendarDays size={20} />, permission: PERMISSIONS.RESERVATIONS_VIEW },
       ],
     },
     {
@@ -310,9 +320,10 @@ export function Layout() {
       title: t('nav.content'),
       icon: <FileText size={20} />,
       collapsible: true,
+      permission: PERMISSIONS.KNOWLEDGE_VIEW,
       items: [
-        { path: '/tools/knowledge-base', label: t('nav.knowledgeBase'), icon: <BookOpen size={20} /> },
-        { path: '/tools/site-scraper', label: t('nav.siteScraper'), icon: <Globe size={20} /> },
+        { path: '/tools/knowledge-base', label: t('nav.knowledgeBase'), icon: <BookOpen size={20} />, permission: PERMISSIONS.KNOWLEDGE_VIEW },
+        { path: '/tools/site-scraper', label: t('nav.siteScraper'), icon: <Globe size={20} />, permission: PERMISSIONS.KNOWLEDGE_MANAGE },
       ],
     },
     {
@@ -320,13 +331,24 @@ export function Layout() {
       title: t('nav.engine'),
       icon: <Network size={20} />,
       collapsible: true,
+      permission: PERMISSIONS.SETTINGS_VIEW,
       items: [
-        { path: '/engine/apps', label: t('nav.apps'), icon: <Puzzle size={20} /> },
-        { path: '/engine/automations', label: t('nav.automations'), icon: <Zap size={20} /> },
-        { path: '/engine/autonomy', label: t('nav.autonomy'), icon: <SlidersHorizontal size={20} /> },
+        { path: '/engine/apps', label: t('nav.apps'), icon: <Puzzle size={20} />, permission: PERMISSIONS.SETTINGS_VIEW },
+        { path: '/engine/automations', label: t('nav.automations'), icon: <Zap size={20} />, permission: PERMISSIONS.AUTOMATIONS_VIEW },
+        { path: '/engine/autonomy', label: t('nav.autonomy'), icon: <SlidersHorizontal size={20} />, permission: PERMISSIONS.SETTINGS_VIEW },
       ],
     },
   ];
+
+  // Mark sections and items as disabled based on permissions (but keep them visible)
+  const filteredNavSections = navSections.map((section) => ({
+    ...section,
+    disabled: section.permission ? !can(section.permission) : false,
+    items: section.items.map((item) => ({
+      ...item,
+      disabled: item.permission ? !can(item.permission) : false,
+    })),
+  }));
 
   const isActive = (path: string) => {
     if (path === '/') {
@@ -385,7 +407,7 @@ export function Layout() {
               transitionTimingFunction: 'cubic-bezier(0.4, 0, 0.2, 1)',
             }}
           />
-          {navSections.map((section, sectionIndex) => {
+          {filteredNavSections.map((section, sectionIndex) => {
             const isExpanded = section.id ? expandedSections[section.id] : true;
             const hasActiveItem = section.items.some((item) => isActive(item.path));
 
@@ -395,30 +417,48 @@ export function Layout() {
                   // Collapsible section header
                   <>
                     {!effectiveCollapsed ? (
-                      <button
-                        onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
-                        className={`flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg transition-colors ${
-                          hasActiveItem && !isExpanded
-                            ? 'bg-muted text-foreground'
-                            : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                        }`}
-                        style={{ width: 'calc(100% - 16px)' }}
-                      >
-                        <span className="text-muted-foreground">{section.icon}</span>
-                        <span className="text-sm font-medium">{section.title}</span>
-                      </button>
-                    ) : (
-                      <Tooltip content={section.title} side="right">
+                      section.disabled ? (
+                        <span
+                          className="flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg cursor-not-allowed opacity-50"
+                          style={{ width: 'calc(100% - 16px)' }}
+                        >
+                          <span className="text-muted-foreground">{section.icon}</span>
+                          <span className="text-sm font-medium text-muted-foreground">{section.title}</span>
+                        </span>
+                      ) : (
                         <button
                           onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
-                          className={`flex items-center justify-center mx-auto p-2 w-fit rounded-lg transition-colors ${
+                          className={`flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg transition-colors ${
                             hasActiveItem && !isExpanded
                               ? 'bg-muted text-foreground'
                               : 'text-muted-foreground hover:bg-muted hover:text-foreground'
                           }`}
+                          style={{ width: 'calc(100% - 16px)' }}
                         >
-                          <span className={isExpanded ? 'text-muted-foreground/50' : 'text-muted-foreground'}>{section.icon}</span>
+                          <span className="text-muted-foreground">{section.icon}</span>
+                          <span className="text-sm font-medium">{section.title}</span>
                         </button>
+                      )
+                    ) : (
+                      <Tooltip content={section.title} side="right">
+                        {section.disabled ? (
+                          <span
+                            className="flex items-center justify-center mx-auto p-2 w-fit rounded-lg cursor-not-allowed opacity-50"
+                          >
+                            <span className="text-muted-foreground">{section.icon}</span>
+                          </span>
+                        ) : (
+                          <button
+                            onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
+                            className={`flex items-center justify-center mx-auto p-2 w-fit rounded-lg transition-colors ${
+                              hasActiveItem && !isExpanded
+                                ? 'bg-muted text-foreground'
+                                : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                            }`}
+                          >
+                            <span className={isExpanded ? 'text-muted-foreground/50' : 'text-muted-foreground'}>{section.icon}</span>
+                          </button>
+                        )}
                       </Tooltip>
                     )}
                   </>
@@ -467,40 +507,55 @@ export function Layout() {
                               <div className="absolute start-2.5 top-1/2 -translate-y-1/2 w-5 h-px bg-foreground" />
                             )}
                             <Tooltip content={effectiveCollapsed ? item.label : null} side="right">
-                              <Link
-                                to={item.path}
-                                data-nav-active={active || undefined}
-                                className={`flex items-center gap-3 rounded-lg transition-colors relative z-10 ${
-                                  active
-                                    ? 'text-primary-foreground'
-                                    : 'text-muted-foreground hover:bg-muted hover:text-foreground'
-                                } ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !effectiveCollapsed ? 'ms-5' : ''}`}
-                              >
-                                {(!section.collapsible || effectiveCollapsed) && (
-                                  <span className={`relative ${active ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
-                                    {item.icon}
-                                    {effectiveCollapsed && item.badge && item.badge > 0 && (
-                                      <span className={`absolute -top-1 -end-1 min-w-[16px] h-4 px-1 text-[10px] font-medium rounded-full flex items-center justify-center ${
-                                        active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
-                                      }`}>
-                                        {item.badge > 99 ? '99+' : item.badge}
-                                      </span>
-                                    )}
-                                  </span>
-                                )}
-                                {!effectiveCollapsed && (
-                                  <>
-                                    <span className="text-sm font-medium">{item.label}</span>
-                                    {item.badge && item.badge > 0 && (
-                                      <span className={`ms-auto min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full flex items-center justify-center ${
-                                        active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
-                                      }`}>
-                                        {item.badge > 99 ? '99+' : item.badge}
-                                      </span>
-                                    )}
-                                  </>
-                                )}
-                              </Link>
+                              {item.disabled ? (
+                                <span
+                                  className={`flex items-center gap-3 rounded-lg relative z-10 cursor-not-allowed opacity-50 ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !effectiveCollapsed ? 'ms-5' : ''}`}
+                                >
+                                  {(!section.collapsible || effectiveCollapsed) && (
+                                    <span className="text-muted-foreground">
+                                      {item.icon}
+                                    </span>
+                                  )}
+                                  {!effectiveCollapsed && (
+                                    <span className="text-sm font-medium text-muted-foreground">{item.label}</span>
+                                  )}
+                                </span>
+                              ) : (
+                                <Link
+                                  to={item.path}
+                                  data-nav-active={active || undefined}
+                                  className={`flex items-center gap-3 rounded-lg transition-colors relative z-10 ${
+                                    active
+                                      ? 'text-primary-foreground'
+                                      : 'text-muted-foreground hover:bg-muted hover:text-foreground'
+                                  } ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !effectiveCollapsed ? 'ms-5' : ''}`}
+                                >
+                                  {(!section.collapsible || effectiveCollapsed) && (
+                                    <span className={`relative ${active ? 'text-primary-foreground' : 'text-muted-foreground'}`}>
+                                      {item.icon}
+                                      {effectiveCollapsed && item.badge && item.badge > 0 && (
+                                        <span className={`absolute -top-1 -end-1 min-w-[16px] h-4 px-1 text-[10px] font-medium rounded-full flex items-center justify-center ${
+                                          active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
+                                        }`}>
+                                          {item.badge > 99 ? '99+' : item.badge}
+                                        </span>
+                                      )}
+                                    </span>
+                                  )}
+                                  {!effectiveCollapsed && (
+                                    <>
+                                      <span className="text-sm font-medium">{item.label}</span>
+                                      {item.badge && item.badge > 0 && (
+                                        <span className={`ms-auto min-w-[20px] h-5 px-1.5 text-xs font-medium rounded-full flex items-center justify-center ${
+                                          active ? 'bg-primary-foreground text-primary' : 'bg-primary text-primary-foreground'
+                                        }`}>
+                                          {item.badge > 99 ? '99+' : item.badge}
+                                        </span>
+                                      )}
+                                    </>
+                                  )}
+                                </Link>
+                              )}
                             </Tooltip>
                           </li>
                         );
@@ -560,7 +615,7 @@ export function Layout() {
               <button
                 onClick={() => {
                   setUserMenuOpen(false);
-                  navigate('/engine');
+                  navigate('/settings');
                 }}
                 className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
               >
@@ -614,7 +669,7 @@ export function Layout() {
       <div className="flex-1 flex flex-col min-w-0 h-screen">
         <PageActionsProvider>
           <HeaderBar
-            navSections={navSections}
+            navSections={filteredNavSections}
             isActive={isActive}
             t={t}
             mobileMenuOpen={mobileMenuOpen}
@@ -646,7 +701,7 @@ function HeaderBar({
   const { actions } = usePageActions() as { actions: PageAction[] };
   const location = useLocation();
   const isHomePage = location.pathname === '/';
-  const isSettingsPage = location.pathname === '/engine';
+  const isSettingsPage = location.pathname.startsWith('/settings');
   const activeItem = navSections
     .flatMap((s) => s.items)
     .find((item) => isActive(item.path));

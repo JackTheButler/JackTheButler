@@ -100,6 +100,8 @@
     "progressFormulating": "Formulating guest questions...",
     "progressSaving": "Saving entries to knowledge base...",
     "progressEmbedding": "Generating embeddings...",
+    "noPermission": "Access Restricted",
+    "noPermissionDesc": "You don't have permission to scrape websites. Contact your administrator to request access.",
     "categories": {
       "faq": "FAQ",
       "policy": "Policy",

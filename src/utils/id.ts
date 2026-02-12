@@ -28,6 +28,8 @@ export const ID_PREFIXES = {
   action: 'act',
   notification: 'notif',
   execution: 'exec',
+  // Phase 9: Roles
+  role: 'role',
 } as const;
 
 export type IdPrefix = keyof typeof ID_PREFIXES;

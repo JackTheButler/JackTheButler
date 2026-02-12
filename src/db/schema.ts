@@ -147,6 +147,38 @@ export const reservations = sqliteTable(
 );
 
 // ===================
+// Roles
+// ===================
+
+/**
+ * Role definitions for access control
+ */
+export const roles = sqliteTable(
+  'roles',
+  {
+    id: text('id').primaryKey(),
+
+    // Identity
+    name: text('name').notNull().unique(),
+    description: text('description'),
+
+    // Permissions (JSON array of permission keys, or ['*'] for all)
+    permissions: text('permissions').notNull().default('[]'),
+
+    // System flag - true = built-in role, cannot be deleted
+    isSystem: integer('is_system', { mode: 'boolean' }).notNull().default(false),
+
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    updatedAt: text('updated_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [index('idx_roles_name').on(table.name)]
+);
+
+// ===================
 // Staff
 // ===================
 
@@ -163,11 +195,12 @@ export const staff = sqliteTable(
     name: text('name').notNull(),
     phone: text('phone'),
 
-    // Role: admin, manager, front_desk, concierge, housekeeping, maintenance
-    role: text('role').notNull(),
-    department: text('department'),
+    // Role reference
+    roleId: text('role_id')
+      .notNull()
+      .references(() => roles.id),
 
-    // Permissions (JSON array)
+    // Permissions (JSON array) - for per-user overrides (future)
     permissions: text('permissions').notNull().default('[]'),
 
     // Status: active, inactive
@@ -184,7 +217,7 @@ export const staff = sqliteTable(
       .notNull()
       .default(sql`(datetime('now'))`),
   },
-  (table) => [index('idx_staff_role').on(table.role), index('idx_staff_department').on(table.department)]
+  (table) => [index('idx_staff_role_id').on(table.roleId)]
 );
 
 // ===================
@@ -430,6 +463,9 @@ export type NewGuest = typeof guests.$inferInsert;
 
 export type Reservation = typeof reservations.$inferSelect;
 export type NewReservation = typeof reservations.$inferInsert;
+
+export type Role = typeof roles.$inferSelect;
+export type NewRole = typeof roles.$inferInsert;
 
 export type Staff = typeof staff.$inferSelect;
 export type NewStaff = typeof staff.$inferInsert;

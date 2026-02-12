@@ -39,7 +39,13 @@
     "logout": "退出",
     "language": "语言",
     "switchToDark": "切换到深色",
-    "switchToLight": "切换到浅色"
+    "switchToLight": "切换到浅色",
+    "goBack": "返回",
+    "home": "首页"
+  },
+  "errors": {
+    "accessDenied": "访问被拒绝",
+    "accessDeniedDescription": "您没有权限访问此页面。如果您认为这是一个错误，请联系管理员。"
   },
   "nav": {
     "home": "首页",
@@ -56,7 +62,10 @@
     "apps": "应用",
     "automations": "自动化",
     "autonomy": "自主性",
-    "dangerZone": "危险区域"
+    "dangerZone": "危险区域",
+    "admin": "管理",
+    "users": "用户",
+    "roles": "角色"
   },
   "filters": {
     "all": "全部",

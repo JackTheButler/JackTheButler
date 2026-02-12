@@ -21,6 +21,7 @@ import {
   type ApprovalStatus,
 } from '@/lib/config';
 import { useFilteredQuery } from '@/hooks/useFilteredQuery';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -259,6 +260,8 @@ function ExpandedRow({
 export function ApprovalsPage() {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { can } = usePermissions();
+  const canManageApprovals = can(PERMISSIONS.APPROVALS_MANAGE);
   const [filterStatus, setFilterStatus] = useState<ApprovalStatus | 'all'>('pending');
   const [expandedId, setExpandedId] = useState<string | null>(null);
   const [approvingId, setApprovingId] = useState<string | null>(null);
@@ -426,7 +429,7 @@ export function ApprovalsPage() {
                         <span className="text-sm text-muted-foreground">{formatTimeAgo(item.createdAt, t)}</span>
                       </TableCell>
                       <TableCell className="px-4">
-                        {item.status === 'pending' ? (
+                        {item.status === 'pending' && canManageApprovals ? (
                           <div onClick={(e) => e.stopPropagation()}>
                             <DropdownMenu>
                               <DropdownMenuTrigger>
@@ -452,7 +455,7 @@ export function ApprovalsPage() {
                               </DropdownMenuContent>
                             </DropdownMenu>
                           </div>
-                        ) : (
+                        ) : item.status !== 'pending' ? (
                           <Tooltip
                             content={
                               (item.staffName || item.decidedAt || item.rejectionReason)
@@ -464,6 +467,10 @@ export function ApprovalsPage() {
                               {item.status}
                             </Badge>
                           </Tooltip>
+                        ) : (
+                          <Badge variant="warning" className="capitalize">
+                            {item.status}
+                          </Badge>
                         )}
                       </TableCell>
                     </TableRow>

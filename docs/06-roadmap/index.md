@@ -2,13 +2,14 @@
 
 Future features and improvements planned for Jack The Butler.
 
-## Upcoming Features
+## Features
 
 | Feature | Status | Priority | Description |
 |---------|--------|----------|-------------|
-| [AI Assistant Framework](./001-ai-assistant-framework.md) | In Progress | High | Modular AI assistant for setup, integrations, and ongoing help (Phases 1-4, 7 complete) |
-| [Reusable Assistant System](./002-setup-architecture-refactoring.md) | In Progress | Medium | Build reusable assistant framework with multiple render modes (Phase 8A in progress) |
+| [AI Assistant Framework](./001-ai-assistant-framework.md) | Released | High | Modular AI assistant for setup wizard (Phases 1-4, 7-8 complete; 5-6 deferred) |
+| [Reusable Assistant System](./002-setup-architecture-refactoring.md) | Released | Medium | Reusable assistant framework with multiple render modes (Phases 8A-8D complete) |
 | [Setup API Reference](./003-setup-api-cleanup.md) | Reference | Low | API catalog for Phase 1-4 implementation (for refactoring reference) |
+| [User & Role Management](./004-user-role-management.md) | Planned | High | Permission-based role system with configurable roles (Phases 9A-9M) |
 
 ## How to Propose Features
 

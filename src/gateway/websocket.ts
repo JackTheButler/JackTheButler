@@ -18,7 +18,7 @@ const log = createLogger('websocket');
 
 interface AuthenticatedSocket extends WebSocket {
   userId?: string;
-  role?: string;
+  roleId?: string;
   isAlive: boolean;
 }
 
@@ -90,7 +90,7 @@ export function setupWebSocket(server: Server): WebSocketServer {
         const { payload } = await jwtVerify(token, secret);
         if (payload.type !== 'refresh') {
           ws.userId = payload.sub as string;
-          ws.role = payload.role as string;
+          ws.roleId = payload.roleId as string;
 
           // Track authenticated connection
           if (!clients.has(ws.userId)) {

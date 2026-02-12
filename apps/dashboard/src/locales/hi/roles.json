@@ -1,0 +1,58 @@
+{
+  "title": "भूमिकाएं",
+  "description": "विभिन्न उपयोगकर्ता प्रकारों के लिए अनुमतियां परिभाषित करें।",
+  "addRole": "भूमिका जोड़ें",
+  "editRole": "भूमिका संपादित करें",
+  "table": {
+    "name": "नाम",
+    "description": "विवरण",
+    "permissions": "अनुमतियां",
+    "users": "उपयोगकर्ता"
+  },
+  "labels": {
+    "name": "नाम",
+    "description": "विवरण (वैकल्पिक)",
+    "permissions": "अनुमतियां"
+  },
+  "placeholders": {
+    "name": "उदा., फ्रंट डेस्क प्रबंधक",
+    "description": "इस भूमिका के उद्देश्य का संक्षिप्त विवरण"
+  },
+  "helpText": {
+    "systemRoleLocked": "सिस्टम भूमिका के नाम बदले नहीं जा सकते।",
+    "permissionsInfo": "इस भूमिका के लिए अनुमतियां चुनें।",
+    "allPermissions": "इस भूमिका के पास पूर्ण प्रशासनिक पहुंच है (सभी अनुमतियां)।"
+  },
+  "validation": {
+    "nameRequired": "नाम आवश्यक है",
+    "permissionsRequired": "कम से कम एक अनुमति आवश्यक है"
+  },
+  "errors": {
+    "createFailed": "भूमिका बनाने में विफल",
+    "updateFailed": "भूमिका अपडेट करने में विफल",
+    "deleteFailed": "भूमिका हटाने में विफल"
+  },
+  "empty": {
+    "title": "कोई भूमिका नहीं मिली",
+    "description": "भूमिकाएं परिभाषित करती हैं कि सिस्टम में उपयोगकर्ताओं के पास क्या अनुमतियां हैं।"
+  },
+  "system": "सिस्टम",
+  "allPermissions": "सभी अनुमतियां",
+  "permissionCount": "{{count}} अनुमतियां",
+  "permissionSelected_one": "{{count}} अनुमति चयनित",
+  "permissionSelected_other": "{{count}} अनुमतियां चयनित",
+  "actions": {
+    "edit": "संपादित करें",
+    "delete": "हटाएं"
+  },
+  "confirm": {
+    "deleteTitle": "भूमिका हटाएं",
+    "deleteDescription": "क्या आप \"{{name}}\" भूमिका को हटाना चाहते हैं? यह क्रिया पूर्ववत नहीं की जा सकती।",
+    "deleteButton": "हटाएं"
+  },
+  "buttons": {
+    "cancel": "रद्द करें",
+    "saveChanges": "परिवर्तन सहेजें",
+    "createRole": "भूमिका बनाएं"
+  }
+}

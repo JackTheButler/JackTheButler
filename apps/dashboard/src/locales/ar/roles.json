@@ -1,0 +1,58 @@
+{
+  "title": "الأدوار",
+  "description": "تحديد الصلاحيات لأنواع المستخدمين المختلفة.",
+  "addRole": "إضافة دور",
+  "editRole": "تعديل دور",
+  "table": {
+    "name": "الاسم",
+    "description": "الوصف",
+    "permissions": "الصلاحيات",
+    "users": "المستخدمون"
+  },
+  "labels": {
+    "name": "الاسم",
+    "description": "الوصف (اختياري)",
+    "permissions": "الصلاحيات"
+  },
+  "placeholders": {
+    "name": "مثال: مدير الاستقبال",
+    "description": "وصف مختصر لغرض هذا الدور"
+  },
+  "helpText": {
+    "systemRoleLocked": "لا يمكن تغيير أسماء أدوار النظام.",
+    "permissionsInfo": "حدد الصلاحيات التي يجب أن يمتلكها هذا الدور.",
+    "allPermissions": "هذا الدور لديه وصول إداري كامل (جميع الصلاحيات)."
+  },
+  "validation": {
+    "nameRequired": "الاسم مطلوب",
+    "permissionsRequired": "مطلوب صلاحية واحدة على الأقل"
+  },
+  "errors": {
+    "createFailed": "فشل في إنشاء الدور",
+    "updateFailed": "فشل في تحديث الدور",
+    "deleteFailed": "فشل في حذف الدور"
+  },
+  "empty": {
+    "title": "لم يتم العثور على أدوار",
+    "description": "الأدوار تحدد الصلاحيات التي يمتلكها المستخدمون في النظام."
+  },
+  "system": "نظام",
+  "allPermissions": "جميع الصلاحيات",
+  "permissionCount": "{{count}} صلاحيات",
+  "permissionSelected_one": "{{count}} صلاحية محددة",
+  "permissionSelected_other": "{{count}} صلاحيات محددة",
+  "actions": {
+    "edit": "تعديل",
+    "delete": "حذف"
+  },
+  "confirm": {
+    "deleteTitle": "حذف الدور",
+    "deleteDescription": "هل أنت متأكد من حذف دور \"{{name}}\"؟ لا يمكن التراجع عن هذا الإجراء.",
+    "deleteButton": "حذف"
+  },
+  "buttons": {
+    "cancel": "إلغاء",
+    "saveChanges": "حفظ التغييرات",
+    "createRole": "إنشاء دور"
+  }
+}

@@ -28,6 +28,7 @@ import { Switch } from '@/components/ui/switch';
 import { FilterTabs } from '@/components/ui/filter-tabs';
 import { PageContainer, PageHeader, StatsBar, SearchInput, EmptyState } from '@/components';
 import { AutomationCardSkeleton } from '@/components';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 
 type TriggerType = 'time_based' | 'event_based';
 type ActionType = 'send_message' | 'create_task' | 'notify_staff' | 'webhook';
@@ -101,7 +102,7 @@ function getTriggerDescription(rule: AutomationRule, t: (key: string) => string)
   }
 }
 
-function RuleCard({ rule, onToggle, t }: { rule: AutomationRule; onToggle: (enabled: boolean) => void; t: (key: string) => string }) {
+function RuleCard({ rule, onToggle, t, canManage }: { rule: AutomationRule; onToggle: (enabled: boolean) => void; t: (key: string) => string; canManage: boolean }) {
   const TriggerIcon = triggerIcons[rule.triggerType] || Clock;
   const ActionIcon = actionIcons[rule.actionType] || Zap;
 
@@ -156,11 +157,13 @@ function RuleCard({ rule, onToggle, t }: { rule: AutomationRule; onToggle: (enab
             </div>
           </Link>
           <div className="flex items-center gap-3 shrink-0">
-            <Switch
-              checked={rule.enabled}
-              onCheckedChange={onToggle}
-              aria-label={rule.enabled ? t('automations.disableRule') : t('automations.enableRule')}
-            />
+            {canManage && (
+              <Switch
+                checked={rule.enabled}
+                onCheckedChange={onToggle}
+                aria-label={rule.enabled ? t('automations.disableRule') : t('automations.enableRule')}
+              />
+            )}
             <Link to={`/engine/automations/${rule.id}`}>
               <ChevronRight className="w-5 h-5 text-muted-foreground/50 group-hover:text-muted-foreground transition-colors rtl:rotate-180" />
             </Link>
@@ -186,22 +189,26 @@ const getTriggerTypeFilters = (t: (key: string) => string): { value: 'all' | Tri
 export function AutomationsPage() {
   const { t } = useTranslation();
   const { setActions } = usePageActions();
+  const { can } = usePermissions();
+  const canManageAutomations = can(PERMISSIONS.AUTOMATIONS_MANAGE);
   const [search, setSearch] = useState('');
   const [filterType, setFilterType] = useState<'all' | TriggerType>('all');
   const queryClient = useQueryClient();
   const triggerTypeFilters = getTriggerTypeFilters(t);
 
   useEffect(() => {
-    setActions([
-      {
-        id: 'new-rule',
-        label: t('automations.newRule'),
-        icon: Sparkles,
-        href: '/engine/automations/generate',
-      },
-    ]);
+    if (canManageAutomations) {
+      setActions([
+        {
+          id: 'new-rule',
+          label: t('automations.newRule'),
+          icon: Sparkles,
+          href: '/engine/automations/generate',
+        },
+      ]);
+    }
     return () => setActions([]);
-  }, [setActions, t]);
+  }, [setActions, t, canManageAutomations]);
 
   const { data, isLoading, error } = useQuery({
     queryKey: ['automation-rules'],
@@ -300,6 +307,7 @@ export function AutomationsPage() {
                 toggleMutation.mutate({ ruleId: rule.id, enabled })
               }
               t={t}
+              canManage={canManageAutomations}
             />
           ))}
         </div>

@@ -1,0 +1,58 @@
+{
+  "title": "角色",
+  "description": "为不同用户类型定义权限。",
+  "addRole": "添加角色",
+  "editRole": "编辑角色",
+  "table": {
+    "name": "名称",
+    "description": "描述",
+    "permissions": "权限",
+    "users": "用户"
+  },
+  "labels": {
+    "name": "名称",
+    "description": "描述（可选）",
+    "permissions": "权限"
+  },
+  "placeholders": {
+    "name": "例如：前台经理",
+    "description": "简要描述此角色的用途"
+  },
+  "helpText": {
+    "systemRoleLocked": "系统角色名称不可更改。",
+    "permissionsInfo": "选择此角色应拥有的权限。",
+    "allPermissions": "此角色拥有完整的管理员访问权限（所有权限）。"
+  },
+  "validation": {
+    "nameRequired": "名称为必填项",
+    "permissionsRequired": "至少需要一个权限"
+  },
+  "errors": {
+    "createFailed": "创建角色失败",
+    "updateFailed": "更新角色失败",
+    "deleteFailed": "删除角色失败"
+  },
+  "empty": {
+    "title": "未找到角色",
+    "description": "角色定义了用户在系统中拥有的权限。"
+  },
+  "system": "系统",
+  "allPermissions": "所有权限",
+  "permissionCount": "{{count}} 个权限",
+  "permissionSelected_one": "已选择 {{count}} 个权限",
+  "permissionSelected_other": "已选择 {{count}} 个权限",
+  "actions": {
+    "edit": "编辑",
+    "delete": "删除"
+  },
+  "confirm": {
+    "deleteTitle": "删除角色",
+    "deleteDescription": "确定要删除 \"{{name}}\" 角色吗？此操作无法撤消。",
+    "deleteButton": "删除"
+  },
+  "buttons": {
+    "cancel": "取消",
+    "saveChanges": "保存更改",
+    "createRole": "创建角色"
+  }
+}

@@ -1,19 +1,30 @@
 import * as React from 'react';
 import { cn } from '@/lib/utils';
-import { Check } from 'lucide-react';
+import { Check, Minus } from 'lucide-react';
 
 export interface CheckboxProps extends React.InputHTMLAttributes<HTMLInputElement> {
   onCheckedChange?: (checked: boolean) => void;
+  indeterminate?: boolean;
 }
 
 const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
-  ({ className, checked, onCheckedChange, ...props }, ref) => {
+  ({ className, checked, indeterminate, onCheckedChange, onClick, ...props }, ref) => {
+    const innerRef = React.useRef<HTMLInputElement>(null);
+
+    React.useImperativeHandle(ref, () => innerRef.current!);
+
+    React.useEffect(() => {
+      if (innerRef.current) {
+        innerRef.current.indeterminate = !!indeterminate;
+      }
+    }, [indeterminate]);
+
     return (
-      <label className="inline-flex items-center cursor-pointer">
+      <label className="inline-flex items-center cursor-pointer" onClick={onClick}>
         <input
           type="checkbox"
           className="sr-only peer"
-          ref={ref}
+          ref={innerRef}
           checked={checked}
           onChange={(e) => onCheckedChange?.(e.target.checked)}
           {...props}
@@ -23,13 +34,14 @@ const Checkbox = React.forwardRef<HTMLInputElement, CheckboxProps>(
             'w-4 h-4 border rounded flex items-center justify-center',
             'peer-focus-visible:ring-2 peer-focus-visible:ring-ring peer-focus-visible:ring-offset-2',
             'transition-colors',
-            checked
+            checked || indeterminate
               ? 'bg-primary border-primary text-primary-foreground'
               : 'border-input bg-background',
             className
           )}
         >
           {checked && <Check className="w-3 h-3" />}
+          {!checked && indeterminate && <Minus className="w-3 h-3" />}
         </div>
       </label>
     );

@@ -39,6 +39,7 @@ import {
   reservationStatusVariants,
   conversationStateVariants,
 } from '@/lib/config';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import type { GuestWithCounts, ReservationSummary, Conversation } from '@/types/api';
 
 const VIP_OPTIONS = ['none', 'silver', 'gold', 'platinum', 'diamond'];
@@ -48,6 +49,8 @@ export function GuestProfilePage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const { can } = usePermissions();
+  const canManageGuests = can(PERMISSIONS.GUESTS_MANAGE);
   const [guest, setGuest] = useState<GuestWithCounts | null>(null);
   const [reservations, setReservations] = useState<ReservationSummary[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -237,24 +240,26 @@ export function GuestProfilePage() {
             </div>
           </div>
         </div>
-        <div className="flex gap-2">
-          {editing ? (
-            <>
-              <Button variant="outline" onClick={() => setEditing(false)}>
-                {t('common.cancel')}
+        {canManageGuests && (
+          <div className="flex gap-2">
+            {editing ? (
+              <>
+                <Button variant="outline" onClick={() => setEditing(false)}>
+                  {t('common.cancel')}
+                </Button>
+                <Button onClick={handleSave} disabled={saving}>
+                  {saving ? <Spinner size="sm" className="me-2" /> : <Save className="w-4 h-4 me-2" />}
+                  {t('common.save')}
+                </Button>
+              </>
+            ) : (
+              <Button variant="outline" onClick={() => setEditing(true)}>
+                <Pencil className="w-4 h-4 me-2" />
+                {t('common.edit')}
               </Button>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? <Spinner size="sm" className="me-2" /> : <Save className="w-4 h-4 me-2" />}
-                {t('common.save')}
-              </Button>
-            </>
-          ) : (
-            <Button variant="outline" onClick={() => setEditing(true)}>
-              <Pencil className="w-4 h-4 me-2" />
-              {t('common.edit')}
-            </Button>
-          )}
-        </div>
+            )}
+          </div>
+        )}
       </div>
 
       {/* Tabs */}

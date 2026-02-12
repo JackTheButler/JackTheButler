@@ -35,6 +35,8 @@ interface DemoDataCardProps {
   showAlways?: boolean;
   /** Render without card border (for settings page) */
   borderless?: boolean;
+  /** Disable actions (for users without manage permission) */
+  disabled?: boolean;
 }
 
 /**
@@ -42,7 +44,7 @@ interface DemoDataCardProps {
  * Once data is loaded, state is persisted to localStorage so the button
  * is replaced with a success message. User can close the card with X.
  */
-export function DemoDataCard({ showAlways = false, borderless = false }: DemoDataCardProps) {
+export function DemoDataCard({ showAlways = false, borderless = false, disabled = false }: DemoDataCardProps) {
   const { t } = useTranslation();
   const { isDismissed, dismiss } = useDismissible('demo-data', true);
   const { knowledgeBase } = useSystemStatus();
@@ -138,6 +140,7 @@ export function DemoDataCard({ showAlways = false, borderless = false }: DemoDat
             variant="outline"
             size="sm"
             onClick={() => setShowConfirmDialog(true)}
+            disabled={disabled}
           >
             {t('home.demoData.createAll')}
           </Button>

@@ -7,6 +7,8 @@
  */
 
 import { Hono } from 'hono';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 import { db } from '@/db/index.js';
 import { guests, reservations, knowledgeBase, conversations, messages, tasks } from '@/db/schema.js';
 import {
@@ -21,11 +23,14 @@ import { sql } from 'drizzle-orm';
 
 const seedRoutes = new Hono();
 
+// Apply auth to all routes
+seedRoutes.use('/*', requireAuth);
+
 /**
  * POST /api/v1/seed/demo
  * Load demo data into the database
  */
-seedRoutes.post('/demo', async (c) => {
+seedRoutes.post('/demo', requirePermission(PERMISSIONS.ADMIN_MANAGE), async (c) => {
   try {
     // Insert guests
     let guestsCreated = 0;
@@ -121,7 +126,7 @@ seedRoutes.post('/demo', async (c) => {
  * POST /api/v1/seed/reset
  * Reset the entire database (requires confirmation)
  */
-seedRoutes.post('/reset', async (c) => {
+seedRoutes.post('/reset', requirePermission(PERMISSIONS.ADMIN_MANAGE), async (c) => {
   try {
     const body = await c.req.json();
 

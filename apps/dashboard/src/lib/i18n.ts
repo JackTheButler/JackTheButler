@@ -14,6 +14,8 @@ import enSettings from '@/locales/en/settings.json';
 import enAutomations from '@/locales/en/automations.json';
 import enKnowledge from '@/locales/en/knowledge.json';
 import enSetup from '@/locales/en/setup.json';
+import enUsers from '@/locales/en/users.json';
+import enRoles from '@/locales/en/roles.json';
 
 import esCommon from '@/locales/es/common.json';
 import esAuth from '@/locales/es/auth.json';
@@ -26,6 +28,8 @@ import esSettings from '@/locales/es/settings.json';
 import esAutomations from '@/locales/es/automations.json';
 import esKnowledge from '@/locales/es/knowledge.json';
 import esSetup from '@/locales/es/setup.json';
+import esUsers from '@/locales/es/users.json';
+import esRoles from '@/locales/es/roles.json';
 
 import arCommon from '@/locales/ar/common.json';
 import arAuth from '@/locales/ar/auth.json';
@@ -38,6 +42,8 @@ import arSettings from '@/locales/ar/settings.json';
 import arAutomations from '@/locales/ar/automations.json';
 import arKnowledge from '@/locales/ar/knowledge.json';
 import arSetup from '@/locales/ar/setup.json';
+import arUsers from '@/locales/ar/users.json';
+import arRoles from '@/locales/ar/roles.json';
 
 import hiCommon from '@/locales/hi/common.json';
 import hiAuth from '@/locales/hi/auth.json';
@@ -50,6 +56,8 @@ import hiSettings from '@/locales/hi/settings.json';
 import hiAutomations from '@/locales/hi/automations.json';
 import hiKnowledge from '@/locales/hi/knowledge.json';
 import hiSetup from '@/locales/hi/setup.json';
+import hiUsers from '@/locales/hi/users.json';
+import hiRoles from '@/locales/hi/roles.json';
 
 import ruCommon from '@/locales/ru/common.json';
 import ruAuth from '@/locales/ru/auth.json';
@@ -62,6 +70,8 @@ import ruSettings from '@/locales/ru/settings.json';
 import ruAutomations from '@/locales/ru/automations.json';
 import ruKnowledge from '@/locales/ru/knowledge.json';
 import ruSetup from '@/locales/ru/setup.json';
+import ruUsers from '@/locales/ru/users.json';
+import ruRoles from '@/locales/ru/roles.json';
 
 import zhCommon from '@/locales/zh/common.json';
 import zhAuth from '@/locales/zh/auth.json';
@@ -74,6 +84,8 @@ import zhSettings from '@/locales/zh/settings.json';
 import zhAutomations from '@/locales/zh/automations.json';
 import zhKnowledge from '@/locales/zh/knowledge.json';
 import zhSetup from '@/locales/zh/setup.json';
+import zhUsers from '@/locales/zh/users.json';
+import zhRoles from '@/locales/zh/roles.json';
 
 // Define available namespaces
 export const namespaces = [
@@ -88,6 +100,8 @@ export const namespaces = [
   'automations',
   'knowledge',
   'setup',
+  'users',
+  'roles',
 ] as const;
 
 export type Namespace = (typeof namespaces)[number];
@@ -109,6 +123,8 @@ i18n
         automations: enAutomations,
         knowledge: enKnowledge,
         setup: enSetup,
+        users: enUsers,
+        roles: enRoles,
       },
       es: {
         common: esCommon,
@@ -122,6 +138,8 @@ i18n
         automations: esAutomations,
         knowledge: esKnowledge,
         setup: esSetup,
+        users: esUsers,
+        roles: esRoles,
       },
       ar: {
         common: arCommon,
@@ -135,6 +153,8 @@ i18n
         automations: arAutomations,
         knowledge: arKnowledge,
         setup: arSetup,
+        users: arUsers,
+        roles: arRoles,
       },
       hi: {
         common: hiCommon,
@@ -148,6 +168,8 @@ i18n
         automations: hiAutomations,
         knowledge: hiKnowledge,
         setup: hiSetup,
+        users: hiUsers,
+        roles: hiRoles,
       },
       ru: {
         common: ruCommon,
@@ -161,6 +183,8 @@ i18n
         automations: ruAutomations,
         knowledge: ruKnowledge,
         setup: ruSetup,
+        users: ruUsers,
+        roles: ruRoles,
       },
       zh: {
         common: zhCommon,
@@ -174,6 +198,8 @@ i18n
         automations: zhAutomations,
         knowledge: zhKnowledge,
         setup: zhSetup,
+        users: zhUsers,
+        roles: zhRoles,
       },
     },
     fallbackLng: 'en',
@@ -183,7 +209,7 @@ i18n
     // Load all namespaces (they're bundled anyway)
     ns: namespaces as unknown as string[],
     // Search other namespaces when key not found in default
-    fallbackNS: ['auth', 'dashboard', 'tasks', 'conversations', 'guests', 'reservations', 'settings', 'automations', 'knowledge', 'setup'],
+    fallbackNS: ['auth', 'dashboard', 'tasks', 'conversations', 'guests', 'reservations', 'settings', 'automations', 'knowledge', 'setup', 'users', 'roles'],
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],

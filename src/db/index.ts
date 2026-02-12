@@ -13,10 +13,12 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Database, { type Database as DatabaseType } from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { eq } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from './schema.js';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { DEFAULT_ROLES } from '@/core/permissions/defaults.js';
 
 const log = createLogger('db');
 const config = loadConfig();
@@ -77,6 +79,42 @@ function runMigrations(): void {
 
 // Run migrations on module load
 runMigrations();
+
+/**
+ * Seed default roles if they don't exist
+ * This runs automatically after migrations
+ */
+function seedDefaultRoles(): void {
+  try {
+    for (const role of DEFAULT_ROLES) {
+      // Check if role already exists
+      const existing = db.select().from(schema.roles).where(eq(schema.roles.id, role.id)).get();
+
+      if (!existing) {
+        const now = new Date().toISOString();
+        db.insert(schema.roles)
+          .values({
+            id: role.id,
+            name: role.name,
+            description: role.description,
+            permissions: JSON.stringify(role.permissions),
+            isSystem: role.isSystem,
+            createdAt: now,
+            updatedAt: now,
+          })
+          .run();
+        log.info({ roleId: role.id, roleName: role.name }, 'Created default role');
+      }
+    }
+    log.info('Default roles verified');
+  } catch (error) {
+    log.error({ error }, 'Failed to seed default roles');
+    throw error;
+  }
+}
+
+// Seed default roles after migrations
+seedDefaultRoles();
 
 /**
  * Close the database connection (for graceful shutdown)

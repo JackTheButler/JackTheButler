@@ -86,7 +86,6 @@ function createTestDb() {
       name TEXT NOT NULL,
       phone TEXT,
       role TEXT NOT NULL,
-      department TEXT,
       permissions TEXT NOT NULL DEFAULT '[]',
       status TEXT NOT NULL DEFAULT 'active',
       last_active_at TEXT,

@@ -12,6 +12,8 @@ import { appConfigService } from '@/services/app-config.js';
 import { getAllManifests, getManifest } from '@/apps/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { maskConfig } from '@/utils/crypto.js';
+import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 
 const log = createLogger('api:apps');
 
@@ -19,6 +21,9 @@ const log = createLogger('api:apps');
  * App routes
  */
 export const appRoutes = new Hono();
+
+// Apply auth to all routes
+appRoutes.use('/*', requireAuth);
 
 // ==================
 // List Apps
@@ -28,7 +33,7 @@ export const appRoutes = new Hono();
  * GET /api/v1/apps
  * List all available apps with their status
  */
-appRoutes.get('/', async (c) => {
+appRoutes.get('/', requirePermission(PERMISSIONS.SETTINGS_VIEW), async (c) => {
   const apps = await appConfigService.listApps();
 
   // Transform for API response
@@ -55,7 +60,7 @@ appRoutes.get('/', async (c) => {
  * GET /api/v1/apps/categories
  * List apps grouped by category
  */
-appRoutes.get('/categories', async (c) => {
+appRoutes.get('/categories', requirePermission(PERMISSIONS.SETTINGS_VIEW), async (c) => {
   const groups = await appConfigService.listAppsByCategory();
 
   return c.json({
@@ -83,7 +88,7 @@ appRoutes.get('/categories', async (c) => {
  * GET /api/v1/apps/registry
  * Get the static app registry (available apps)
  */
-appRoutes.get('/registry', async (c) => {
+appRoutes.get('/registry', requirePermission(PERMISSIONS.SETTINGS_VIEW), async (c) => {
   const manifests = getAllManifests();
 
   return c.json({
@@ -108,7 +113,7 @@ appRoutes.get('/registry', async (c) => {
  * GET /api/v1/apps/:appId
  * Get detailed app info with config schema
  */
-appRoutes.get('/:appId', async (c) => {
+appRoutes.get('/:appId', requirePermission(PERMISSIONS.SETTINGS_VIEW), async (c) => {
   const { appId } = c.req.param();
 
   const appDetail = await appConfigService.getApp(appId);
@@ -151,7 +156,7 @@ const updateConfigSchema = z.object({
  * PUT /api/v1/apps/:appId
  * Update app config
  */
-appRoutes.put('/:appId', async (c) => {
+appRoutes.put('/:appId', requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (c) => {
   const { appId } = c.req.param();
 
   const manifest = getManifest(appId);
@@ -220,7 +225,7 @@ appRoutes.put('/:appId', async (c) => {
  * DELETE /api/v1/apps/:appId
  * Delete app config
  */
-appRoutes.delete('/:appId', async (c) => {
+appRoutes.delete('/:appId', requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (c) => {
   const { appId } = c.req.param();
 
   const deleted = await appConfigService.deleteAppConfig(appId);
@@ -242,7 +247,7 @@ appRoutes.delete('/:appId', async (c) => {
  * POST /api/v1/apps/:appId/test
  * Test app connection
  */
-appRoutes.post('/:appId/test', async (c) => {
+appRoutes.post('/:appId/test', requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (c) => {
   const { appId } = c.req.param();
 
   const manifest = getManifest(appId);
@@ -278,7 +283,7 @@ appRoutes.post('/:appId/test', async (c) => {
  * POST /api/v1/apps/:appId/toggle
  * Enable or disable an app
  */
-appRoutes.post('/:appId/toggle', async (c) => {
+appRoutes.post('/:appId/toggle', requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (c) => {
   const { appId } = c.req.param();
 
   const body = await c.req.json();
@@ -307,7 +312,7 @@ appRoutes.post('/:appId/toggle', async (c) => {
  * GET /api/v1/apps/:appId/logs
  * Get app event logs
  */
-appRoutes.get('/:appId/logs', async (c) => {
+appRoutes.get('/:appId/logs', requirePermission(PERMISSIONS.SETTINGS_VIEW), async (c) => {
   const { appId } = c.req.param();
   const limit = parseInt(c.req.query('limit') ?? '50', 10);
 

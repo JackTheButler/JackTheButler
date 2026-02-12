@@ -21,6 +21,8 @@ import {
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { generateId } from '@/utils/id.js';
+import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 
 const log = createLogger('api:automation');
 
@@ -28,6 +30,9 @@ const log = createLogger('api:automation');
  * Automation routes
  */
 export const automationRoutes = new Hono();
+
+// Apply auth to all routes
+automationRoutes.use('/*', requireAuth);
 
 // ==================
 // List Rules
@@ -37,7 +42,7 @@ export const automationRoutes = new Hono();
  * GET /api/v1/automation/rules
  * List all automation rules
  */
-automationRoutes.get('/rules', async (c) => {
+automationRoutes.get('/rules', requirePermission(PERMISSIONS.AUTOMATIONS_VIEW), async (c) => {
   try {
     const engine = getAutomationEngine();
     const rules = await engine.getRules();
@@ -75,7 +80,7 @@ automationRoutes.get('/rules', async (c) => {
  * GET /api/v1/automation/templates
  * Get available message templates
  */
-automationRoutes.get('/templates', async (c) => {
+automationRoutes.get('/templates', requirePermission(PERMISSIONS.AUTOMATIONS_VIEW), async (c) => {
   const templates = getAvailableTemplates();
 
   return c.json({
@@ -94,7 +99,7 @@ automationRoutes.get('/templates', async (c) => {
  * GET /api/v1/automation/rules/:ruleId
  * Get a specific rule
  */
-automationRoutes.get('/rules/:ruleId', async (c) => {
+automationRoutes.get('/rules/:ruleId', requirePermission(PERMISSIONS.AUTOMATIONS_VIEW), async (c) => {
   const { ruleId } = c.req.param();
 
   const engine = getAutomationEngine();
@@ -139,7 +144,7 @@ const createRuleSchema = z.object({
  * POST /api/v1/automation/rules
  * Create a new automation rule
  */
-automationRoutes.post('/rules', async (c) => {
+automationRoutes.post('/rules', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), async (c) => {
   const body = await c.req.json();
   const parsed = createRuleSchema.safeParse(body);
 
@@ -198,7 +203,7 @@ const updateRuleSchema = z.object({
  * PUT /api/v1/automation/rules/:ruleId
  * Update an automation rule
  */
-automationRoutes.put('/rules/:ruleId', async (c) => {
+automationRoutes.put('/rules/:ruleId', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), async (c) => {
   const { ruleId } = c.req.param();
 
   const body = await c.req.json();
@@ -254,7 +259,7 @@ automationRoutes.put('/rules/:ruleId', async (c) => {
  * DELETE /api/v1/automation/rules/:ruleId
  * Delete an automation rule
  */
-automationRoutes.delete('/rules/:ruleId', async (c) => {
+automationRoutes.delete('/rules/:ruleId', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), async (c) => {
   const { ruleId } = c.req.param();
 
   const engine = getAutomationEngine();
@@ -277,7 +282,7 @@ automationRoutes.delete('/rules/:ruleId', async (c) => {
  * POST /api/v1/automation/rules/:ruleId/toggle
  * Enable or disable a rule
  */
-automationRoutes.post('/rules/:ruleId/toggle', async (c) => {
+automationRoutes.post('/rules/:ruleId/toggle', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), async (c) => {
   const { ruleId } = c.req.param();
 
   const body = await c.req.json();
@@ -306,7 +311,7 @@ automationRoutes.post('/rules/:ruleId/toggle', async (c) => {
  * GET /api/v1/automation/rules/:ruleId/logs
  * Get execution logs for a specific rule
  */
-automationRoutes.get('/rules/:ruleId/logs', async (c) => {
+automationRoutes.get('/rules/:ruleId/logs', requirePermission(PERMISSIONS.AUTOMATIONS_VIEW), async (c) => {
   const { ruleId } = c.req.param();
   const limit = parseInt(c.req.query('limit') ?? '50', 10);
 
@@ -346,7 +351,7 @@ automationRoutes.get('/rules/:ruleId/logs', async (c) => {
  * GET /api/v1/automation/logs
  * Get all automation execution logs
  */
-automationRoutes.get('/logs', async (c) => {
+automationRoutes.get('/logs', requirePermission(PERMISSIONS.AUTOMATIONS_VIEW), async (c) => {
   const limit = parseInt(c.req.query('limit') ?? '50', 10);
   const status = c.req.query('status'); // Optional filter
 
@@ -388,7 +393,7 @@ automationRoutes.get('/logs', async (c) => {
  * POST /api/v1/automation/rules/:ruleId/test
  * Test a rule execution (dry run)
  */
-automationRoutes.post('/rules/:ruleId/test', async (c) => {
+automationRoutes.post('/rules/:ruleId/test', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), async (c) => {
   const { ruleId } = c.req.param();
 
   const engine = getAutomationEngine();
@@ -464,7 +469,7 @@ const generateRuleSchema = z.object({
  * POST /api/v1/automation/generate
  * Generate an automation rule from natural language description
  */
-automationRoutes.post('/generate', async (c) => {
+automationRoutes.post('/generate', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), async (c) => {
   const body = await c.req.json();
   const parsed = generateRuleSchema.safeParse(body);
 

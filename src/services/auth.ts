@@ -6,10 +6,11 @@
 
 import { SignJWT, jwtVerify } from 'jose';
 import { eq } from 'drizzle-orm';
-import { db, staff } from '@/db/index.js';
+import { db, staff, roles } from '@/db/index.js';
 import { loadConfig } from '@/config/index.js';
 import { UnauthorizedError, NotFoundError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { WILDCARD_PERMISSION } from '@/core/permissions/index.js';
 
 const log = createLogger('auth');
 
@@ -23,8 +24,9 @@ export interface UserInfo {
   id: string;
   email: string;
   name: string;
-  role: string;
-  department: string | null;
+  roleId: string;
+  roleName: string;
+  permissions: string[];
 }
 
 export class AuthService {
@@ -69,7 +71,10 @@ export class AuthService {
       .set({ lastActiveAt: new Date().toISOString() })
       .where(eq(staff.id, user.id));
 
-    return this.generateTokens(user.id, user.role, rememberMe);
+    // Get user permissions from role
+    const permissions = await this.getUserPermissions(user.id, user.roleId);
+
+    return this.generateTokens(user.id, user.roleId, permissions, rememberMe);
   }
 
   /**
@@ -90,7 +95,10 @@ export class AuthService {
         throw new UnauthorizedError('User not found or inactive');
       }
 
-      return this.generateTokens(user.id, user.role);
+      // Re-fetch permissions on refresh (in case role changed)
+      const permissions = await this.getUserPermissions(user.id, user.roleId);
+
+      return this.generateTokens(user.id, user.roleId, permissions);
     } catch (error) {
       if (error instanceof UnauthorizedError) {
         throw error;
@@ -110,25 +118,37 @@ export class AuthService {
       throw new NotFoundError('User', userId);
     }
 
+    // Get role info
+    const [role] = await db.select().from(roles).where(eq(roles.id, user.roleId)).limit(1);
+
+    // Get permissions
+    const permissions = await this.getUserPermissions(user.id, user.roleId);
+
     return {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
-      department: user.department,
+      roleId: user.roleId,
+      roleName: role?.name || 'Unknown',
+      permissions,
     };
   }
 
   /**
    * Generate access and refresh tokens
    */
-  private async generateTokens(userId: string, role: string, rememberMe = false): Promise<TokenPair> {
+  private async generateTokens(
+    userId: string,
+    roleId: string,
+    permissions: string[],
+    rememberMe = false
+  ): Promise<TokenPair> {
     const now = Math.floor(Date.now() / 1000);
     const accessExpiresIn = 15 * 60; // 15 minutes
     // Remember me: 30 days, otherwise: 1 day
     const refreshExpiresIn = rememberMe ? 30 * 24 * 60 * 60 : 24 * 60 * 60;
 
-    const accessToken = await new SignJWT({ sub: userId, role, type: 'access' })
+    const accessToken = await new SignJWT({ sub: userId, roleId, permissions, type: 'access' })
       .setProtectedHeader({ alg: 'HS256' })
       .setIssuedAt(now)
       .setExpirationTime(now + accessExpiresIn)
@@ -145,6 +165,28 @@ export class AuthService {
       refreshToken,
       expiresIn: accessExpiresIn,
     };
+  }
+
+  /**
+   * Get permissions for a user (from role + user overrides)
+   */
+  private async getUserPermissions(userId: string, roleId: string): Promise<string[]> {
+    // Get role permissions
+    const [role] = await db.select().from(roles).where(eq(roles.id, roleId)).limit(1);
+    const rolePermissions = role ? (JSON.parse(role.permissions) as string[]) : [];
+
+    // If role has wildcard, return just the wildcard
+    if (rolePermissions.includes(WILDCARD_PERMISSION)) {
+      return [WILDCARD_PERMISSION];
+    }
+
+    // Get user-level permission overrides
+    const [user] = await db.select().from(staff).where(eq(staff.id, userId)).limit(1);
+    const userPermissions = user ? (JSON.parse(user.permissions) as string[]) : [];
+
+    // Merge and dedupe
+    const allPermissions = new Set([...rolePermissions, ...userPermissions]);
+    return Array.from(allPermissions);
   }
 
   /**
@@ -167,3 +209,6 @@ export class AuthService {
     return password;
   }
 }
+
+// Export singleton instance
+export const authService = new AuthService();

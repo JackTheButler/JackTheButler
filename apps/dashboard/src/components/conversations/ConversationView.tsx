@@ -6,6 +6,7 @@ import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatTime, formatDateTime } from '@/lib/formatters';
 import { priorityVariants, taskStatusVariants } from '@/lib/config';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import type { Task } from '@/types/api';
 import { DrawerRoot, DrawerContent } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
@@ -45,6 +46,9 @@ interface Message {
 export function ConversationView({ id }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
+  const { can } = usePermissions();
+  const canManageConversations = can(PERMISSIONS.CONVERSATIONS_MANAGE);
+  const canManageTasks = can(PERMISSIONS.TASKS_MANAGE);
   const [input, setInput] = useState('');
   const [stateMenuOpen, setStateMenuOpen] = useState(false);
   const [taskDrawerOpen, setTaskDrawerOpen] = useState(false);
@@ -171,16 +175,22 @@ export function ConversationView({ id }: Props) {
             )}
           </div>
           <div className="relative" ref={stateMenuRef}>
-            <Button
-              variant="outline"
-              size="sm"
-              onClick={() => setStateMenuOpen(!stateMenuOpen)}
-            >
-              <span className="capitalize">{t(`conversations.states.${conv.state}`)}</span>
-              <ChevronDown size={14} className={cn('transition-transform', stateMenuOpen && 'rotate-180')} />
-            </Button>
+            {canManageConversations ? (
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={() => setStateMenuOpen(!stateMenuOpen)}
+              >
+                <span className="capitalize">{t(`conversations.states.${conv.state}`)}</span>
+                <ChevronDown size={14} className={cn('transition-transform', stateMenuOpen && 'rotate-180')} />
+              </Button>
+            ) : (
+              <Badge variant="outline" className="capitalize">
+                {t(`conversations.states.${conv.state}`)}
+              </Badge>
+            )}
 
-            {stateMenuOpen && (
+            {stateMenuOpen && canManageConversations && (
               <div className="absolute end-0 mt-1 w-40 bg-card border border-border rounded-md shadow-lg py-1 z-50">
                 {(conv.state === 'active' || conv.state === 'new') && (
                   <button
@@ -252,25 +262,27 @@ export function ConversationView({ id }: Props) {
       </div>
 
       {/* Input */}
-      <div className="p-4 border-t shrink-0">
-        <div className="flex gap-2">
-          <input
-            type="text"
-            value={input}
-            onChange={(e) => setInput(e.target.value)}
-            onKeyDown={handleKeyDown}
-            placeholder={t('conversations.typeMessage')}
-            className="flex-1 px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
-            disabled={sendMutation.isPending}
-          />
-          <Button
-            onClick={handleSend}
-            disabled={!input.trim() || sendMutation.isPending}
-          >
-            {t('conversations.send')}
-          </Button>
+      {canManageConversations && (
+        <div className="p-4 border-t shrink-0">
+          <div className="flex gap-2">
+            <input
+              type="text"
+              value={input}
+              onChange={(e) => setInput(e.target.value)}
+              onKeyDown={handleKeyDown}
+              placeholder={t('conversations.typeMessage')}
+              className="flex-1 px-3 py-2 bg-background border border-input rounded-md focus:outline-none focus:ring-2 focus:ring-ring"
+              disabled={sendMutation.isPending}
+            />
+            <Button
+              onClick={handleSend}
+              disabled={!input.trim() || sendMutation.isPending}
+            >
+              {t('conversations.send')}
+            </Button>
+          </div>
         </div>
-      </div>
+      )}
 
       {/* Tasks Drawer */}
       <DrawerRoot open={taskDrawerOpen} onOpenChange={setTaskDrawerOpen}>
@@ -288,6 +300,7 @@ export function ConversationView({ id }: Props) {
                   onComplete={() => completeTaskMutation.mutate(task.id)}
                   isClaimPending={claimTaskMutation.isPending}
                   isCompletePending={completeTaskMutation.isPending}
+                  canManageTasks={canManageTasks}
                 />
               ))
             )}
@@ -392,6 +405,7 @@ function TaskCard({
   onComplete,
   isClaimPending,
   isCompletePending,
+  canManageTasks,
 }: {
   task: Task;
   t: (key: string, options?: Record<string, unknown>) => string;
@@ -399,6 +413,7 @@ function TaskCard({
   onComplete: () => void;
   isClaimPending: boolean;
   isCompletePending: boolean;
+  canManageTasks: boolean;
 }) {
   const Icon = taskTypeIcons[task.type] || HelpCircle;
 
@@ -440,26 +455,28 @@ function TaskCard({
       )}
 
       {/* Actions */}
-      <div className="flex gap-2">
-        {task.status === 'pending' && (
-          <Button
-            size="xs"
-            onClick={onClaim}
-            loading={isClaimPending}
-          >
-            {t('conversations.claim')}
-          </Button>
-        )}
-        {task.status === 'in_progress' && (
-          <Button
-            size="xs"
-            onClick={onComplete}
-            loading={isCompletePending}
-          >
-            {t('conversations.complete')}
-          </Button>
-        )}
-      </div>
+      {canManageTasks && (
+        <div className="flex gap-2">
+          {task.status === 'pending' && (
+            <Button
+              size="xs"
+              onClick={onClaim}
+              loading={isClaimPending}
+            >
+              {t('conversations.claim')}
+            </Button>
+          )}
+          {task.status === 'in_progress' && (
+            <Button
+              size="xs"
+              onClick={onComplete}
+              loading={isCompletePending}
+            >
+              {t('conversations.complete')}
+            </Button>
+          )}
+        </div>
+      )}
     </div>
   );
 }

@@ -12,7 +12,8 @@ import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { db, settings } from '@/db/index.js';
 import { validateBody } from '../middleware/validator.js';
-import { requireAuth } from '../middleware/auth.js';
+import { requireAuth, requirePermission } from '../middleware/auth.js';
+import { PERMISSIONS } from '@/core/permissions/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('routes:hotel-profile');
@@ -77,7 +78,7 @@ hotelProfileRoutes.use('/*', requireAuth);
  * GET /api/v1/settings/hotel
  * Get current hotel profile
  */
-hotelProfileRoutes.get('/', async (c) => {
+hotelProfileRoutes.get('/', requirePermission(PERMISSIONS.SETTINGS_VIEW), async (c) => {
   const row = await db
     .select()
     .from(settings)
@@ -101,7 +102,7 @@ hotelProfileRoutes.get('/', async (c) => {
  * PUT /api/v1/settings/hotel
  * Update hotel profile
  */
-hotelProfileRoutes.put('/', validateBody(hotelProfileSchema), async (c) => {
+hotelProfileRoutes.put('/', requirePermission(PERMISSIONS.SETTINGS_MANAGE), validateBody(hotelProfileSchema), async (c) => {
   const profile = c.get('validatedBody') as HotelProfile;
   const now = new Date().toISOString();
 
@@ -144,7 +145,7 @@ hotelProfileRoutes.put('/', validateBody(hotelProfileSchema), async (c) => {
  * GET /api/v1/settings/hotel/timezones
  * Get list of all IANA timezones for dropdown with UTC offsets
  */
-hotelProfileRoutes.get('/timezones', (c) => {
+hotelProfileRoutes.get('/timezones', requirePermission(PERMISSIONS.SETTINGS_VIEW), (c) => {
   // Sorted by UTC offset, then alphabetically
   const timezones = [
     // UTC-11 to UTC-9
@@ -271,7 +272,7 @@ hotelProfileRoutes.get('/timezones', (c) => {
  * GET /api/v1/settings/hotel/currencies
  * Get list of currencies for dropdown
  */
-hotelProfileRoutes.get('/currencies', (c) => {
+hotelProfileRoutes.get('/currencies', requirePermission(PERMISSIONS.SETTINGS_VIEW), (c) => {
   const currencies = [
     // Major currencies
     { value: 'USD', label: 'USD - US Dollar', symbol: '$' },
@@ -339,7 +340,7 @@ hotelProfileRoutes.get('/currencies', (c) => {
  * GET /api/v1/settings/hotel/countries
  * Get list of countries for dropdown
  */
-hotelProfileRoutes.get('/countries', (c) => {
+hotelProfileRoutes.get('/countries', requirePermission(PERMISSIONS.SETTINGS_VIEW), (c) => {
   const countries = [
     { value: 'AF', label: 'Afghanistan' },
     { value: 'AL', label: 'Albania' },

@@ -1,7 +1,7 @@
 # AI Assistant Framework
 
-> Phase: In Progress
-> Status: Phase 1, 2, 3, 4 & 7 Complete
+> Phase: Released
+> Status: Phases 1-4, 7-8 Complete (5-6 Deferred)
 > Priority: High
 
 ## Overview
@@ -788,30 +788,28 @@ Raw HTML
 - [ ] AI responses in user's language - Deferred (handled by AI provider)
 - [x] RTL support (Arabic) - via Tailwind `rtl:` utilities
 
-### Phase 8: Reusable Assistant System 📋 PLANNED
+### Phase 8: Reusable Assistant System ✅ COMPLETE
 
-See **[002-setup-architecture-refactoring.md](./002-setup-architecture-refactoring.md)** for detailed implementation plan.
+See **[002-setup-architecture-refactoring.md](./002-setup-architecture-refactoring.md)** for detailed implementation.
 
-Builds a reusable assistant system that powers multiple guided workflows:
+Built a reusable assistant system that powers multiple guided workflows:
 
-- **Phase 8A:** Extract setup step components
-- **Phase 8B:** Shared assistant foundation (`shared/assistant/`)
-- **Phase 8C:** Declarative form schema system (`shared/forms/`)
-- **Phase 8D:** Multiple render modes (fullscreen, popup, embedded, floating)
+- **Phase 8A:** Extract setup step components ✅
+- **Phase 8B:** Shared assistant foundation (`shared/assistant/`) ✅
+- **Phase 8C:** Declarative form schema system (`shared/forms/`) ✅
+- **Phase 8D:** Multiple render modes (fullscreen, popup, embedded, floating) ✅
 
 **Key Features:**
-- Setup wizard becomes first consumer of reusable system
+- Setup wizard uses reusable system
 - `useAssistant()` hook to open assistants from any component
 - Trigger system (by page, error code, or keyword)
-- Future assistants (channel setup, help) use same infrastructure
-
-**Estimated effort:** 8-10 days total
+- Future assistants (channel setup, help) can use same infrastructure total
 
 ---
 
 ## Extensibility
 
-> **⚠️ VISION DOCUMENT**: This section describes the **target architecture** to be implemented in [Phase 8](./002-setup-architecture-refactoring.md). The current implementation uses a monolithic approach in `Setup.tsx`.
+> **✅ IMPLEMENTED**: This section describes the **current architecture** implemented in [Phase 8](./002-setup-architecture-refactoring.md). The setup wizard uses the reusable assistant system in `shared/assistant/`.
 
 The assistant will be built as a **modular framework** that can handle any guided workflow, not just initial setup.
 

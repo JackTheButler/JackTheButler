@@ -5,6 +5,7 @@ import { useQueryClient } from '@tanstack/react-query';
 import { PageContainer, DataTable, EmptyState } from '@/components';
 import { usePageActions } from '@/contexts/PageActionsContext';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
+import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import type { Column } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -89,6 +90,8 @@ export function KnowledgeBasePage() {
   const { t } = useTranslation();
   const { setActions } = usePageActions();
   const { providers, knowledgeBase: kbStatus } = useSystemStatus();
+  const { can } = usePermissions();
+  const canManageKnowledge = can(PERMISSIONS.KNOWLEDGE_MANAGE);
   const queryClient = useQueryClient();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
@@ -162,7 +165,7 @@ export function KnowledgeBasePage() {
   };
 
   useEffect(() => {
-    if (!isAddingNew && !editingEntry) {
+    if (!isAddingNew && !editingEntry && canManageKnowledge) {
       setActions([
         {
           id: 'reindex',
@@ -183,7 +186,7 @@ export function KnowledgeBasePage() {
       setActions([]);
     }
     return () => setActions([]);
-  }, [setActions, isAddingNew, editingEntry, reindexing, t, providers?.embedding]);
+  }, [setActions, isAddingNew, editingEntry, reindexing, t, providers?.embedding, canManageKnowledge]);
 
   useEffect(() => {
     fetchEntries();
@@ -362,28 +365,32 @@ export function KnowledgeBasePage() {
         </div>
       ),
     },
-    {
-      key: 'actions',
-      header: '',
-      className: 'w-16',
-      render: (entry) => (
-        <DropdownMenu>
-          <DropdownMenuTrigger>
-            <button className="p-1.5 rounded hover:bg-muted text-muted-foreground">
-              <MoreHorizontal className="w-4 h-4" />
-            </button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
-            <DropdownMenuItem onClick={() => startEdit(entry)}>
-              {t('common.edit')}
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={() => setDeleteEntryId(entry.id)}>
-              {t('common.delete')}
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      ),
-    },
+    ...(canManageKnowledge
+      ? [
+          {
+            key: 'actions',
+            header: '',
+            className: 'w-16',
+            render: (entry: KnowledgeEntry) => (
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <button className="p-1.5 rounded hover:bg-muted text-muted-foreground">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem onClick={() => startEdit(entry)}>
+                    {t('common.edit')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => setDeleteEntryId(entry.id)}>
+                    {t('common.delete')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            ),
+          },
+        ]
+      : []),
   ];
 
   const categoryOptions = [
@@ -428,7 +435,7 @@ export function KnowledgeBasePage() {
               size="sm"
               variant="outline"
               onClick={() => setShowReindexConfirm(true)}
-              disabled={reindexing}
+              disabled={reindexing || !canManageKnowledge}
               className="ms-4"
             >
               <RefreshCw className={cn('w-4 h-4 me-1.5', reindexing && 'animate-spin')} />

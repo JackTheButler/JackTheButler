@@ -100,6 +100,8 @@
     "progressFormulating": "正在生成客人问题...",
     "progressSaving": "正在保存条目到知识库...",
     "progressEmbedding": "正在生成嵌入向量...",
+    "noPermission": "访问受限",
+    "noPermissionDesc": "您没有权限抓取网站。请联系管理员以请求访问权限。",
     "categories": {
       "faq": "常见问题",
       "policy": "政策",

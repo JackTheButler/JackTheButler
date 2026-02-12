@@ -72,7 +72,7 @@ const routeOverrides: Record<string, string> = {
 /**
  * Pending setup step
  */
-function PendingStepRow({ issue, step }: { issue: SystemIssue; step: number }) {
+function PendingStepRow({ issue, step, disabled }: { issue: SystemIssue; step: number; disabled?: boolean }) {
   const { t } = useTranslation();
   const hasTranslation = issueTypes.includes(issue.type as typeof issueTypes[number]);
   const title = hasTranslation ? t(`home.issues.${issue.type}.title`) : issue.message;
@@ -88,7 +88,7 @@ function PendingStepRow({ issue, step }: { issue: SystemIssue; step: number }) {
       <div className="flex-1 min-w-0">
         <h3 className="font-medium text-foreground">{title}</h3>
         <p className="text-sm text-muted-foreground mt-0.5">{description}</p>
-        {route && (
+        {route && !disabled && (
           <Link to={route} className="inline-block mt-3">
             <Button size="sm">
               {actionLabel}
@@ -106,13 +106,15 @@ interface ActionItemsProps {
   showAlways?: boolean;
   /** Render without card border (for settings page) */
   borderless?: boolean;
+  /** Disable action buttons (for users without manage permission) */
+  disabled?: boolean;
 }
 
 /**
  * Onboarding checklist for the dashboard
  * Shows completed steps and remaining setup tasks
  */
-export function ActionItems({ showAlways = false, borderless = false }: ActionItemsProps) {
+export function ActionItems({ showAlways = false, borderless = false, disabled = false }: ActionItemsProps) {
   const { t } = useTranslation();
   const { issues, completedSteps, isLoading } = useSystemStatus();
   const { isDismissed, dismiss, canDismiss } = useDismissible(
@@ -192,7 +194,7 @@ export function ActionItems({ showAlways = false, borderless = false }: ActionIt
         ))}
         {/* Then pending steps */}
         {sortedIssues.map((issue, index) => (
-          <PendingStepRow key={issue.type} issue={issue} step={completedSteps.length + index + 1} />
+          <PendingStepRow key={issue.type} issue={issue} step={completedSteps.length + index + 1} disabled={disabled} />
         ))}
       </Content>
     </Wrapper>

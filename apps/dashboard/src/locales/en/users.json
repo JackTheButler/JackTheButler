@@ -1,0 +1,74 @@
+{
+  "title": "Users",
+  "description": "Manage staff members and their access.",
+  "addUser": "Add User",
+  "editUser": "Edit User",
+  "searchPlaceholder": "Search by name or email...",
+  "table": {
+    "name": "Name",
+    "role": "Role",
+    "status": "Status",
+    "lastActive": "Last Active"
+  },
+  "labels": {
+    "name": "Name",
+    "email": "Email",
+    "password": "Password",
+    "role": "Role"
+  },
+  "placeholders": {
+    "name": "John Smith",
+    "email": "john@hotel.com",
+    "password": "Minimum 8 characters",
+    "role": "Select a role"
+  },
+  "helpText": {
+    "emailLocked": "Email cannot be changed after creation."
+  },
+  "validation": {
+    "nameRequired": "Name is required",
+    "emailRequired": "Email is required",
+    "passwordRequired": "Password is required",
+    "passwordMinLength": "Password must be at least 8 characters",
+    "roleRequired": "Role is required"
+  },
+  "errors": {
+    "createFailed": "Failed to create user",
+    "updateFailed": "Failed to update user",
+    "deleteFailed": "Failed to delete user"
+  },
+  "filters": {
+    "all": "All",
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "empty": {
+    "title": "No users found",
+    "description": "Add your first team member to get started.",
+    "descriptionFiltered": "Try adjusting your search or filters."
+  },
+  "status": {
+    "active": "Active",
+    "inactive": "Inactive"
+  },
+  "never": "Never",
+  "actions": {
+    "edit": "Edit",
+    "deactivate": "Deactivate",
+    "activate": "Activate",
+    "delete": "Delete"
+  },
+  "confirm": {
+    "deactivateTitle": "Deactivate User",
+    "deactivateDescription": "Are you sure you want to deactivate {{name}}? They will no longer be able to log in.",
+    "deactivateButton": "Deactivate",
+    "deleteTitle": "Delete User",
+    "deleteDescription": "Are you sure you want to permanently delete {{name}}? This action cannot be undone.",
+    "deleteButton": "Delete"
+  },
+  "buttons": {
+    "cancel": "Cancel",
+    "saveChanges": "Save Changes",
+    "createUser": "Create User"
+  }
+}
