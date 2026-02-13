@@ -38,6 +38,27 @@ interface HotelProfile {
 const log = createLogger('ai:responder');
 
 /**
+ * Structured channel action hint passed via message metadata.
+ * Channels declare available actions; the responder builds the prompt.
+ */
+interface ChannelActionHint {
+  id: string;
+  triggerHint: string;
+  requiresVerification: boolean;
+}
+
+/**
+ * Channel actions metadata passed in InboundMessage.metadata.channelActions
+ */
+interface ChannelActionsMetadata {
+  actions: ChannelActionHint[];
+  verificationStatus: string;
+}
+
+/** Pattern the AI uses to tag a suggested action */
+const ACTION_TAG_RE = /\[ACTION:([a-z0-9-]+)\]\s*$/;
+
+/**
  * System prompt for the hotel butler
  */
 const BUTLER_SYSTEM_PROMPT = `You are Jack, a friendly hotel concierge. Be warm, helpful, and BRIEF.
@@ -167,7 +188,8 @@ export class AIResponder implements Responder {
     const hotelProfile = await this.getHotelProfile();
 
     // 5. Build the prompt
-    const messages = this.buildPromptMessages(message.content, classification, knowledgeContext, history, guestContext, hotelProfile);
+    const channelActions = message.metadata?.channelActions as ChannelActionsMetadata | undefined;
+    const messages = this.buildPromptMessages(message.content, classification, knowledgeContext, history, guestContext, hotelProfile, channelActions);
 
     // 6. Generate response
     metrics.aiRequests.inc();
@@ -178,6 +200,17 @@ export class AIResponder implements Responder {
     });
 
     const duration = Date.now() - startTime;
+
+    // 7. Extract [ACTION:xxx] tag if present
+    let content = response.content;
+    let suggestedAction: string | undefined;
+    const actionMatch = content.match(ACTION_TAG_RE);
+    if (actionMatch) {
+      suggestedAction = actionMatch[1];
+      content = content.replace(ACTION_TAG_RE, '').trimEnd();
+      log.debug({ suggestedAction }, 'AI suggested channel action');
+    }
+
     metrics.aiResponseTime.observe(duration);
 
     log.info(
@@ -188,6 +221,7 @@ export class AIResponder implements Responder {
         knowledgeHits: knowledgeContext.length,
         guestName: guestContext?.guest?.fullName,
         roomNumber: guestContext?.reservation?.roomNumber,
+        suggestedAction,
         duration,
       },
       'AI response generated'
@@ -195,19 +229,20 @@ export class AIResponder implements Responder {
 
     // Cache the response for FAQ-style queries
     if (canUseCache && this.cache && classification.confidence > 0.7) {
-      this.cache.set(message.content, response.content, classification.intent).catch((err) => {
+      this.cache.set(message.content, content, classification.intent).catch((err) => {
         log.error({ err }, 'Failed to cache response');
       });
     }
 
     return {
-      content: response.content,
+      content,
       confidence: classification.confidence,
       intent: classification.intent,
       metadata: {
         classification,
         knowledgeContext: knowledgeContext.map((k) => ({ id: k.id, title: k.title, similarity: k.similarity })),
         usage: response.usage,
+        suggestedAction,
         guestContext: guestContext?.guest ? {
           guestId: guestContext.guest.id,
           guestName: guestContext.guest.fullName,
@@ -257,7 +292,8 @@ export class AIResponder implements Responder {
     knowledgeContext: KnowledgeSearchResult[],
     history: Message[],
     guestContext?: GuestContext,
-    hotelProfile?: HotelProfile | null
+    hotelProfile?: HotelProfile | null,
+    channelActions?: ChannelActionsMetadata,
   ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
 
@@ -360,6 +396,30 @@ export class AIResponder implements Responder {
       if (classification.requiresAction) {
         systemContent += '\nNote: This may require creating a task or action.';
       }
+    }
+
+    // Channel-specific actions (e.g., webchat forms)
+    if (channelActions && channelActions.actions.length > 0) {
+      const isVerified = channelActions.verificationStatus === 'verified';
+      const actionLines = channelActions.actions.map(
+        (a) => `- ${a.id}: ${a.triggerHint}${a.requiresVerification ? ' (requires guest verification first)' : ''}`,
+      );
+
+      systemContent += '\n\n## Channel Actions';
+      systemContent += '\nThe guest is using a channel with interactive forms. Available actions:';
+      systemContent += '\n' + actionLines.join('\n');
+
+      if (isVerified) {
+        systemContent += '\n\nThe guest is verified — you have their reservation details above. Answer questions directly.';
+        systemContent += '\nOnly suggest an action if the guest explicitly wants to DO something (extend stay, etc.).';
+      } else {
+        systemContent += '\n\nThe guest has NOT verified their identity yet.';
+        systemContent += '\nFor reservation-specific questions, let them know you can help and the form will appear.';
+      }
+
+      systemContent += '\n\nIMPORTANT: If the guest needs one of the actions above, end your response with [ACTION:action-id].';
+      systemContent += '\nExample: "I\'ll pull up the form for you! [ACTION:verify-reservation]"';
+      systemContent += '\nDo NOT include [ACTION:...] if no action is needed.';
     }
 
     // Personalization instruction

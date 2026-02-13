@@ -46,6 +46,7 @@ export interface ConversationDetails extends ConversationSummary {
 export interface UpdateConversationInput {
   state?: ConversationState | undefined;
   assignedTo?: string | null | undefined;
+  guestId?: string | undefined;
   currentIntent?: string | undefined;
   metadata?: Record<string, unknown> | undefined;
 }

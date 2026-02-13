@@ -13,6 +13,7 @@ import { createLogger } from '@/utils/logger.js';
 import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
 import { getApprovalQueue } from '@/core/approval-queue.js';
+import { handleGuestConnection } from '@/apps/channels/webchat/index.js';
 
 const log = createLogger('websocket');
 
@@ -38,6 +39,8 @@ const clients = new Map<string, Set<AuthenticatedSocket>>();
 export function setupWebSocket(server: Server): WebSocketServer {
   // Staff dashboard WebSocket server (noServer mode for manual routing)
   const wss = new WebSocketServer({ noServer: true });
+  // Guest webchat WebSocket server
+  const guestWss = new WebSocketServer({ noServer: true });
   const config = loadConfig();
   const secret = new TextEncoder().encode(config.jwt.secret);
 
@@ -48,6 +51,10 @@ export function setupWebSocket(server: Server): WebSocketServer {
     if (pathname === '/ws') {
       wss.handleUpgrade(request, socket, head, (ws) => {
         wss.emit('connection', ws, request);
+      });
+    } else if (pathname === '/ws/chat') {
+      guestWss.handleUpgrade(request, socket, head, (ws) => {
+        guestWss.emit('connection', ws, request);
       });
     } else {
       // Unknown WebSocket path - destroy connection
@@ -157,7 +164,34 @@ export function setupWebSocket(server: Server): WebSocketServer {
     });
   });
 
+  // Heartbeat interval for guest connections
+  const guestHeartbeatInterval = setInterval(() => {
+    guestWss.clients.forEach((ws) => {
+      const socket = ws as AuthenticatedSocket;
+      if (!socket.isAlive) {
+        log.debug('Terminating dead guest connection');
+        return socket.terminate();
+      }
+      socket.isAlive = false;
+      socket.ping();
+    });
+  }, 30000);
+
+  guestWss.on('close', () => {
+    clearInterval(guestHeartbeatInterval);
+  });
+
+  // Handle guest webchat connections
+  guestWss.on('connection', (ws: AuthenticatedSocket, req) => {
+    ws.isAlive = true;
+    ws.on('pong', () => {
+      ws.isAlive = true;
+    });
+    handleGuestConnection(ws, req);
+  });
+
   log.info('WebSocket server started on /ws (staff dashboard)');
+  log.info('WebSocket server started on /ws/chat (guest webchat)');
 
   return wss;
 }

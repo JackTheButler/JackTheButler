@@ -40,6 +40,15 @@ export class Scheduler {
       });
     }
 
+    // WebChat session cleanup (every hour)
+    this.scheduleJob('webchat-session-cleanup', 60 * 60 * 1000, async () => {
+      const { webchatSessionService } = await import('./webchat-session.js');
+      const count = await webchatSessionService.cleanupExpired();
+      if (count > 0) {
+        log.info({ deleted: count }, 'Cleaned up expired webchat sessions');
+      }
+    });
+
     log.info({ jobs: Array.from(this.jobs.keys()) }, 'Scheduler started');
   }
 
@@ -90,6 +99,12 @@ export class Scheduler {
 
     if (name === 'pms-sync') {
       await this.runPMSSync();
+    } else if (name === 'webchat-session-cleanup') {
+      const { webchatSessionService } = await import('./webchat-session.js');
+      const count = await webchatSessionService.cleanupExpired();
+      if (count > 0) {
+        log.info({ deleted: count }, 'Cleaned up expired webchat sessions');
+      }
     }
   }
 

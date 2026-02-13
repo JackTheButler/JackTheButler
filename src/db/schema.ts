@@ -911,3 +911,39 @@ export const setupState = sqliteTable('setup_state', {
 
 export type SetupState = typeof setupState.$inferSelect;
 export type NewSetupState = typeof setupState.$inferInsert;
+
+// ===================
+// WebChat Sessions
+// ===================
+
+/**
+ * Persistent sessions for webchat guests.
+ * Survives page refreshes — token stored in localStorage.
+ */
+export const webchatSessions = sqliteTable(
+  'webchat_sessions',
+  {
+    id: text('id').primaryKey(),
+    token: text('token').notNull(),
+    conversationId: text('conversation_id').references(() => conversations.id),
+    guestId: text('guest_id').references(() => guests.id),
+    reservationId: text('reservation_id'), // PMS external ID, not our internal reservation ID
+    verificationStatus: text('verification_status').notNull().default('anonymous'),
+    verificationAttempts: integer('verification_attempts').notNull().default(0),
+    verificationCode: text('verification_code'),
+    verificationCodeExpiresAt: text('verification_code_expires_at'),
+    expiresAt: text('expires_at').notNull(),
+    lastActivityAt: text('last_activity_at').notNull(),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    uniqueIndex('idx_webchat_sessions_token').on(table.token),
+    index('idx_webchat_sessions_expires').on(table.expiresAt),
+    index('idx_webchat_sessions_conversation').on(table.conversationId),
+  ]
+);
+
+export type WebChatSession = typeof webchatSessions.$inferSelect;
+export type NewWebChatSession = typeof webchatSessions.$inferInsert;

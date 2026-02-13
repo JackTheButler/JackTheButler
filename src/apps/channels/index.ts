@@ -24,6 +24,12 @@ export {
   type TwilioConfig,
 } from './sms/index.js';
 
+// WebChat
+export {
+  manifest as webchatManifest,
+  webchatConnectionManager,
+} from './webchat/index.js';
+
 // Email
 export {
   // SMTP (legacy)
@@ -60,6 +66,7 @@ export {
 import { metaWhatsAppManifest } from './whatsapp/index.js';
 import { twilioManifest } from './sms/index.js';
 import { smtpManifest, mailgunManifest, sendgridManifest, gmailSmtpManifest } from './email/index.js';
+import { manifest as webchatManifest } from './webchat/index.js';
 
 /**
  * Channel provider types
@@ -80,6 +87,8 @@ export const channelManifests: Record<string, ChannelAppManifest> = {
   'email-sendgrid': sendgridManifest,     // Alternative
   'email-gmail-smtp': gmailSmtpManifest,  // Free option
   'email-smtp': smtpManifest,             // Advanced - own SMTP server
+  // WebChat (built-in, auto-activated)
+  'channel-webchat': webchatManifest,
 };
 
 /**
@@ -93,7 +102,7 @@ export function getChannelManifests(): ChannelAppManifest[] {
  * Get manifests by channel type
  */
 export function getChannelManifestsByType(
-  channelType: 'whatsapp' | 'sms' | 'email'
+  channelType: 'whatsapp' | 'sms' | 'email' | 'webchat'
 ): ChannelAppManifest[] {
   return Object.values(channelManifests).filter((m) => m.id.startsWith(channelType));
 }

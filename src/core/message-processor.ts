@@ -80,13 +80,22 @@ export class MessageProcessor {
       'Conversation resolved'
     );
 
-    // 3. Match to guest and reservation (for phone/email channels)
+    // 3. Match to guest and reservation
     let guestContext: GuestContext | undefined;
+
+    // For phone-based channels, identify guest by phone number
     if (inbound.channel === 'whatsapp' || inbound.channel === 'sms') {
       try {
-        // Match and link conversation to guest/reservation
         await guestContextService.matchConversation(conversation.id, { phone: inbound.channelId });
-        // Get full guest context for AI
+      } catch (error) {
+        log.warn({ error, conversationId: conversation.id }, 'Failed to match guest by phone');
+      }
+    }
+
+    // Load guest context for any channel if the conversation has a linked guest
+    // (phone channels link above, webchat links via verification, etc.)
+    if (conversation.guestId) {
+      try {
         guestContext = await guestContextService.getContextByConversation(conversation.id);
         if (guestContext.guest) {
           log.debug(

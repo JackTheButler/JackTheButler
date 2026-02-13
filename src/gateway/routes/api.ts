@@ -23,6 +23,7 @@ import { systemRoutes } from './system.js';
 import { seedRoutes } from './seed.js';
 import { rolesRouter, permissionsRouter } from './roles.js';
 import { staffRouter } from './staff.js';
+import { webchatRouter } from './webchat.js';
 
 const api = new Hono();
 
@@ -82,6 +83,9 @@ api.route('/permissions', permissionsRouter);
 
 // Staff management routes
 api.route('/staff', staffRouter);
+
+// WebChat routes (session-token auth, not JWT)
+api.route('/webchat', webchatRouter);
 
 /**
  * GET /api/v1

@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { app } from '@/gateway/server.js';
-import { db, staff, conversations, messages, tasks, approvalQueue } from '@/db/index.js';
+import { db, staff, conversations, messages, tasks, approvalQueue, webchatSessions } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
 import { authService } from '@/services/auth.js';
@@ -43,6 +43,7 @@ describe('Conversation Routes', () => {
     await db.delete(tasks);
     await db.delete(approvalQueue);
     await db.delete(messages);
+    await db.delete(webchatSessions);
     await db.delete(conversations);
   });
 
@@ -53,6 +54,7 @@ describe('Conversation Routes', () => {
     await db.delete(tasks);
     await db.delete(approvalQueue);
     await db.delete(messages);
+    await db.delete(webchatSessions);
     await db.delete(conversations);
   });
 

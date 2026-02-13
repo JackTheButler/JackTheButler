@@ -13,6 +13,7 @@ import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import type { ContentType, ChannelType } from '@/types/index.js';
 import { getAppRegistry } from '@/apps/index.js';
+import { webchatConnectionManager } from '@/apps/channels/webchat/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('api:conversations');
@@ -211,6 +212,22 @@ async function sendToChannel(
         log.info({ channelType, channelId }, 'Message sent via SMS');
       } else {
         log.warn({ channelType }, 'SMS extension not active');
+      }
+      break;
+    }
+    case 'webchat': {
+      const ext = registry.get('channel-webchat');
+      if (ext?.status === 'active') {
+        webchatConnectionManager.send(channelId, {
+          type: 'message',
+          direction: 'outbound',
+          senderType: 'staff',
+          content,
+          timestamp: new Date().toISOString(),
+        });
+        log.info({ channelType, channelId }, 'Message sent via WebChat');
+      } else {
+        log.warn({ channelType }, 'WebChat extension not active');
       }
       break;
     }

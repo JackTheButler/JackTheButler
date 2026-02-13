@@ -78,6 +78,9 @@ export {
   TwilioProvider,
   createTwilioProvider,
   twilioManifest,
+  // WebChat
+  webchatManifest,
+  webchatConnectionManager,
   // Email
   SMTPProvider,
   createSMTPProvider,

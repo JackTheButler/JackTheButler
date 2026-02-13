@@ -286,6 +286,10 @@ export class ConversationService {
       updates.assignedTo = input.assignedTo;
     }
 
+    if (input.guestId !== undefined) {
+      updates.guestId = input.guestId;
+    }
+
     if (input.currentIntent !== undefined) {
       updates.currentIntent = input.currentIntent;
     }

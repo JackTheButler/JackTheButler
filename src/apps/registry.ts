@@ -256,9 +256,15 @@ export class AppRegistry {
 
     try {
       // Check if instance has testConnection method
-      const instance = ext.instance as { testConnection?: () => Promise<ConnectionTestResult> };
+      const instance = ext.instance as { testConnection?: () => Promise<ConnectionTestResult | boolean> };
       if (typeof instance.testConnection === 'function') {
-        const result = await instance.testConnection();
+        const raw = await instance.testConnection();
+
+        // Normalize: PMS adapters return boolean, others return ConnectionTestResult
+        const result: ConnectionTestResult = typeof raw === 'boolean'
+          ? { success: raw, message: raw ? 'Connection successful' : 'Connection failed' }
+          : raw;
+
         ext.lastHealthCheck = new Date();
         ext.healthCheckResult = result;
 

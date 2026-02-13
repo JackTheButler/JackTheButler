@@ -48,7 +48,7 @@ jack/
 │   │   └── src/
 │   │       ├── features/ # Feature modules (setup/, etc.)
 │   │       └── shared/   # Shared infrastructure (assistant/, forms/)
-│   └── widget/           # Guest web chat widget
+│   └── webchat/          # Guest web chat widget
 ├── data/                 # SQLite database & uploads (gitignored)
 │   └── jack.db           # Main database file
 ├── docs/                 # Documentation

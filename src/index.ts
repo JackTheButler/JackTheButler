@@ -53,6 +53,19 @@ async function main(): Promise<void> {
     logger.error({ error }, 'Failed to load apps from database');
   }
 
+  // Auto-activate webchat (built-in, no external dependencies)
+  try {
+    const { getAppRegistry } = await import('@/apps/index.js');
+    const registry = getAppRegistry();
+    const webchat = registry.get('channel-webchat');
+    if (webchat && webchat.status !== 'active') {
+      await registry.activate('channel-webchat', {});
+      logger.info('WebChat channel auto-activated');
+    }
+  } catch (error) {
+    logger.error({ error }, 'Failed to auto-activate WebChat channel');
+  }
+
   // Create HTTP server
   const server = createServer((req, res) => {
     // Convert Node.js request to Web Request
