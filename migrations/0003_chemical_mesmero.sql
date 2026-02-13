@@ -1,11 +1,13 @@
--- First, migrate existing staff records to use roleId based on their old role value
+-- Disable FK checks for the entire migration (roles are seeded after migrations)
+PRAGMA foreign_keys=OFF;--> statement-breakpoint
+
+-- Migrate existing staff records to use roleId based on their old role value
 -- Map: 'admin' → 'role-admin', 'manager' → 'role-manager', others → 'role-staff'
 UPDATE `staff` SET `role_id` = 'role-admin' WHERE `role_id` IS NULL AND LOWER(`role`) = 'admin';--> statement-breakpoint
 UPDATE `staff` SET `role_id` = 'role-manager' WHERE `role_id` IS NULL AND LOWER(`role`) = 'manager';--> statement-breakpoint
 UPDATE `staff` SET `role_id` = 'role-staff' WHERE `role_id` IS NULL;--> statement-breakpoint
 
--- Now recreate the staff table without the role column and with role_id as NOT NULL
-PRAGMA foreign_keys=OFF;--> statement-breakpoint
+-- Recreate the staff table without the role column and with role_id as NOT NULL
 CREATE TABLE `__new_staff` (
 	`id` text PRIMARY KEY NOT NULL,
 	`email` text NOT NULL,
