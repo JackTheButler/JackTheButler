@@ -27,7 +27,8 @@ import { formStyles } from './styles/forms.css.js';
 import { animationStyles } from './styles/animations.css.js';
 import { responsiveStyles } from './styles/responsive.css.js';
 
-import type { VerificationStatus, WidgetConfig } from './types.js';
+import { darkenHex, hexToRgba, contrastText } from './utils.js';
+import type { ButtonIcon, VerificationStatus, WidgetConfig, WidgetRemoteConfig } from './types.js';
 import type { ActionForm as ActionFormType } from './components/action-form.js';
 
 const ALL_STYLES = [
@@ -63,7 +64,7 @@ export class ButlerChatWidget {
 
   constructor(private readonly config: WidgetConfig) {}
 
-  init(): void {
+  async init(): Promise<void> {
     // Create host element on body
     this.hostEl = document.createElement('div');
     this.hostEl.id = 'butler-chat-root';
@@ -77,8 +78,11 @@ export class ButlerChatWidget {
     style.textContent = ALL_STYLES;
     this.shadow.appendChild(style);
 
-    // Create components
-    this.header = createChatHeader(() => this.close());
+    // Fetch remote config and apply theme overrides
+    await this.fetchAndApplyConfig();
+
+    // Create components (apply pending remote config to header)
+    this.header = createChatHeader(() => this.close(), this._pendingTitle, this._pendingLogo);
     this.inputBar = createInputBar((content) => this.handleSend(content));
 
     // Assemble panel
@@ -189,6 +193,85 @@ export class ButlerChatWidget {
       getVerificationStatus: () => this.verificationStatus,
       getSessionToken: () => getToken(),
     });
+  }
+
+  private async fetchAndApplyConfig(): Promise<void> {
+    try {
+      const keyParam = this.config.butlerKey ? `?key=${this.config.butlerKey}` : '';
+      const res = await fetch(`${this.config.gatewayOrigin}/api/v1/webchat/config${keyParam}`);
+      if (!res.ok) return; // Silently fall back to defaults
+
+      const cfg: WidgetRemoteConfig = await res.json();
+      this.applyRemoteConfig(cfg);
+    } catch {
+      // Network error — fall back to defaults
+    }
+  }
+
+  private applyRemoteConfig(cfg: WidgetRemoteConfig): void {
+    if (!this.shadow) return;
+
+    // Build CSS overrides for non-default values
+    const overrides: string[] = [];
+
+    // Dark theme — swap surface and text variables
+    if (cfg.theme === 'dark') {
+      overrides.push(`--butler-bg-panel: #1e1e2e`);
+      overrides.push(`--butler-bg-messages: #181825`);
+      overrides.push(`--butler-bg-bubble-ai: #2a2a3e`);
+      overrides.push(`--butler-border-bubble-ai: #3a3a4e`);
+      overrides.push(`--butler-bg-bubble-staff: #3a3520`);
+      overrides.push(`--butler-border-bubble-staff: #6b5c1e`);
+      overrides.push(`--butler-text-primary: #e0e0e0`);
+      overrides.push(`--butler-text-secondary: #a0a0a0`);
+      overrides.push(`--butler-text-light: #707070`);
+      overrides.push(`--butler-border-color: #3a3a4e`);
+      overrides.push(`--butler-shadow-panel: 0 8px 32px rgba(0, 0, 0, 0.3), 0 2px 8px rgba(0, 0, 0, 0.2)`);
+    }
+
+    if (cfg.primaryColor) {
+      overrides.push(`--butler-color-primary: ${cfg.primaryColor}`);
+      overrides.push(`--butler-color-primary-hover: ${darkenHex(cfg.primaryColor, 20)}`);
+      overrides.push(`--butler-color-primary-light: ${hexToRgba(cfg.primaryColor, 0.1)}`);
+      overrides.push(`--butler-bg-bubble-guest: ${cfg.primaryColor}`);
+      overrides.push(`--butler-text-on-primary: ${contrastText(cfg.primaryColor)}`);
+    }
+
+    if (cfg.headerBackground) {
+      overrides.push(`--butler-bg-header: ${cfg.headerBackground}`);
+      // In dark mode, messages bg is already set above
+      if (cfg.theme !== 'dark') {
+        overrides.push(`--butler-bg-messages: ${hexToRgba(cfg.headerBackground, 0.04)}`);
+      }
+    }
+
+    if (overrides.length > 0) {
+      const overrideStyle = document.createElement('style');
+      overrideStyle.textContent = `:host { ${overrides.join('; ')}; }`;
+      this.shadow.appendChild(overrideStyle);
+    }
+
+    // Store values to apply in init after header creation
+    this._pendingTitle = cfg.botName || undefined;
+    this._pendingLogo = cfg.logoUrl || undefined;
+    this._primaryColor = cfg.primaryColor || undefined;
+    this._buttonIcon = (cfg.buttonIcon as ButtonIcon) || 'chat';
+  }
+
+  /** Pending config values applied after header creation */
+  private _pendingTitle?: string;
+  private _pendingLogo?: string;
+  private _primaryColor?: string;
+  private _buttonIcon: ButtonIcon = 'chat';
+
+  /** Primary color from remote config (used by CTA button outside shadow DOM) */
+  get primaryColor(): string | undefined {
+    return this._primaryColor;
+  }
+
+  /** Button icon from remote config (used by CTA button outside shadow DOM) */
+  get buttonIcon(): ButtonIcon {
+    return this._buttonIcon;
   }
 
   open(): void {

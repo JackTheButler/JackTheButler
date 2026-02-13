@@ -43,7 +43,7 @@ export const animationStyles = `
   width: 8px;
   height: 8px;
   border-radius: 50%;
-  background: var(--butler-text-light);
+  background: var(--butler-color-primary);
   animation: butler-typing-bounce 1.4s infinite;
 }
 

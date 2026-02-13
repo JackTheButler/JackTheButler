@@ -12,6 +12,7 @@
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/registry.js';
+import { appConfigService } from './app-config.js';
 import { webchatSessionService } from './webchat-session.js';
 import { conversationService } from './conversation.js';
 import { guestService } from './guest.js';
@@ -143,6 +144,43 @@ export class WebChatActionService {
   }
 
   /**
+   * Get enabled actions filtered by webchat config.
+   * If no enabledActions filter is configured, returns all actions (backward compat).
+   * Auto-includes verify-reservation if any requiresVerification action is enabled.
+   */
+  async getEnabledActions(): Promise<Omit<WebChatAction, 'endpoint'>[]> {
+    const appConfig = await appConfigService.getAppConfig('channel-webchat');
+    const enabledStr = appConfig?.config?.enabledActions as string | undefined;
+
+    if (!enabledStr?.trim()) {
+      // No filter configured — return all
+      return this.getActions();
+    }
+
+    const enabledSet = new Set(
+      enabledStr.split(',').map((s) => s.trim()).filter(Boolean)
+    );
+
+    // Auto-include verify-reservation if any enabled action requires verification
+    const needsVerify = actions.some(
+      (a) => enabledSet.has(a.id) && a.requiresVerification
+    );
+    if (needsVerify) {
+      enabledSet.add('verify-reservation');
+    }
+
+    return this.getActions().filter((a) => enabledSet.has(a.id));
+  }
+
+  /**
+   * Check if a specific action is enabled.
+   */
+  async isActionEnabled(actionId: string): Promise<boolean> {
+    const enabled = await this.getEnabledActions();
+    return enabled.some((a) => a.id === actionId);
+  }
+
+  /**
    * Get a single action by ID.
    */
   getAction(id: string): WebChatAction | undefined {
@@ -158,6 +196,11 @@ export class WebChatActionService {
     sessionToken: string,
     input: Record<string, string>,
   ): Promise<ActionResult> {
+    // Check if action is enabled
+    if (!await this.isActionEnabled(actionId)) {
+      return { success: false, message: 'This action is not currently available.', error: 'action_disabled' };
+    }
+
     // Validate session
     const session = await webchatSessionService.validate(sessionToken);
     if (!session) {

@@ -24,7 +24,7 @@ export type ProviderStatus = 'active' | 'inactive' | 'error' | 'unconfigured';
 /**
  * Configuration field types
  */
-export type ConfigFieldType = 'text' | 'password' | 'number' | 'boolean' | 'select';
+export type ConfigFieldType = 'text' | 'password' | 'number' | 'boolean' | 'select' | 'color';
 
 /**
  * Configuration field definition

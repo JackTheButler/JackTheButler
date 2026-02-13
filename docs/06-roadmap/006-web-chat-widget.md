@@ -1,7 +1,7 @@
 # Web Chat Widget
 
 > Phase: In Progress
-> Status: Phase 1 Complete
+> Status: Phase 6 Complete
 > Priority: Medium
 
 ## Overview
@@ -1440,17 +1440,162 @@ Phase 6 will override these via config endpoint. CSS custom properties inherit i
 8. Test Chrome, Safari, Firefox, mobile Safari
 ```
 
-### Phase 6: Dashboard Configuration
+### Phase 6: Dashboard Configuration ✅
 
 **Goal:** Admins configure, preview, and deploy the widget entirely from the dashboard.
 
-App manifest + activation flow, configuration page (appearance, behavior, domain allowlist, action toggles), embed code generator with copy button. Follows existing app config patterns.
+**Status:** Complete
+
+#### What's Built
+
+1. **Config schema** — 8 fields on manifest: theme (light/dark select), primary color (color picker), header background (color picker), button icon (visual card selector with 4 SVG options), bot name, logo URL, welcome message, allowed domains
+2. **Widget key** — auto-generated `wc_xxx` on first save via `PUT /api/v1/apps/channel-webchat`, persists across saves
+3. **Public config endpoint** — `GET /api/v1/webchat/config?key=wc_xxx` returns theme + appearance settings (no auth); 503 if disabled; 403 on key mismatch; defaults if no config
+4. **Dark/light theme** — `theme` select swaps all surface, text, border, and shadow CSS variables; primary color and header background apply on top of either theme
+5. **Color derivation** — Two admin-set colors drive the entire palette: primary color derives hover, light, and guest bubble colors; header background derives messages area background at 4% opacity
+6. **Contrast-aware text** — `contrastText()` utility computes luminance (ITU-R BT.709) and returns white or dark text for guest bubbles and CTA icon based on primary color brightness
+7. **Button icon picker** — 4 options (chat bubble, bell, message dots, headset) rendered as square SVG cards in dashboard; selected icon applied to CTA `::after` pseudo-element
+8. **Welcome message** — server sends as first AI message on new sessions, persisted in conversation, visible in history on reconnect
+9. **Embed code section** — dashboard shows copy-pasteable `<script>` + CTA snippet with widget key + gateway URL (handles Vite dev port vs production)
+10. **Action toggles** — `getEnabledActions()` filters actions across 3 sync points (widget list, AI hints, execution guard); auto-includes `verify-reservation` when any `requiresVerification` action is enabled
+11. **Activation gate** — disabled webchat rejects WS connections with "unavailable"; config endpoint returns 503; server restart respects enabled flag
+12. **CORS fix** — `crossOriginResourcePolicy: false` in security middleware so widget.js loads cross-origin
+13. **Color picker** — added `'color'` to `ConfigFieldType`; dashboard renders native `<input type="color">` + hex text input combo
+14. **Typing dots** — follow primary color via `var(--butler-color-primary)`
+15. **Form styles** — all hardcoded hex colors replaced with CSS variables for theme compatibility
+
+#### Files Modified
+
+| File | Purpose |
+|------|---------|
+| `src/apps/channels/webchat/index.ts` | 8-field configSchema, activation gate, welcome message, async buildChannelActions |
+| `src/apps/types.ts` | Added `'color'` to ConfigFieldType |
+| `src/gateway/routes/apps.ts` | Widget key auto-gen (`wc_` + randomBytes) in PUT handler |
+| `src/gateway/routes/webchat.ts` | `GET /config` public endpoint, `GET /actions` uses getEnabledActions |
+| `src/gateway/middleware/security.ts` | crossOriginResourcePolicy: false |
+| `src/services/webchat-action.ts` | getEnabledActions(), isActionEnabled(), execution guard |
+| `src/index.ts` | Webchat auto-activation respects enabled flag |
+| `apps/webchat/src/types.ts` | WidgetRemoteConfig (theme, buttonIcon), ButtonIcon type |
+| `apps/webchat/src/utils.ts` | darkenHex(), hexToRgba(), contrastText() |
+| `apps/webchat/src/widget.ts` | fetchAndApplyConfig(), applyRemoteConfig() with dark theme + color derivation |
+| `apps/webchat/src/main.ts` | ICON_SVGS map, contrastText for CTA icon, buttonIcon/primaryColor usage |
+| `apps/webchat/src/components/chat-header.ts` | setTitle(), setLogo(), SVG chat icon |
+| `apps/webchat/src/styles/animations.css.ts` | Typing dots use --butler-color-primary |
+| `apps/webchat/src/styles/messages.css.ts` | Scroll button collapses when hidden, hover uses variable |
+| `apps/webchat/src/styles/forms.css.ts` | All colors via CSS variables (theme-compatible) |
+| `apps/dashboard/src/pages/engine/apps/AppEdit.tsx` | Icon card selector, color picker, EmbedCode component |
 
 ### Phase 7: Feature Expansion
 
-**Goal:** Rich chat experience with all planned features beyond basic text.
+**Goal:** Rich chat experience — each feature is independent and can be implemented in any order.
 
-Rich responses (quick reply buttons, cards, images), pre-chat form, offline mode, conversation persistence across sessions for verified guests, initial action set (extend-stay, book-room, order-meal, request-service).
+| # | Feature | Status |
+|---|---------|--------|
+| 7A | Quick Reply Buttons | Pending |
+| 7B | New Service Actions | Pending |
+| 7C | Pre-Chat Form | Future |
+| 7D | Offline / Away Mode | Pending |
+| 7E | Conversation Persistence | Pending |
+| 7F | Rich Responses (Cards & Images) | Future |
+| 7G | Read Receipts | Future |
+
+---
+
+#### 7A: Quick Reply Buttons
+
+AI includes 2-4 clickable pill buttons below its message. Guest clicks one → sends that text as their message. Buttons disable after selection.
+
+**Server changes:**
+
+1. **`src/ai/responder.ts`** — Add `QUICK_REPLY_RE` regex after `ACTION_TAG_RE` (line 59). Extract `[QUICK_REPLIES:opt1|opt2|opt3]` from AI output the same way `[ACTION:xxx]` is extracted (lines 204-212). Include `quickReplies: string[]` in returned metadata (line 241-253). Add instructions to system prompt after channel actions block (line 423):
+   ```
+   QUICK REPLIES: When it would help the guest to offer 2-4 clickable options,
+   end your response with [QUICK_REPLIES:option1|option2|option3].
+   Only use when options are genuinely useful. Do NOT use for open-ended questions.
+   ```
+
+2. **`src/apps/channels/webchat/index.ts`** — In `handleGuestMessage()` (lines 390-399), extract `response.metadata?.quickReplies` and include in the WS message object sent to the guest.
+
+**Widget changes:**
+
+3. **`apps/webchat/src/types.ts`** — Add `quickReplies?: string[]` to `ChatMessage` interface.
+
+4. **`apps/webchat/src/components/message-bubble.ts`** — Extend `createMessageBubble()` to accept optional `quickReplies: string[]` and `onQuickReply: (text: string) => void`. After the text element, render a flex-wrap container of pill buttons. On click: call `onQuickReply(text)`, disable all buttons, highlight selected.
+
+5. **`apps/webchat/src/components/message-list.ts`** — Update `addMessage()` signature to accept optional `quickReplies` and `onQuickReply` callback, forward to `createMessageBubble()`.
+
+6. **`apps/webchat/src/widget.ts`** — In `onMessage` (line 137-138), when AI message has `msg.quickReplies`, pass them and `(text) => this.handleSend(text)` to `addMessage()`.
+
+7. **`apps/webchat/src/styles/messages.css.ts`** — Add styles for `.butler-quick-replies` (flex-wrap, gap) and `.butler-quick-reply` (pill buttons: primary color border, hover fills, `:disabled` faded, `--selected` filled).
+
+---
+
+#### 7B: New Service Actions
+
+Add 3 new actions to the registry. Same pattern as `extend-stay`. No widget changes — widget fetches action definitions dynamically from `GET /api/v1/webchat/actions`.
+
+**File:** `src/services/webchat-action.ts`
+
+1. **Add 3 action definitions** to the `actions` array (after line 129):
+
+   - **`request-service`** — Guest requests hotel services. Fields: `serviceType` (select: housekeeping, extra-towels, extra-pillows, amenities, maintenance, other), `details` (text, optional), `urgency` (select: normal, urgent). `requiresVerification: true`.
+
+   - **`order-room-service`** — Guest orders food/drink. Fields: `items` (text, required — what they want), `specialInstructions` (text, optional). `requiresVerification: true`.
+
+   - **`book-spa`** — Guest books a spa treatment. Fields: `treatment` (select: massage, facial, body-wrap, manicure-pedicure, other), `preferredDate` (date), `preferredTime` (select: morning, midday, afternoon, evening), `notes` (text, optional). `requiresVerification: true`.
+
+2. **Add 3 handler methods** after `handleExtendStay()` — follow the same pattern: validate inputs, get session for reservationId, log the request, return a conversational success message. These are stubs (log + respond) — PMS integration is future.
+
+3. **Add 3 cases** to the `execute()` switch statement (lines 229-238).
+
+---
+
+#### 7D: Offline / Away Mode
+
+When WS can't connect after multiple retries, show a customizable away message and optional contact form in the widget.
+
+**Server changes:**
+
+1. **`src/apps/channels/webchat/index.ts`** — Add 2 fields to `configSchema`:
+   - `offlineMessage` (text, placeholder: "We're currently unavailable. Please leave a message...")
+   - `offlineFormEnabled` (select: off/on, default off)
+
+2. **`src/gateway/routes/webchat.ts`** — Add `offlineMessage` and `offlineFormEnabled` to config defaults + response.
+
+3. **`src/gateway/routes/webchat.ts`** — New `POST /api/v1/webchat/offline-message` endpoint (no session required). Accepts `{ name, email, message }`. Creates a conversation + inbound message for staff follow-up. Returns `{ success: true }`.
+
+**Widget changes:**
+
+4. **`apps/webchat/src/types.ts`** — Add `offlineMessage` and `offlineFormEnabled` to `WidgetRemoteConfig`.
+
+5. **`apps/webchat/src/connection.ts`** — Add `reconnectAttempts` counter. Increment on each reconnect attempt, reset to 0 on successful connection. Add `onReconnectFailed` callback that fires when attempts exceed a threshold (e.g., 3).
+
+6. **New file: `apps/webchat/src/components/offline-overlay.ts`** — Overlay shown over the message area. Contains: away message text, optional contact form (name, email, message + submit button). On submit: POST to `/api/v1/webchat/offline-message`, show thank-you message.
+
+7. **`apps/webchat/src/widget.ts`** — In `onDisconnected`: if reconnect failures >= 3 and offline config exists, show offline overlay. In `onConnected`: remove overlay. In `fetchAndApplyConfig()`: if fetch fails with network error/503, flag as offline immediately.
+
+8. **`apps/webchat/src/styles/messages.css.ts`** — Add `.butler-offline-overlay` styles (absolute positioned over messages area, centered content, semi-transparent background).
+
+---
+
+#### 7E: Conversation Persistence for Verified Guests
+
+When a verified guest returns after session expiry and re-verifies, restore their previous webchat conversation history instead of starting blank.
+
+**Server changes:**
+
+1. **`src/services/conversation.ts`** — New method `findByGuestAndChannel(guestId, channelType)`. Query conversations table filtered by `guestId` + `channelType`, order by `updatedAt` desc, limit 1. Returns the most recent conversation or null.
+
+2. **`src/services/webchat-action.ts`** — In `completeVerification()` (lines 572-580), after guest lookup and session verification, before broadcasting `session_update`:
+   - Call `conversationService.findByGuestAndChannel(guest.id, 'webchat')`
+   - If found and current session has no conversation yet (or has a different one), link session to the existing conversation via `webchatSessionService.linkConversation()`
+   - After broadcasting `session_update`, also send `history` message with the restored conversation's messages
+
+**Widget changes:**
+
+3. **`apps/webchat/src/components/message-list.ts`** — Add `clear()` method that removes all child elements except the sentinel and scroll button.
+
+4. **`apps/webchat/src/widget.ts`** — In `onHistory` callback (lines 117-131): if messages are already displayed (mid-session history from verification), call `clear()` first before rendering the restored history.
 
 ### Phase 8: Security Hardening
 

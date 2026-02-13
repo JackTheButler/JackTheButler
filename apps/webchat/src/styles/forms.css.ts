@@ -5,8 +5,8 @@
 export const formStyles = `
 .butler-action-form {
   align-self: stretch;
-  background: #f0f4ff;
-  border: 1px solid #c4d4ff;
+  background: var(--butler-bg-bubble-ai);
+  border: 1px solid var(--butler-border-bubble-ai);
   border-radius: var(--butler-radius-form);
   padding: 16px;
   margin: 4px 0;
@@ -54,7 +54,7 @@ export const formStyles = `
 }
 
 .butler-form-input--readonly {
-  background: #f0f0f0;
+  background: var(--butler-bg-messages);
 }
 
 .butler-form-select {
@@ -95,7 +95,7 @@ export const formStyles = `
 
 .butler-form-cancel {
   padding: 8px 16px;
-  background: #e0e0e0;
+  background: var(--butler-border-color);
   color: var(--butler-text-primary);
   border-radius: 8px;
   font-size: 13px;
@@ -104,7 +104,7 @@ export const formStyles = `
 }
 
 .butler-form-cancel:hover {
-  background: #d0d0d0;
+  background: var(--butler-text-light);
 }
 
 .butler-form-field--error .butler-form-input,

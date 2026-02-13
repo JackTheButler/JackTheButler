@@ -6,6 +6,7 @@
  * @module gateway/routes/apps
  */
 
+import { randomBytes } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { appConfigService } from '@/services/app-config.js';
@@ -196,6 +197,11 @@ appRoutes.put('/:appId', requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (
   const newConfig: Record<string, string | boolean | number> = config
     ? { ...(existing?.config ?? {}), ...trimmedConfig }
     : existing?.config ?? {};
+
+  // Auto-generate widget key for webchat on first save
+  if (appId === 'channel-webchat' && !newConfig.widgetKey) {
+    newConfig.widgetKey = 'wc_' + randomBytes(16).toString('hex');
+  }
 
   // Save config
   const result = await appConfigService.saveAppConfig(

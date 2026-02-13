@@ -105,3 +105,15 @@ export interface WidgetConfig {
   gatewayOrigin: string;
   butlerKey?: string;
 }
+
+export type ButtonIcon = 'chat' | 'bell' | 'dots' | 'headset';
+
+export interface WidgetRemoteConfig {
+  theme: 'light' | 'dark';
+  buttonIcon: ButtonIcon;
+  botName: string;
+  primaryColor: string;
+  headerBackground: string;
+  logoUrl: string | null;
+  welcomeMessage: string | null;
+}

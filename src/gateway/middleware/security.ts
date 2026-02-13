@@ -14,6 +14,9 @@ const log = createLogger('security');
  * Security headers middleware using Hono's secure-headers
  */
 export const securityHeaders = secureHeaders({
+  // Allow cross-origin requests (widget is loaded on hotel sites)
+  crossOriginResourcePolicy: false,
+
   // Prevent clickjacking
   xFrameOptions: 'DENY',
 

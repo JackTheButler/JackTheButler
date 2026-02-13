@@ -6,7 +6,16 @@
  */
 
 import { ButlerChatWidget } from './widget.js';
-import { deriveGatewayOrigin, readButlerKey } from './utils.js';
+import { deriveGatewayOrigin, readButlerKey, contrastText } from './utils.js';
+import type { ButtonIcon } from './types.js';
+
+/** SVG path data for each button icon option (24x24 viewBox, stroke-based) */
+const ICON_SVGS: Record<ButtonIcon, string> = {
+  chat: `<path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/>`,
+  bell: `<path d='M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9'/><path d='M13.73 21a2 2 0 0 1-3.46 0'/>`,
+  dots: `<path d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/><circle cx='8' cy='10' r='1' fill='currentColor' stroke='none'/><circle cx='12' cy='10' r='1' fill='currentColor' stroke='none'/><circle cx='16' cy='10' r='1' fill='currentColor' stroke='none'/>`,
+  headset: `<path d='M3 18v-6a9 9 0 0 1 18 0v6'/><path d='M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3zM3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z'/>`,
+};
 
 // Capture the current script element before any async work
 const scriptEl = document.currentScript as HTMLScriptElement | null;
@@ -17,68 +26,74 @@ const butlerKey = readButlerKey(scriptEl);
 
 // Create and init widget
 const widget = new ButlerChatWidget({ gatewayOrigin, butlerKey });
-widget.init();
 
-// CTA detection: find all [data-butler-chat] elements
-const ctas = document.querySelectorAll<HTMLElement>('[data-butler-chat]');
+(async () => {
+  await widget.init();
 
-for (const cta of ctas) {
-  // Attach click handler
-  cta.addEventListener('click', (e) => {
-    e.preventDefault();
-    widget.toggle();
-  });
+  // CTA detection: find all [data-butler-chat] elements
+  const ctas = document.querySelectorAll<HTMLElement>('[data-butler-chat]');
 
-  // Attribute-based preset
-  const preset = cta.getAttribute('data-butler-chat');
-  if (!preset || preset === '' || preset === 'bubble') {
-    cta.classList.add('butler-chat-trigger');
+  for (const cta of ctas) {
+    // Attach click handler
+    cta.addEventListener('click', (e) => {
+      e.preventDefault();
+      widget.toggle();
+    });
+
+    // Attribute-based preset
+    const preset = cta.getAttribute('data-butler-chat');
+    if (!preset || preset === '' || preset === 'bubble') {
+      cta.classList.add('butler-chat-trigger');
+    }
+    // "custom" → no default styles
   }
-  // "custom" → no default styles
-}
 
-// Inject default CTA styles into document head
-if (ctas.length > 0) {
-  const ctaStyle = document.createElement('style');
-  ctaStyle.id = 'butler-chat-cta-styles';
-  ctaStyle.textContent = `
-    .butler-chat-trigger {
-      position: fixed;
-      bottom: 20px;
-      right: 20px;
-      width: 56px;
-      height: 56px;
-      border-radius: 50%;
-      background: #0084ff;
-      color: #fff;
-      border: none;
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-      z-index: 2147483646;
-      transition: transform 150ms ease, box-shadow 150ms ease;
-      padding: 0;
-      font-size: 0;
-      line-height: 0;
-    }
-    .butler-chat-trigger:hover {
-      transform: scale(1.05);
-      box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
-    }
-    .butler-chat-trigger::after {
-      content: '';
-      display: block;
-      width: 24px;
-      height: 24px;
-      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z'/%3E%3C/svg%3E");
-      background-size: contain;
-      background-repeat: no-repeat;
-    }
-  `;
-  document.head.appendChild(ctaStyle);
-}
+  // Inject default CTA styles into document head
+  const ctaColor = widget.primaryColor || '#0084ff';
+  const iconPaths = ICON_SVGS[widget.buttonIcon] || ICON_SVGS.chat;
+  const ctaIconSvg = encodeURIComponent(`<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='${contrastText(ctaColor)}' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'>${iconPaths}</svg>`);
+  if (ctas.length > 0) {
+    const ctaStyle = document.createElement('style');
+    ctaStyle.id = 'butler-chat-cta-styles';
+    ctaStyle.textContent = `
+      .butler-chat-trigger {
+        position: fixed;
+        bottom: 20px;
+        right: 20px;
+        width: 56px;
+        height: 56px;
+        border-radius: 50%;
+        background: ${ctaColor};
+        color: #fff;
+        border: none;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+        z-index: 2147483646;
+        transition: transform 150ms ease, box-shadow 150ms ease;
+        padding: 0;
+        font-size: 0;
+        line-height: 0;
+      }
+      .butler-chat-trigger:hover {
+        transform: scale(1.05);
+        box-shadow: 0 6px 16px rgba(0, 0, 0, 0.2);
+      }
+      .butler-chat-trigger::after {
+        content: '';
+        display: block;
+        width: 24px;
+        height: 24px;
+        background-image: url("data:image/svg+xml,${ctaIconSvg}");
+        background-size: contain;
+        background-repeat: no-repeat;
+      }
+    `;
+    document.head.appendChild(ctaStyle);
+  }
 
-// Expose globally
-(window as unknown as Record<string, unknown>).ButlerChat = widget;
+  // Expose globally
+  (window as unknown as Record<string, unknown>).ButlerChat = widget;
+})();

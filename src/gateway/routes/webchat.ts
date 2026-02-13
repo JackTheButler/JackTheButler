@@ -10,6 +10,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { webchatActionService } from '@/services/webchat-action.js';
 import { webchatSessionService } from '@/services/webchat-session.js';
+import { appConfigService } from '@/services/app-config.js';
 import { validateBody } from '../middleware/validator.js';
 import { UnauthorizedError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
@@ -64,12 +65,60 @@ type Variables = {
 const webchatRouter = new Hono<{ Variables: Variables }>();
 
 /**
+ * GET /api/v1/webchat/config
+ * Returns widget appearance config (colors, bot name, logo).
+ * No auth — widget runs on hotel's public site.
+ * Optional ?key=wc_xxx for widget key validation.
+ */
+webchatRouter.get('/config', async (c) => {
+  const appConfig = await appConfigService.getAppConfig('channel-webchat');
+
+  // Defaults for backward compat (no config saved yet)
+  const defaults = {
+    theme: 'light' as string,
+    buttonIcon: 'chat' as string,
+    botName: 'Hotel Concierge',
+    primaryColor: '#0084ff',
+    headerBackground: '#1a1a2e',
+    logoUrl: null as string | null,
+    welcomeMessage: null as string | null,
+  };
+
+  if (!appConfig) {
+    return c.json(defaults);
+  }
+
+  // Activation gate — disabled means unavailable
+  if (!appConfig.enabled) {
+    return c.json({ error: 'Widget not available' }, 503);
+  }
+
+  // Widget key validation (if key is configured)
+  const widgetKey = appConfig.config?.widgetKey as string | undefined;
+  const queryKey = c.req.query('key');
+  if (widgetKey && queryKey && queryKey !== widgetKey) {
+    return c.json({ error: 'Invalid widget key' }, 403);
+  }
+
+  const cfg = appConfig.config ?? {};
+  return c.json({
+    theme: (cfg.theme as string) || defaults.theme,
+    buttonIcon: (cfg.buttonIcon as string) || defaults.buttonIcon,
+    botName: (cfg.botName as string) || defaults.botName,
+    primaryColor: (cfg.primaryColor as string) || defaults.primaryColor,
+    headerBackground: (cfg.headerBackground as string) || defaults.headerBackground,
+    logoUrl: (cfg.logoUrl as string) || defaults.logoUrl,
+    welcomeMessage: (cfg.welcomeMessage as string) || defaults.welcomeMessage,
+  });
+});
+
+/**
  * GET /api/v1/webchat/actions
  * Returns action definitions for the widget.
  * No session required — widget needs this on first load.
  */
-webchatRouter.get('/actions', (c) => {
-  const actions = webchatActionService.getActions();
+webchatRouter.get('/actions', async (c) => {
+  const actions = await webchatActionService.getEnabledActions();
   return c.json({ actions });
 });
 

@@ -18,6 +18,9 @@ import {
   Settings2,
   Power,
   PowerOff,
+  Code,
+  Copy,
+  Check,
 } from 'lucide-react';
 import { InlineAlert } from '@/components/ui/inline-alert';
 import { api } from '@/lib/api';
@@ -38,7 +41,7 @@ type AppStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disa
 interface ConfigField {
   key: string;
   label: string;
-  type: 'text' | 'password' | 'select' | 'boolean' | 'number';
+  type: 'text' | 'password' | 'select' | 'boolean' | 'number' | 'color';
   required: boolean;
   placeholder?: string;
   description?: string;
@@ -124,6 +127,30 @@ const fieldLabelKeys: Record<string, string> = {
   enableCompletion: 'appEdit.fields.enableCompletion',
 };
 
+/** SVG icons for the webchat button icon picker */
+const BUTTON_ICON_OPTIONS: { value: string; label: string; svg: string }[] = [
+  {
+    value: 'chat',
+    label: 'Chat Bubble',
+    svg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>',
+  },
+  {
+    value: 'bell',
+    label: 'Concierge Bell',
+    svg: '<path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/>',
+  },
+  {
+    value: 'dots',
+    label: 'Message Dots',
+    svg: '<path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><circle cx="8" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="12" cy="10" r="1" fill="currentColor" stroke="none"/><circle cx="16" cy="10" r="1" fill="currentColor" stroke="none"/>',
+  },
+  {
+    value: 'headset',
+    label: 'Headset',
+    svg: '<path d="M3 18v-6a9 9 0 0 1 18 0v6"/><path d="M21 19a2 2 0 0 1-2 2h-1a2 2 0 0 1-2-2v-3a2 2 0 0 1 2-2h3z"/><path d="M3 19a2 2 0 0 0 2 2h1a2 2 0 0 0 2-2v-3a2 2 0 0 0-2-2H3z"/>',
+  },
+];
+
 function ConfigForm({
   app,
   onSaved,
@@ -199,7 +226,42 @@ function ConfigForm({
                 {field.required && <span className="text-red-500">*</span>}
               </div>
 
-              {field.type === 'select' && field.options ? (
+              {field.key === 'buttonIcon' ? (
+                <div className="flex gap-2">
+                  {BUTTON_ICON_OPTIONS.map((opt) => {
+                    const selected = (formData[field.key] || field.default || 'chat') === opt.value;
+                    return (
+                      <button
+                        key={opt.value}
+                        type="button"
+                        disabled={!canManage}
+                        onClick={() => setFormData({ ...formData, [field.key]: opt.value })}
+                        title={opt.label}
+                        className={cn(
+                          'flex items-center justify-center w-12 h-12 rounded-lg border-2 transition-colors',
+                          'hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
+                          selected
+                            ? 'border-primary bg-primary/5'
+                            : 'border-transparent bg-muted/50'
+                        )}
+                      >
+                        <svg
+                          width="24"
+                          height="24"
+                          viewBox="0 0 24 24"
+                          fill="none"
+                          stroke="currentColor"
+                          strokeWidth="2"
+                          strokeLinecap="round"
+                          strokeLinejoin="round"
+                          className={cn('w-5 h-5', selected ? 'text-primary' : 'text-muted-foreground')}
+                          dangerouslySetInnerHTML={{ __html: opt.svg }}
+                        />
+                      </button>
+                    );
+                  })}
+                </div>
+              ) : field.type === 'select' && field.options ? (
                 <Select
                   value={String(formData[field.key] || '')}
                   onValueChange={(value) => setFormData({ ...formData, [field.key]: value })}
@@ -217,6 +279,24 @@ function ConfigForm({
                     ))}
                   </SelectContent>
                 </Select>
+              ) : field.type === 'color' ? (
+                <div className="flex items-center gap-3">
+                  <input
+                    type="color"
+                    id={field.key}
+                    value={String(formData[field.key] || field.default || '#000000')}
+                    onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                    disabled={!canManage}
+                    className="h-9 w-12 cursor-pointer rounded border border-input bg-background p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
+                  />
+                  <Input
+                    value={String(formData[field.key] || '')}
+                    onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                    placeholder={field.placeholder}
+                    className="flex-1 font-mono"
+                    disabled={!canManage}
+                  />
+                </div>
               ) : (
                 <div className="relative">
                   <Input
@@ -445,6 +525,56 @@ function ActivityLogs({ appId }: { appId: string }) {
   );
 }
 
+function EmbedCode({ widgetKey }: { widgetKey: string }) {
+  const { t } = useTranslation();
+  const [copied, setCopied] = useState(false);
+  // In production, gateway = same origin. In dev, Vite runs on 5173 but gateway is on 3000.
+  const gatewayUrl = import.meta.env.DEV
+    ? window.location.origin.replace(/:\d+$/, ':3000')
+    : window.location.origin;
+  const snippet = `<button data-butler-chat>Chat</button>\n<script src="${gatewayUrl}/widget.js" data-butler-key="${widgetKey}"></script>`;
+
+  const handleCopy = async () => {
+    await navigator.clipboard.writeText(snippet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+
+  return (
+    <Card>
+      <CardHeader>
+        <CardTitle className="text-base flex items-center gap-2">
+          <Code className="w-4 h-4" />
+          {t('appEdit.embedCode', 'Embed Code')}
+        </CardTitle>
+      </CardHeader>
+      <CardContent className="space-y-3">
+        <p className="text-sm text-muted-foreground">
+          {t('appEdit.embedCodeDescription', 'Add this snippet to your hotel website to enable the chat widget.')}
+        </p>
+        <div className="relative">
+          <pre className="bg-muted p-4 rounded-lg text-xs overflow-x-auto whitespace-pre-wrap break-all font-mono">
+            {snippet}
+          </pre>
+          <Button
+            variant="outline"
+            size="sm"
+            onClick={handleCopy}
+            className="absolute top-2 end-2"
+          >
+            {copied ? (
+              <Check className="w-3.5 h-3.5 me-1.5 text-green-600" />
+            ) : (
+              <Copy className="w-3.5 h-3.5 me-1.5" />
+            )}
+            {copied ? t('appEdit.copied', 'Copied') : t('appEdit.copy', 'Copy')}
+          </Button>
+        </div>
+      </CardContent>
+    </Card>
+  );
+}
+
 export function AppEditPage() {
   const { t } = useTranslation();
   const { appId } = useParams<{ appId: string }>();
@@ -552,6 +682,11 @@ export function AppEditPage() {
             />
           </CardContent>
         </Card>
+
+        {/* Embed Code (webchat only) */}
+        {app.id === 'channel-webchat' && app.config?.widgetKey && (
+          <EmbedCode widgetKey={String(app.config.widgetKey)} />
+        )}
 
         {/* Activity Logs */}
         {app.config && (

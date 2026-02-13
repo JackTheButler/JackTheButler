@@ -59,7 +59,13 @@ async function main(): Promise<void> {
     const registry = getAppRegistry();
     const webchat = registry.get('channel-webchat');
     if (webchat && webchat.status !== 'active') {
-      await registry.activate('channel-webchat', {});
+      // Ensure DB config exists so dashboard shows correct status
+      const existing = await appConfigService.getAppConfig('channel-webchat');
+      if (!existing) {
+        await appConfigService.saveAppConfig('channel-webchat', {}, true);
+      } else if (existing.enabled) {
+        await registry.activate('channel-webchat', existing.config);
+      }
       logger.info('WebChat channel auto-activated');
     }
   } catch (error) {

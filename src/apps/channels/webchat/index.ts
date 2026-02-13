@@ -16,6 +16,7 @@ import type { ChannelAdapter } from '@/core/interfaces/channel.js';
 import type { InboundMessage, OutboundMessage } from '@/core/interfaces/channel.js';
 import type { ContentType, SendResult, ChannelType } from '@/types/index.js';
 import { messageProcessor } from '@/core/message-processor.js';
+import { appConfigService } from '@/services/app-config.js';
 import { conversationService } from '@/services/conversation.js';
 import { webchatSessionService } from '@/services/webchat-session.js';
 import { webchatActionService } from '@/services/webchat-action.js';
@@ -168,6 +169,14 @@ export function handleGuestConnection(ws: GuestSocket, req: IncomingMessage): vo
 }
 
 async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage): Promise<void> {
+  // Activation gate — reject connections if webchat is disabled
+  const webchatConfig = await appConfigService.getAppConfig('channel-webchat');
+  if (webchatConfig && !webchatConfig.enabled) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Chat is currently unavailable.' }));
+    ws.close();
+    return;
+  }
+
   const token = parseToken(req);
   let session: WebChatSession;
   let restored = false;
@@ -225,6 +234,37 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
     }
   }
 
+  // Send welcome message for new sessions
+  const welcomeMsg = (webchatConfig?.config?.welcomeMessage as string)?.trim();
+  if (!restored && welcomeMsg) {
+    try {
+      // Ensure conversation exists
+      let convId = session.conversationId;
+      if (!convId) {
+        const conv = await conversationService.findOrCreate('webchat', sessionId);
+        convId = conv.id;
+        await webchatSessionService.linkConversation(sessionId, convId);
+      }
+      // Persist + send
+      await conversationService.addMessage(convId, {
+        direction: 'outbound',
+        senderType: 'ai',
+        content: welcomeMsg,
+        contentType: 'text',
+      });
+      ws.send(
+        JSON.stringify({
+          type: 'message',
+          direction: 'outbound',
+          senderType: 'ai',
+          content: welcomeMsg,
+        })
+      );
+    } catch (error) {
+      log.warn({ error, sessionId }, 'Failed to send welcome message');
+    }
+  }
+
   // Handle messages
   ws.on('message', (data) => {
     try {
@@ -274,8 +314,8 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
  * Build structured channel actions metadata for the AI responder.
  * The responder owns the prompt — we just pass the data.
  */
-function buildChannelActions(verificationStatus?: string) {
-  const actions = webchatActionService.getActions();
+async function buildChannelActions(verificationStatus?: string) {
+  const actions = await webchatActionService.getEnabledActions();
   return {
     actions: actions.map((a) => ({
       id: a.id,
@@ -324,7 +364,7 @@ async function handleGuestMessage(
     contentType: 'text',
     timestamp: new Date(),
     metadata: {
-      channelActions: buildChannelActions(session?.verificationStatus),
+      channelActions: await buildChannelActions(session?.verificationStatus),
     },
   };
 
@@ -370,7 +410,85 @@ export const manifest: ChannelAppManifest = {
   version: '0.1.0',
   description: 'Chat widget for hotel websites',
   icon: '💬',
-  configSchema: [],
+  configSchema: [
+    {
+      key: 'theme',
+      label: 'Theme',
+      type: 'select',
+      required: false,
+      description: 'Widget color scheme (light or dark)',
+      options: [
+        { value: 'light', label: 'Light' },
+        { value: 'dark', label: 'Dark' },
+      ],
+      default: 'light',
+    },
+    {
+      key: 'primaryColor',
+      label: 'Primary Color',
+      type: 'color',
+      required: false,
+      placeholder: '#0084ff',
+      description: 'Main accent color for the chat widget (hex)',
+      default: '#0084ff',
+    },
+    {
+      key: 'headerBackground',
+      label: 'Header Background',
+      type: 'color',
+      required: false,
+      placeholder: '#1a1a2e',
+      description: 'Header background color (hex)',
+      default: '#1a1a2e',
+    },
+    {
+      key: 'buttonIcon',
+      label: 'Button Icon',
+      type: 'select',
+      required: false,
+      description: 'Icon shown on the floating chat button',
+      options: [
+        { value: 'chat', label: 'Chat Bubble' },
+        { value: 'bell', label: 'Concierge Bell' },
+        { value: 'dots', label: 'Message Dots' },
+        { value: 'headset', label: 'Headset' },
+      ],
+      default: 'chat',
+    },
+    {
+      key: 'botName',
+      label: 'Bot Name',
+      type: 'text',
+      required: false,
+      placeholder: 'Hotel Concierge',
+      description: 'Display name shown in the chat header',
+      default: 'Hotel Concierge',
+    },
+    {
+      key: 'logoUrl',
+      label: 'Logo URL',
+      type: 'text',
+      required: false,
+      placeholder: 'https://example.com/logo.png',
+      description: 'URL to a logo image shown in the chat header',
+    },
+    {
+      key: 'welcomeMessage',
+      label: 'Welcome Message',
+      type: 'text',
+      required: false,
+      placeholder: 'Welcome! How can I help you today?',
+      description: 'Greeting shown when a new chat session starts',
+    },
+    {
+      key: 'allowedDomains',
+      label: 'Allowed Domains',
+      type: 'text',
+      required: false,
+      placeholder: 'example.com, hotel.com',
+      description: 'Comma-separated list of domains allowed to embed the widget',
+    },
+  ],
   features: {
     inbound: true,
     outbound: true,

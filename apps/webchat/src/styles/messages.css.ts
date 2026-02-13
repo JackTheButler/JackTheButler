@@ -28,8 +28,10 @@ export const messageStyles = `
   align-items: center;
   justify-content: center;
   width: 32px;
-  min-height: 32px;
+  min-height: 0;
+  height: 0;
   flex-shrink: 0;
+  overflow: hidden;
   border-radius: 50%;
   background: var(--butler-bg-panel);
   color: var(--butler-text-secondary);
@@ -43,12 +45,15 @@ export const messageStyles = `
 
 .butler-scroll-btn.butler-scroll-btn--visible {
   opacity: 1;
+  min-height: 32px;
+  height: 32px;
+  overflow: visible;
   transform: translateY(0) scale(1);
   pointer-events: auto;
 }
 
 .butler-scroll-btn:hover {
-  background: #f0f0f0;
+  background: var(--butler-border-color);
 }
 
 .butler-msg {
