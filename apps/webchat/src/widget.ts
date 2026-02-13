@@ -116,6 +116,8 @@ export class ButlerChatWidget {
       },
       onHistory: (msg) => {
         if (msg.messages?.length) {
+          // Clear existing messages (handles mid-session restore after verification)
+          this.messageList.clear();
           for (const m of msg.messages) {
             if (m.direction === 'inbound') {
               this.messageList.addMessage(m.content, 'guest', 'You');
@@ -135,7 +137,10 @@ export class ButlerChatWidget {
         if (msg.senderType === 'system') {
           this.messageList.addMessage(msg.content, 'system');
         } else if (msg.senderType === 'ai') {
-          this.messageList.addMessage(msg.content, 'ai', 'AI');
+          const qrOptions = msg.quickReplies?.length
+            ? { quickReplies: msg.quickReplies, onQuickReply: (text: string) => this.handleSend(text) }
+            : undefined;
+          this.messageList.addMessage(msg.content, 'ai', 'AI', qrOptions);
           if (msg.action?.id) {
             this.actionManager?.handleActionTrigger(msg.action.id);
           }

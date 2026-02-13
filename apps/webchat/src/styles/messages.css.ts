@@ -107,4 +107,41 @@ export const messageStyles = `
   max-width: 90%;
   text-align: center;
 }
+
+.butler-quick-replies {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.butler-quick-reply {
+  padding: 5px 12px;
+  border-radius: 14px;
+  border: 1px solid var(--butler-color-primary);
+  background: transparent;
+  color: var(--butler-color-primary);
+  font-size: var(--butler-font-size-small);
+  font-family: inherit;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, opacity 150ms ease;
+}
+
+.butler-quick-reply:hover:not(:disabled) {
+  background: var(--butler-color-primary);
+  color: var(--butler-text-on-primary);
+}
+
+.butler-quick-reply--selected {
+  background: var(--butler-color-primary);
+  color: var(--butler-text-on-primary);
+}
+
+.butler-quick-reply--faded {
+  opacity: 0.4;
+}
+
+.butler-quick-reply:disabled {
+  cursor: default;
+}
 `;

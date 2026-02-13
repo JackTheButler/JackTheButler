@@ -117,6 +117,25 @@ export class ConversationService {
   }
 
   /**
+   * Find the most recent conversation for a guest on a specific channel.
+   */
+  async findByGuestAndChannel(guestId: string, channelType: ChannelType): Promise<Conversation | null> {
+    const [conversation] = await db
+      .select()
+      .from(conversations)
+      .where(
+        and(
+          eq(conversations.guestId, guestId),
+          eq(conversations.channelType, channelType),
+        )
+      )
+      .orderBy(desc(conversations.updatedAt))
+      .limit(1);
+
+    return conversation || null;
+  }
+
+  /**
    * Find conversation by ID
    */
   async findById(id: string): Promise<Conversation | null> {
@@ -397,6 +416,18 @@ export class ConversationService {
 
     const results = await query;
     return results.reverse(); // Return in chronological order
+  }
+
+  /**
+   * Move all messages from one conversation to another.
+   */
+  async moveMessages(fromConversationId: string, toConversationId: string): Promise<number> {
+    const result = await db
+      .update(messages)
+      .set({ conversationId: toConversationId })
+      .where(eq(messages.conversationId, fromConversationId));
+
+    return result.changes;
   }
 
   /**

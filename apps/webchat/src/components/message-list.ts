@@ -7,11 +7,13 @@
 
 import { createElement } from '../utils.js';
 import { createMessageBubble } from './message-bubble.js';
+import type { MessageBubbleOptions } from './message-bubble.js';
 import type { MessageVariant } from '../types.js';
 
 export interface MessageList {
   element: HTMLDivElement;
-  addMessage(content: string, variant: MessageVariant, label?: string): void;
+  addMessage(content: string, variant: MessageVariant, label?: string, options?: MessageBubbleOptions): void;
+  clear(): void;
   scrollToBottom(): void;
 }
 
@@ -66,11 +68,19 @@ export function createMessageList(): MessageList {
 
   return {
     element: container,
-    addMessage(content, variant, label) {
-      const bubble = createMessageBubble(content, variant, label);
+    addMessage(content, variant, label, options) {
+      const bubble = createMessageBubble(content, variant, label, options);
       container.insertBefore(bubble.element, sentinel);
       if (isNearBottom) {
         scrollToBottom();
+      }
+    },
+    clear() {
+      // Remove all message bubbles, keep sentinel and scroll button
+      for (const child of Array.from(container.children)) {
+        if (child !== sentinel && child !== scrollBtn) {
+          container.removeChild(child);
+        }
       }
     },
     scrollToBottom,

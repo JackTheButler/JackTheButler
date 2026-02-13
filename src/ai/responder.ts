@@ -58,6 +58,9 @@ interface ChannelActionsMetadata {
 /** Pattern the AI uses to tag a suggested action */
 const ACTION_TAG_RE = /\[ACTION:([a-z0-9-]+)\]\s*$/;
 
+/** Pattern for quick reply buttons: [QUICK_REPLIES:opt1|opt2|opt3] */
+const QUICK_REPLY_RE = /\[QUICK_REPLIES:((?:[^|\]]+\|?)+)\]\s*$/;
+
 /**
  * System prompt for the hotel butler
  */
@@ -201,7 +204,7 @@ export class AIResponder implements Responder {
 
     const duration = Date.now() - startTime;
 
-    // 7. Extract [ACTION:xxx] tag if present
+    // 7. Extract [ACTION:xxx] and [QUICK_REPLIES:...] tags if present
     let content = response.content;
     let suggestedAction: string | undefined;
     const actionMatch = content.match(ACTION_TAG_RE);
@@ -209,6 +212,13 @@ export class AIResponder implements Responder {
       suggestedAction = actionMatch[1];
       content = content.replace(ACTION_TAG_RE, '').trimEnd();
       log.debug({ suggestedAction }, 'AI suggested channel action');
+    }
+
+    let quickReplies: string[] | undefined;
+    const qrMatch = content.match(QUICK_REPLY_RE);
+    if (qrMatch) {
+      quickReplies = qrMatch[1]!.split('|').map((s) => s.trim()).filter(Boolean);
+      content = content.replace(QUICK_REPLY_RE, '').trimEnd();
     }
 
     metrics.aiResponseTime.observe(duration);
@@ -243,6 +253,7 @@ export class AIResponder implements Responder {
         knowledgeContext: knowledgeContext.map((k) => ({ id: k.id, title: k.title, similarity: k.similarity })),
         usage: response.usage,
         suggestedAction,
+        quickReplies,
         guestContext: guestContext?.guest ? {
           guestId: guestContext.guest.id,
           guestName: guestContext.guest.fullName,
@@ -417,10 +428,17 @@ export class AIResponder implements Responder {
         systemContent += '\nFor reservation-specific questions, let them know you can help and the form will appear.';
       }
 
-      systemContent += '\n\nIMPORTANT: If the guest needs one of the actions above, end your response with [ACTION:action-id].';
-      systemContent += '\nExample: "I\'ll pull up the form for you! [ACTION:verify-reservation]"';
+      systemContent += '\n\nCRITICAL — You MUST end your response with [ACTION:action-id] when the guest wants one of the actions above.';
+      systemContent += '\nThe [ACTION:...] tag is what triggers the form — without it, nothing happens. Never describe pulling up a form without the tag.';
+      systemContent += '\nExample: "I\'ll get that sorted! [ACTION:request-service]"';
       systemContent += '\nDo NOT include [ACTION:...] if no action is needed.';
     }
+
+    // Quick reply buttons
+    systemContent += '\n\nQUICK REPLIES: When it would help to offer the guest 2-4 clickable options, end your response with [QUICK_REPLIES:option1|option2|option3].';
+    systemContent += '\nExample: "How can I help?" [QUICK_REPLIES:Room Service|Housekeeping|Extend Stay|Something Else]';
+    systemContent += '\nOnly use when options are genuinely useful. Do NOT use for open-ended questions. Do NOT combine with [ACTION:...].';
+
 
     // Personalization instruction
     if (guestContext?.guest) {

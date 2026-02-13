@@ -126,6 +126,95 @@ const actions: WebChatAction[] = [
     ],
     endpoint: '/api/v1/webchat/actions/extend-stay',
   },
+  {
+    id: 'request-service',
+    name: 'Request a Service',
+    triggerHint: 'guest wants housekeeping, towels, pillows, amenities, or maintenance',
+    requiresVerification: true,
+    fields: [
+      {
+        key: 'serviceType',
+        label: 'Service Type',
+        type: 'select',
+        required: true,
+        options: ['housekeeping', 'extra-towels', 'extra-pillows', 'amenities', 'maintenance', 'other'],
+      },
+      {
+        key: 'details',
+        label: 'Details',
+        type: 'text',
+        required: false,
+        placeholder: 'Any specific details',
+      },
+      {
+        key: 'urgency',
+        label: 'Urgency',
+        type: 'select',
+        required: true,
+        options: ['normal', 'urgent'],
+      },
+    ],
+    endpoint: '/api/v1/webchat/actions/request-service',
+  },
+  {
+    id: 'order-room-service',
+    name: 'Order Room Service',
+    triggerHint: 'guest wants to order food or beverages to their room',
+    requiresVerification: true,
+    fields: [
+      {
+        key: 'items',
+        label: 'What would you like to order?',
+        type: 'text',
+        required: true,
+        placeholder: 'e.g. Caesar salad, club sandwich, sparkling water',
+      },
+      {
+        key: 'specialInstructions',
+        label: 'Special Instructions',
+        type: 'text',
+        required: false,
+        placeholder: 'Allergies, preferences, etc.',
+      },
+    ],
+    endpoint: '/api/v1/webchat/actions/order-room-service',
+  },
+  {
+    id: 'book-spa',
+    name: 'Book Spa Treatment',
+    triggerHint: 'guest wants to book a spa treatment or massage',
+    requiresVerification: true,
+    fields: [
+      {
+        key: 'treatment',
+        label: 'Treatment',
+        type: 'select',
+        required: true,
+        options: ['massage', 'facial', 'body-wrap', 'manicure-pedicure', 'other'],
+      },
+      {
+        key: 'preferredDate',
+        label: 'Preferred Date',
+        type: 'date',
+        required: true,
+      },
+      {
+        key: 'preferredTime',
+        label: 'Preferred Time',
+        type: 'select',
+        required: true,
+        options: ['morning', 'midday', 'afternoon', 'evening'],
+      },
+      {
+        key: 'notes',
+        label: 'Notes',
+        type: 'text',
+        required: false,
+        placeholder: 'Any preferences or requests',
+      },
+    ],
+    endpoint: '/api/v1/webchat/actions/book-spa',
+  },
 ];
 
 // ============================================
@@ -232,6 +321,15 @@ export class WebChatActionService {
         break;
       case 'extend-stay':
         result = await this.handleExtendStay(session.id, input);
+        break;
+      case 'request-service':
+        result = await this.handleRequestService(session.id, input);
+        break;
+      case 'order-room-service':
+        result = await this.handleOrderRoomService(session.id, input);
+        break;
+      case 'book-spa':
+        result = await this.handleBookSpa(session.id, input);
         break;
       default:
         result = { success: false, message: 'Action not implemented.', error: 'not_implemented' };
@@ -493,6 +591,102 @@ export class WebChatActionService {
   }
 
   // ============================================
+  // Request Service
+  // ============================================
+
+  private async handleRequestService(
+    sessionId: string,
+    input: Record<string, string>,
+  ): Promise<ActionResult> {
+    const { serviceType, details, urgency } = input;
+    if (!serviceType) {
+      return { success: false, message: 'Please select a service type.', error: 'missing_fields' };
+    }
+
+    const session = await webchatSessionService.findById(sessionId);
+    if (!session?.reservationId) {
+      return { success: false, message: 'No reservation linked to this session.', error: 'no_reservation' };
+    }
+
+    const label = serviceType.replace(/-/g, ' ');
+    log.info(
+      { sessionId, reservationId: session.reservationId, serviceType, urgency, details },
+      'Service requested',
+    );
+
+    return {
+      success: true,
+      message: `Your ${label} request has been submitted${urgency === 'urgent' ? ' as urgent' : ''}. Our team will take care of it shortly.${details ? ` We've noted: "${details}".` : ''} Anything else?`,
+      data: { serviceType, urgency, reservationId: session.reservationId },
+    };
+  }
+
+  // ============================================
+  // Order Room Service
+  // ============================================
+
+  private async handleOrderRoomService(
+    sessionId: string,
+    input: Record<string, string>,
+  ): Promise<ActionResult> {
+    const { items, specialInstructions } = input;
+    if (!items) {
+      return { success: false, message: 'Please tell us what you\'d like to order.', error: 'missing_fields' };
+    }
+
+    const session = await webchatSessionService.findById(sessionId);
+    if (!session?.reservationId) {
+      return { success: false, message: 'No reservation linked to this session.', error: 'no_reservation' };
+    }
+
+    log.info(
+      { sessionId, reservationId: session.reservationId, items, specialInstructions },
+      'Room service ordered',
+    );
+
+    return {
+      success: true,
+      message: `Your room service order has been placed! We'll have it delivered to your room shortly.${specialInstructions ? ` Special instructions noted: "${specialInstructions}".` : ''} Anything else?`,
+      data: { items, reservationId: session.reservationId },
+    };
+  }
+
+  // ============================================
+  // Book Spa
+  // ============================================
+
+  private async handleBookSpa(
+    sessionId: string,
+    input: Record<string, string>,
+  ): Promise<ActionResult> {
+    const { treatment, preferredDate, preferredTime, notes } = input;
+    if (!treatment || !preferredDate || !preferredTime) {
+      return { success: false, message: 'Please fill in treatment, date, and time.', error: 'missing_fields' };
+    }
+
+    const session = await webchatSessionService.findById(sessionId);
+    if (!session?.reservationId) {
+      return { success: false, message: 'No reservation linked to this session.', error: 'no_reservation' };
+    }
+
+    const label = treatment.replace(/-/g, ' ');
+    const formatted = new Date(preferredDate + 'T00:00:00').toLocaleDateString('en-US', {
+      month: 'short', day: 'numeric', year: 'numeric',
+    });
+
+    log.info(
+      { sessionId, reservationId: session.reservationId, treatment, preferredDate, preferredTime, notes },
+      'Spa booking requested',
+    );
+
+    return {
+      success: true,
+      message: `Your ${label} has been requested for ${formatted} (${preferredTime}). Our spa team will confirm availability shortly.${notes ? ` Notes: "${notes}".` : ''} Anything else?`,
+      data: { treatment, preferredDate, preferredTime, reservationId: session.reservationId },
+    };
+  }
+
+  // ============================================
   // Helpers
   // ============================================
 
@@ -570,9 +764,38 @@ export class WebChatActionService {
       reservation.departureDate,
     );
 
-    // Link conversation to guest if session has a conversation
+    // Restore previous conversation if this guest has one on webchat
     const session = await webchatSessionService.findById(sessionId);
-    if (session?.conversationId) {
+    const previousConv = await conversationService.findByGuestAndChannel(guest.id, 'webchat');
+
+    if (previousConv && session?.conversationId && session.conversationId !== previousConv.id) {
+      // Move current session's messages into the previous conversation
+      await conversationService.moveMessages(session.conversationId, previousConv.id);
+
+      // Link session to the previous conversation
+      await webchatSessionService.linkConversation(sessionId, previousConv.id);
+      await conversationService.update(previousConv.id, {
+        guestId: guest.id,
+        metadata: { reservationId: reservation.externalId },
+      });
+
+      // Send merged history (old + current messages, chronological)
+      try {
+        const history = await conversationService.getMessages(previousConv.id, { limit: 50 });
+        webchatConnectionManager.send(sessionId, {
+          type: 'history',
+          messages: history.map((m) => ({
+            direction: m.direction,
+            senderType: m.senderType,
+            content: m.content,
+            timestamp: m.createdAt,
+          })),
+        });
+      } catch (error) {
+        log.warn({ error, sessionId, conversationId: previousConv.id }, 'Failed to send restored history');
+      }
+    } else if (session?.conversationId) {
+      // No previous conversation — just link current one to guest
       await conversationService.update(session.conversationId, {
         guestId: guest.id,
         metadata: { reservationId: reservation.externalId },

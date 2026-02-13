@@ -74,6 +74,7 @@ export interface ChatMessage {
   direction?: 'inbound' | 'outbound';
   senderType?: 'ai' | 'staff' | 'system';
   action?: { id: string };
+  quickReplies?: string[];
 }
 
 export interface ErrorMessage {

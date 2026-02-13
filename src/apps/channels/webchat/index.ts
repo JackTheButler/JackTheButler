@@ -374,8 +374,9 @@ async function handleGuestMessage(
   // Link conversation to session (idempotent — cheap UPDATE on every message)
   await webchatSessionService.linkConversation(sessionId, response.conversationId);
 
-  // Read AI's suggested action (if any)
+  // Read AI's suggested action and quick replies (if any)
   const suggestedAction = response.metadata?.suggestedAction as string | undefined;
+  const quickReplies = response.metadata?.quickReplies as string[] | undefined;
   let actionMeta: { id: string } | undefined;
   if (suggestedAction) {
     // Validate the action exists before sending to client
@@ -396,6 +397,7 @@ async function handleGuestMessage(
     conversationId: response.conversationId,
     timestamp: new Date().toISOString(),
     ...(actionMeta ? { action: actionMeta } : {}),
+    ...(quickReplies?.length ? { quickReplies } : {}),
   });
 }
 

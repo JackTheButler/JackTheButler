@@ -1494,7 +1494,7 @@ Phase 6 will override these via config endpoint. CSS custom properties inherit i
 | 7A | Quick Reply Buttons | Pending |
 | 7B | New Service Actions | Pending |
 | 7C | Pre-Chat Form | Future |
-| 7D | Offline / Away Mode | Pending |
+| 7D | Offline / Away Mode | Removed |
 | 7E | Conversation Persistence | Pending |
 | 7F | Rich Responses (Cards & Images) | Future |
 | 7G | Read Receipts | Future |
@@ -1601,7 +1601,15 @@ When a verified guest returns after session expiry and re-verifies, restore thei
 
 **Goal:** Production-ready security for a public-facing widget.
 
-Rate limiting (verification attempts, message rate, connections per IP), data exposure rule enforcement in AI responses, domain allowlist enforcement, abuse prevention, cross-browser testing.
+| # | Feature | Status |
+|---|---------|--------|
+| 8A | Message length limits — reject messages over 5000 chars at WS handler | Pending |
+| 8B | WebSocket connection limit — max 5 concurrent connections per session | Pending |
+| 8C | Message rate limiting — max ~10 messages/min per session, throttle at WS layer | Pending |
+| 8D | Domain allowlist enforcement — validate Origin header on WS upgrade + widget.js endpoint against `allowedDomains` config | Pending |
+| 8E | Action form input validation — enforce max length on all text fields, sanitize before passing to handlers | Pending |
+| 8F | Verification code rate limiting — max 3 code generation requests per session per hour | Pending |
+| 8G | AI data exposure rules — system prompt guardrails to never reveal room numbers, credit cards, full phone/email in widget responses | Pending |
 
 ---
 
