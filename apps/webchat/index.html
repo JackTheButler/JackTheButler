@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Grand — Dev Harness</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, 'Times New Roman', serif; background: #f9f6f2; color: #333; }
+    header { background: #2c1810; color: #f9f6f2; padding: 20px 32px; }
+    header h1 { font-size: 24px; font-weight: 400; letter-spacing: 1px; }
+    header p { font-size: 13px; opacity: 0.7; margin-top: 4px; }
+    main { max-width: 800px; margin: 40px auto; padding: 0 24px; }
+    h2 { font-size: 20px; font-weight: 400; margin-bottom: 16px; color: #2c1810; }
+    p { line-height: 1.7; margin-bottom: 16px; color: #555; }
+    .card { background: #fff; border: 1px solid #e8e0d8; border-radius: 8px; padding: 24px; margin-bottom: 24px; }
+    .custom-cta { display: inline-block; padding: 12px 24px; background: #2c1810; color: #f9f6f2; text-decoration: none; border-radius: 6px; font-size: 14px; cursor: pointer; border: none; font-family: inherit; }
+    .custom-cta:hover { background: #3d2519; }
+    .test-section { margin-top: 40px; padding: 24px; background: #fffbf0; border: 1px dashed #d4c5a9; border-radius: 8px; }
+    .test-section h3 { font-size: 14px; text-transform: uppercase; letter-spacing: 1px; color: #999; margin-bottom: 12px; }
+    .test-buttons { display: flex; gap: 12px; flex-wrap: wrap; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hotel Grand</h1>
+    <p>A fictitious luxury hotel — widget dev harness</p>
+  </header>
+
+  <main>
+    <div class="card">
+      <h2>Welcome to Hotel Grand</h2>
+      <p>Experience luxury at its finest. Our award-winning hotel offers breathtaking views, world-class dining, and unmatched hospitality. Whether you're here for business or pleasure, we'll make your stay unforgettable.</p>
+      <p>Need assistance? Click the chat bubble in the bottom-right corner, or use the button below to reach our concierge.</p>
+    </div>
+
+    <div class="card">
+      <h2>Our Services</h2>
+      <p>Room service available 24/7. Spa appointments can be booked through the front desk or our chat concierge. Airport transfers arranged upon request.</p>
+    </div>
+
+    <div class="test-section">
+      <h3>Widget Test Controls</h3>
+      <div class="test-buttons">
+        <!-- Default bubble preset (gets floating button styles) -->
+        <button data-butler-chat>Default Bubble CTA</button>
+
+        <!-- Custom preset (hotel provides all styling) -->
+        <a href="#" data-butler-chat="custom" class="custom-cta">Custom Styled CTA</a>
+      </div>
+    </div>
+  </main>
+
+  <!-- Widget entry point (Vite HMR in dev) -->
+  <script type="module" src="/src/main.ts"></script>
+</body>
+</html>

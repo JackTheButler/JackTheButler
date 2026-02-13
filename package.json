@@ -6,8 +6,10 @@
   "scripts": {
     "dev": "tsx watch --env-file=.env.development src/index.ts",
     "dev:dashboard": "pnpm --filter @jack/dashboard dev",
+    "dev:webchat": "pnpm --filter @jack/webchat dev",
     "dev:website": "pnpm --filter @jack/landing dev",
     "build": "tsc && tsc-alias",
+    "build:webchat": "pnpm --filter @jack/webchat build",
     "start": "node --env-file=.env dist/index.js",
     "lint": "oxlint src/",
     "lint:fix": "oxlint src/ --fix",

@@ -142,15 +142,13 @@ Hotels add two things to their website — a script tag and a CTA element:
 
 The CTA element can be any HTML tag — `<button>`, `<a>`, `<div>` — as long as it has the `data-butler-chat` attribute. This gives hotels two levels of control:
 
-**Basic users:** Use the element as-is. The widget script applies default styling based on the dashboard settings (primary color, floating position, bubble shape). The dashboard offers presets:
-- **Floating bubble** — fixed-position circle in the bottom corner (default)
-- **Inline button** — styled button that sits in the page flow (e.g., in a header or contact section)
+**Basic users:** Use the element as-is (`data-butler-chat` or `data-butler-chat="bubble"`). The widget script applies default floating bubble styling (primary color, fixed position, bottom corner). This is the only built-in preset in Phase 4. Additional presets (e.g., inline button) are a Phase 6 dashboard feature.
 
-**Advanced users:** Override the widget's default CTA styles with their own CSS rules (standard specificity — their rules win). The widget only attaches the click handler and connection logic. Hotels can make it a custom-designed button in their nav bar, a banner, a link in the footer, etc.
+**Advanced users:** Use `data-butler-chat="custom"` to opt out of all default CTA styles. The widget only attaches the click handler and connection logic — hotels provide all styling. Hotels can make it a custom-designed button in their nav bar, a banner, a link in the footer, etc.
 
 ```html
 <!-- Advanced: fully custom styled CTA -->
-<a href="#" data-butler-chat class="hotel-custom-chat-btn">
+<a href="#" data-butler-chat="custom" class="hotel-custom-chat-btn">
   <img src="/chat-icon.svg" /> Need help? Talk to us
 </a>
 ```
@@ -158,13 +156,13 @@ The CTA element can be any HTML tag — `<button>`, `<a>`, `<div>` — as long a
 **How it works:**
 
 1. Script loads and finds all elements with `data-butler-chat`
-2. Loads the widget's default CSS (scoped with `butler-chat-` class prefix) and applies the `butler-chat-trigger` class to CTA elements
-3. Hotels override any default style using standard CSS specificity — their own rules win over the widget's defaults
+2. Loads the widget's default CSS (scoped with `butler-chat-` class prefix) and applies the `butler-chat-trigger` class to CTA elements that use the default preset (`data-butler-chat` or `data-butler-chat="bubble"`). Elements with `data-butler-chat="custom"` get only the click handler, no default styles.
+3. Hotels override any default style using standard CSS specificity — their own rules win over the widget's defaults. Alternatively, use `data-butler-chat="custom"` to opt out of all default CTA styling.
 4. Attaches click handler to open the chat panel
 5. Chat panel itself is always rendered by the widget (shadow DOM) — fully isolated CSS. Only the CTA trigger lives in the host page's DOM
 6. WebSocket connection is established when the guest opens the chat
 
-The `widget.js` file is served by the Butler gateway as a static asset. The `data-butler-key` attribute is a widget configuration key — generated when the admin activates webchat in the dashboard (Phase 6). The widget uses it to fetch its configuration (colors, welcome message, allowed actions, etc.) via `GET /api/v1/webchat/config?key=wc_abc123`. For Phase 1-3 testing, this attribute is not required — the widget uses hardcoded defaults.
+The `widget.js` file is served by the Butler gateway as a static asset. The `data-butler-key` attribute is a widget configuration key — generated when the admin activates webchat in the dashboard (Phase 6). The widget uses it to fetch its configuration (colors, welcome message, allowed actions, etc.) via `GET /api/v1/webchat/config?key=wc_abc123`. For Phase 1-5, this attribute is not required — the widget stores it but uses hardcoded defaults until Phase 6 adds the config endpoint.
 
 **Why script + CTA instead of script-only:**
 - Hotels control where the trigger appears (floating, in nav, in footer, on specific pages only)
@@ -1133,7 +1131,7 @@ The AI does not generate an immediate follow-up to the action result. Instead, t
 - Good: *"Your stay has been extended to March 15th! Is there anything else I can help with?"*
 - Bad: *"Stay extended to 2024-03-15"* (feels like a dead-end, guest doesn't know what to do next)
 
-This avoids the need for a "system event → AI response" pipeline in Phase 3. The AI naturally picks up context on the next guest message because it sees the system message in conversation history. A richer Phase 5/7 improvement would be: after the action result, the server automatically triggers an AI response that wraps the result into a more natural conversational follow-up.
+This avoids the need for a "system event → AI response" pipeline in Phase 3. The AI naturally picks up context on the next guest message because it sees the system message in conversation history. A richer Phase 7 improvement would be: after the action result, the server automatically triggers an AI response that wraps the result into a more natural conversational follow-up.
 
 **How to test Phase 3:**
 
@@ -1172,13 +1170,275 @@ The page connects to the Butler instance at a configurable URL (defaults to `loc
 
 **Goal:** Standalone `widget.js` bundle that hotels can embed with a script + CTA element on any site without conflicts.
 
-Build pipeline (`apps/webchat/`), shadow DOM or iframe isolation, CTA element detection (`data-butler-chat`), default styling vs custom styling detection. Test: paste snippet on a random HTML page → bubble appears → opens a functional chat panel.
+Build pipeline (`apps/webchat/`), shadow DOM isolation, CTA element detection (`data-butler-chat`), stub components for all UI pieces. The widget is **functional but minimally styled** — enough for usability and end-to-end testing, but visual polish comes in Phase 5. Test: paste snippet on a random HTML page → default CTA appears → opens a working chat panel with basic styling.
+
+#### Key Decisions
+
+**Framework:** Vanilla TypeScript (no Preact/React/lit). The widget has ~7 component types — too small to justify a framework. `test.html` already proves the full feature set in vanilla JS. Bundle target: < 50KB gzipped (likely 15-25KB).
+
+**CSS:** Template literal strings in `*.css.ts` files, injected into shadow DOM via a single `<style>` element. Zero external CSS files — everything in one `widget.js`.
+
+**Build:** Vite lib mode → single IIFE `widget.js`. Self-executing on load.
+
+**Shadow DOM:** Chat panel in a shadow root on a host `<div>` appended to `document.body`. CTA triggers stay in host page DOM. `position: fixed` on the host element for reliable viewport positioning.
+
+**Connection:** Lazy — WS connects only when guest first opens the panel.
+
+#### Project Structure
+
+```
+apps/webchat/
+├── package.json          # @jack/webchat, zero runtime deps
+├── vite.config.ts        # Vite lib mode → IIFE widget.js
+├── tsconfig.json         # DOM + ES2022, bundler moduleResolution
+├── index.html            # Dev harness (simulates hotel page)
+├── test.html             # Existing test page (kept, not built)
+└── src/
+    ├── main.ts           # Entry: auto-init, CTA detection, derive gateway origin
+    ├── widget.ts          # ButlerChatWidget class: shadow DOM, instant show/hide
+    ├── connection.ts      # WS connect/reconnect/heartbeat
+    ├── session.ts         # localStorage token management
+    ├── actions.ts         # Action registry, form submission, verification chaining
+    ├── types.ts
+    ├── constants.ts
+    ├── utils.ts
+    ├── components/        # Stubs in Phase 4, polished in Phase 5
+    │   ├── chat-panel.ts       # Panel container (stub: basic flex layout)
+    │   ├── chat-header.ts      # Header (stub: title text + close button)
+    │   ├── message-list.ts     # Message area (stub: scrollable div)
+    │   ├── message-bubble.ts   # Bubbles (stub: 4 variants, basic alignment)
+    │   ├── input-bar.ts        # Input (stub: text input + send button)
+    │   ├── action-form.ts      # Forms (stub: native form elements)
+    │   └── typing-indicator.ts # Typing (stub: static "...", animated in Phase 5)
+    └── styles/            # Stubs/empty in Phase 4, polished in Phase 5
+        ├── theme.ts            # CSS custom properties + defaults
+        ├── base.ts             # Shadow DOM reset
+        ├── panel.css.ts        # (stub: basic dimensions)
+        ├── header.css.ts       # (stub: basic layout)
+        ├── messages.css.ts     # (stub: basic alignment)
+        ├── input.css.ts        # (stub: basic layout)
+        ├── forms.css.ts        # (stub: basic layout)
+        ├── animations.css.ts   # (empty: animations added in Phase 5)
+        └── responsive.css.ts   # (empty: responsive added in Phase 5)
+```
+
+All component and style files are created as **stubs** in Phase 4 — functional but minimally styled (basic layout, plain borders, native form elements). Phase 5 replaces them with production-quality, polished versions.
+
+#### What's Built
+
+1. Vite workspace package (`@jack/webchat`) with lib mode build → single IIFE `widget.js`
+2. Self-executing entry point: reads `data-butler-key` from `<script>` tag (stored for Phase 6 config fetch, unused until then), derives gateway origin from `src` attribute
+3. `ButlerChatWidget` class: shadow DOM host, instant show/hide toggle (animated in Phase 5), lazy WS connection
+4. CTA detection: `querySelectorAll('[data-butler-chat]')` → click handlers, attribute-based preset (`data-butler-chat="bubble"` vs `"custom"`)
+5. Connection logic ported from `test.html`: WS connect/reconnect/heartbeat, session token management
+6. Stub components for all UI pieces: chat panel, header, message list, bubbles, input bar, action forms, typing indicator — functional with basic layout and minimal styling
+7. Stub style files: shadow DOM reset, basic layout, simple colors — enough for usability, not visual polish
+8. Action/verification logic ported from `test.html`: fetch actions, verification chaining, form submission
+9. Gateway serves `/widget.js` from `./widget/` directory with CORS headers
+10. CORS middleware on `/api/v1/webchat/*` routes — the widget runs cross-origin (hotel website ≠ Butler instance), so REST calls need CORS headers and OPTIONS preflight handling
+11. Docker build integration: webchat build step + copy dist to `./widget`
+12. Dev harness (`index.html`) for testing with Vite hot reload
+
+#### Files
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `apps/webchat/package.json` | Create | Workspace package, zero runtime deps |
+| `apps/webchat/vite.config.ts` | Create | Lib mode build config |
+| `apps/webchat/tsconfig.json` | Create | DOM + ES2022, bundler resolution |
+| `apps/webchat/index.html` | Create | Dev harness simulating a hotel page |
+| `apps/webchat/src/main.ts` | Create | Entry: auto-init, CTA detection |
+| `apps/webchat/src/widget.ts` | Create | Shadow DOM host, instant show/hide toggle |
+| `apps/webchat/src/connection.ts` | Create | WS connect/reconnect (ported from test.html) |
+| `apps/webchat/src/session.ts` | Create | localStorage token management |
+| `apps/webchat/src/actions.ts` | Create | Action registry, verification chaining |
+| `apps/webchat/src/types.ts` | Create | Widget type definitions |
+| `apps/webchat/src/constants.ts` | Create | Configuration constants |
+| `apps/webchat/src/utils.ts` | Create | Shared utilities |
+| `apps/webchat/src/components/chat-panel.ts` | Create (stub) | Panel container with basic flex layout |
+| `apps/webchat/src/components/chat-header.ts` | Create (stub) | Title text + close button |
+| `apps/webchat/src/components/message-list.ts` | Create (stub) | Scrollable div with overflow-y |
+| `apps/webchat/src/components/message-bubble.ts` | Create (stub) | 4 variants with basic alignment |
+| `apps/webchat/src/components/input-bar.ts` | Create (stub) | Text input + send button |
+| `apps/webchat/src/components/action-form.ts` | Create (stub) | Dynamic form with native elements |
+| `apps/webchat/src/components/typing-indicator.ts` | Create (stub) | Static "..." text indicator |
+| `apps/webchat/src/styles/theme.ts` | Create | CSS custom properties with defaults |
+| `apps/webchat/src/styles/base.ts` | Create | Shadow DOM reset |
+| `apps/webchat/src/styles/panel.css.ts` | Create (stub) | Basic panel dimensions and positioning |
+| `apps/webchat/src/styles/header.css.ts` | Create (stub) | Basic header layout |
+| `apps/webchat/src/styles/messages.css.ts` | Create (stub) | Basic bubble alignment and spacing |
+| `apps/webchat/src/styles/input.css.ts` | Create (stub) | Basic input layout |
+| `apps/webchat/src/styles/forms.css.ts` | Create (stub) | Basic form layout |
+| `apps/webchat/src/styles/animations.css.ts` | Create (empty) | Placeholder — animations added in Phase 5 |
+| `apps/webchat/src/styles/responsive.css.ts` | Create (empty) | Placeholder — responsive added in Phase 5 |
+| `package.json` (root) | Modify | Add `dev:webchat`, `build:webchat` scripts |
+| `src/gateway/server.ts` | Modify | Add `/widget.js` route |
+| `Dockerfile` | Modify | Add webchat build + copy dist |
+
+> **Note:** The global CORS middleware in `src/gateway/server.ts` (line 26-35) already applies `origin: '*'` to all routes, including `/api/v1/webchat/*`. No additional CORS configuration is needed for Phase 4.
+
+#### Technical Details
+
+**Entry point** (`src/main.ts`) — Self-executing IIFE:
+1. Read `data-butler-key` from own `<script>` tag via `document.currentScript` (stored for Phase 6 config fetch, unused until then)
+2. Derive gateway origin from script `src` attribute (e.g., `https://hotel-butler.com/widget.js` → `https://hotel-butler.com`)
+3. Create `ButlerChatWidget`, call `init()`
+4. Find all `[data-butler-chat]` elements, attach click handlers (see CTA detection below)
+5. Expose as `window.ButlerChat`
+
+**Shadow DOM setup** — In `widget.ts`:
+- Append `<div id="butler-chat-root">` to `document.body` with `position: fixed`, max z-index
+- Create shadow root (`mode: 'open'`)
+- Inject concatenated styles from stub `*.css.ts` files as single `<style>` (basic layout — polished styles replace these in Phase 5)
+- Render stub panel container inside shadow root (functional but plain)
+- Toggle: instant `display: flex` / `display: none` (slide animation replaces this in Phase 5)
+
+**CTA detection and default styling:**
+- `querySelectorAll('[data-butler-chat]')` → attach click → `widget.toggle()`
+- Attribute-based preset detection (no computed style sniffing — explicit and reliable):
+  - `data-butler-chat` or `data-butler-chat="bubble"` → add `butler-chat-trigger` class (default floating bubble)
+  - `data-butler-chat="custom"` → no default styles applied, hotel provides all styling
+- Inject `<style id="butler-chat-cta-styles">` in document head for default floating bubble (circle, primary color, bottom-right fixed, inline SVG chat icon)
+- Hotels using the default preset can override with normal CSS specificity, or use `"custom"` to opt out entirely
+
+**Gateway serving** — Add before SPA fallback in `src/gateway/server.ts`:
+```typescript
+app.get('/widget.js', async (c) => {
+  const content = await fs.readFile('./widget/widget.js', 'utf-8');
+  c.header('Access-Control-Allow-Origin', '*');
+  c.header('Cache-Control', 'public, max-age=3600');
+  return c.body(content, 200, { 'Content-Type': 'application/javascript; charset=utf-8' });
+});
+```
+
+Widget dist served from `./widget/widget.js` (parallel to `./dashboard/`).
+
+**CORS** — The global CORS middleware in `src/gateway/server.ts` already applies `origin: '*'` to all routes. No additional CORS middleware needed for webchat. Phase 8 tightens this to the configured domain allowlist.
+
+**Docker integration** — Build stage adds webchat package copy and build, production stage copies `apps/webchat/dist` to `./widget`.
+
+#### How to Test Phase 4
+
+```
+1. pnpm install → workspace registered
+2. pnpm build:webchat → apps/webchat/dist/widget.js exists
+3. pnpm typecheck → no errors
+4. pnpm test → existing tests pass
+5. pnpm dev + pnpm dev:webchat → dev harness works with hot reload
+6. Copy dist to ./widget/ → curl localhost:3000/widget.js returns bundle
+7. External HTML with <script src="http://localhost:3000/widget.js">
+   + <button data-butler-chat> → floating bubble appears → click opens chat panel
+8. Send message → guest message right-aligned, AI response left-aligned (basic styling)
+9. Trigger action → form renders inline (native form elements, functional)
+10. Shadow DOM isolation → no CSS conflicts with host page
+11. Bundle < 50KB gzipped
+12. docker build succeeds, container serves /widget.js
+```
+
+Note: The widget is functional but minimally styled at this point — basic layout, plain borders, no animations. Visual polish is added in Phase 5.
+
+---
 
 ### Phase 5: Widget UI & Theming
 
-**Goal:** Production-quality chat interface — styled message bubbles, chat header, input area, mobile responsive.
+**Goal:** Upgrade Phase 4's functional stubs into a production-quality chat interface — polished message bubbles, styled chat header, refined input area, mobile responsive layout, open/close slide animation, animated typing indicator, and a CSS custom property theming system for Phase 6 configuration.
 
-The visual design pass. Themed from dashboard settings (primary color, logo). Forms rendered cleanly inline. Typing indicators, read receipts, smooth open/close animations.
+#### What's Built
+
+1. Chat panel layout upgrade: refined spacing, `max-height` constraints, box shadow, border radius
+2. Chat header upgrade: logo image support (or name fallback), styled title, animated close button
+3. Message bubbles upgrade: 4 polished variants (guest/ai/staff/system) with distinct colors, rounded corners, sender labels
+4. Message list upgrade: smooth auto-scroll on new messages, scroll-to-bottom affordance
+5. Input bar upgrade: pill-shaped input + styled send button, focus rings, disabled state styling, auto-focus on panel open
+6. Action forms upgrade: styled form elements replacing native inputs, spinner loading state, improved validation feedback
+7. Open/close panel animation: `translateY(100%) → translateY(0)` slide with cubic bezier easing (replaces Phase 4's instant toggle)
+8. Mobile responsive: full screen below 640px with safe area insets (new — Phase 4 stubs have no responsive handling)
+9. Typing indicator upgrade: three-dot bounce animation (replaces Phase 4's static "..." text), 30s timeout failsafe
+10. CSS custom property theming system for Phase 6 configuration override
+
+#### Files
+
+| File | Action | Purpose |
+|------|--------|---------|
+| `apps/webchat/src/components/chat-panel.ts` | Replace | Polished panel with refined spacing and layout |
+| `apps/webchat/src/components/chat-header.ts` | Replace | Logo image support, styled close button |
+| `apps/webchat/src/components/message-list.ts` | Replace | Smooth auto-scroll, scroll-to-bottom affordance |
+| `apps/webchat/src/components/message-bubble.ts` | Replace | Polished 4-variant bubbles with colors and labels |
+| `apps/webchat/src/components/input-bar.ts` | Replace | Pill-shaped input, styled send button, focus states |
+| `apps/webchat/src/components/action-form.ts` | Replace | Styled form elements, spinner loading state |
+| `apps/webchat/src/components/typing-indicator.ts` | Replace | Three-dot bounce animation |
+| `apps/webchat/src/styles/theme.ts` | Modify | Expand CSS custom properties for full theming |
+| `apps/webchat/src/styles/base.ts` | Modify | Refined shadow DOM reset |
+| `apps/webchat/src/styles/panel.css.ts` | Replace | Polished panel: border radius, shadow, transitions |
+| `apps/webchat/src/styles/header.css.ts` | Replace | Styled header with gradient, logo sizing |
+| `apps/webchat/src/styles/messages.css.ts` | Replace | Polished bubble styles, colors, rounded corners |
+| `apps/webchat/src/styles/input.css.ts` | Replace | Pill input, styled button, focus rings |
+| `apps/webchat/src/styles/forms.css.ts` | Replace | Custom form elements, validation states |
+| `apps/webchat/src/styles/animations.css.ts` | Replace | Slide animation, typing dot bounce, transitions |
+| `apps/webchat/src/styles/responsive.css.ts` | Replace | Full-screen mobile with safe area insets |
+
+#### Technical Details
+
+**Chat panel layout** — Panel container: flex column with header, scrollable message area, typing indicator, and input bar. Desktop: 380×600px, fixed bottom-right, 16px margin, 16px radius, box shadow. `max-height: calc(100vh - 32px)`.
+
+**Message bubbles** — 4 variants:
+
+| Type | Align | Background | Detail |
+|------|-------|------------|--------|
+| guest | right | primary color | sharp bottom-right corner |
+| ai | left | white + border | "AI" label, sharp bottom-left |
+| staff | left | warm yellow | "Staff" label |
+| system | center | transparent | italic, small |
+
+Content via `textContent` (not `innerHTML`) to prevent XSS.
+
+**Input bar** — Pill-shaped input + send button. Enter to send, disabled when disconnected, auto-focus on open.
+
+**Action forms** — Styled upgrade of Phase 4 stub forms. Inline in message list. Conditional field visibility (`showWhen`), styled validation feedback, spinner loading state. Replaces native form elements with custom-styled inputs.
+
+**Open/close animation:**
+- `translateY(100%) → translateY(0)`, `cubic-bezier(0.16, 1, 0.3, 1)`, 300ms
+- Open: `display: flex` → next frame add `.open` class
+- Close: remove `.open` → on `transitionend` set `display: none`
+
+**Mobile responsive:**
+- `@media (max-width: 639px)` → full screen (`100vw × 100dvh`), no radius, no shadow
+- `env(safe-area-inset-bottom)` for notched devices
+
+**Typing indicator** — Three dots, staggered bounce animation:
+- Show when guest sends a message
+- Hide when AI response arrives
+- 30s timeout failsafe
+
+**Theming system** — All components use CSS custom properties from `theme.ts`:
+```css
+:host {
+  --butler-color-primary: #0084ff;
+  --butler-bg-panel: #ffffff;
+  --butler-bg-header: #1a1a2e;
+  --butler-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  --butler-radius-panel: 16px;
+  --butler-radius-bubble: 12px;
+  --butler-z-index: 2147483647;
+  --butler-panel-width: 380px;
+  --butler-panel-height: 600px;
+}
+```
+
+Phase 6 will override these via config endpoint. CSS custom properties inherit into shadow DOM when set on the host element.
+
+#### How to Test Phase 5
+
+```
+1. Build → open dev harness → panel slides up smoothly on CTA click
+2. Send message → guest bubble right-aligned, AI bubble left-aligned
+3. Staff replies from dashboard → yellow staff bubble appears
+4. Action triggered → styled form appears inline in message list
+5. Mobile viewport (< 640px) → panel goes full screen
+6. Load page with Bootstrap/Tailwind → no CSS conflicts (shadow DOM isolation)
+7. Bundle size still < 50KB gzipped
+8. Test Chrome, Safari, Firefox, mobile Safari
+```
 
 ### Phase 6: Dashboard Configuration
 

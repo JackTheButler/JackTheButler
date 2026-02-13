@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Hotel Grand — Widget Embed Test</title>
+  <!-- CSS conflict test: Bootstrap + Tailwind Reset -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@3.4.1/src/css/preflight.css" rel="stylesheet">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: Georgia, 'Times New Roman', serif; background: #f9f6f2; color: #333; }
+    header { background: #2c1810; color: #f9f6f2; padding: 20px 32px; }
+    header h1 { font-size: 24px; font-weight: 400; }
+    main { max-width: 700px; margin: 40px auto; padding: 0 24px; line-height: 1.7; }
+    h2 { margin-bottom: 12px; font-weight: 400; }
+    p { margin-bottom: 16px; color: #555; }
+  </style>
+</head>
+<body>
+  <header>
+    <h1>Hotel Grand</h1>
+  </header>
+  <main>
+    <h2>Welcome</h2>
+    <p>Experience luxury at its finest. Need help? Click the chat bubble in the bottom-right corner.</p>
+    <p>Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua.</p>
+  </main>
+
+  <button data-butler-chat>Chat with us</button>
+  <script src="http://localhost:3000/widget.js"></script>
+</body>
+</html>

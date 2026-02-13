@@ -19,6 +19,36 @@ import { errorHandler, requestLogger, securityHeaders, apiRateLimit } from './mi
 export function createApp() {
   const app = new Hono();
 
+  // Serve widget.js bundle (for hotel website embeds)
+  // Registered before security headers — widget is loaded cross-origin by hotel sites
+  app.get('/widget.js', async (c) => {
+    const fs = await import('node:fs/promises');
+    // Production: ./widget/widget.js (Docker copies dist here)
+    // Development: ./apps/webchat/dist/widget.js (local build output)
+    const paths = ['./widget/widget.js', './apps/webchat/dist/widget.js'];
+    for (const filePath of paths) {
+      try {
+        const content = await fs.readFile(filePath, 'utf-8');
+        return c.body(content, 200, {
+          'Content-Type': 'application/javascript; charset=utf-8',
+          'Cache-Control': 'public, max-age=3600',
+          'Access-Control-Allow-Origin': '*',
+        });
+      } catch {
+        continue;
+      }
+    }
+    return c.json(
+      {
+        error: {
+          code: 'NOT_FOUND',
+          message: 'Widget not built. Run: pnpm build:webchat',
+        },
+      },
+      404
+    );
+  });
+
   // Security headers (CSP, X-Frame-Options, HSTS, etc.)
   app.use('*', securityHeaders);
 

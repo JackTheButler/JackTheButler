@@ -18,6 +18,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy package files (root and dashboard)
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 COPY apps/dashboard/package.json ./apps/dashboard/
+COPY apps/webchat/package.json ./apps/webchat/
 
 # Install all dependencies
 RUN pnpm install --frozen-lockfile && npm rebuild better-sqlite3
@@ -27,12 +28,16 @@ COPY tsconfig.json ./
 COPY src ./src
 COPY migrations ./migrations
 COPY apps/dashboard ./apps/dashboard
+COPY apps/webchat ./apps/webchat
 
 # Build backend TypeScript
 RUN pnpm build
 
 # Build dashboard
 RUN pnpm --filter @jack/dashboard build
+
+# Build webchat widget
+RUN pnpm --filter @jack/webchat build
 
 # ===================
 # Production Stage
@@ -61,6 +66,9 @@ COPY --from=builder /app/migrations ./migrations
 
 # Copy built dashboard
 COPY --from=builder /app/apps/dashboard/dist ./dashboard
+
+# Copy built webchat widget
+COPY --from=builder /app/apps/webchat/dist ./widget
 
 # Create data directory
 RUN mkdir -p /app/data
