@@ -14,6 +14,7 @@ import { appConfigService } from '@/services/app-config.js';
 import { validateBody } from '../middleware/validator.js';
 import { UnauthorizedError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { resolveLocale, getWidgetStrings } from '@/locales/webchat/index.js';
 import type { MiddlewareHandler } from 'hono';
 
 const log = createLogger('routes:webchat');
@@ -92,6 +93,7 @@ webchatRouter.use('*', async (c, next) => {
  */
 webchatRouter.get('/config', async (c) => {
   const appConfig = await appConfigService.getAppConfig('channel-webchat');
+  const locale = resolveLocale(c.req.query('locale') ?? undefined);
 
   // Defaults for backward compat (no config saved yet)
   const defaults = {
@@ -104,8 +106,10 @@ webchatRouter.get('/config', async (c) => {
     welcomeMessage: null as string | null,
   };
 
+  const localeFields = { locale, strings: getWidgetStrings(locale) };
+
   if (!appConfig) {
-    return c.json(defaults);
+    return c.json({ ...defaults, ...localeFields });
   }
 
   // Activation gate — disabled means unavailable
@@ -129,6 +133,7 @@ webchatRouter.get('/config', async (c) => {
     headerBackground: (cfg.headerBackground as string) || defaults.headerBackground,
     logoUrl: (cfg.logoUrl as string) || defaults.logoUrl,
     welcomeMessage: (cfg.welcomeMessage as string) || defaults.welcomeMessage,
+    ...localeFields,
   });
 });
 
@@ -138,7 +143,8 @@ webchatRouter.get('/config', async (c) => {
  * No session required — widget needs this on first load.
  */
 webchatRouter.get('/actions', async (c) => {
-  const actions = await webchatActionService.getEnabledActions();
+  const locale = resolveLocale(c.req.query('locale') ?? undefined);
+  const actions = await webchatActionService.getEnabledActions(locale);
   return c.json({ actions });
 });
 

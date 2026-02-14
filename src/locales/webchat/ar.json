@@ -1,0 +1,198 @@
+{
+  "widget": {
+    "inputPlaceholder": "اكتب رسالة...",
+    "sendButton": "إرسال رسالة",
+    "closeChat": "إغلاق المحادثة",
+    "scrollToBottom": "انتقل للأسفل",
+    "senderYou": "أنت",
+    "senderAI": "المساعد",
+    "senderStaff": "الموظف",
+    "sessionRestored": "تم استعادة الجلسة.",
+    "sessionExpired": "انتهت الجلسة السابقة. بدء جلسة جديدة.",
+    "submit": "إرسال",
+    "cancel": "إلغاء",
+    "submitting": "جارٍ الإرسال...",
+    "fieldRequired": "{{field}} مطلوب",
+    "selectPlaceholder": "اختر {{field}}...",
+    "verifyFirst": "يرجى التحقق من حجزك أولاً.",
+    "noSession": "لا توجد جلسة نشطة. يرجى تحديث الصفحة.",
+    "verificationCode": "رمز التحقق",
+    "actionFailed": "فشل الإجراء.",
+    "submitFailed": "فشل إرسال النموذج. يرجى المحاولة مرة أخرى."
+  },
+  "errors": {
+    "connectionFailed": "فشل الاتصال",
+    "chatUnavailable": "المحادثة غير متاحة حالياً.",
+    "tooManyConnections": "اتصالات كثيرة جداً.",
+    "emptyMessage": "رسالة فارغة.",
+    "messageTooLong": "الرسالة طويلة جداً.",
+    "slowDown": "يرجى الانتظار قليلاً.",
+    "processingError": "عذراً، حدث خطأ أثناء معالجة طلبك. يرجى المحاولة مرة أخرى.",
+    "invalidMessage": "تنسيق رسالة غير صالح"
+  },
+  "actions": {
+    "verifyReservation": {
+      "name": "التحقق من حجزك",
+      "triggerHint": "guest wants to verify or link their booking/reservation",
+      "fields": {
+        "method": {
+          "label": "طريقة التحقق",
+          "options": {
+            "booking-name": "رقم الحجز + اسم العائلة",
+            "booking-email": "رقم الحجز + البريد الإلكتروني",
+            "email-code": "رمز التحقق عبر البريد"
+          }
+        },
+        "confirmationNumber": {
+          "label": "رقم الحجز",
+          "placeholder": "مثال: BK-12345"
+        },
+        "lastName": {
+          "label": "اسم العائلة في الحجز",
+          "placeholder": "كما يظهر في حجزك"
+        },
+        "email": {
+          "label": "البريد الإلكتروني",
+          "placeholder": "البريد الإلكتروني في حجزك"
+        },
+        "code": {
+          "label": "رمز التحقق",
+          "placeholder": "رمز مكون من 6 أرقام من بريدك"
+        }
+      }
+    },
+    "extendStay": {
+      "name": "تمديد إقامتك",
+      "triggerHint": "guest wants to extend their stay or change checkout date",
+      "fields": {
+        "newCheckoutDate": {
+          "label": "تاريخ المغادرة الجديد"
+        },
+        "notes": {
+          "label": "طلبات خاصة",
+          "placeholder": "اختياري"
+        }
+      }
+    },
+    "requestService": {
+      "name": "طلب خدمة",
+      "triggerHint": "guest wants housekeeping, towels, pillows, amenities, or maintenance",
+      "fields": {
+        "serviceType": {
+          "label": "نوع الخدمة",
+          "options": {
+            "housekeeping": "تنظيف الغرفة",
+            "extra-towels": "مناشف إضافية",
+            "extra-pillows": "وسائد إضافية",
+            "amenities": "مستلزمات",
+            "maintenance": "صيانة",
+            "other": "أخرى"
+          }
+        },
+        "details": {
+          "label": "التفاصيل",
+          "placeholder": "أي تفاصيل محددة"
+        },
+        "urgency": {
+          "label": "الأولوية",
+          "options": {
+            "normal": "عادي",
+            "urgent": "عاجل"
+          }
+        }
+      }
+    },
+    "orderRoomService": {
+      "name": "طلب خدمة الغرف",
+      "triggerHint": "guest wants to order food or beverages to their room",
+      "fields": {
+        "items": {
+          "label": "ماذا تريد أن تطلب؟",
+          "placeholder": "مثال: سلطة سيزر، ساندويتش كلوب، مياه غازية"
+        },
+        "specialInstructions": {
+          "label": "تعليمات خاصة",
+          "placeholder": "حساسية، تفضيلات، إلخ."
+        }
+      }
+    },
+    "bookSpa": {
+      "name": "حجز علاج سبا",
+      "triggerHint": "guest wants to book a spa treatment or massage",
+      "fields": {
+        "treatment": {
+          "label": "العلاج",
+          "options": {
+            "massage": "تدليك",
+            "facial": "عناية بالوجه",
+            "body-wrap": "لفافة الجسم",
+            "manicure-pedicure": "مانيكير وباديكير",
+            "other": "أخرى"
+          }
+        },
+        "preferredDate": {
+          "label": "التاريخ المفضل"
+        },
+        "preferredTime": {
+          "label": "الوقت المفضل",
+          "options": {
+            "morning": "صباحاً",
+            "midday": "ظهراً",
+            "afternoon": "بعد الظهر",
+            "evening": "مساءً"
+          }
+        },
+        "notes": {
+          "label": "ملاحظات",
+          "placeholder": "أي تفضيلات أو طلبات"
+        }
+      }
+    }
+  },
+  "messages": {
+    "actionDisabled": "هذا الإجراء غير متاح حالياً.",
+    "sessionExpired": "انتهت الجلسة. يرجى تحديث الصفحة.",
+    "unknownAction": "إجراء غير معروف.",
+    "verificationRequired": "يرجى التحقق من حجزك أولاً.",
+    "inputTooLong": "{{field}} طويل جداً (الحد الأقصى {{max}} حرف).",
+    "actionNotImplemented": "الإجراء غير مطبق.",
+    "sessionNotFound": "الجلسة غير موجودة.",
+    "tooManyAttempts": "محاولات تحقق كثيرة جداً. يرجى بدء جلسة محادثة جديدة.",
+    "invalidMethod": "طريقة تحقق غير صالحة.",
+    "missingBookingRef": "رقم الحجز واسم العائلة مطلوبان.",
+    "missingBookingEmail": "رقم الحجز والبريد الإلكتروني مطلوبان.",
+    "noReservationFound": "لم يتم العثور على حجز بهذا الرقم المرجعي.",
+    "lastNameMismatch": "اسم العائلة لا يتطابق مع سجلاتنا.",
+    "emailMismatch": "البريد الإلكتروني لا يتطابق مع سجلاتنا.",
+    "missingEmail": "عنوان البريد الإلكتروني مطلوب.",
+    "verificationUnavailable": "التحقق غير متاح مؤقتاً.",
+    "noReservationForEmail": "لم يتم العثور على حجز لهذا البريد الإلكتروني.",
+    "tooManyCodeRequests": "طلبات رمز كثيرة جداً. يرجى المحاولة لاحقاً.",
+    "tooManyCodeRequestsEmail": "طلبات رمز كثيرة جداً لهذا البريد. يرجى المحاولة لاحقاً.",
+    "codeSent": "تم إرسال رمز تحقق مكون من 6 أرقام إلى بريدك الإلكتروني.",
+    "missingEmailAndCode": "البريد الإلكتروني ورمز التحقق مطلوبان.",
+    "noPendingCode": "لا يوجد رمز تحقق معلق. يرجى طلب رمز جديد.",
+    "codeExpired": "انتهت صلاحية رمز التحقق. يرجى طلب رمز جديد.",
+    "invalidCode": "رمز تحقق غير صالح.",
+    "noReservationFoundGeneric": "لم يتم العثور على حجز.",
+    "verifiedWelcome": "تم التحقق من الحجز! مرحباً {{firstName}}. كيف يمكنني مساعدتك في إقامتك؟",
+    "missingCheckoutDate": "تاريخ المغادرة الجديد مطلوب.",
+    "noReservationLinked": "لا يوجد حجز مرتبط بهذه الجلسة.",
+    "extendStaySuccess": "تم! تم إرسال طلبك لتمديد الإقامة حتى {{date}}. سيؤكد فريق الاستقبال قريباً.",
+    "extendStayNotes": " لقد سجلنا: \"{{notes}}\".",
+    "extendStayAnythingElse": " هل هناك شيء آخر يمكنني مساعدتك به؟",
+    "missingServiceType": "يرجى اختيار نوع الخدمة.",
+    "serviceRequestSuccess": "تم إرسال طلب {{service}} الخاص بك{{urgency}}. سيتولى فريقنا الأمر قريباً.",
+    "serviceRequestUrgent": " كطلب عاجل",
+    "serviceRequestDetails": " لقد سجلنا: \"{{details}}\".",
+    "serviceRequestAnythingElse": " هل تحتاج شيئاً آخر؟",
+    "missingOrderItems": "يرجى إخبارنا بما تريد طلبه.",
+    "roomServiceSuccess": "تم تقديم طلب خدمة الغرف! سنوصله إلى غرفتك قريباً.",
+    "roomServiceInstructions": " تم تسجيل التعليمات الخاصة: \"{{instructions}}\".",
+    "roomServiceAnythingElse": " هل تحتاج شيئاً آخر؟",
+    "missingSpaFields": "يرجى ملء العلاج والتاريخ والوقت.",
+    "spaBookingSuccess": "تم طلب {{treatment}} بتاريخ {{date}} ({{time}}). سيؤكد فريق السبا التوافر قريباً.",
+    "spaBookingNotes": " ملاحظات: \"{{notes}}\".",
+    "spaBookingAnythingElse": " هل تحتاج شيئاً آخر؟"
+  }
+}

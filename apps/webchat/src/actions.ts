@@ -12,6 +12,7 @@ import type {
   ActionResult,
   VerificationStatus,
 } from './types.js';
+import type { WidgetStrings } from './defaults.js';
 
 export interface ActionCallbacks {
   onShowForm(
@@ -35,12 +36,23 @@ export class ActionManager {
 
   constructor(
     private readonly gatewayOrigin: string,
+    private strings: WidgetStrings,
+    private locale: string,
     private readonly callbacks: ActionCallbacks
   ) {}
 
+  setStrings(strings: WidgetStrings): void {
+    this.strings = strings;
+  }
+
+  setLocale(locale: string): void {
+    this.locale = locale;
+  }
+
   async fetchActions(): Promise<void> {
     try {
-      const res = await fetch(`${this.gatewayOrigin}/api/v1/webchat/actions`);
+      const qs = this.locale ? `?locale=${encodeURIComponent(this.locale)}` : '';
+      const res = await fetch(`${this.gatewayOrigin}/api/v1/webchat/actions${qs}`);
       if (res.ok) {
         const json = await res.json();
         this.actions = json.actions ?? [];
@@ -64,7 +76,7 @@ export class ActionManager {
 
     if (action.requiresVerification && this.callbacks.getVerificationStatus() !== 'verified') {
       this.pendingActionId = actionId;
-      this.callbacks.onSystemMessage('Please verify your booking first.');
+      this.callbacks.onSystemMessage(this.strings.verifyFirst);
       this.showActionForm('verify-reservation');
     } else {
       this.showActionForm(actionId);
@@ -97,7 +109,7 @@ export class ActionManager {
     if (!action && !overrideFields) return;
 
     const fields = overrideFields ?? action!.fields;
-    const actionName = action?.name ?? 'Verification Code';
+    const actionName = action?.name ?? this.strings.verificationCode;
 
     this.callbacks.onShowForm(
       actionId,
@@ -122,7 +134,7 @@ export class ActionManager {
   ): Promise<void> {
     const token = this.callbacks.getSessionToken();
     if (!token) {
-      this.callbacks.onSystemMessage('No active session. Please refresh.');
+      this.callbacks.onSystemMessage(this.strings.noSession);
       this.callbacks.onHideForm();
       return;
     }
@@ -161,7 +173,7 @@ export class ActionManager {
           setTimeout(() => this.showActionForm(pending), 300);
         }
       } else {
-        this.callbacks.onSystemMessage(result.message || 'Action failed.');
+        this.callbacks.onSystemMessage(result.message || this.strings.actionFailed);
 
         // For retryable verification errors, re-show the form
         if (result.error !== 'attempts_exceeded' && result.error !== 'invalid_session') {
@@ -171,7 +183,7 @@ export class ActionManager {
       }
     } catch {
       this.callbacks.onHideForm();
-      this.callbacks.onSystemMessage('Failed to submit form. Please try again.');
+      this.callbacks.onSystemMessage(this.strings.submitFailed);
     }
 
     this.nextStepContext = null;

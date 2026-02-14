@@ -16,7 +16,9 @@ import { appConfigService } from './app-config.js';
 import { webchatSessionService } from './webchat-session.js';
 import { conversationService } from './conversation.js';
 import { guestService } from './guest.js';
-import { webchatConnectionManager } from '@/apps/channels/webchat/index.js';
+import { webchatConnectionManager, getSessionLocale } from '@/apps/channels/webchat/index.js';
+import { t } from '@/locales/webchat/index.js';
+import type { SupportedLocale } from '@/locales/webchat/index.js';
 import type { NormalizedReservation } from '@/core/interfaces/pms.js';
 
 const log = createLogger('webchat-action');
@@ -40,6 +42,7 @@ export interface WebChatActionField {
   type: 'text' | 'date' | 'number' | 'select' | 'email' | 'tel';
   required: boolean;
   options?: string[];
+  optionLabels?: string[];
   placeholder?: string;
   validation?: string;
   showWhen?: {
@@ -218,6 +221,61 @@ const actions: WebChatAction[] = [
 ];
 
 // ============================================
+// Action ID → translation key mapping
+// ============================================
+
+const actionTranslationKeys: Record<string, string> = {
+  'verify-reservation': 'verifyReservation',
+  'extend-stay': 'extendStay',
+  'request-service': 'requestService',
+  'order-room-service': 'orderRoomService',
+  'book-spa': 'bookSpa',
+};
+
+/**
+ * Localize an action's display strings (name, field labels, placeholders, option labels).
+ * Machine identifiers (field.key, field.options values, triggerHint) stay in English.
+ */
+function localizeAction(
+  action: Omit<WebChatAction, 'endpoint'>,
+  locale: SupportedLocale,
+): Omit<WebChatAction, 'endpoint'> {
+  if (locale === 'en') return action;
+
+  const actionKey = actionTranslationKeys[action.id];
+  if (!actionKey) return action;
+
+  const prefix = `actions.${actionKey}`;
+
+  return {
+    ...action,
+    name: t(locale, `${prefix}.name`) || action.name,
+    fields: action.fields.map((field) => {
+      const fieldPrefix = `${prefix}.fields.${field.key}`;
+      const localized: WebChatActionField = {
+        ...field,
+        label: t(locale, `${fieldPrefix}.label`) || field.label,
+      };
+
+      const placeholder = t(locale, `${fieldPrefix}.placeholder`);
+      if (placeholder && placeholder !== `${fieldPrefix}.placeholder`) {
+        localized.placeholder = placeholder;
+      }
+
+      // Translate option display labels (values stay English)
+      if (field.options?.length) {
+        localized.optionLabels = field.options.map((opt) => {
+          const translated = t(locale, `${fieldPrefix}.options.${opt}`);
+          return translated !== `${fieldPrefix}.options.${opt}` ? translated : opt.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        });
+      }
+
+      return localized;
+    }),
+  };
+}
+
+// ============================================
 // Service
 // ============================================
 
@@ -236,8 +294,10 @@ export class WebChatActionService {
    * Get all registered actions (sent to widget on connect).
    * Endpoint URLs are stripped — the widget doesn't need them.
    */
-  getActions(): Omit<WebChatAction, 'endpoint'>[] {
-    return actions.map(({ endpoint: _, ...rest }) => rest);
+  getActions(locale?: SupportedLocale): Omit<WebChatAction, 'endpoint'>[] {
+    const stripped = actions.map(({ endpoint: _, ...rest }) => rest);
+    if (!locale || locale === 'en') return stripped;
+    return stripped.map((a) => localizeAction(a, locale));
   }
 
   /**
@@ -245,13 +305,13 @@ export class WebChatActionService {
    * If no enabledActions filter is configured, returns all actions (backward compat).
    * Auto-includes verify-reservation if any requiresVerification action is enabled.
    */
-  async getEnabledActions(): Promise<Omit<WebChatAction, 'endpoint'>[]> {
+  async getEnabledActions(locale?: SupportedLocale): Promise<Omit<WebChatAction, 'endpoint'>[]> {
     const appConfig = await appConfigService.getAppConfig('channel-webchat');
     const enabledStr = appConfig?.config?.enabledActions as string | undefined;
 
     if (!enabledStr?.trim()) {
       // No filter configured — return all
-      return this.getActions();
+      return this.getActions(locale);
     }
 
     const enabledSet = new Set(
@@ -266,7 +326,7 @@ export class WebChatActionService {
       enabledSet.add('verify-reservation');
     }
 
-    return this.getActions().filter((a) => enabledSet.has(a.id));
+    return this.getActions(locale).filter((a) => enabledSet.has(a.id));
   }
 
   /**
@@ -295,25 +355,28 @@ export class WebChatActionService {
   ): Promise<ActionResult> {
     // Check if action is enabled
     if (!await this.isActionEnabled(actionId)) {
-      return { success: false, message: 'This action is not currently available.', error: 'action_disabled' };
+      return { success: false, message: t('en', 'messages.actionDisabled'), error: 'action_disabled' };
     }
 
     // Validate session
     const session = await webchatSessionService.validate(sessionToken);
     if (!session) {
-      return { success: false, message: 'Session expired. Please refresh the page.', error: 'invalid_session' };
+      return { success: false, message: t('en', 'messages.sessionExpired'), error: 'invalid_session' };
     }
+
+    // Get locale from the WS session
+    const locale = getSessionLocale(session.id);
 
     const action = this.getAction(actionId);
     if (!action) {
-      return { success: false, message: 'Unknown action.', error: 'unknown_action' };
+      return { success: false, message: t(locale, 'messages.unknownAction'), error: 'unknown_action' };
     }
 
     // Check verification requirement
     if (action.requiresVerification && session.verificationStatus !== 'verified') {
       return {
         success: false,
-        message: 'Please verify your booking first.',
+        message: t(locale, 'messages.verificationRequired'),
         error: 'verification_required',
       };
     }
@@ -322,7 +385,7 @@ export class WebChatActionService {
     for (const field of action.fields) {
       const value = input[field.key];
       if (value && value.length > MAX_INPUT_FIELD_LENGTH) {
-        return { success: false, message: `${field.label} is too long (max ${MAX_INPUT_FIELD_LENGTH} characters).`, error: 'input_too_long' };
+        return { success: false, message: t(locale, 'messages.inputTooLong', { field: field.label, max: String(MAX_INPUT_FIELD_LENGTH) }), error: 'input_too_long' };
       }
     }
 
@@ -333,22 +396,22 @@ export class WebChatActionService {
     let result: ActionResult;
     switch (actionId) {
       case 'verify-reservation':
-        result = await this.handleVerifyReservation(session.id, input);
+        result = await this.handleVerifyReservation(session.id, input, locale);
         break;
       case 'extend-stay':
-        result = await this.handleExtendStay(session.id, input);
+        result = await this.handleExtendStay(session.id, input, locale);
         break;
       case 'request-service':
-        result = await this.handleRequestService(session.id, input);
+        result = await this.handleRequestService(session.id, input, locale);
         break;
       case 'order-room-service':
-        result = await this.handleOrderRoomService(session.id, input);
+        result = await this.handleOrderRoomService(session.id, input, locale);
         break;
       case 'book-spa':
-        result = await this.handleBookSpa(session.id, input);
+        result = await this.handleBookSpa(session.id, input, locale);
         break;
       default:
-        result = { success: false, message: 'Action not implemented.', error: 'not_implemented' };
+        result = { success: false, message: t(locale, 'messages.actionNotImplemented'), error: 'not_implemented' };
     }
 
     // Persist result as system message and broadcast (if session has a conversation)
@@ -383,17 +446,18 @@ export class WebChatActionService {
   private async handleVerifyReservation(
     sessionId: string,
     input: Record<string, string>,
+    locale: SupportedLocale,
   ): Promise<ActionResult> {
     const session = await webchatSessionService.findById(sessionId);
     if (!session) {
-      return { success: false, message: 'Session not found.', error: 'invalid_session' };
+      return { success: false, message: t(locale, 'messages.sessionNotFound'), error: 'invalid_session' };
     }
 
     // Check attempt limit
     if (session.verificationAttempts >= MAX_VERIFICATION_ATTEMPTS) {
       return {
         success: false,
-        message: 'Too many verification attempts. Please start a new chat session.',
+        message: t(locale, 'messages.tooManyAttempts'),
         error: 'attempts_exceeded',
       };
     }
@@ -401,20 +465,20 @@ export class WebChatActionService {
     const method = input.method;
 
     if (method === 'booking-name') {
-      return this.verifyByBookingName(sessionId, input);
+      return this.verifyByBookingName(sessionId, input, locale);
     }
     if (method === 'booking-email') {
-      return this.verifyByBookingEmail(sessionId, input);
+      return this.verifyByBookingEmail(sessionId, input, locale);
     }
     if (method === 'email-code') {
       // Two-step: if code present it's step 2, otherwise step 1
       if (input.code) {
-        return this.verifyEmailCodeStep2(sessionId, input);
+        return this.verifyEmailCodeStep2(sessionId, input, locale);
       }
-      return this.verifyEmailCodeStep1(sessionId, input);
+      return this.verifyEmailCodeStep1(sessionId, input, locale);
     }
 
-    return { success: false, message: 'Invalid verification method.', error: 'invalid_method' };
+    return { success: false, message: t(locale, 'messages.invalidMethod'), error: 'invalid_method' };
   }
 
   /**
@@ -423,24 +487,25 @@ export class WebChatActionService {
   private async verifyByBookingName(
     sessionId: string,
     input: Record<string, string>,
+    locale: SupportedLocale,
   ): Promise<ActionResult> {
     const { confirmationNumber, lastName } = input;
     if (!confirmationNumber || !lastName) {
-      return { success: false, message: 'Booking reference and last name are required.', error: 'missing_fields' };
+      return { success: false, message: t(locale, 'messages.missingBookingRef'), error: 'missing_fields' };
     }
 
     const reservation = await this.lookupByConfirmation(confirmationNumber);
     if (!reservation) {
       await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: 'No reservation found with that booking reference.', error: 'not_found' };
+      return { success: false, message: t(locale, 'messages.noReservationFound'), error: 'not_found' };
     }
 
     if (reservation.guest.lastName.toLowerCase() !== lastName.toLowerCase()) {
       await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: "The last name doesn't match our records.", error: 'mismatch' };
+      return { success: false, message: t(locale, 'messages.lastNameMismatch'), error: 'mismatch' };
     }
 
-    return this.completeVerification(sessionId, reservation);
+    return this.completeVerification(sessionId, reservation, locale);
   }
 
   /**
@@ -449,24 +514,25 @@ export class WebChatActionService {
   private async verifyByBookingEmail(
     sessionId: string,
     input: Record<string, string>,
+    locale: SupportedLocale,
   ): Promise<ActionResult> {
     const { confirmationNumber, email } = input;
     if (!confirmationNumber || !email) {
-      return { success: false, message: 'Booking reference and email are required.', error: 'missing_fields' };
+      return { success: false, message: t(locale, 'messages.missingBookingEmail'), error: 'missing_fields' };
     }
 
     const reservation = await this.lookupByConfirmation(confirmationNumber);
     if (!reservation) {
       await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: 'No reservation found with that booking reference.', error: 'not_found' };
+      return { success: false, message: t(locale, 'messages.noReservationFound'), error: 'not_found' };
     }
 
     if (!reservation.guest.email || reservation.guest.email.toLowerCase() !== email.toLowerCase()) {
       await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: "The email doesn't match our records.", error: 'mismatch' };
+      return { success: false, message: t(locale, 'messages.emailMismatch'), error: 'mismatch' };
     }
 
-    return this.completeVerification(sessionId, reservation);
+    return this.completeVerification(sessionId, reservation, locale);
   }
 
   /**
@@ -475,43 +541,44 @@ export class WebChatActionService {
   private async verifyEmailCodeStep1(
     sessionId: string,
     input: Record<string, string>,
+    locale: SupportedLocale,
   ): Promise<ActionResult> {
     const { email } = input;
     if (!email) {
-      return { success: false, message: 'Email address is required.', error: 'missing_fields' };
+      return { success: false, message: t(locale, 'messages.missingEmail'), error: 'missing_fields' };
     }
 
     // Search PMS for reservations matching this email
     const pmsAdapter = getAppRegistry().getActivePMSAdapter();
     if (!pmsAdapter) {
-      return { success: false, message: 'Verification is temporarily unavailable.', error: 'no_pms' };
+      return { success: false, message: t(locale, 'messages.verificationUnavailable'), error: 'no_pms' };
     }
 
     const reservations = await pmsAdapter.searchReservations({ guestEmail: email.toLowerCase() });
     if (reservations.length === 0) {
       await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: 'No reservation found for that email address.', error: 'not_found' };
+      return { success: false, message: t(locale, 'messages.noReservationForEmail'), error: 'not_found' };
     }
 
     // 8F: Rate limit code generation — per session and per email
     const now = Date.now();
-    let codeTimestamps = codeRequestTimestamps.get(sessionId) || [];
-    codeTimestamps = codeTimestamps.filter((t) => now - t < 60 * 60 * 1000);
-    if (codeTimestamps.length >= MAX_CODE_REQUESTS_PER_HOUR) {
-      return { success: false, message: 'Too many code requests. Please try again later.', error: 'rate_limited' };
+    let codeTs = codeRequestTimestamps.get(sessionId) || [];
+    codeTs = codeTs.filter((ts) => now - ts < 60 * 60 * 1000);
+    if (codeTs.length >= MAX_CODE_REQUESTS_PER_HOUR) {
+      return { success: false, message: t(locale, 'messages.tooManyCodeRequests'), error: 'rate_limited' };
     }
 
     const emailKey = email.toLowerCase();
-    let emailTimestamps = emailCodeRequestTimestamps.get(emailKey) || [];
-    emailTimestamps = emailTimestamps.filter((t) => now - t < 60 * 60 * 1000);
-    if (emailTimestamps.length >= MAX_CODE_REQUESTS_PER_EMAIL_PER_HOUR) {
-      return { success: false, message: 'Too many code requests for this email. Please try again later.', error: 'rate_limited' };
+    let emailTs = emailCodeRequestTimestamps.get(emailKey) || [];
+    emailTs = emailTs.filter((ts) => now - ts < 60 * 60 * 1000);
+    if (emailTs.length >= MAX_CODE_REQUESTS_PER_EMAIL_PER_HOUR) {
+      return { success: false, message: t(locale, 'messages.tooManyCodeRequestsEmail'), error: 'rate_limited' };
     }
 
-    codeTimestamps.push(now);
-    codeRequestTimestamps.set(sessionId, codeTimestamps);
-    emailTimestamps.push(now);
-    emailCodeRequestTimestamps.set(emailKey, emailTimestamps);
+    codeTs.push(now);
+    codeRequestTimestamps.set(sessionId, codeTs);
+    emailTs.push(now);
+    emailCodeRequestTimestamps.set(emailKey, emailTs);
 
     // Generate 6-digit code
     const code = String(randomInt(100000, 1000000));
@@ -525,15 +592,15 @@ export class WebChatActionService {
 
     return {
       success: true,
-      message: 'A 6-digit verification code has been sent to your email.',
+      message: t(locale, 'messages.codeSent'),
       nextStep: {
         fields: [
           {
             key: 'code',
-            label: 'Verification Code',
+            label: t(locale, 'actions.verifyReservation.fields.code.label'),
             type: 'text',
             required: true,
-            placeholder: '6-digit code from your email',
+            placeholder: t(locale, 'actions.verifyReservation.fields.code.placeholder'),
           },
         ],
         context: { email, method: 'email-code' },
@@ -547,21 +614,22 @@ export class WebChatActionService {
   private async verifyEmailCodeStep2(
     sessionId: string,
     input: Record<string, string>,
+    locale: SupportedLocale,
   ): Promise<ActionResult> {
     const { email, code } = input;
     if (!email || !code) {
-      return { success: false, message: 'Email and verification code are required.', error: 'missing_fields' };
+      return { success: false, message: t(locale, 'messages.missingEmailAndCode'), error: 'missing_fields' };
     }
 
     const session = await webchatSessionService.findById(sessionId);
     if (!session || !session.verificationCode || !session.verificationCodeExpiresAt) {
-      return { success: false, message: 'No pending verification code. Please request a new one.', error: 'no_code' };
+      return { success: false, message: t(locale, 'messages.noPendingCode'), error: 'no_code' };
     }
 
     // Check expiry
     if (new Date(session.verificationCodeExpiresAt) <= new Date()) {
       await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: 'Verification code has expired. Please request a new one.', error: 'code_expired' };
+      return { success: false, message: t(locale, 'messages.codeExpired'), error: 'code_expired' };
     }
 
     // Constant-time comparison
@@ -572,22 +640,22 @@ export class WebChatActionService {
 
     if (submittedBuf.length !== storedBuf.length || !timingSafeEqual(submittedBuf, storedBuf)) {
       await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: 'Invalid verification code.', error: 'code_mismatch' };
+      return { success: false, message: t(locale, 'messages.invalidCode'), error: 'code_mismatch' };
     }
 
     // Code matches — find the reservation by email
     const pmsAdapter = getAppRegistry().getActivePMSAdapter();
     if (!pmsAdapter) {
-      return { success: false, message: 'Verification is temporarily unavailable.', error: 'no_pms' };
+      return { success: false, message: t(locale, 'messages.verificationUnavailable'), error: 'no_pms' };
     }
 
     const reservations = await pmsAdapter.searchReservations({ guestEmail: email.toLowerCase() });
     const reservation = this.pickBestReservation(reservations);
     if (!reservation) {
-      return { success: false, message: 'No reservation found.', error: 'not_found' };
+      return { success: false, message: t(locale, 'messages.noReservationFoundGeneric'), error: 'not_found' };
     }
 
-    return this.completeVerification(sessionId, reservation);
+    return this.completeVerification(sessionId, reservation, locale);
   }
 
   // ============================================
@@ -597,15 +665,16 @@ export class WebChatActionService {
   private async handleExtendStay(
     sessionId: string,
     input: Record<string, string>,
+    locale: SupportedLocale,
   ): Promise<ActionResult> {
     const { newCheckoutDate, notes } = input;
     if (!newCheckoutDate) {
-      return { success: false, message: 'New checkout date is required.', error: 'missing_fields' };
+      return { success: false, message: t(locale, 'messages.missingCheckoutDate'), error: 'missing_fields' };
     }
 
     const session = await webchatSessionService.findById(sessionId);
     if (!session?.reservationId) {
-      return { success: false, message: 'No reservation linked to this session.', error: 'no_reservation' };
+      return { success: false, message: t(locale, 'messages.noReservationLinked'), error: 'no_reservation' };
     }
 
     // For Phase 3, we log the request and create a task. Actual PMS modification is a future feature.
@@ -614,14 +683,19 @@ export class WebChatActionService {
       'Stay extension requested',
     );
 
-    // Format date for display (e.g. "Feb 15, 2026")
-    const formatted = new Date(newCheckoutDate + 'T00:00:00').toLocaleDateString('en-US', {
+    // Format date for display using session locale
+    const localeTag = locale === 'en' ? 'en-US' : locale;
+    const formatted = new Date(newCheckoutDate + 'T00:00:00').toLocaleDateString(localeTag, {
       month: 'short', day: 'numeric', year: 'numeric',
     });
 
+    let message = t(locale, 'messages.extendStaySuccess', { date: formatted });
+    if (notes) message += t(locale, 'messages.extendStayNotes', { notes });
+    message += t(locale, 'messages.extendStayAnythingElse');
+
     return {
       success: true,
-      message: `Got it! Your request to extend until ${formatted} has been submitted. Our front desk team will confirm shortly.${notes ? ` We've noted: "${notes}".` : ''} Is there anything else I can help with?`,
+      message,
       data: { newCheckoutDate, reservationId: session.reservationId },
     };
   }
@@ -633,26 +707,37 @@ export class WebChatActionService {
   private async handleRequestService(
     sessionId: string,
     input: Record<string, string>,
+    locale: SupportedLocale,
   ): Promise<ActionResult> {
     const { serviceType, details, urgency } = input;
     if (!serviceType) {
-      return { success: false, message: 'Please select a service type.', error: 'missing_fields' };
+      return { success: false, message: t(locale, 'messages.missingServiceType'), error: 'missing_fields' };
     }
 
     const session = await webchatSessionService.findById(sessionId);
     if (!session?.reservationId) {
-      return { success: false, message: 'No reservation linked to this session.', error: 'no_reservation' };
+      return { success: false, message: t(locale, 'messages.noReservationLinked'), error: 'no_reservation' };
     }
 
-    const label = serviceType.replace(/-/g, ' ');
+    // Use translated option label if available, otherwise humanize the key
+    const serviceLabel = t(locale, `actions.requestService.fields.serviceType.options.${serviceType}`);
+    const label = serviceLabel !== `actions.requestService.fields.serviceType.options.${serviceType}`
+      ? serviceLabel
+      : serviceType.replace(/-/g, ' ');
+
     log.info(
       { sessionId, reservationId: session.reservationId, serviceType, urgency, details },
       'Service requested',
     );
 
+    const urgencyStr = urgency === 'urgent' ? t(locale, 'messages.serviceRequestUrgent') : '';
+    let message = t(locale, 'messages.serviceRequestSuccess', { service: label, urgency: urgencyStr });
+    if (details) message += t(locale, 'messages.serviceRequestDetails', { details });
+    message += t(locale, 'messages.serviceRequestAnythingElse');
+
     return {
       success: true,
-      message: `Your ${label} request has been submitted${urgency === 'urgent' ? ' as urgent' : ''}. Our team will take care of it shortly.${details ? ` We've noted: "${details}".` : ''} Anything else?`,
+      message,
       data: { serviceType, urgency, reservationId: session.reservationId },
     };
   }
@@ -664,15 +749,16 @@ export class WebChatActionService {
   private async handleOrderRoomService(
     sessionId: string,
     input: Record<string, string>,
+    locale: SupportedLocale,
   ): Promise<ActionResult> {
     const { items, specialInstructions } = input;
     if (!items) {
-      return { success: false, message: 'Please tell us what you\'d like to order.', error: 'missing_fields' };
+      return { success: false, message: t(locale, 'messages.missingOrderItems'), error: 'missing_fields' };
     }
 
     const session = await webchatSessionService.findById(sessionId);
     if (!session?.reservationId) {
-      return { success: false, message: 'No reservation linked to this session.', error: 'no_reservation' };
+      return { success: false, message: t(locale, 'messages.noReservationLinked'), error: 'no_reservation' };
     }
 
     log.info(
@@ -680,9 +766,13 @@ export class WebChatActionService {
       'Room service ordered',
     );
 
+    let message = t(locale, 'messages.roomServiceSuccess');
+    if (specialInstructions) message += t(locale, 'messages.roomServiceInstructions', { instructions: specialInstructions });
+    message += t(locale, 'messages.roomServiceAnythingElse');
+
     return {
       success: true,
-      message: `Your room service order has been placed! We'll have it delivered to your room shortly.${specialInstructions ? ` Special instructions noted: "${specialInstructions}".` : ''} Anything else?`,
+      message,
       data: { items, reservationId: session.reservationId },
     };
   }
@@ -694,19 +784,31 @@ export class WebChatActionService {
   private async handleBookSpa(
     sessionId: string,
     input: Record<string, string>,
+    locale: SupportedLocale,
   ): Promise<ActionResult> {
     const { treatment, preferredDate, preferredTime, notes } = input;
     if (!treatment || !preferredDate || !preferredTime) {
-      return { success: false, message: 'Please fill in treatment, date, and time.', error: 'missing_fields' };
+      return { success: false, message: t(locale, 'messages.missingSpaFields'), error: 'missing_fields' };
     }
 
     const session = await webchatSessionService.findById(sessionId);
     if (!session?.reservationId) {
-      return { success: false, message: 'No reservation linked to this session.', error: 'no_reservation' };
+      return { success: false, message: t(locale, 'messages.noReservationLinked'), error: 'no_reservation' };
     }
 
-    const label = treatment.replace(/-/g, ' ');
-    const formatted = new Date(preferredDate + 'T00:00:00').toLocaleDateString('en-US', {
+    // Use translated option label if available
+    const treatmentLabel = t(locale, `actions.bookSpa.fields.treatment.options.${treatment}`);
+    const label = treatmentLabel !== `actions.bookSpa.fields.treatment.options.${treatment}`
+      ? treatmentLabel
+      : treatment.replace(/-/g, ' ');
+
+    const timeLabel = t(locale, `actions.bookSpa.fields.preferredTime.options.${preferredTime}`);
+    const timeStr = timeLabel !== `actions.bookSpa.fields.preferredTime.options.${preferredTime}`
+      ? timeLabel
+      : preferredTime;
+
+    const localeTag = locale === 'en' ? 'en-US' : locale;
+    const formatted = new Date(preferredDate + 'T00:00:00').toLocaleDateString(localeTag, {
       month: 'short', day: 'numeric', year: 'numeric',
     });
 
@@ -715,9 +817,13 @@ export class WebChatActionService {
       'Spa booking requested',
     );
 
+    let message = t(locale, 'messages.spaBookingSuccess', { treatment: label, date: formatted, time: timeStr });
+    if (notes) message += t(locale, 'messages.spaBookingNotes', { notes });
+    message += t(locale, 'messages.spaBookingAnythingElse');
+
     return {
       success: true,
-      message: `Your ${label} has been requested for ${formatted} (${preferredTime}). Our spa team will confirm availability shortly.${notes ? ` Notes: "${notes}".` : ''} Anything else?`,
+      message,
       data: { treatment, preferredDate, preferredTime, reservationId: session.reservationId },
     };
   }
@@ -772,6 +878,7 @@ export class WebChatActionService {
   private async completeVerification(
     sessionId: string,
     reservation: NormalizedReservation,
+    locale: SupportedLocale = 'en',
   ): Promise<ActionResult> {
     // Find or create guest in our DB
     let guest = reservation.guest.email
@@ -851,7 +958,7 @@ export class WebChatActionService {
 
     return {
       success: true,
-      message: `Booking verified! Welcome, ${reservation.guest.firstName}. How can I help you with your stay?`,
+      message: t(locale, 'messages.verifiedWelcome', { firstName: reservation.guest.firstName }),
       data: {
         guestName: `${reservation.guest.firstName} ${reservation.guest.lastName}`,
         checkIn: reservation.arrivalDate,

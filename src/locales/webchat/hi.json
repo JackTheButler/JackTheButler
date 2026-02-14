@@ -1,0 +1,198 @@
+{
+  "widget": {
+    "inputPlaceholder": "संदेश लिखें...",
+    "sendButton": "संदेश भेजें",
+    "closeChat": "चैट बंद करें",
+    "scrollToBottom": "नीचे स्क्रॉल करें",
+    "senderYou": "आप",
+    "senderAI": "AI",
+    "senderStaff": "स्टाफ",
+    "sessionRestored": "सत्र पुनर्स्थापित।",
+    "sessionExpired": "पिछला सत्र समाप्त हो गया। नया सत्र शुरू हो रहा है।",
+    "submit": "जमा करें",
+    "cancel": "रद्द करें",
+    "submitting": "जमा हो रहा है...",
+    "fieldRequired": "{{field}} आवश्यक है",
+    "selectPlaceholder": "{{field}} चुनें...",
+    "verifyFirst": "कृपया पहले अपनी बुकिंग सत्यापित करें।",
+    "noSession": "कोई सक्रिय सत्र नहीं। कृपया पेज रिफ्रेश करें।",
+    "verificationCode": "सत्यापन कोड",
+    "actionFailed": "कार्रवाई विफल।",
+    "submitFailed": "फॉर्म जमा करने में विफल। कृपया पुनः प्रयास करें।"
+  },
+  "errors": {
+    "connectionFailed": "कनेक्शन विफल",
+    "chatUnavailable": "चैट वर्तमान में उपलब्ध नहीं है।",
+    "tooManyConnections": "बहुत अधिक कनेक्शन।",
+    "emptyMessage": "खाली संदेश।",
+    "messageTooLong": "संदेश बहुत लंबा है।",
+    "slowDown": "कृपया धीरे करें।",
+    "processingError": "क्षमा करें, आपके अनुरोध को संसाधित करने में त्रुटि हुई। कृपया पुनः प्रयास करें।",
+    "invalidMessage": "अमान्य संदेश प्रारूप"
+  },
+  "actions": {
+    "verifyReservation": {
+      "name": "अपनी बुकिंग सत्यापित करें",
+      "triggerHint": "guest wants to verify or link their booking/reservation",
+      "fields": {
+        "method": {
+          "label": "सत्यापन विधि",
+          "options": {
+            "booking-name": "बुकिंग संदर्भ + उपनाम",
+            "booking-email": "बुकिंग संदर्भ + ईमेल",
+            "email-code": "ईमेल सत्यापन कोड"
+          }
+        },
+        "confirmationNumber": {
+          "label": "बुकिंग संदर्भ",
+          "placeholder": "जैसे BK-12345"
+        },
+        "lastName": {
+          "label": "बुकिंग पर उपनाम",
+          "placeholder": "जैसा आपके आरक्षण में है"
+        },
+        "email": {
+          "label": "ईमेल पता",
+          "placeholder": "आपके आरक्षण का ईमेल"
+        },
+        "code": {
+          "label": "सत्यापन कोड",
+          "placeholder": "आपके ईमेल से 6-अंकीय कोड"
+        }
+      }
+    },
+    "extendStay": {
+      "name": "अपना प्रवास बढ़ाएं",
+      "triggerHint": "guest wants to extend their stay or change checkout date",
+      "fields": {
+        "newCheckoutDate": {
+          "label": "नई चेकआउट तिथि"
+        },
+        "notes": {
+          "label": "विशेष अनुरोध",
+          "placeholder": "वैकल्पिक"
+        }
+      }
+    },
+    "requestService": {
+      "name": "सेवा का अनुरोध करें",
+      "triggerHint": "guest wants housekeeping, towels, pillows, amenities, or maintenance",
+      "fields": {
+        "serviceType": {
+          "label": "सेवा का प्रकार",
+          "options": {
+            "housekeeping": "हाउसकीपिंग",
+            "extra-towels": "अतिरिक्त तौलिए",
+            "extra-pillows": "अतिरिक्त तकिए",
+            "amenities": "सुविधाएं",
+            "maintenance": "रखरखाव",
+            "other": "अन्य"
+          }
+        },
+        "details": {
+          "label": "विवरण",
+          "placeholder": "कोई विशिष्ट विवरण"
+        },
+        "urgency": {
+          "label": "तात्कालिकता",
+          "options": {
+            "normal": "सामान्य",
+            "urgent": "तत्काल"
+          }
+        }
+      }
+    },
+    "orderRoomService": {
+      "name": "रूम सर्विस ऑर्डर करें",
+      "triggerHint": "guest wants to order food or beverages to their room",
+      "fields": {
+        "items": {
+          "label": "आप क्या ऑर्डर करना चाहेंगे?",
+          "placeholder": "जैसे सीज़र सलाद, क्लब सैंडविच, स्पार्कलिंग वॉटर"
+        },
+        "specialInstructions": {
+          "label": "विशेष निर्देश",
+          "placeholder": "एलर्जी, प्राथमिकताएं, आदि।"
+        }
+      }
+    },
+    "bookSpa": {
+      "name": "स्पा उपचार बुक करें",
+      "triggerHint": "guest wants to book a spa treatment or massage",
+      "fields": {
+        "treatment": {
+          "label": "उपचार",
+          "options": {
+            "massage": "मालिश",
+            "facial": "फेशियल",
+            "body-wrap": "बॉडी रैप",
+            "manicure-pedicure": "मैनीक्योर और पेडीक्योर",
+            "other": "अन्य"
+          }
+        },
+        "preferredDate": {
+          "label": "पसंदीदा तिथि"
+        },
+        "preferredTime": {
+          "label": "पसंदीदा समय",
+          "options": {
+            "morning": "सुबह",
+            "midday": "दोपहर",
+            "afternoon": "दोपहर बाद",
+            "evening": "शाम"
+          }
+        },
+        "notes": {
+          "label": "नोट्स",
+          "placeholder": "कोई प्राथमिकता या अनुरोध"
+        }
+      }
+    }
+  },
+  "messages": {
+    "actionDisabled": "यह कार्रवाई वर्तमान में उपलब्ध नहीं है।",
+    "sessionExpired": "सत्र समाप्त हो गया। कृपया पेज रिफ्रेश करें।",
+    "unknownAction": "अज्ञात कार्रवाई।",
+    "verificationRequired": "कृपया पहले अपनी बुकिंग सत्यापित करें।",
+    "inputTooLong": "{{field}} बहुत लंबा है (अधिकतम {{max}} अक्षर)।",
+    "actionNotImplemented": "कार्रवाई लागू नहीं है।",
+    "sessionNotFound": "सत्र नहीं मिला।",
+    "tooManyAttempts": "बहुत अधिक सत्यापन प्रयास। कृपया नया चैट सत्र शुरू करें।",
+    "invalidMethod": "अमान्य सत्यापन विधि।",
+    "missingBookingRef": "बुकिंग संदर्भ और उपनाम आवश्यक हैं।",
+    "missingBookingEmail": "बुकिंग संदर्भ और ईमेल आवश्यक हैं।",
+    "noReservationFound": "उस बुकिंग संदर्भ से कोई आरक्षण नहीं मिला।",
+    "lastNameMismatch": "उपनाम हमारे रिकॉर्ड से मेल नहीं खाता।",
+    "emailMismatch": "ईमेल हमारे रिकॉर्ड से मेल नहीं खाता।",
+    "missingEmail": "ईमेल पता आवश्यक है।",
+    "verificationUnavailable": "सत्यापन अस्थायी रूप से अनुपलब्ध है।",
+    "noReservationForEmail": "उस ईमेल पते के लिए कोई आरक्षण नहीं मिला।",
+    "tooManyCodeRequests": "बहुत अधिक कोड अनुरोध। कृपया बाद में पुनः प्रयास करें।",
+    "tooManyCodeRequestsEmail": "इस ईमेल के लिए बहुत अधिक कोड अनुरोध। कृपया बाद में प्रयास करें।",
+    "codeSent": "आपके ईमेल पर 6-अंकीय सत्यापन कोड भेजा गया है।",
+    "missingEmailAndCode": "ईमेल और सत्यापन कोड आवश्यक हैं।",
+    "noPendingCode": "कोई लंबित सत्यापन कोड नहीं। कृपया नया अनुरोध करें।",
+    "codeExpired": "सत्यापन कोड समाप्त हो गया है। कृपया नया अनुरोध करें।",
+    "invalidCode": "अमान्य सत्यापन कोड।",
+    "noReservationFoundGeneric": "कोई आरक्षण नहीं मिला।",
+    "verifiedWelcome": "बुकिंग सत्यापित! स्वागत है, {{firstName}}। आपके प्रवास में मैं कैसे मदद कर सकता हूँ?",
+    "missingCheckoutDate": "नई चेकआउट तिथि आवश्यक है।",
+    "noReservationLinked": "इस सत्र से कोई आरक्षण जुड़ा नहीं है।",
+    "extendStaySuccess": "समझ गया! {{date}} तक बढ़ाने का आपका अनुरोध भेज दिया गया है। हमारा फ्रंट डेस्क जल्द ही पुष्टि करेगा।",
+    "extendStayNotes": " हमने नोट किया: \"{{notes}}\"।",
+    "extendStayAnythingElse": " क्या कुछ और है जिसमें मैं मदद कर सकता हूँ?",
+    "missingServiceType": "कृपया एक सेवा प्रकार चुनें।",
+    "serviceRequestSuccess": "आपका {{service}} अनुरोध भेज दिया गया है{{urgency}}। हमारी टीम जल्द ही इसका ध्यान रखेगी।",
+    "serviceRequestUrgent": " तत्काल के रूप में",
+    "serviceRequestDetails": " हमने नोट किया: \"{{details}}\"।",
+    "serviceRequestAnythingElse": " कुछ और?",
+    "missingOrderItems": "कृपया बताएं कि आप क्या ऑर्डर करना चाहेंगे।",
+    "roomServiceSuccess": "आपका रूम सर्विस ऑर्डर दे दिया गया है! हम इसे जल्द ही आपके कमरे में पहुंचा देंगे।",
+    "roomServiceInstructions": " विशेष निर्देश नोट किए गए: \"{{instructions}}\"।",
+    "roomServiceAnythingElse": " कुछ और?",
+    "missingSpaFields": "कृपया उपचार, तिथि और समय भरें।",
+    "spaBookingSuccess": "आपका {{treatment}} {{date}} ({{time}}) के लिए अनुरोधित किया गया है। हमारी स्पा टीम जल्द ही उपलब्धता की पुष्टि करेगी।",
+    "spaBookingNotes": " नोट्स: \"{{notes}}\"।",
+    "spaBookingAnythingElse": " कुछ और?"
+  }
+}

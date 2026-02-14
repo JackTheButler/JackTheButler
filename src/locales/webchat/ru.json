@@ -1,0 +1,198 @@
+{
+  "widget": {
+    "inputPlaceholder": "Введите сообщение...",
+    "sendButton": "Отправить сообщение",
+    "closeChat": "Закрыть чат",
+    "scrollToBottom": "Прокрутить вниз",
+    "senderYou": "Вы",
+    "senderAI": "ИИ",
+    "senderStaff": "Персонал",
+    "sessionRestored": "Сессия восстановлена.",
+    "sessionExpired": "Предыдущая сессия истекла. Начинаем заново.",
+    "submit": "Отправить",
+    "cancel": "Отмена",
+    "submitting": "Отправка...",
+    "fieldRequired": "{{field}} обязательно",
+    "selectPlaceholder": "Выберите {{field}}...",
+    "verifyFirst": "Пожалуйста, сначала подтвердите бронирование.",
+    "noSession": "Нет активной сессии. Обновите страницу.",
+    "verificationCode": "Код подтверждения",
+    "actionFailed": "Действие не выполнено.",
+    "submitFailed": "Не удалось отправить форму. Попробуйте ещё раз."
+  },
+  "errors": {
+    "connectionFailed": "Ошибка подключения",
+    "chatUnavailable": "Чат сейчас недоступен.",
+    "tooManyConnections": "Слишком много подключений.",
+    "emptyMessage": "Пустое сообщение.",
+    "messageTooLong": "Сообщение слишком длинное.",
+    "slowDown": "Пожалуйста, не так быстро.",
+    "processingError": "Извините, произошла ошибка при обработке вашего запроса. Попробуйте ещё раз.",
+    "invalidMessage": "Неверный формат сообщения"
+  },
+  "actions": {
+    "verifyReservation": {
+      "name": "Подтвердить бронирование",
+      "triggerHint": "guest wants to verify or link their booking/reservation",
+      "fields": {
+        "method": {
+          "label": "Способ подтверждения",
+          "options": {
+            "booking-name": "Номер брони + Фамилия",
+            "booking-email": "Номер брони + Email",
+            "email-code": "Код по email"
+          }
+        },
+        "confirmationNumber": {
+          "label": "Номер бронирования",
+          "placeholder": "Напр. BK-12345"
+        },
+        "lastName": {
+          "label": "Фамилия в бронировании",
+          "placeholder": "Как указано в бронировании"
+        },
+        "email": {
+          "label": "Электронная почта",
+          "placeholder": "Email из бронирования"
+        },
+        "code": {
+          "label": "Код подтверждения",
+          "placeholder": "6-значный код из email"
+        }
+      }
+    },
+    "extendStay": {
+      "name": "Продлить проживание",
+      "triggerHint": "guest wants to extend their stay or change checkout date",
+      "fields": {
+        "newCheckoutDate": {
+          "label": "Новая дата выезда"
+        },
+        "notes": {
+          "label": "Особые пожелания",
+          "placeholder": "Необязательно"
+        }
+      }
+    },
+    "requestService": {
+      "name": "Запросить услугу",
+      "triggerHint": "guest wants housekeeping, towels, pillows, amenities, or maintenance",
+      "fields": {
+        "serviceType": {
+          "label": "Тип услуги",
+          "options": {
+            "housekeeping": "Уборка",
+            "extra-towels": "Дополнительные полотенца",
+            "extra-pillows": "Дополнительные подушки",
+            "amenities": "Принадлежности",
+            "maintenance": "Техобслуживание",
+            "other": "Другое"
+          }
+        },
+        "details": {
+          "label": "Подробности",
+          "placeholder": "Любые детали"
+        },
+        "urgency": {
+          "label": "Срочность",
+          "options": {
+            "normal": "Обычная",
+            "urgent": "Срочная"
+          }
+        }
+      }
+    },
+    "orderRoomService": {
+      "name": "Заказать обслуживание в номер",
+      "triggerHint": "guest wants to order food or beverages to their room",
+      "fields": {
+        "items": {
+          "label": "Что вы хотите заказать?",
+          "placeholder": "Напр. салат Цезарь, клаб-сэндвич, минеральная вода"
+        },
+        "specialInstructions": {
+          "label": "Особые пожелания",
+          "placeholder": "Аллергии, предпочтения и т.д."
+        }
+      }
+    },
+    "bookSpa": {
+      "name": "Забронировать спа-процедуру",
+      "triggerHint": "guest wants to book a spa treatment or massage",
+      "fields": {
+        "treatment": {
+          "label": "Процедура",
+          "options": {
+            "massage": "Массаж",
+            "facial": "Уход за лицом",
+            "body-wrap": "Обёртывание",
+            "manicure-pedicure": "Маникюр и педикюр",
+            "other": "Другое"
+          }
+        },
+        "preferredDate": {
+          "label": "Предпочтительная дата"
+        },
+        "preferredTime": {
+          "label": "Предпочтительное время",
+          "options": {
+            "morning": "Утро",
+            "midday": "Полдень",
+            "afternoon": "День",
+            "evening": "Вечер"
+          }
+        },
+        "notes": {
+          "label": "Заметки",
+          "placeholder": "Пожелания или запросы"
+        }
+      }
+    }
+  },
+  "messages": {
+    "actionDisabled": "Это действие сейчас недоступно.",
+    "sessionExpired": "Сессия истекла. Обновите страницу.",
+    "unknownAction": "Неизвестное действие.",
+    "verificationRequired": "Пожалуйста, сначала подтвердите бронирование.",
+    "inputTooLong": "{{field}} слишком длинное (максимум {{max}} символов).",
+    "actionNotImplemented": "Действие не реализовано.",
+    "sessionNotFound": "Сессия не найдена.",
+    "tooManyAttempts": "Слишком много попыток подтверждения. Начните новый чат.",
+    "invalidMethod": "Недопустимый способ подтверждения.",
+    "missingBookingRef": "Необходимы номер бронирования и фамилия.",
+    "missingBookingEmail": "Необходимы номер бронирования и email.",
+    "noReservationFound": "Бронирование с таким номером не найдено.",
+    "lastNameMismatch": "Фамилия не совпадает с нашими данными.",
+    "emailMismatch": "Email не совпадает с нашими данными.",
+    "missingEmail": "Необходим адрес электронной почты.",
+    "verificationUnavailable": "Подтверждение временно недоступно.",
+    "noReservationForEmail": "Бронирование для этого email не найдено.",
+    "tooManyCodeRequests": "Слишком много запросов кода. Попробуйте позже.",
+    "tooManyCodeRequestsEmail": "Слишком много запросов кода для этого email. Попробуйте позже.",
+    "codeSent": "6-значный код подтверждения отправлен на вашу электронную почту.",
+    "missingEmailAndCode": "Необходимы email и код подтверждения.",
+    "noPendingCode": "Нет ожидающего кода подтверждения. Запросите новый.",
+    "codeExpired": "Код подтверждения истёк. Запросите новый.",
+    "invalidCode": "Неверный код подтверждения.",
+    "noReservationFoundGeneric": "Бронирование не найдено.",
+    "verifiedWelcome": "Бронирование подтверждено! Добро пожаловать, {{firstName}}. Чем могу помочь?",
+    "missingCheckoutDate": "Необходима новая дата выезда.",
+    "noReservationLinked": "К этой сессии не привязано бронирование.",
+    "extendStaySuccess": "Принято! Ваш запрос на продление до {{date}} отправлен. Стойка регистрации подтвердит в ближайшее время.",
+    "extendStayNotes": " Мы отметили: \"{{notes}}\".",
+    "extendStayAnythingElse": " Могу ли я ещё чем-то помочь?",
+    "missingServiceType": "Пожалуйста, выберите тип услуги.",
+    "serviceRequestSuccess": "Ваш запрос на {{service}} отправлен{{urgency}}. Наша команда займётся этим в ближайшее время.",
+    "serviceRequestUrgent": " как срочный",
+    "serviceRequestDetails": " Мы отметили: \"{{details}}\".",
+    "serviceRequestAnythingElse": " Что-нибудь ещё?",
+    "missingOrderItems": "Пожалуйста, скажите, что вы хотите заказать.",
+    "roomServiceSuccess": "Ваш заказ в номер оформлен! Доставим в ближайшее время.",
+    "roomServiceInstructions": " Особые пожелания учтены: \"{{instructions}}\".",
+    "roomServiceAnythingElse": " Что-нибудь ещё?",
+    "missingSpaFields": "Пожалуйста, заполните процедуру, дату и время.",
+    "spaBookingSuccess": "Ваш запрос на {{treatment}} на {{date}} ({{time}}) отправлен. Спа-команда подтвердит наличие мест.",
+    "spaBookingNotes": " Примечания: \"{{notes}}\".",
+    "spaBookingAnythingElse": " Что-нибудь ещё?"
+  }
+}

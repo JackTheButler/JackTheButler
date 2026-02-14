@@ -7,6 +7,8 @@
  */
 
 import { createElement } from '../utils.js';
+import { DEFAULT_STRINGS, interpolate } from '../defaults.js';
+import type { WidgetStrings } from '../defaults.js';
 import type { WebChatActionField } from '../types.js';
 
 export interface ActionForm {
@@ -19,7 +21,8 @@ export function createActionForm(
   fields: WebChatActionField[],
   context: Record<string, string> | undefined,
   onSubmit: (data: Record<string, string>) => Promise<void>,
-  onCancel: () => void
+  onCancel: () => void,
+  strings: WidgetStrings = DEFAULT_STRINGS
 ): ActionForm {
   const form = createElement('div', { class: 'butler-action-form' });
 
@@ -50,14 +53,15 @@ export function createActionForm(
       input.name = field.key;
 
       const emptyOpt = createElement('option', { value: '' }, [
-        `Select ${field.label}...`,
+        interpolate(strings.selectPlaceholder, { field: field.label }),
       ]) as HTMLOptionElement;
       input.appendChild(emptyOpt);
 
-      for (const opt of field.options) {
-        const option = createElement('option', { value: opt }, [
-          opt.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase()),
-        ]) as HTMLOptionElement;
+      for (let i = 0; i < field.options.length; i++) {
+        const opt = field.options[i]!;
+        const displayLabel = field.optionLabels?.[i]
+          ?? opt.replace(/-/g, ' ').replace(/\b\w/g, (c) => c.toUpperCase());
+        const option = createElement('option', { value: opt }, [displayLabel]) as HTMLOptionElement;
         input.appendChild(option);
       }
 
@@ -94,15 +98,15 @@ export function createActionForm(
   const submitBtn = createElement('button', {
     class: 'butler-form-submit',
     type: 'button',
-  }, ['Submit']);
+  }, [strings.submit]);
 
   const cancelBtn = createElement('button', {
     class: 'butler-form-cancel',
     type: 'button',
-  }, ['Cancel']);
+  }, [strings.cancel]);
 
   submitBtn.addEventListener('click', async () => {
-    const data = collectFormData(form, fields, context);
+    const data = collectFormData(form, fields, context, strings);
     if (!data) return; // Validation failed
 
     // Show loading state
@@ -112,7 +116,7 @@ export function createActionForm(
 
     const spinner = createElement('span', { class: 'butler-form-spinner' });
     submitBtn.appendChild(spinner);
-    submitBtn.appendChild(document.createTextNode(' Submitting...'));
+    submitBtn.appendChild(document.createTextNode(` ${strings.submitting}`));
 
     try {
       await onSubmit(data);
@@ -120,7 +124,7 @@ export function createActionForm(
       // Reset button on error
       submitBtn.disabled = false;
       submitBtn.classList.remove('butler-form-submit--loading');
-      submitBtn.textContent = 'Submit';
+      submitBtn.textContent = strings.submit;
     }
   });
 
@@ -164,7 +168,8 @@ function updateConditionalFields(form: HTMLDivElement): void {
 function collectFormData(
   form: HTMLDivElement,
   fields: WebChatActionField[],
-  context?: Record<string, string>
+  context?: Record<string, string>,
+  strings: WidgetStrings = DEFAULT_STRINGS
 ): Record<string, string> | null {
   const data: Record<string, string> = {};
 
@@ -200,7 +205,7 @@ function collectFormData(
         let errorEl = fieldEl.querySelector('.butler-form-error');
         if (!errorEl) {
           errorEl = createElement('div', { class: 'butler-form-error' }, [
-            `${field.label} is required`,
+            interpolate(strings.fieldRequired, { field: field.label }),
           ]);
           fieldEl.appendChild(errorEl);
         }

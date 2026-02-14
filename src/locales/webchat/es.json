@@ -1,0 +1,198 @@
+{
+  "widget": {
+    "inputPlaceholder": "Escribe un mensaje...",
+    "sendButton": "Enviar mensaje",
+    "closeChat": "Cerrar chat",
+    "scrollToBottom": "Ir al final",
+    "senderYou": "Tú",
+    "senderAI": "IA",
+    "senderStaff": "Personal",
+    "sessionRestored": "Sesión restaurada.",
+    "sessionExpired": "La sesión anterior expiró. Comenzando de nuevo.",
+    "submit": "Enviar",
+    "cancel": "Cancelar",
+    "submitting": "Enviando...",
+    "fieldRequired": "{{field}} es obligatorio",
+    "selectPlaceholder": "Seleccionar {{field}}...",
+    "verifyFirst": "Por favor, verifique su reserva primero.",
+    "noSession": "No hay sesión activa. Por favor, actualice la página.",
+    "verificationCode": "Código de verificación",
+    "actionFailed": "La acción falló.",
+    "submitFailed": "Error al enviar el formulario. Inténtelo de nuevo."
+  },
+  "errors": {
+    "connectionFailed": "Error de conexión",
+    "chatUnavailable": "El chat no está disponible actualmente.",
+    "tooManyConnections": "Demasiadas conexiones.",
+    "emptyMessage": "Mensaje vacío.",
+    "messageTooLong": "Mensaje demasiado largo.",
+    "slowDown": "Por favor, vaya más despacio.",
+    "processingError": "Lo siento, se produjo un error al procesar su solicitud. Inténtelo de nuevo.",
+    "invalidMessage": "Formato de mensaje no válido"
+  },
+  "actions": {
+    "verifyReservation": {
+      "name": "Verificar su reserva",
+      "triggerHint": "guest wants to verify or link their booking/reservation",
+      "fields": {
+        "method": {
+          "label": "Método de verificación",
+          "options": {
+            "booking-name": "Referencia + Apellido",
+            "booking-email": "Referencia + Correo electrónico",
+            "email-code": "Código por correo electrónico"
+          }
+        },
+        "confirmationNumber": {
+          "label": "Referencia de reserva",
+          "placeholder": "Ej. BK-12345"
+        },
+        "lastName": {
+          "label": "Apellido en la reserva",
+          "placeholder": "Como aparece en su reserva"
+        },
+        "email": {
+          "label": "Correo electrónico",
+          "placeholder": "Correo de su reserva"
+        },
+        "code": {
+          "label": "Código de verificación",
+          "placeholder": "Código de 6 dígitos de su correo"
+        }
+      }
+    },
+    "extendStay": {
+      "name": "Extender su estadía",
+      "triggerHint": "guest wants to extend their stay or change checkout date",
+      "fields": {
+        "newCheckoutDate": {
+          "label": "Nueva fecha de salida"
+        },
+        "notes": {
+          "label": "Solicitudes especiales",
+          "placeholder": "Opcional"
+        }
+      }
+    },
+    "requestService": {
+      "name": "Solicitar un servicio",
+      "triggerHint": "guest wants housekeeping, towels, pillows, amenities, or maintenance",
+      "fields": {
+        "serviceType": {
+          "label": "Tipo de servicio",
+          "options": {
+            "housekeeping": "Limpieza",
+            "extra-towels": "Toallas adicionales",
+            "extra-pillows": "Almohadas adicionales",
+            "amenities": "Amenidades",
+            "maintenance": "Mantenimiento",
+            "other": "Otro"
+          }
+        },
+        "details": {
+          "label": "Detalles",
+          "placeholder": "Detalles específicos"
+        },
+        "urgency": {
+          "label": "Urgencia",
+          "options": {
+            "normal": "Normal",
+            "urgent": "Urgente"
+          }
+        }
+      }
+    },
+    "orderRoomService": {
+      "name": "Servicio a la habitación",
+      "triggerHint": "guest wants to order food or beverages to their room",
+      "fields": {
+        "items": {
+          "label": "¿Qué desea ordenar?",
+          "placeholder": "Ej. Ensalada César, sándwich club, agua con gas"
+        },
+        "specialInstructions": {
+          "label": "Instrucciones especiales",
+          "placeholder": "Alergias, preferencias, etc."
+        }
+      }
+    },
+    "bookSpa": {
+      "name": "Reservar tratamiento de spa",
+      "triggerHint": "guest wants to book a spa treatment or massage",
+      "fields": {
+        "treatment": {
+          "label": "Tratamiento",
+          "options": {
+            "massage": "Masaje",
+            "facial": "Facial",
+            "body-wrap": "Envoltura corporal",
+            "manicure-pedicure": "Manicura y pedicura",
+            "other": "Otro"
+          }
+        },
+        "preferredDate": {
+          "label": "Fecha preferida"
+        },
+        "preferredTime": {
+          "label": "Hora preferida",
+          "options": {
+            "morning": "Mañana",
+            "midday": "Mediodía",
+            "afternoon": "Tarde",
+            "evening": "Noche"
+          }
+        },
+        "notes": {
+          "label": "Notas",
+          "placeholder": "Preferencias o solicitudes"
+        }
+      }
+    }
+  },
+  "messages": {
+    "actionDisabled": "Esta acción no está disponible actualmente.",
+    "sessionExpired": "La sesión expiró. Por favor, actualice la página.",
+    "unknownAction": "Acción desconocida.",
+    "verificationRequired": "Por favor, verifique su reserva primero.",
+    "inputTooLong": "{{field}} es demasiado largo (máximo {{max}} caracteres).",
+    "actionNotImplemented": "Acción no implementada.",
+    "sessionNotFound": "Sesión no encontrada.",
+    "tooManyAttempts": "Demasiados intentos de verificación. Inicie una nueva sesión de chat.",
+    "invalidMethod": "Método de verificación no válido.",
+    "missingBookingRef": "Se requieren la referencia de reserva y el apellido.",
+    "missingBookingEmail": "Se requieren la referencia de reserva y el correo electrónico.",
+    "noReservationFound": "No se encontró ninguna reserva con esa referencia.",
+    "lastNameMismatch": "El apellido no coincide con nuestros registros.",
+    "emailMismatch": "El correo electrónico no coincide con nuestros registros.",
+    "missingEmail": "Se requiere la dirección de correo electrónico.",
+    "verificationUnavailable": "La verificación no está disponible temporalmente.",
+    "noReservationForEmail": "No se encontró ninguna reserva para ese correo electrónico.",
+    "tooManyCodeRequests": "Demasiadas solicitudes de código. Inténtelo más tarde.",
+    "tooManyCodeRequestsEmail": "Demasiadas solicitudes de código para este correo. Inténtelo más tarde.",
+    "codeSent": "Se ha enviado un código de verificación de 6 dígitos a su correo electrónico.",
+    "missingEmailAndCode": "Se requieren el correo electrónico y el código de verificación.",
+    "noPendingCode": "No hay código de verificación pendiente. Solicite uno nuevo.",
+    "codeExpired": "El código de verificación ha expirado. Solicite uno nuevo.",
+    "invalidCode": "Código de verificación no válido.",
+    "noReservationFoundGeneric": "No se encontró ninguna reserva.",
+    "verifiedWelcome": "¡Reserva verificada! Bienvenido/a, {{firstName}}. ¿En qué puedo ayudarle con su estadía?",
+    "missingCheckoutDate": "Se requiere la nueva fecha de salida.",
+    "noReservationLinked": "No hay reserva vinculada a esta sesión.",
+    "extendStaySuccess": "¡Entendido! Su solicitud para extender hasta el {{date}} ha sido enviada. Nuestro equipo de recepción confirmará en breve.",
+    "extendStayNotes": " Hemos anotado: \"{{notes}}\".",
+    "extendStayAnythingElse": " ¿Hay algo más en lo que pueda ayudarle?",
+    "missingServiceType": "Por favor, seleccione un tipo de servicio.",
+    "serviceRequestSuccess": "Su solicitud de {{service}} ha sido enviada{{urgency}}. Nuestro equipo se encargará en breve.",
+    "serviceRequestUrgent": " como urgente",
+    "serviceRequestDetails": " Hemos anotado: \"{{details}}\".",
+    "serviceRequestAnythingElse": " ¿Algo más?",
+    "missingOrderItems": "Por favor, indíquenos qué desea ordenar.",
+    "roomServiceSuccess": "¡Su pedido de servicio a la habitación ha sido realizado! Se lo entregaremos en su habitación en breve.",
+    "roomServiceInstructions": " Instrucciones especiales anotadas: \"{{instructions}}\".",
+    "roomServiceAnythingElse": " ¿Algo más?",
+    "missingSpaFields": "Por favor, complete tratamiento, fecha y hora.",
+    "spaBookingSuccess": "Su {{treatment}} ha sido solicitado para el {{date}} ({{time}}). Nuestro equipo de spa confirmará la disponibilidad en breve.",
+    "spaBookingNotes": " Notas: \"{{notes}}\".",
+    "spaBookingAnythingElse": " ¿Algo más?"
+  }
+}

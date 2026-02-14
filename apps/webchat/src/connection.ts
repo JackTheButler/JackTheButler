@@ -40,6 +40,7 @@ export class ConnectionManager {
 
   constructor(
     private readonly gatewayOrigin: string,
+    private readonly locale: string,
     private readonly callbacks: ConnectionCallbacks,
     private readonly butlerKey?: string
   ) {}
@@ -59,6 +60,9 @@ export class ConnectionManager {
     }
     if (this.butlerKey) {
       params.push(`key=${encodeURIComponent(this.butlerKey)}`);
+    }
+    if (this.locale) {
+      params.push(`locale=${encodeURIComponent(this.locale)}`);
     }
     if (params.length > 0) {
       url += `?${params.join('&')}`;
@@ -108,6 +112,10 @@ export class ConnectionManager {
 
   sendMessage(content: string): void {
     this.send({ type: 'message', content });
+  }
+
+  sendLocale(locale: string): void {
+    this.send({ type: 'set_locale', locale });
   }
 
   isConnected(): boolean {

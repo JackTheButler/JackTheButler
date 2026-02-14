@@ -4,6 +4,9 @@
  * Mirrors server-side types from src/services/webchat-action.ts
  */
 
+import type { WidgetStrings } from './defaults.js';
+export type { WidgetStrings } from './defaults.js';
+
 // ============================================
 // Action types (mirror server)
 // ============================================
@@ -22,6 +25,7 @@ export interface WebChatActionField {
   type: 'text' | 'date' | 'number' | 'select' | 'email' | 'tel';
   required: boolean;
   options?: string[];
+  optionLabels?: string[];
   placeholder?: string;
   validation?: string;
   showWhen?: {
@@ -117,4 +121,6 @@ export interface WidgetRemoteConfig {
   headerBackground: string;
   logoUrl: string | null;
   welcomeMessage: string | null;
+  locale?: string;
+  strings?: WidgetStrings;
 }

@@ -23,6 +23,8 @@ import { webchatActionService } from '@/services/webchat-action.js';
 import type { WebChatSession } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
+import { resolveLocale, t } from '@/locales/webchat/index.js';
+import type { SupportedLocale } from '@/locales/webchat/index.js';
 import type { IncomingMessage } from 'node:http';
 
 const log = createLogger('apps:channels:webchat');
@@ -52,6 +54,21 @@ function isRateLimited(sessionId: string): boolean {
   if (timestamps.length >= MAX_MESSAGES_PER_MINUTE) return true;
   timestamps.push(now);
   return false;
+}
+
+// ============================================
+// Session Locale Tracking
+// ============================================
+
+/** In-memory locale per session (no DB migration needed) */
+const sessionLocales = new Map<string, SupportedLocale>();
+
+export function getSessionLocale(sessionId: string): SupportedLocale {
+  return sessionLocales.get(sessionId) ?? 'en';
+}
+
+export function setSessionLocale(sessionId: string, locale: SupportedLocale): void {
+  sessionLocales.set(sessionId, locale);
 }
 
 // ============================================
@@ -179,6 +196,18 @@ function parseToken(req: IncomingMessage): string | null {
 }
 
 /**
+ * Parse the locale query parameter from the WebSocket upgrade request URL.
+ */
+function parseLocale(req: IncomingMessage): SupportedLocale {
+  try {
+    const url = new URL(req.url ?? '', `http://${req.headers.host ?? 'localhost'}`);
+    return resolveLocale(url.searchParams.get('locale') ?? undefined);
+  } catch {
+    return 'en';
+  }
+}
+
+/**
  * Handle a new guest WebSocket connection on /ws/chat.
  * Called by the gateway's WebSocket server.
  *
@@ -190,16 +219,19 @@ function parseToken(req: IncomingMessage): string | null {
 export function handleGuestConnection(ws: GuestSocket, req: IncomingMessage): void {
   handleGuestConnectionAsync(ws, req).catch((error) => {
     log.error({ error }, 'Failed to handle guest connection');
-    ws.send(JSON.stringify({ type: 'error', message: 'Connection failed' }));
+    ws.send(JSON.stringify({ type: 'error', message: t('en', 'errors.connectionFailed') }));
     ws.close();
   });
 }
 
 async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage): Promise<void> {
+  // Parse locale early so it's available for error messages
+  const locale = parseLocale(req);
+
   // Activation gate — reject connections if webchat is disabled
   const webchatConfig = await appConfigService.getAppConfig('channel-webchat');
   if (webchatConfig && !webchatConfig.enabled) {
-    ws.send(JSON.stringify({ type: 'error', message: 'Chat is currently unavailable.' }));
+    ws.send(JSON.stringify({ type: 'error', message: t(locale, 'errors.chatUnavailable') }));
     ws.close();
     return;
   }
@@ -255,12 +287,13 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
 
   // 8B: Connection limit per session
   if (webchatConnectionManager.getCount(sessionId) >= MAX_CONNECTIONS_PER_SESSION) {
-    ws.send(JSON.stringify({ type: 'error', message: 'Too many connections.' }));
+    ws.send(JSON.stringify({ type: 'error', message: t(locale, 'errors.tooManyConnections') }));
     ws.close();
     return;
   }
 
   webchatConnectionManager.add(sessionId, ws);
+  setSessionLocale(sessionId, locale);
 
   // Send session info
   ws.send(
@@ -335,26 +368,33 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
         return;
       }
 
+      if (parsed.type === 'set_locale') {
+        const newLocale = resolveLocale(parsed.locale);
+        setSessionLocale(sessionId, newLocale);
+        return;
+      }
+
       if (parsed.type === 'message') {
+        const sessionLoc = getSessionLocale(sessionId);
         // 8A: Message length limit
         if (typeof parsed.content !== 'string' || parsed.content.length === 0) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Empty message.' }));
+          ws.send(JSON.stringify({ type: 'error', message: t(sessionLoc, 'errors.emptyMessage') }));
           return;
         }
         if (parsed.content.length > MAX_MESSAGE_LENGTH) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Message too long.' }));
+          ws.send(JSON.stringify({ type: 'error', message: t(sessionLoc, 'errors.messageTooLong') }));
           return;
         }
         // 8C: Message rate limiting
         if (isRateLimited(sessionId)) {
-          ws.send(JSON.stringify({ type: 'error', message: 'Please slow down.' }));
+          ws.send(JSON.stringify({ type: 'error', message: t(sessionLoc, 'errors.slowDown') }));
           return;
         }
         handleGuestMessage(sessionId, ws, parsed.content).catch((error) => {
           log.error({ error, sessionId }, 'Failed to process webchat message');
           webchatConnectionManager.send(sessionId, {
             type: 'error',
-            message: "I'm sorry, I encountered an error processing your request. Please try again.",
+            message: t(sessionLoc, 'errors.processingError'),
           });
         });
         return;
@@ -363,7 +403,7 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
       log.debug({ type: parsed.type, sessionId }, 'Unknown webchat message type');
     } catch (error) {
       log.warn({ error, sessionId }, 'Invalid webchat message');
-      ws.send(JSON.stringify({ type: 'error', message: 'Invalid message format' }));
+      ws.send(JSON.stringify({ type: 'error', message: t(getSessionLocale(sessionId), 'errors.invalidMessage') }));
     }
   });
 
@@ -372,6 +412,7 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
     webchatConnectionManager.remove(sessionId, ws);
     if (webchatConnectionManager.getCount(sessionId) === 0) {
       messageTimestamps.delete(sessionId);
+      sessionLocales.delete(sessionId);
     }
     log.info({ sessionId }, 'Guest webchat disconnected');
   });

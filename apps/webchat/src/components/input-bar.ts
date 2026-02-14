@@ -6,20 +6,23 @@
  */
 
 import { createElement } from '../utils.js';
+import { DEFAULT_STRINGS } from '../defaults.js';
+import type { WidgetStrings } from '../defaults.js';
 
 export interface InputBar {
   element: HTMLDivElement;
   setEnabled(enabled: boolean): void;
   focus(): void;
+  updateStrings(strings: WidgetStrings): void;
 }
 
-export function createInputBar(onSend: (content: string) => void): InputBar {
+export function createInputBar(onSend: (content: string) => void, strings: WidgetStrings = DEFAULT_STRINGS): InputBar {
   const bar = createElement('div', { class: 'butler-input-bar' });
 
   const input = createElement('input', {
     class: 'butler-input',
     type: 'text',
-    placeholder: 'Type a message...',
+    placeholder: strings.inputPlaceholder,
     autocomplete: 'off',
   }) as HTMLInputElement;
   input.disabled = true;
@@ -27,7 +30,7 @@ export function createInputBar(onSend: (content: string) => void): InputBar {
   const sendBtn = createElement('button', {
     class: 'butler-send-btn',
     type: 'button',
-    'aria-label': 'Send message',
+    'aria-label': strings.sendButton,
   });
   sendBtn.disabled = true;
   sendBtn.innerHTML =
@@ -60,6 +63,10 @@ export function createInputBar(onSend: (content: string) => void): InputBar {
     },
     focus() {
       input.focus();
+    },
+    updateStrings(s: WidgetStrings) {
+      input.placeholder = s.inputPlaceholder;
+      sendBtn.setAttribute('aria-label', s.sendButton);
     },
   };
 }

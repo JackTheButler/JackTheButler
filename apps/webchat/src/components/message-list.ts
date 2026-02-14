@@ -7,6 +7,8 @@
 
 import { createElement } from '../utils.js';
 import { createMessageBubble } from './message-bubble.js';
+import { DEFAULT_STRINGS } from '../defaults.js';
+import type { WidgetStrings } from '../defaults.js';
 import type { MessageBubbleOptions } from './message-bubble.js';
 import type { MessageVariant } from '../types.js';
 
@@ -15,9 +17,10 @@ export interface MessageList {
   addMessage(content: string, variant: MessageVariant, label?: string, options?: MessageBubbleOptions): void;
   clear(): void;
   scrollToBottom(): void;
+  updateStrings(strings: WidgetStrings): void;
 }
 
-export function createMessageList(): MessageList {
+export function createMessageList(strings: WidgetStrings = DEFAULT_STRINGS): MessageList {
   const container = createElement('div', { class: 'butler-messages' });
 
   // Sentinel element at the bottom — used by IntersectionObserver
@@ -27,7 +30,7 @@ export function createMessageList(): MessageList {
   // Scroll-to-bottom button
   const scrollBtn = createElement('button', {
     class: 'butler-scroll-btn',
-    'aria-label': 'Scroll to bottom',
+    'aria-label': strings.scrollToBottom,
     type: 'button',
   });
   scrollBtn.innerHTML =
@@ -84,5 +87,8 @@ export function createMessageList(): MessageList {
       }
     },
     scrollToBottom,
+    updateStrings(s: WidgetStrings) {
+      scrollBtn.setAttribute('aria-label', s.scrollToBottom);
+    },
   };
 }

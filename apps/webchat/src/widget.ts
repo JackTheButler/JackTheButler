@@ -28,6 +28,8 @@ import { animationStyles } from './styles/animations.css.js';
 import { responsiveStyles } from './styles/responsive.css.js';
 
 import { darkenHex, hexToRgba, contrastText } from './utils.js';
+import { DEFAULT_STRINGS } from './defaults.js';
+import type { WidgetStrings } from './defaults.js';
 import type { ButtonIcon, VerificationStatus, WidgetConfig, WidgetRemoteConfig } from './types.js';
 import type { ActionForm as ActionFormType } from './components/action-form.js';
 
@@ -54,10 +56,12 @@ export class ButlerChatWidget {
   private typingTimer: ReturnType<typeof setTimeout> | null = null;
   private typingShownAt = 0;
   private currentForm: ActionFormType | null = null;
+  private strings: WidgetStrings = DEFAULT_STRINGS;
+  private locale = 'en';
 
   // Components
   private panel = createChatPanel();
-  private messageList = createMessageList();
+  private messageList!: ReturnType<typeof createMessageList>;
   private typingIndicator = createTypingIndicator();
   private inputBar!: ReturnType<typeof createInputBar>;
   private header!: ReturnType<typeof createChatHeader>;
@@ -81,9 +85,17 @@ export class ButlerChatWidget {
     // Fetch remote config and apply theme overrides
     await this.fetchAndApplyConfig();
 
-    // Create components (apply pending remote config to header)
-    this.header = createChatHeader(() => this.close(), this._pendingTitle, this._pendingLogo);
-    this.inputBar = createInputBar((content) => this.handleSend(content));
+    // Create components (with localized strings from config)
+    this.messageList = createMessageList(this.strings);
+    this.header = createChatHeader(
+      () => this.close(),
+      this._pendingTitle,
+      this._pendingLogo,
+      this.strings,
+      (locale) => this.changeLocale(locale),
+      this.locale
+    );
+    this.inputBar = createInputBar((content) => this.handleSend(content), this.strings);
 
     // Assemble panel
     this.panel.setContent(
@@ -95,15 +107,15 @@ export class ButlerChatWidget {
     this.shadow.appendChild(this.panel.element);
 
     // Create managers (but don't connect yet — lazy on first open)
-    this.connection = new ConnectionManager(this.config.gatewayOrigin, {
+    this.connection = new ConnectionManager(this.config.gatewayOrigin, this.locale, {
       onSession: (msg) => {
         this.verificationStatus = msg.verificationStatus ?? 'anonymous';
         this.inputBar.setEnabled(true);
 
         if (msg.restored) {
-          this.messageList.addMessage('Session restored.', 'system');
+          this.messageList.addMessage(this.strings.sessionRestored, 'system');
         } else if (msg.previousExpired) {
-          this.messageList.addMessage('Previous session expired. Starting fresh.', 'system');
+          this.messageList.addMessage(this.strings.sessionExpired, 'system');
         }
       },
       onSessionUpdate: (msg) => {
@@ -120,13 +132,13 @@ export class ButlerChatWidget {
           this.messageList.clear();
           for (const m of msg.messages) {
             if (m.direction === 'inbound') {
-              this.messageList.addMessage(m.content, 'guest', 'You');
+              this.messageList.addMessage(m.content, 'guest', this.strings.senderYou);
             } else if (m.senderType === 'staff') {
-              this.messageList.addMessage(m.content, 'staff', 'Staff');
+              this.messageList.addMessage(m.content, 'staff', this.strings.senderStaff);
             } else if (m.senderType === 'system') {
               this.messageList.addMessage(m.content, 'system');
             } else {
-              this.messageList.addMessage(m.content, 'ai', 'AI');
+              this.messageList.addMessage(m.content, 'ai', this.strings.senderAI);
             }
           }
         }
@@ -140,14 +152,14 @@ export class ButlerChatWidget {
           const qrOptions = msg.quickReplies?.length
             ? { quickReplies: msg.quickReplies, onQuickReply: (text: string) => this.handleSend(text) }
             : undefined;
-          this.messageList.addMessage(msg.content, 'ai', 'AI', qrOptions);
+          this.messageList.addMessage(msg.content, 'ai', this.strings.senderAI, qrOptions);
           if (msg.action?.id) {
             this.actionManager?.handleActionTrigger(msg.action.id);
           }
         } else if (msg.senderType === 'staff') {
-          this.messageList.addMessage(msg.content, 'staff', 'Staff');
+          this.messageList.addMessage(msg.content, 'staff', this.strings.senderStaff);
         } else if (msg.direction === 'inbound') {
-          this.messageList.addMessage(msg.content, 'guest', 'You');
+          this.messageList.addMessage(msg.content, 'guest', this.strings.senderYou);
         }
       },
       onError: (message) => {
@@ -161,7 +173,7 @@ export class ButlerChatWidget {
       },
     }, this.config.butlerKey);
 
-    this.actionManager = new ActionManager(this.config.gatewayOrigin, {
+    this.actionManager = new ActionManager(this.config.gatewayOrigin, this.strings, this.locale, {
       onShowForm: (actionId, fields, actionName, context, onSubmit, onCancel) => {
         this.removeCurrentForm();
 
@@ -175,7 +187,8 @@ export class ButlerChatWidget {
           () => {
             this.removeCurrentForm();
             if (onCancel) onCancel();
-          }
+          },
+          this.strings
         );
 
         this.currentForm = form;
@@ -202,8 +215,12 @@ export class ButlerChatWidget {
 
   private async fetchAndApplyConfig(): Promise<void> {
     try {
-      const keyParam = this.config.butlerKey ? `?key=${this.config.butlerKey}` : '';
-      const res = await fetch(`${this.config.gatewayOrigin}/api/v1/webchat/config${keyParam}`);
+      const params = new URLSearchParams();
+      if (this.config.butlerKey) params.set('key', this.config.butlerKey);
+      const savedLocale = localStorage.getItem('butler-locale');
+      params.set('locale', savedLocale || navigator.language || 'en');
+      const qs = params.toString();
+      const res = await fetch(`${this.config.gatewayOrigin}/api/v1/webchat/config?${qs}`);
       if (!res.ok) return; // Silently fall back to defaults
 
       const cfg: WidgetRemoteConfig = await res.json();
@@ -254,6 +271,15 @@ export class ButlerChatWidget {
       const overrideStyle = document.createElement('style');
       overrideStyle.textContent = `:host { ${overrides.join('; ')}; }`;
       this.shadow.appendChild(overrideStyle);
+    }
+
+    // Store i18n strings + locale
+    if (cfg.strings) this.strings = cfg.strings;
+    if (cfg.locale) this.locale = cfg.locale;
+
+    // RTL support for Arabic
+    if (this.hostEl && this.locale === 'ar') {
+      this.hostEl.dir = 'rtl';
     }
 
     // Store values to apply in init after header creation
@@ -332,11 +358,50 @@ export class ButlerChatWidget {
     this.hostEl?.remove();
   }
 
+  private async changeLocale(locale: string): Promise<void> {
+    this.locale = locale;
+    localStorage.setItem('butler-locale', locale);
+
+    // Tell the server about the new locale
+    this.connection?.sendLocale(locale);
+
+    // Fetch new strings from config endpoint
+    try {
+      const params = new URLSearchParams();
+      if (this.config.butlerKey) params.set('key', this.config.butlerKey);
+      params.set('locale', locale);
+      const qs = params.toString();
+      const res = await fetch(`${this.config.gatewayOrigin}/api/v1/webchat/config?${qs}`);
+      if (res.ok) {
+        const cfg: WidgetRemoteConfig = await res.json();
+        if (cfg.strings) {
+          this.strings = cfg.strings;
+          // Update all components with new strings
+          this.header.updateStrings(this.strings);
+          this.inputBar.updateStrings(this.strings);
+          this.messageList.updateStrings(this.strings);
+          this.actionManager?.setStrings(this.strings);
+          this.actionManager?.setLocale(locale);
+        }
+      }
+    } catch {
+      // Strings update failed — keep current strings
+    }
+
+    // Re-fetch actions in new locale
+    this.actionManager?.fetchActions();
+
+    // RTL support
+    if (this.hostEl) {
+      this.hostEl.dir = locale === 'ar' ? 'rtl' : '';
+    }
+  }
+
   private handleSend(content: string): void {
     if (!this.connection?.isConnected()) return;
 
     this.connection.sendMessage(content);
-    this.messageList.addMessage(content, 'guest', 'You');
+    this.messageList.addMessage(content, 'guest', this.strings.senderYou);
 
     // Show typing indicator
     this.showTyping();

@@ -1,0 +1,198 @@
+{
+  "widget": {
+    "inputPlaceholder": "输入消息...",
+    "sendButton": "发送消息",
+    "closeChat": "关闭聊天",
+    "scrollToBottom": "滚动到底部",
+    "senderYou": "您",
+    "senderAI": "AI",
+    "senderStaff": "工作人员",
+    "sessionRestored": "会话已恢复。",
+    "sessionExpired": "上次会话已过期。重新开始。",
+    "submit": "提交",
+    "cancel": "取消",
+    "submitting": "提交中...",
+    "fieldRequired": "{{field}}为必填项",
+    "selectPlaceholder": "请选择{{field}}...",
+    "verifyFirst": "请先验证您的预订。",
+    "noSession": "没有活动会话。请刷新页面。",
+    "verificationCode": "验证码",
+    "actionFailed": "操作失败。",
+    "submitFailed": "提交表单失败。请重试。"
+  },
+  "errors": {
+    "connectionFailed": "连接失败",
+    "chatUnavailable": "聊天目前不可用。",
+    "tooManyConnections": "连接过多。",
+    "emptyMessage": "消息为空。",
+    "messageTooLong": "消息过长。",
+    "slowDown": "请稍慢一些。",
+    "processingError": "抱歉，处理您的请求时出错。请重试。",
+    "invalidMessage": "消息格式无效"
+  },
+  "actions": {
+    "verifyReservation": {
+      "name": "验证您的预订",
+      "triggerHint": "guest wants to verify or link their booking/reservation",
+      "fields": {
+        "method": {
+          "label": "验证方式",
+          "options": {
+            "booking-name": "预订号 + 姓氏",
+            "booking-email": "预订号 + 邮箱",
+            "email-code": "邮箱验证码"
+          }
+        },
+        "confirmationNumber": {
+          "label": "预订号",
+          "placeholder": "例如 BK-12345"
+        },
+        "lastName": {
+          "label": "预订姓氏",
+          "placeholder": "与您的预订一致"
+        },
+        "email": {
+          "label": "邮箱地址",
+          "placeholder": "您预订时使用的邮箱"
+        },
+        "code": {
+          "label": "验证码",
+          "placeholder": "邮箱中的6位验证码"
+        }
+      }
+    },
+    "extendStay": {
+      "name": "延长住宿",
+      "triggerHint": "guest wants to extend their stay or change checkout date",
+      "fields": {
+        "newCheckoutDate": {
+          "label": "新退房日期"
+        },
+        "notes": {
+          "label": "特殊要求",
+          "placeholder": "选填"
+        }
+      }
+    },
+    "requestService": {
+      "name": "请求服务",
+      "triggerHint": "guest wants housekeeping, towels, pillows, amenities, or maintenance",
+      "fields": {
+        "serviceType": {
+          "label": "服务类型",
+          "options": {
+            "housekeeping": "客房清洁",
+            "extra-towels": "额外毛巾",
+            "extra-pillows": "额外枕头",
+            "amenities": "洗漱用品",
+            "maintenance": "维修",
+            "other": "其他"
+          }
+        },
+        "details": {
+          "label": "详情",
+          "placeholder": "具体说明"
+        },
+        "urgency": {
+          "label": "紧急程度",
+          "options": {
+            "normal": "普通",
+            "urgent": "紧急"
+          }
+        }
+      }
+    },
+    "orderRoomService": {
+      "name": "订购客房服务",
+      "triggerHint": "guest wants to order food or beverages to their room",
+      "fields": {
+        "items": {
+          "label": "您想点什么？",
+          "placeholder": "例如 凯撒沙拉、总会三明治、气泡水"
+        },
+        "specialInstructions": {
+          "label": "特殊说明",
+          "placeholder": "过敏、偏好等"
+        }
+      }
+    },
+    "bookSpa": {
+      "name": "预约水疗",
+      "triggerHint": "guest wants to book a spa treatment or massage",
+      "fields": {
+        "treatment": {
+          "label": "项目",
+          "options": {
+            "massage": "按摩",
+            "facial": "面部护理",
+            "body-wrap": "身体裹敷",
+            "manicure-pedicure": "美甲美足",
+            "other": "其他"
+          }
+        },
+        "preferredDate": {
+          "label": "首选日期"
+        },
+        "preferredTime": {
+          "label": "首选时间",
+          "options": {
+            "morning": "上午",
+            "midday": "中午",
+            "afternoon": "下午",
+            "evening": "晚上"
+          }
+        },
+        "notes": {
+          "label": "备注",
+          "placeholder": "偏好或要求"
+        }
+      }
+    }
+  },
+  "messages": {
+    "actionDisabled": "此操作目前不可用。",
+    "sessionExpired": "会话已过期。请刷新页面。",
+    "unknownAction": "未知操作。",
+    "verificationRequired": "请先验证您的预订。",
+    "inputTooLong": "{{field}}过长（最多{{max}}个字符）。",
+    "actionNotImplemented": "操作未实现。",
+    "sessionNotFound": "未找到会话。",
+    "tooManyAttempts": "验证尝试次数过多。请开始新的聊天会话。",
+    "invalidMethod": "无效的验证方式。",
+    "missingBookingRef": "需要预订号和姓氏。",
+    "missingBookingEmail": "需要预订号和邮箱。",
+    "noReservationFound": "未找到该预订号的预订。",
+    "lastNameMismatch": "姓氏与我们的记录不符。",
+    "emailMismatch": "邮箱与我们的记录不符。",
+    "missingEmail": "需要邮箱地址。",
+    "verificationUnavailable": "验证暂时不可用。",
+    "noReservationForEmail": "未找到该邮箱的预订。",
+    "tooManyCodeRequests": "验证码请求过多。请稍后重试。",
+    "tooManyCodeRequestsEmail": "该邮箱验证码请求过多。请稍后重试。",
+    "codeSent": "6位验证码已发送至您的邮箱。",
+    "missingEmailAndCode": "需要邮箱和验证码。",
+    "noPendingCode": "没有待验证的验证码。请重新请求。",
+    "codeExpired": "验证码已过期。请重新请求。",
+    "invalidCode": "验证码无效。",
+    "noReservationFoundGeneric": "未找到预订。",
+    "verifiedWelcome": "预订已验证！欢迎，{{firstName}}。有什么可以帮您的吗？",
+    "missingCheckoutDate": "需要新的退房日期。",
+    "noReservationLinked": "此会话未关联预订。",
+    "extendStaySuccess": "收到！您延长住宿至{{date}}的请求已提交。前台将尽快确认。",
+    "extendStayNotes": " 我们已记录：\"{{notes}}\"。",
+    "extendStayAnythingElse": " 还有什么需要帮助的吗？",
+    "missingServiceType": "请选择服务类型。",
+    "serviceRequestSuccess": "您的{{service}}请求已提交{{urgency}}。我们的团队将尽快处理。",
+    "serviceRequestUrgent": "（紧急）",
+    "serviceRequestDetails": " 我们已记录：\"{{details}}\"。",
+    "serviceRequestAnythingElse": " 还需要什么吗？",
+    "missingOrderItems": "请告诉我们您想点什么。",
+    "roomServiceSuccess": "您的客房服务订单已提交！我们将尽快送至您的房间。",
+    "roomServiceInstructions": " 特殊说明已记录：\"{{instructions}}\"。",
+    "roomServiceAnythingElse": " 还需要什么吗？",
+    "missingSpaFields": "请填写项目、日期和时间。",
+    "spaBookingSuccess": "您的{{treatment}}已申请，时间为{{date}}（{{time}}）。水疗团队将尽快确认。",
+    "spaBookingNotes": " 备注：\"{{notes}}\"。",
+    "spaBookingAnythingElse": " 还需要什么吗？"
+  }
+}
