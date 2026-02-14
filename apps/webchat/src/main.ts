@@ -44,8 +44,12 @@ const widget = new ButlerChatWidget({ gatewayOrigin, butlerKey });
     const preset = cta.getAttribute('data-butler-chat');
     if (!preset || preset === '' || preset === 'bubble') {
       cta.classList.add('butler-chat-trigger');
+    } else if (preset === 'inline') {
+      cta.classList.add('butler-chat-inline');
     }
-    // "custom" → no default styles
+
+    // Reveal CTA if hidden before widget loaded
+    cta.style.removeProperty('display');
   }
 
   // Inject default CTA styles into document head
@@ -89,6 +93,36 @@ const widget = new ButlerChatWidget({ gatewayOrigin, butlerKey });
         background-image: url("data:image/svg+xml,${ctaIconSvg}");
         background-size: contain;
         background-repeat: no-repeat;
+      }
+      .butler-chat-inline {
+        display: inline-flex;
+        align-items: center;
+        gap: 8px;
+        padding: 10px 20px;
+        border-radius: 24px;
+        background: ${ctaColor};
+        color: ${contrastText(ctaColor)};
+        border: none;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: 500;
+        font-family: inherit;
+        line-height: 1;
+        transition: background 150ms ease, transform 150ms ease;
+      }
+      .butler-chat-inline:hover {
+        filter: brightness(0.9);
+        transform: scale(1.03);
+      }
+      .butler-chat-inline::before {
+        content: '';
+        display: block;
+        width: 18px;
+        height: 18px;
+        background-image: url("data:image/svg+xml,${ctaIconSvg}");
+        background-size: contain;
+        background-repeat: no-repeat;
+        flex-shrink: 0;
       }
     `;
     document.head.appendChild(ctaStyle);

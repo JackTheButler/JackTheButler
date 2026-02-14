@@ -91,7 +91,44 @@ After completing the wizard, log in with the credentials you created.
    - URL: `https://your-domain.com/webhooks/whatsapp`
    - Verify Token: Your configured token
 
-### 4. Test the Setup
+### 4. Add Web Chat to Your Website
+
+Embed the chat widget on your hotel website so visitors can talk to Jack directly.
+
+1. Go to **Engine > Apps > Web Chat** in the dashboard
+2. Customize the appearance (color, icon, bot name, welcome message)
+3. Click **Save** and toggle **Enabled**
+4. Copy the embed code shown in the dashboard — it includes your unique widget key
+
+Paste the embed code before `</body>` on your website. Then **add a chat button** using one of two presets:
+
+```html
+<!-- Floating bubble (fixed bottom-right corner) -->
+<button data-butler-chat>Chat</button>
+
+<!-- Inline button (flows in page, styled pill) -->
+<button data-butler-chat="inline">Chat with us</button>
+```
+
+- **`bubble`** (default) — Fixed-position circle in the bottom-right corner with a chat icon. Best for a persistent, always-visible CTA.
+- **`inline`** — A styled pill button that flows in the page layout. Place it wherever you want — a header, hero section, or contact page. Override the default styles with your own CSS on `.butler-chat-inline`.
+
+You can use both presets on the same page. Both toggle the same chat panel.
+
+**Customizing the inline button:**
+
+```css
+/* Override default inline styles */
+.butler-chat-inline {
+  background: #2c1810;
+  border-radius: 6px;
+  font-family: Georgia, serif;
+}
+```
+
+Button color, icon, and branding are configured in the dashboard under **Engine > Apps > Web Chat**.
+
+### 5. Test the Setup
 
 1. Send a message to your WhatsApp Business number
 2. You should see the conversation appear in the dashboard

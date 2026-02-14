@@ -1,0 +1,180 @@
+---
+import DocsLayout from '../../../layouts/DocsLayout.astro'
+---
+
+<DocsLayout
+  title="Web Chat Setup"
+  description="Add a chat widget to your hotel website so visitors can talk to Jack directly."
+  section="Configuration"
+>
+  <p>
+    The web chat widget lets guests start a conversation from your website. It connects directly to your Jack server — no third-party accounts or API keys needed.
+  </p>
+
+  <h2 id="overview">Overview</h2>
+
+  <p>Setting up web chat takes three steps:</p>
+
+  <ol>
+    <li>Configure the widget in the dashboard</li>
+    <li>Copy the embed code to your website</li>
+    <li>Add a chat button</li>
+  </ol>
+
+  <h2 id="step-1">Step 1: Configure in the Dashboard</h2>
+
+  <ol>
+    <li>Go to <strong>Engine &gt; Apps &gt; Web Chat</strong></li>
+    <li>Customize the widget appearance:
+      <ul>
+        <li><strong>Primary Color</strong> — Button and header color</li>
+        <li><strong>Button Icon</strong> — Chat bubble, bell, dots, or headset</li>
+        <li><strong>Bot Name</strong> — Display name in the chat header</li>
+        <li><strong>Welcome Message</strong> — Initial greeting shown to visitors</li>
+        <li><strong>Allowed Domains</strong> — Restrict which websites can use the widget (optional)</li>
+      </ul>
+    </li>
+    <li>Click <strong>Save</strong> and toggle <strong>Enabled</strong></li>
+  </ol>
+
+  <p>
+    When you save, Jack generates a unique widget key and shows you the embed code to copy.
+  </p>
+
+  <h2 id="step-2">Step 2: Add the Embed Code</h2>
+
+  <p>
+    Copy the embed code from the dashboard and paste it before the closing <code>&lt;/body&gt;</code> tag on any page where you want the chat widget. It looks like this:
+  </p>
+
+  <pre><code>&lt;script src="https://your-jack-server.com/widget.js" data-butler-key="wc_..."&gt;&lt;/script&gt;</code></pre>
+
+  <p>
+    The <code>data-butler-key</code> is unique to your property and authenticates the widget. Don't change it — use the exact code from the dashboard.
+  </p>
+
+  <h2 id="step-3">Step 3: Add a Chat Button</h2>
+
+  <p>
+    Any element with the <code>data-butler-chat</code> attribute becomes a chat trigger. Jack provides two built-in presets:
+  </p>
+
+  <h3>Floating Bubble (default)</h3>
+
+  <pre><code>&lt;button data-butler-chat&gt;Chat&lt;/button&gt;</code></pre>
+
+  <p>
+    Renders a fixed-position circle in the bottom-right corner of the page with a chat icon. Always visible as guests browse. This is the most common option.
+  </p>
+
+  <h3>Inline Button</h3>
+
+  <pre><code>&lt;button data-butler-chat="inline"&gt;Chat with us&lt;/button&gt;</code></pre>
+
+  <p>
+    Renders a styled pill button that flows in the page layout. Place it in a header, hero section, contact page, or anywhere you want a natural call-to-action. The button text is whatever you put inside the element.
+  </p>
+
+  <div class="not-prose my-6 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+    <p class="text-sm text-blue-800 dark:text-blue-200">
+      <strong>Tip:</strong> You can use both presets on the same page. Both toggle the same chat panel.
+    </p>
+  </div>
+
+  <h2 id="customization">Customizing Appearance</h2>
+
+  <p>
+    Widget color, icon, bot name, and branding are all managed in the dashboard under <strong>Engine &gt; Apps &gt; Web Chat</strong>. Changes apply immediately — no need to update the embed code.
+  </p>
+
+  <h3>CSS overrides for inline buttons</h3>
+
+  <p>
+    The inline button has sensible defaults, but you can override them in your own stylesheet:
+  </p>
+
+  <pre><code>.butler-chat-inline &#123;
+  background: #2c1810;
+  border-radius: 6px;
+  font-family: Georgia, serif;
+&#125;</code></pre>
+
+  <p>
+    Your CSS takes precedence over the widget's built-in styles, so you can match the button to your hotel's brand.
+  </p>
+
+  <h2 id="examples">Full Example</h2>
+
+  <pre><code>&lt;!DOCTYPE html&gt;
+&lt;html&gt;
+&lt;body&gt;
+  &lt;header&gt;
+    &lt;nav&gt;
+      &lt;!-- Inline chat button in your nav bar --&gt;
+      &lt;button data-butler-chat="inline"&gt;Chat with us&lt;/button&gt;
+    &lt;/nav&gt;
+  &lt;/header&gt;
+
+  &lt;main&gt;
+    &lt;!-- Your page content --&gt;
+  &lt;/main&gt;
+
+  &lt;!-- Floating bubble (always visible) --&gt;
+  &lt;button data-butler-chat&gt;Chat&lt;/button&gt;
+
+  &lt;!-- Widget script (before closing body) --&gt;
+  &lt;script src="https://your-jack-server.com/widget.js"
+          data-butler-key="YOUR_KEY"&gt;&lt;/script&gt;
+&lt;/body&gt;
+&lt;/html&gt;</code></pre>
+
+  <h2 id="how-it-works">How It Works</h2>
+
+  <ul>
+    <li>The script loads asynchronously and creates the chat panel</li>
+    <li>It finds all <code>[data-butler-chat]</code> elements and binds click handlers</li>
+    <li>Clicking any trigger toggles the chat panel open/closed</li>
+    <li>Messages are sent over WebSocket to your Jack server in real-time</li>
+    <li>Conversations appear in your dashboard alongside WhatsApp, SMS, and email</li>
+  </ul>
+
+  <h2 id="guest-identity">Guest Identity</h2>
+
+  <p>
+    Web chat guests are session-based by default. If a guest provides their email or phone number during the conversation, Jack links them to any existing guest profile across other channels.
+  </p>
+
+  <h2 id="costs">Costs</h2>
+
+  <div class="not-prose my-6 p-4 bg-neutral-50 dark:bg-neutral-900 rounded-lg">
+    <ul class="space-y-2 text-sm">
+      <li class="flex justify-between">
+        <span>Web Chat widget</span>
+        <span class="text-green-600 dark:text-green-400 font-medium">Free — included with Jack</span>
+      </li>
+    </ul>
+    <p class="text-xs text-neutral-500 mt-3">No per-message fees. The widget connects directly to your self-hosted Jack server.</p>
+  </div>
+
+  <h2 id="troubleshooting">Troubleshooting</h2>
+
+  <h3>Widget doesn't load</h3>
+  <ul>
+    <li>Check the script <code>src</code> URL points to your Jack server</li>
+    <li>Verify your Jack server is running and accessible from the browser</li>
+    <li>Check the browser console for errors</li>
+  </ul>
+
+  <h3>Chat button doesn't appear</h3>
+  <ul>
+    <li>Ensure your element has the <code>data-butler-chat</code> attribute</li>
+    <li>For the bubble preset, the button may be hidden behind other fixed elements — check <code>z-index</code></li>
+  </ul>
+
+  <h3>Messages not sending</h3>
+  <ul>
+    <li>Verify the <code>data-butler-key</code> matches the key in your dashboard</li>
+    <li>Check that WebSocket connections are not blocked by a firewall or proxy</li>
+    <li>If using a reverse proxy, ensure it supports WebSocket upgrades</li>
+  </ul>
+</DocsLayout>
