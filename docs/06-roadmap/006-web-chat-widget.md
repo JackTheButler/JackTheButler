@@ -1491,11 +1491,11 @@ Phase 6 will override these via config endpoint. CSS custom properties inherit i
 
 | # | Feature | Status |
 |---|---------|--------|
-| 7A | Quick Reply Buttons | Pending |
-| 7B | New Service Actions | Pending |
+| 7A | Quick Reply Buttons | Done |
+| 7B | New Service Actions | Done |
 | 7C | Pre-Chat Form | Future |
 | 7D | Offline / Away Mode | Removed |
-| 7E | Conversation Persistence | Pending |
+| 7E | Conversation Persistence | Done |
 | 7F | Rich Responses (Cards & Images) | Future |
 | 7G | Read Receipts | Future |
 
@@ -1597,19 +1597,85 @@ When a verified guest returns after session expiry and re-verifies, restore thei
 
 4. **`apps/webchat/src/widget.ts`** — In `onHistory` callback (lines 117-131): if messages are already displayed (mid-session history from verification), call `clear()` first before rendering the restored history.
 
-### Phase 8: Security Hardening
+### Phase 8: Security Hardening ✅
 
 **Goal:** Production-ready security for a public-facing widget.
 
+**Status:** Complete
+
 | # | Feature | Status |
 |---|---------|--------|
-| 8A | Message length limits — reject messages over 5000 chars at WS handler | Pending |
-| 8B | WebSocket connection limit — max 5 concurrent connections per session | Pending |
-| 8C | Message rate limiting — max ~10 messages/min per session, throttle at WS layer | Pending |
-| 8D | Domain allowlist enforcement — validate Origin header on WS upgrade + widget.js endpoint against `allowedDomains` config | Pending |
-| 8E | Action form input validation — enforce max length on all text fields, sanitize before passing to handlers | Pending |
-| 8F | Verification code rate limiting — max 3 code generation requests per session per hour | Pending |
-| 8G | AI data exposure rules — system prompt guardrails to never reveal room numbers, credit cards, full phone/email in widget responses | Pending |
+| 8A | Message length limits | Done |
+| 8B | WebSocket connection limit | Done |
+| 8C | Message rate limiting | Done |
+| 8D | Domain allowlist enforcement | Done |
+| 8E | Action form input validation | Done |
+| 8F | Verification code rate limiting | Done |
+| 8G | AI data exposure rules | Done |
+
+#### 8A: Message Length Limits
+
+Reject empty or oversized messages at the WS handler before they reach the message processor. Max 5000 characters. Returns `{ type: "error", message: "..." }` to the sender.
+
+**File:** `src/apps/channels/webchat/index.ts` — in `ws.on('message')` handler, before `handleGuestMessage()`.
+
+---
+
+#### 8B: WebSocket Connection Limit
+
+Max 5 concurrent WS connections per session (prevents tab-bombing). Checked in `handleGuestConnectionAsync()` before `connectionManager.add()`. Excess connections receive an error message and are closed.
+
+**File:** `src/apps/channels/webchat/index.ts` — in `handleGuestConnectionAsync()`.
+
+---
+
+#### 8C: Message Rate Limiting
+
+Sliding window rate limiter — max 10 messages per minute per session. Uses an in-memory `Map<string, number[]>` tracking timestamps. Automatically cleaned up when all connections for a session close. Returns "Please slow down." on excess.
+
+**File:** `src/apps/channels/webchat/index.ts` — `isRateLimited()` function + check in `ws.on('message')` handler.
+
+---
+
+#### 8D: Domain Allowlist Enforcement
+
+Validates the `Origin` header on WS upgrade against the `allowedDomains` config field. Supports exact match and subdomain match (e.g., `hotel.com` matches `www.hotel.com`). If `allowedDomains` is empty/unset, all origins are allowed (backwards compatible). Unauthorized connections are closed immediately.
+
+**File:** `src/apps/channels/webchat/index.ts` — in `handleGuestConnectionAsync()`, after activation gate.
+
+---
+
+#### 8E: Action Form Input Validation
+
+Enforces a 500-character max length on all action form text fields. Checked in `execute()` against the action's field definitions before any handler logic runs.
+
+**File:** `src/services/webchat-action.ts` — in `execute()`, after verification check.
+
+---
+
+#### 8F: Verification Code Rate Limiting
+
+Max 3 email verification code requests per session per hour. Uses a sliding window `Map<string, number[]>`. Prevents abuse of the email-code verification method without blocking other verification methods.
+
+**File:** `src/services/webchat-action.ts` — in `handleVerifyByEmail()`, before code generation.
+
+---
+
+#### 8G: AI Data Exposure Rules
+
+System prompt guardrails added to the AI responder for webchat conversations. Explicitly instructs the AI to never reveal: room numbers, credit card/payment details, full phone numbers (only last 4 digits), full email addresses (only masked form), other guests on the same booking, or billing/folio details. Directs guests to contact the front desk for restricted information.
+
+**File:** `src/ai/responder.ts` — "Data Exposure Rules" section in system prompt.
+
+---
+
+#### Files Modified
+
+| File | Changes |
+|------|---------|
+| `src/apps/channels/webchat/index.ts` | 8A message length check, 8B connection limit, 8C rate limiter, 8D domain allowlist |
+| `src/services/webchat-action.ts` | 8E input field length validation, 8F verification code rate limit |
+| `src/ai/responder.ts` | 8G data exposure rules in system prompt |
 
 ---
 

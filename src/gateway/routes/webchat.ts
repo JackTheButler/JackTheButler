@@ -65,6 +65,26 @@ type Variables = {
 const webchatRouter = new Hono<{ Variables: Variables }>();
 
 /**
+ * Domain allowlist middleware — validate Origin header on all webchat REST endpoints.
+ * If allowedDomains is configured, only requests from those domains are allowed.
+ */
+webchatRouter.use('*', async (c, next) => {
+  const appConfig = await appConfigService.getAppConfig('channel-webchat');
+  const allowedDomainsStr = (appConfig?.config?.allowedDomains as string)?.trim();
+  if (!allowedDomainsStr) return next();
+
+  const origin = c.req.header('Origin') ?? '';
+  let originHost = '';
+  try { originHost = new URL(origin).hostname.toLowerCase(); } catch { /* invalid origin */ }
+  const allowedDomains = allowedDomainsStr.split(',').map((d) => d.trim().toLowerCase());
+  if (!allowedDomains.some((d) => originHost === d || originHost.endsWith(`.${d}`))) {
+    log.warn({ origin }, 'Rejected webchat request from unauthorized domain');
+    return c.json({ error: 'Unauthorized domain' }, 403);
+  }
+  return next();
+});
+
+/**
  * GET /api/v1/webchat/config
  * Returns widget appearance config (colors, bot name, logo).
  * No auth — widget runs on hotel's public site.

@@ -40,7 +40,8 @@ export class ConnectionManager {
 
   constructor(
     private readonly gatewayOrigin: string,
-    private readonly callbacks: ConnectionCallbacks
+    private readonly callbacks: ConnectionCallbacks,
+    private readonly butlerKey?: string
   ) {}
 
   connect(): void {
@@ -51,9 +52,16 @@ export class ConnectionManager {
     const host = this.gatewayOrigin.replace(/^https?:\/\//, '');
     let url = `${protocol}//${host}/ws/chat`;
 
+    const params: string[] = [];
     const token = getToken();
     if (token) {
-      url += `?token=${encodeURIComponent(token)}`;
+      params.push(`token=${encodeURIComponent(token)}`);
+    }
+    if (this.butlerKey) {
+      params.push(`key=${encodeURIComponent(this.butlerKey)}`);
+    }
+    if (params.length > 0) {
+      url += `?${params.join('&')}`;
     }
 
     const ws = new WebSocket(url);

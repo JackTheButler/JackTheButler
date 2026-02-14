@@ -159,7 +159,7 @@ export class ButlerChatWidget {
       onDisconnected: () => {
         this.inputBar.setEnabled(false);
       },
-    });
+    }, this.config.butlerKey);
 
     this.actionManager = new ActionManager(this.config.gatewayOrigin, {
       onShowForm: (actionId, fields, actionName, context, onSubmit, onCancel) => {

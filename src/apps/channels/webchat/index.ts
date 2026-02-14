@@ -28,6 +28,33 @@ import type { IncomingMessage } from 'node:http';
 const log = createLogger('apps:channels:webchat');
 
 // ============================================
+// Security Limits
+// ============================================
+
+const MAX_MESSAGE_LENGTH = 5000;
+const MAX_CONNECTIONS_PER_SESSION = 5;
+const MAX_MESSAGES_PER_MINUTE = 10;
+
+/** Sliding-window message rate tracker per session */
+const messageTimestamps = new Map<string, number[]>();
+
+function isRateLimited(sessionId: string): boolean {
+  const now = Date.now();
+  let timestamps = messageTimestamps.get(sessionId);
+  if (!timestamps) {
+    timestamps = [];
+    messageTimestamps.set(sessionId, timestamps);
+  }
+  // Keep only last 60s
+  while (timestamps.length > 0 && now - timestamps[0]! > 60_000) {
+    timestamps.shift();
+  }
+  if (timestamps.length >= MAX_MESSAGES_PER_MINUTE) return true;
+  timestamps.push(now);
+  return false;
+}
+
+// ============================================
 // Connection Manager
 // ============================================
 
@@ -177,6 +204,31 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
     return;
   }
 
+  // Widget key validation — reject connections without valid key
+  const widgetKey = (webchatConfig?.config?.widgetKey as string) ?? '';
+  if (widgetKey) {
+    const url = new URL(req.url ?? '', `http://${req.headers.host ?? 'localhost'}`);
+    const queryKey = url.searchParams.get('key') ?? '';
+    if (queryKey !== widgetKey) {
+      log.warn('Rejected webchat connection: invalid widget key');
+      ws.close();
+      return;
+    }
+  }
+
+  // 8D: Domain allowlist — validate Origin header
+  const allowedDomainsStr = (webchatConfig?.config?.allowedDomains as string)?.trim();
+  if (allowedDomainsStr) {
+    const origin = req.headers.origin;
+    const originHost = origin ? (() => { try { return new URL(origin).hostname.toLowerCase(); } catch { return ''; } })() : '';
+    const allowedDomains = allowedDomainsStr.split(',').map((d) => d.trim().toLowerCase());
+    if (!allowedDomains.some((d) => originHost === d || originHost.endsWith(`.${d}`))) {
+      log.warn({ origin }, 'Rejected webchat connection from unauthorized domain');
+      ws.close();
+      return;
+    }
+  }
+
   const token = parseToken(req);
   let session: WebChatSession;
   let restored = false;
@@ -200,6 +252,14 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
   }
 
   const sessionId = session.id;
+
+  // 8B: Connection limit per session
+  if (webchatConnectionManager.getCount(sessionId) >= MAX_CONNECTIONS_PER_SESSION) {
+    ws.send(JSON.stringify({ type: 'error', message: 'Too many connections.' }));
+    ws.close();
+    return;
+  }
+
   webchatConnectionManager.add(sessionId, ws);
 
   // Send session info
@@ -276,6 +336,20 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
       }
 
       if (parsed.type === 'message') {
+        // 8A: Message length limit
+        if (typeof parsed.content !== 'string' || parsed.content.length === 0) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Empty message.' }));
+          return;
+        }
+        if (parsed.content.length > MAX_MESSAGE_LENGTH) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Message too long.' }));
+          return;
+        }
+        // 8C: Message rate limiting
+        if (isRateLimited(sessionId)) {
+          ws.send(JSON.stringify({ type: 'error', message: 'Please slow down.' }));
+          return;
+        }
         handleGuestMessage(sessionId, ws, parsed.content).catch((error) => {
           log.error({ error, sessionId }, 'Failed to process webchat message');
           webchatConnectionManager.send(sessionId, {
@@ -296,6 +370,9 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
   // Handle close — session persists in DB, only WS removed
   ws.on('close', () => {
     webchatConnectionManager.remove(sessionId, ws);
+    if (webchatConnectionManager.getCount(sessionId) === 0) {
+      messageTimestamps.delete(sessionId);
+    }
     log.info({ sessionId }, 'Guest webchat disconnected');
   });
 

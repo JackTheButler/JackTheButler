@@ -47,6 +47,12 @@ export class Scheduler {
       if (count > 0) {
         log.info({ deleted: count }, 'Cleaned up expired webchat sessions');
       }
+
+      const { cleanupRateLimitMaps } = await import('./webchat-action.js');
+      const rateLimitCleaned = cleanupRateLimitMaps();
+      if (rateLimitCleaned > 0) {
+        log.info({ cleaned: rateLimitCleaned }, 'Cleaned up stale rate-limit entries');
+      }
     });
 
     log.info({ jobs: Array.from(this.jobs.keys()) }, 'Scheduler started');
@@ -104,6 +110,12 @@ export class Scheduler {
       const count = await webchatSessionService.cleanupExpired();
       if (count > 0) {
         log.info({ deleted: count }, 'Cleaned up expired webchat sessions');
+      }
+
+      const { cleanupRateLimitMaps } = await import('./webchat-action.js');
+      const rateLimitCleaned = cleanupRateLimitMaps();
+      if (rateLimitCleaned > 0) {
+        log.info({ cleaned: rateLimitCleaned }, 'Cleaned up stale rate-limit entries');
       }
     }
   }

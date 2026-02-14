@@ -222,6 +222,14 @@ const actions: WebChatAction[] = [
 // ============================================
 
 const MAX_VERIFICATION_ATTEMPTS = 5;
+const MAX_INPUT_FIELD_LENGTH = 500;
+const MAX_CODE_REQUESTS_PER_HOUR = 3;
+const MAX_CODE_REQUESTS_PER_EMAIL_PER_HOUR = 5;
+
+/** Sliding-window tracker for email verification code requests per session */
+const codeRequestTimestamps = new Map<string, number[]>();
+/** Sliding-window tracker for code requests per email (cross-session) */
+const emailCodeRequestTimestamps = new Map<string, number[]>();
 
 export class WebChatActionService {
   /**
@@ -308,6 +316,14 @@ export class WebChatActionService {
         message: 'Please verify your booking first.',
         error: 'verification_required',
       };
+    }
+
+    // 8E: Validate input field lengths
+    for (const field of action.fields) {
+      const value = input[field.key];
+      if (value && value.length > MAX_INPUT_FIELD_LENGTH) {
+        return { success: false, message: `${field.label} is too long (max ${MAX_INPUT_FIELD_LENGTH} characters).`, error: 'input_too_long' };
+      }
     }
 
     // Touch session
@@ -477,8 +493,28 @@ export class WebChatActionService {
       return { success: false, message: 'No reservation found for that email address.', error: 'not_found' };
     }
 
-    // Generate 4-digit code
-    const code = String(randomInt(1000, 10000));
+    // 8F: Rate limit code generation — per session and per email
+    const now = Date.now();
+    let codeTimestamps = codeRequestTimestamps.get(sessionId) || [];
+    codeTimestamps = codeTimestamps.filter((t) => now - t < 60 * 60 * 1000);
+    if (codeTimestamps.length >= MAX_CODE_REQUESTS_PER_HOUR) {
+      return { success: false, message: 'Too many code requests. Please try again later.', error: 'rate_limited' };
+    }
+
+    const emailKey = email.toLowerCase();
+    let emailTimestamps = emailCodeRequestTimestamps.get(emailKey) || [];
+    emailTimestamps = emailTimestamps.filter((t) => now - t < 60 * 60 * 1000);
+    if (emailTimestamps.length >= MAX_CODE_REQUESTS_PER_EMAIL_PER_HOUR) {
+      return { success: false, message: 'Too many code requests for this email. Please try again later.', error: 'rate_limited' };
+    }
+
+    codeTimestamps.push(now);
+    codeRequestTimestamps.set(sessionId, codeTimestamps);
+    emailTimestamps.push(now);
+    emailCodeRequestTimestamps.set(emailKey, emailTimestamps);
+
+    // Generate 6-digit code
+    const code = String(randomInt(100000, 1000000));
     const codeHash = createHash('sha256').update(code).digest('hex');
     const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
 
@@ -489,7 +525,7 @@ export class WebChatActionService {
 
     return {
       success: true,
-      message: 'A 4-digit verification code has been sent to your email.',
+      message: 'A 6-digit verification code has been sent to your email.',
       nextStep: {
         fields: [
           {
@@ -497,7 +533,7 @@ export class WebChatActionService {
             label: 'Verification Code',
             type: 'text',
             required: true,
-            placeholder: '4-digit code from your email',
+            placeholder: '6-digit code from your email',
           },
         ],
         context: { email, method: 'email-code' },
@@ -829,3 +865,27 @@ export class WebChatActionService {
  * Singleton instance
  */
 export const webchatActionService = new WebChatActionService();
+
+/**
+ * Clean up stale rate-limit entries (entries older than 1 hour).
+ * Called periodically by the scheduler.
+ */
+export function cleanupRateLimitMaps(): number {
+  const now = Date.now();
+  const hour = 60 * 60 * 1000;
+  let cleaned = 0;
+
+  for (const [key, timestamps] of codeRequestTimestamps) {
+    const fresh = timestamps.filter((t) => now - t < hour);
+    if (fresh.length === 0) { codeRequestTimestamps.delete(key); cleaned++; }
+    else { codeRequestTimestamps.set(key, fresh); }
+  }
+
+  for (const [key, timestamps] of emailCodeRequestTimestamps) {
+    const fresh = timestamps.filter((t) => now - t < hour);
+    if (fresh.length === 0) { emailCodeRequestTimestamps.delete(key); cleaned++; }
+    else { emailCodeRequestTimestamps.set(key, fresh); }
+  }
+
+  return cleaned;
+}

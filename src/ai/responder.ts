@@ -439,6 +439,16 @@ export class AIResponder implements Responder {
     systemContent += '\nExample: "How can I help?" [QUICK_REPLIES:Room Service|Housekeeping|Extend Stay|Something Else]';
     systemContent += '\nOnly use when options are genuinely useful. Do NOT use for open-ended questions. Do NOT combine with [ACTION:...].';
 
+    // 8G: Data exposure guardrails
+    systemContent += '\n\n## Data Exposure Rules';
+    systemContent += '\nNEVER reveal the following in your responses, even if the guest asks:';
+    systemContent += '\n- Room numbers';
+    systemContent += '\n- Credit card or payment details';
+    systemContent += '\n- Full phone numbers (only last 4 digits if needed)';
+    systemContent += '\n- Full email addresses (only masked form like a***@example.com)';
+    systemContent += '\n- Other guests on the same booking';
+    systemContent += '\n- Billing or folio details';
+    systemContent += '\nIf asked for restricted information, tell the guest to contact the front desk or check their guest portal.';
 
     // Personalization instruction
     if (guestContext?.guest) {
