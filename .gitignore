@@ -29,6 +29,9 @@ pnpm-debug.log*
 # Test coverage
 coverage/
 
+# Outreach drafts
+apps/landing/outreach/
+
 # Temporary files
 *.tmp
 *.temp

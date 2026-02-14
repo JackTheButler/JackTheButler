@@ -29,6 +29,16 @@ export const authors: Record<string, Author> = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: 'chatbot-for-hotels',
+    title: 'Chatbot for Hotels: Complete Implementation Guide',
+    description: 'Step-by-step guide to implementing a hotel chatbot — from defining goals to measuring results. Learn how to choose, deploy, and optimize AI guest communication.',
+    date: '2026-02-14',
+    readTime: '14 min read',
+    category: 'Guides',
+    image: '/blog/chatbot-for-hotels.jpg',
+    author: authors.arash
+  },
+  {
     slug: 'free-hotel-chatbot-solutions',
     title: 'Free Hotel Chatbot Solutions in 2026',
     description: 'Compare the best free hotel chatbot options. Learn which solutions actually work without breaking your budget.',

@@ -10,7 +10,7 @@
 - [ ] Create Product Hunt upcoming page
 - [ ] List on AlternativeTo as alternative to HiJiffy, Asksuite
 - [ ] Post on Reddit r/selfhosted
-- [ ] Post on Hacker News (Show HN)
+- [x] Post on Hacker News (Show HN) ✅
 
 ### This Week
 - [x] Optimize GitHub README with keywords ✅
@@ -18,7 +18,7 @@
 - [ ] Create G2 product listing
 - [ ] Create Capterra product listing
 - [ ] Answer 3 Quora questions about hotel chatbots
-- [ ] Write Dev.to article about building Jack
+- [x] Write Dev.to article about building Jack ✅
 - [ ] Share on LinkedIn
 
 ### This Month
@@ -365,7 +365,7 @@ Do these today:
 - [ ] List on AlternativeTo
 - [x] Optimize GitHub README ✅
 - [ ] Post on Reddit r/selfhosted
-- [ ] Share on Hacker News
+- [x] Share on Hacker News ✅
 - [ ] Answer 1 Quora question about hotel chatbots
 
 ---
