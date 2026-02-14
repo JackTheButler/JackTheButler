@@ -70,7 +70,7 @@ function AppCard({ app, t }: { app: App; t: (key: string) => string }) {
     <Link to={`/engine/apps/${app.id}`} className="h-full">
       <Card className="card-hover cursor-pointer group overflow-hidden h-full">
         <div className="flex h-full">
-          <CardContent className="p-5 flex-1">
+          <CardContent className="p-5 flex-1 w-full">
             <div className="flex items-start gap-4">
               <div className="p-2.5 rounded-xl bg-foreground/5 group-hover:bg-muted transition-colors">
                 <AppIcon id={app.id} size="lg" />
@@ -91,7 +91,7 @@ function AppCard({ app, t }: { app: App; t: (key: string) => string }) {
             </div>
 
             {app.status === 'error' && app.lastError && (
-              <InlineAlert variant="error" className="mt-3">
+              <InlineAlert variant="error" className="mt-3 max-h-24 overflow-y-auto break-words scrollbar-hide">
                 {app.lastError}
               </InlineAlert>
             )}
