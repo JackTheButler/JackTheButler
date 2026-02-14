@@ -69,7 +69,11 @@ function runMigrations(): void {
     const __dirname = dirname(fileURLToPath(import.meta.url));
     const migrationsFolder = resolve(__dirname, '../../migrations');
 
+    // Temporarily disable FK checks — some migrations reference rows
+    // (e.g. role IDs) that are seeded after migrations complete.
+    sqlite.pragma('foreign_keys = OFF');
     migrate(db, { migrationsFolder });
+    sqlite.pragma('foreign_keys = ON');
     log.info('Database migrations applied');
   } catch (error) {
     log.error({ error }, 'Failed to run migrations');
