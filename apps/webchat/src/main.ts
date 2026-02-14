@@ -44,6 +44,8 @@ const widget = new ButlerChatWidget({ gatewayOrigin, butlerKey });
     const preset = cta.getAttribute('data-butler-chat');
     if (!preset || preset === '' || preset === 'bubble') {
       cta.classList.add('butler-chat-trigger');
+      // Move bubble to body so parent CSS (filters, transforms) can't trap position:fixed
+      document.body.appendChild(cta);
     } else if (preset === 'inline') {
       cta.classList.add('butler-chat-inline');
     }
