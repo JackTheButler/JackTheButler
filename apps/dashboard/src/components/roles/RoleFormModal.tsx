@@ -207,7 +207,7 @@ export function RoleFormModal({ open, onClose, role }: RoleFormModalProps) {
     <DialogRoot open={open} onOpenChange={(open) => !open && onClose()}>
       <DialogContent title={isEditing ? t('editRole') : t('addRole')} className="max-w-2xl">
         <form onSubmit={handleSubmit} className="flex flex-col overflow-hidden">
-          <div className="p-4 space-y-6 flex-1 min-h-0 overflow-y-auto">
+          <div className="relative p-4 space-y-6 flex-1 min-h-0 overflow-y-auto">
             {error && <InlineAlert variant="error">{error}</InlineAlert>}
 
             {/* Basic Info */}
