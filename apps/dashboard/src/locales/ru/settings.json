@@ -114,11 +114,37 @@
       "error": "Ошибка",
       "notSetUp": "Не настроено"
     },
+    "embedCode": "Код встраивания",
+    "embedCodeDescription": "Добавьте этот фрагмент на сайт вашего отеля для активации виджета чата.",
+    "copied": "Скопировано",
+    "copy": "Копировать",
     "fields": {
       "embeddingModel": "Модель эмбеддингов",
       "completionModel": "Модель завершения",
       "enableEmbedding": "Включить эмбеддинги",
-      "enableCompletion": "Включить завершение"
+      "enableCompletion": "Включить завершение",
+      "theme": "Тема",
+      "themeDescription": "Цветовая схема виджета (светлая или тёмная)",
+      "themeLight": "Светлая",
+      "themeDark": "Тёмная",
+      "primaryColor": "Основной цвет",
+      "primaryColorDescription": "Основной акцентный цвет виджета чата (hex)",
+      "headerBackground": "Фон заголовка",
+      "headerBackgroundDescription": "Цвет фона заголовка (hex)",
+      "buttonIcon": "Иконка кнопки",
+      "buttonIconDescription": "Иконка на плавающей кнопке чата",
+      "buttonIconChat": "Пузырь чата",
+      "buttonIconBell": "Колокольчик консьержа",
+      "buttonIconDots": "Точки сообщения",
+      "buttonIconHeadset": "Гарнитура",
+      "botName": "Имя бота",
+      "botNameDescription": "Отображаемое имя в заголовке чата",
+      "logoUrl": "URL логотипа",
+      "logoUrlDescription": "URL изображения логотипа в заголовке чата",
+      "welcomeMessage": "Приветственное сообщение",
+      "welcomeMessageDescription": "Приветствие при начале новой сессии чата",
+      "allowedDomains": "Разрешённые домены",
+      "allowedDomainsDescription": "Список доменов через запятую, которым разрешено встраивать виджет"
     }
   },
   "settings": {

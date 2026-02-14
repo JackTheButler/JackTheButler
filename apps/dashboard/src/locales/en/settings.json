@@ -114,11 +114,37 @@
       "error": "Error",
       "notSetUp": "Not Set Up"
     },
+    "embedCode": "Embed Code",
+    "embedCodeDescription": "Add this snippet to your hotel website to enable the chat widget.",
+    "copied": "Copied",
+    "copy": "Copy",
     "fields": {
       "embeddingModel": "Embedding Model",
       "completionModel": "Completion Model",
       "enableEmbedding": "Enable Embedding",
-      "enableCompletion": "Enable Completion"
+      "enableCompletion": "Enable Completion",
+      "theme": "Theme",
+      "themeDescription": "Widget color scheme (light or dark)",
+      "themeLight": "Light",
+      "themeDark": "Dark",
+      "primaryColor": "Primary Color",
+      "primaryColorDescription": "Main accent color for the chat widget (hex)",
+      "headerBackground": "Header Background",
+      "headerBackgroundDescription": "Header background color (hex)",
+      "buttonIcon": "Button Icon",
+      "buttonIconDescription": "Icon shown on the floating chat button",
+      "buttonIconChat": "Chat Bubble",
+      "buttonIconBell": "Concierge Bell",
+      "buttonIconDots": "Message Dots",
+      "buttonIconHeadset": "Headset",
+      "botName": "Bot Name",
+      "botNameDescription": "Display name shown in the chat header",
+      "logoUrl": "Logo URL",
+      "logoUrlDescription": "URL to a logo image shown in the chat header",
+      "welcomeMessage": "Welcome Message",
+      "welcomeMessageDescription": "Greeting shown when a new chat session starts",
+      "allowedDomains": "Allowed Domains",
+      "allowedDomainsDescription": "Comma-separated list of domains allowed to embed the widget"
     }
   },
   "settings": {

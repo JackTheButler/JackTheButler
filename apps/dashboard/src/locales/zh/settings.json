@@ -114,11 +114,37 @@
       "error": "错误",
       "notSetUp": "未设置"
     },
+    "embedCode": "嵌入代码",
+    "embedCodeDescription": "将此代码片段添加到您的酒店网站以启用聊天小部件。",
+    "copied": "已复制",
+    "copy": "复制",
     "fields": {
       "embeddingModel": "嵌入模型",
       "completionModel": "补全模型",
       "enableEmbedding": "启用嵌入",
-      "enableCompletion": "启用补全"
+      "enableCompletion": "启用补全",
+      "theme": "主题",
+      "themeDescription": "小部件配色方案（浅色或深色）",
+      "themeLight": "浅色",
+      "themeDark": "深色",
+      "primaryColor": "主色调",
+      "primaryColorDescription": "聊天小部件的主要强调色（十六进制）",
+      "headerBackground": "标题背景",
+      "headerBackgroundDescription": "标题背景颜色（十六进制）",
+      "buttonIcon": "按钮图标",
+      "buttonIconDescription": "悬浮聊天按钮上显示的图标",
+      "buttonIconChat": "聊天气泡",
+      "buttonIconBell": "礼宾铃",
+      "buttonIconDots": "消息点",
+      "buttonIconHeadset": "耳机",
+      "botName": "机器人名称",
+      "botNameDescription": "聊天标题中显示的名称",
+      "logoUrl": "Logo 网址",
+      "logoUrlDescription": "聊天标题中显示的 Logo 图片网址",
+      "welcomeMessage": "欢迎消息",
+      "welcomeMessageDescription": "新聊天会话开始时显示的问候语",
+      "allowedDomains": "允许的域名",
+      "allowedDomainsDescription": "允许嵌入小部件的域名列表，用逗号分隔"
     }
   },
   "settings": {

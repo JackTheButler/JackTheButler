@@ -114,11 +114,37 @@
       "error": "त्रुटि",
       "notSetUp": "सेटअप नहीं"
     },
+    "embedCode": "एम्बेड कोड",
+    "embedCodeDescription": "चैट विजेट सक्षम करने के लिए इस स्निपेट को अपने होटल की वेबसाइट में जोड़ें।",
+    "copied": "कॉपी हो गया",
+    "copy": "कॉपी करें",
     "fields": {
       "embeddingModel": "एम्बेडिंग मॉडल",
       "completionModel": "कम्प्लीशन मॉडल",
       "enableEmbedding": "एम्बेडिंग सक्षम करें",
-      "enableCompletion": "कम्प्लीशन सक्षम करें"
+      "enableCompletion": "कम्प्लीशन सक्षम करें",
+      "theme": "थीम",
+      "themeDescription": "विजेट का रंग योजना (हल्का या गहरा)",
+      "themeLight": "हल्का",
+      "themeDark": "गहरा",
+      "primaryColor": "प्राथमिक रंग",
+      "primaryColorDescription": "चैट विजेट का मुख्य एक्सेंट रंग (hex)",
+      "headerBackground": "हेडर पृष्ठभूमि",
+      "headerBackgroundDescription": "हेडर पृष्ठभूमि रंग (hex)",
+      "buttonIcon": "बटन आइकन",
+      "buttonIconDescription": "फ्लोटिंग चैट बटन पर दिखाया गया आइकन",
+      "buttonIconChat": "चैट बबल",
+      "buttonIconBell": "कॉन्सियर्ज बेल",
+      "buttonIconDots": "मैसेज डॉट्स",
+      "buttonIconHeadset": "हेडसेट",
+      "botName": "बॉट का नाम",
+      "botNameDescription": "चैट हेडर में दिखाया गया प्रदर्शन नाम",
+      "logoUrl": "लोगो URL",
+      "logoUrlDescription": "चैट हेडर में दिखाई गई लोगो छवि का URL",
+      "welcomeMessage": "स्वागत संदेश",
+      "welcomeMessageDescription": "नई चैट सत्र शुरू होने पर दिखाया गया अभिवादन",
+      "allowedDomains": "अनुमत डोमेन",
+      "allowedDomainsDescription": "विजेट एम्बेड करने की अनुमति वाले डोमेन की अल्पविराम-पृथक सूची"
     }
   },
   "settings": {

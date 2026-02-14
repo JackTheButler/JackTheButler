@@ -141,17 +141,17 @@ seedRoutes.post('/reset', requirePermission(PERMISSIONS.ADMIN_MANAGE), async (c)
       );
     }
 
-    // Get all table names dynamically (excluding staff to preserve admin accounts)
-    const tablesResult = await db.all<{ name: string }>(sql`
-      SELECT name FROM sqlite_master
-      WHERE type='table'
-      AND name NOT LIKE 'sqlite_%'
-      AND name NOT LIKE '__drizzle%'
-      AND name NOT LIKE '_litestream%'
-      AND name != 'staff'
-    `);
-
-    const tableNames = tablesResult.map((t) => t.name);
+    // Only reset guest-facing data tables — preserve config, staff, roles, etc.
+    const tableNames = [
+      'messages',
+      'tasks',
+      'approval_queue',
+      'webchat_sessions',
+      'conversations',
+      'reservations',
+      'knowledge_base',
+      'guests',
+    ];
 
     // Disable foreign key checks
     await db.run(sql`PRAGMA foreign_keys = OFF`);

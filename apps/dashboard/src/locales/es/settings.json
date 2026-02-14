@@ -114,11 +114,37 @@
       "error": "Error",
       "notSetUp": "No Configurado"
     },
+    "embedCode": "Código de Inserción",
+    "embedCodeDescription": "Agrega este fragmento al sitio web de tu hotel para habilitar el widget de chat.",
+    "copied": "Copiado",
+    "copy": "Copiar",
     "fields": {
       "embeddingModel": "Modelo de Embedding",
       "completionModel": "Modelo de Completado",
       "enableEmbedding": "Habilitar Embedding",
-      "enableCompletion": "Habilitar Completado"
+      "enableCompletion": "Habilitar Completado",
+      "theme": "Tema",
+      "themeDescription": "Esquema de color del widget (claro u oscuro)",
+      "themeLight": "Claro",
+      "themeDark": "Oscuro",
+      "primaryColor": "Color Principal",
+      "primaryColorDescription": "Color de acento principal del widget de chat (hex)",
+      "headerBackground": "Fondo del Encabezado",
+      "headerBackgroundDescription": "Color de fondo del encabezado (hex)",
+      "buttonIcon": "Icono del Botón",
+      "buttonIconDescription": "Icono mostrado en el botón flotante de chat",
+      "buttonIconChat": "Burbuja de Chat",
+      "buttonIconBell": "Campana de Conserje",
+      "buttonIconDots": "Puntos de Mensaje",
+      "buttonIconHeadset": "Auriculares",
+      "botName": "Nombre del Bot",
+      "botNameDescription": "Nombre mostrado en el encabezado del chat",
+      "logoUrl": "URL del Logo",
+      "logoUrlDescription": "URL de una imagen de logo mostrada en el encabezado del chat",
+      "welcomeMessage": "Mensaje de Bienvenida",
+      "welcomeMessageDescription": "Saludo mostrado al iniciar una nueva sesión de chat",
+      "allowedDomains": "Dominios Permitidos",
+      "allowedDomainsDescription": "Lista de dominios separados por comas autorizados para insertar el widget"
     }
   },
   "settings": {

@@ -114,11 +114,37 @@
       "error": "خطأ",
       "notSetUp": "غير مُعد"
     },
+    "embedCode": "كود التضمين",
+    "embedCodeDescription": "أضف هذا المقتطف إلى موقع فندقك لتفعيل أداة الدردشة.",
+    "copied": "تم النسخ",
+    "copy": "نسخ",
     "fields": {
       "embeddingModel": "نموذج التضمين",
       "completionModel": "نموذج الإكمال",
       "enableEmbedding": "تفعيل التضمين",
-      "enableCompletion": "تفعيل الإكمال"
+      "enableCompletion": "تفعيل الإكمال",
+      "theme": "المظهر",
+      "themeDescription": "نظام ألوان الأداة (فاتح أو داكن)",
+      "themeLight": "فاتح",
+      "themeDark": "داكن",
+      "primaryColor": "اللون الأساسي",
+      "primaryColorDescription": "لون التمييز الرئيسي لأداة الدردشة (hex)",
+      "headerBackground": "خلفية الرأس",
+      "headerBackgroundDescription": "لون خلفية الرأس (hex)",
+      "buttonIcon": "أيقونة الزر",
+      "buttonIconDescription": "الأيقونة المعروضة على زر الدردشة العائم",
+      "buttonIconChat": "فقاعة دردشة",
+      "buttonIconBell": "جرس الاستقبال",
+      "buttonIconDots": "نقاط الرسالة",
+      "buttonIconHeadset": "سماعة رأس",
+      "botName": "اسم البوت",
+      "botNameDescription": "الاسم المعروض في رأس الدردشة",
+      "logoUrl": "رابط الشعار",
+      "logoUrlDescription": "رابط صورة الشعار المعروضة في رأس الدردشة",
+      "welcomeMessage": "رسالة الترحيب",
+      "welcomeMessageDescription": "التحية المعروضة عند بدء جلسة دردشة جديدة",
+      "allowedDomains": "النطاقات المسموحة",
+      "allowedDomainsDescription": "قائمة نطاقات مفصولة بفواصل مسموح لها بتضمين الأداة"
     }
   },
   "settings": {

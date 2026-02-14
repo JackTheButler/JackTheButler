@@ -125,6 +125,34 @@ const fieldLabelKeys: Record<string, string> = {
   completionModel: 'appEdit.fields.completionModel',
   enableEmbedding: 'appEdit.fields.enableEmbedding',
   enableCompletion: 'appEdit.fields.enableCompletion',
+  theme: 'appEdit.fields.theme',
+  primaryColor: 'appEdit.fields.primaryColor',
+  headerBackground: 'appEdit.fields.headerBackground',
+  buttonIcon: 'appEdit.fields.buttonIcon',
+  botName: 'appEdit.fields.botName',
+  logoUrl: 'appEdit.fields.logoUrl',
+  welcomeMessage: 'appEdit.fields.welcomeMessage',
+  allowedDomains: 'appEdit.fields.allowedDomains',
+};
+
+const fieldDescriptionKeys: Record<string, string> = {
+  theme: 'appEdit.fields.themeDescription',
+  primaryColor: 'appEdit.fields.primaryColorDescription',
+  headerBackground: 'appEdit.fields.headerBackgroundDescription',
+  buttonIcon: 'appEdit.fields.buttonIconDescription',
+  botName: 'appEdit.fields.botNameDescription',
+  logoUrl: 'appEdit.fields.logoUrlDescription',
+  welcomeMessage: 'appEdit.fields.welcomeMessageDescription',
+  allowedDomains: 'appEdit.fields.allowedDomainsDescription',
+};
+
+const optionLabelKeys: Record<string, string> = {
+  'theme.light': 'appEdit.fields.themeLight',
+  'theme.dark': 'appEdit.fields.themeDark',
+  'buttonIcon.chat': 'appEdit.fields.buttonIconChat',
+  'buttonIcon.bell': 'appEdit.fields.buttonIconBell',
+  'buttonIcon.dots': 'appEdit.fields.buttonIconDots',
+  'buttonIcon.headset': 'appEdit.fields.buttonIconHeadset',
 };
 
 /** SVG icons for the webchat button icon picker */
@@ -209,7 +237,7 @@ function ConfigForm({
               <div className="space-y-0.5">
                 <Label htmlFor={field.key}>{fieldLabel}</Label>
                 {field.description && (
-                  <p className="text-sm text-muted-foreground">{field.description}</p>
+                  <p className="text-sm text-muted-foreground">{fieldDescriptionKeys[field.key] ? t(fieldDescriptionKeys[field.key]) : field.description}</p>
                 )}
               </div>
               <Switch
@@ -236,7 +264,7 @@ function ConfigForm({
                         type="button"
                         disabled={!canManage}
                         onClick={() => setFormData({ ...formData, [field.key]: opt.value })}
-                        title={opt.label}
+                        title={optionLabelKeys[`buttonIcon.${opt.value}`] ? t(optionLabelKeys[`buttonIcon.${opt.value}`]) : opt.label}
                         className={cn(
                           'flex items-center justify-center w-12 h-12 rounded-lg border-2 transition-colors',
                           'hover:bg-accent disabled:cursor-not-allowed disabled:opacity-50',
@@ -272,11 +300,14 @@ function ConfigForm({
                     <SelectValue placeholder={t('appEdit.select')} />
                   </SelectTrigger>
                   <SelectContent>
-                    {field.options.map((opt) => (
-                      <SelectItem key={opt.value} value={opt.value}>
-                        {opt.label}
-                      </SelectItem>
-                    ))}
+                    {field.options.map((opt) => {
+                      const optKey = `${field.key}.${opt.value}`;
+                      return (
+                        <SelectItem key={opt.value} value={opt.value}>
+                          {optionLabelKeys[optKey] ? t(optionLabelKeys[optKey]) : opt.label}
+                        </SelectItem>
+                      );
+                    })}
                   </SelectContent>
                 </Select>
               ) : field.type === 'color' ? (
@@ -326,7 +357,7 @@ function ConfigForm({
               )}
 
               {field.description && (
-                <p className="text-sm text-muted-foreground">{field.description}</p>
+                <p className="text-sm text-muted-foreground">{fieldDescriptionKeys[field.key] ? t(fieldDescriptionKeys[field.key]) : field.description}</p>
               )}
             </>
           )}
