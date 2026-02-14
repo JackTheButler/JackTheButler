@@ -2,7 +2,9 @@
 import Layout from '../../layouts/Layout.astro'
 import Footer from '../../components/Footer.astro'
 import { Calendar, Clock, ArrowRight } from '@lucide/astro'
-import { blogPosts as posts, formatDate } from '../../data/blog-posts'
+import { getPublishedPosts, formatDate } from '../../data/blog-posts'
+
+const posts = getPublishedPosts()
 ---
 
 <Layout

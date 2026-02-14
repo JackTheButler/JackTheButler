@@ -150,8 +150,8 @@
 - [ ] **Hotel Virtual Assistant: Automate Guest Services 24/7**
   - Target: "hotel virtual assistant"
   - Difficulty: 0 (Easy) | Potential: 30 | Volume: 40
-- [ ] **Open Source Hotel Chatbot: Why It Matters for Hotels**
-  - Target: "open source hotel chatbot"
+- [x] **Open Source Hotel Chatbot: Complete Setup Guide** — `/blog/open-source-hotel-chatbot-setup/` ✅
+  - Target: "open source hotel chatbot", "self-hosted hotel chatbot"
   - Zero competition — we own this keyword
 
 #### 🔴 High Priority (Competitor & Strategic)

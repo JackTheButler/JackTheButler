@@ -1,0 +1,618 @@
+---
+import Layout from '../../layouts/Layout.astro'
+import Footer from '../../components/Footer.astro'
+import ArticleHeader from '../../components/blog/ArticleHeader.astro'
+import ArticleSchema from '../../components/blog/ArticleSchema.astro'
+import ArticleBottomCTA from '../../components/blog/ArticleBottomCTA.astro'
+import RelatedPosts from '../../components/blog/RelatedPosts.astro'
+import { Check, X, Shield, Server, Globe, Zap, Terminal, Cloud, MessageSquare, Brain, BookOpen, Settings, BarChart3, DollarSign, Lock, Eye, ArrowRight } from '@lucide/astro'
+import { getPost } from '../../data/blog-posts'
+
+const post = getPost('open-source-hotel-chatbot-setup')!
+
+const relatedPosts = [
+  {
+    href: '/blog/chatbot-for-hotels/',
+    title: 'Chatbot for Hotels: Implementation Guide',
+    description: 'The complete guide to choosing and implementing a hotel chatbot.'
+  },
+  {
+    href: '/blog/free-hotel-chatbot-solutions/',
+    title: 'Free Hotel Chatbot Solutions',
+    description: 'Compare the best free chatbot options for hotels.'
+  },
+  {
+    href: '/blog/hotel-whatsapp-automation/',
+    title: 'WhatsApp for Hotels',
+    description: 'Set up WhatsApp Business automation for your property.'
+  }
+]
+---
+
+<Layout
+  title={post.title}
+  description={post.description}
+  type="article"
+  author={post.author.name}
+  publishedTime={post.date}
+>
+  <ArticleSchema post={post} />
+
+  <script type="application/ld+json" set:html={JSON.stringify({
+    "@context": "https://schema.org",
+    "@type": "FAQPage",
+    "mainEntity": [
+      {
+        "@type": "Question",
+        "name": "Do I need to know how to code to set up an open source hotel chatbot?",
+        "acceptedAnswer": { "@type": "Answer", "text": "No. One-click deploy handles the technical setup. The dashboard is designed for hotel staff, not developers. Adding knowledge entries, configuring channels, and managing conversations all happen through a visual interface." }
+      },
+      {
+        "@type": "Question",
+        "name": "How is an open source hotel chatbot different from free chatbots like Tidio or Tawk.to?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Generic chatbots are not built for hospitality. They cannot handle WhatsApp, integrate with property management systems, or understand hotel-specific workflows like escalating a room complaint vs. answering a parking question. Jack The Butler is purpose-built for hotels." }
+      },
+      {
+        "@type": "Question",
+        "name": "What happens if my self-hosted hotel chatbot server goes down?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Cloud platforms like Railway and Render have automatic restarts and uptime monitoring. Your chatbot recovers automatically. For Docker deployments, set --restart unless-stopped on the container. All data is in a single SQLite file — back it up regularly by copying the file." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I customize how the hotel chatbot AI responds?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. The knowledge base controls what the AI knows. The system prompt controls the tone and personality. You can make it formal for a luxury resort or casual for a beach hostel. You can also set autonomy levels — fully automatic, suggest-then-approve, or manual-only." }
+      },
+      {
+        "@type": "Question",
+        "name": "Is guest data safe with a self-hosted hotel chatbot?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Your data never leaves your server. There is no telemetry, no analytics sent to third parties, no data sharing. Guest conversations, profiles, and history are stored in a SQLite database on your own infrastructure." }
+      },
+      {
+        "@type": "Question",
+        "name": "How much does an open source hotel chatbot cost to run?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Jack The Butler is free software. Total running costs are typically $15-25/month: $5-10 for cloud hosting and $5-15 for AI API usage. You can also use free local AI for zero API costs." }
+      },
+      {
+        "@type": "Question",
+        "name": "Can I run an open source hotel chatbot alongside my existing hotel software?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Yes. Jack does not replace your PMS, booking engine, or other systems. It sits alongside them as a guest communication layer. PMS integrations allow Jack to pull reservation data and push task updates, but they are optional." }
+      },
+      {
+        "@type": "Question",
+        "name": "How do I update an open source hotel chatbot to new versions?",
+        "acceptedAnswer": { "@type": "Answer", "text": "Cloud platforms: click Redeploy or enable auto-deploy from the GitHub repository. Docker: run docker compose pull && docker compose up -d. Updates take under a minute and your data persists across versions." }
+      }
+    ]
+  })} />
+
+  <article class="pt-32 pb-24 px-6">
+    <div class="max-w-3xl mx-auto">
+      <ArticleHeader post={post} />
+
+      <!-- Content -->
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <p class="lead text-xl text-neutral-600 dark:text-neutral-400">
+          An open source hotel chatbot lets you deploy AI guest messaging on your own server — no SaaS contracts, no per-message fees, no vendor lock-in. This self-hosted hotel chatbot guide walks you through the full setup, from one-click deploy to your first guest conversation.
+        </p>
+
+        <p>
+          Most hotel chatbots cost $200 to $2,000 per month and store your guest data on someone else's servers. <a href="/hotel-chatbot/">Jack The Butler</a> is different — it is the only production-ready open source hotel chatbot. Free software, your server, your data. Set up in under 30 minutes with no coding required.
+        </p>
+
+      </div>
+
+      <!-- Why Open Source Box -->
+      <div class="not-prose my-12 p-6 rounded-2xl bg-gradient-to-br from-emerald-50 to-blue-50 dark:from-emerald-500/10 dark:to-blue-500/10 border border-emerald-200 dark:border-emerald-500/20">
+        <h4 class="font-semibold text-neutral-900 dark:text-white mb-4">Why Open Source Matters for Hotels</h4>
+        <div class="grid sm:grid-cols-3 gap-6">
+          <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background-color: #10b981;">
+              <Lock class="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p class="font-medium text-sm text-neutral-900 dark:text-white">Data Stays Yours</p>
+              <p class="text-xs text-neutral-600 dark:text-neutral-400">Guest data on your server. Full GDPR compliance without trusting a vendor.</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background-color: #3b82f6;">
+              <DollarSign class="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p class="font-medium text-sm text-neutral-900 dark:text-white">No SaaS Fees</p>
+              <p class="text-xs text-neutral-600 dark:text-neutral-400">Zero licensing cost. Only pay for hosting (~$5/mo) and optional AI API (~$10-20/mo).</p>
+            </div>
+          </div>
+          <div class="flex gap-3">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0" style="background-color: #8b5cf6;">
+              <Eye class="w-4 h-4 text-white" />
+            </div>
+            <div>
+              <p class="font-medium text-sm text-neutral-900 dark:text-white">Full Transparency</p>
+              <p class="text-xs text-neutral-600 dark:text-neutral-400">See exactly what the code does. No black boxes. No vendor lock-in.</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="what-you-need">What You Need</h2>
+        <p>Before starting, here is everything you need — most of it is free:</p>
+
+      </div>
+
+      <!-- Prerequisites -->
+      <div class="not-prose my-10 p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+        <div class="grid sm:grid-cols-2 gap-6">
+          <div>
+            <p class="text-sm font-medium text-neutral-900 dark:text-white mb-3">Required</p>
+            <div class="space-y-2">
+              <div class="flex items-start gap-2 text-sm"><Check class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /> A hosting account (Railway, Render, or your own server)</div>
+              <div class="flex items-start gap-2 text-sm"><Check class="w-4 h-4 text-emerald-500 shrink-0 mt-0.5" /> 5-10 minutes of your time</div>
+            </div>
+          </div>
+          <div>
+            <p class="text-sm font-medium text-neutral-900 dark:text-white mb-3">Optional (but recommended)</p>
+            <div class="space-y-2">
+              <div class="flex items-start gap-2 text-sm"><Check class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" /> An AI API key (Anthropic or OpenAI) for best quality responses</div>
+              <div class="flex items-start gap-2 text-sm"><Check class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" /> Your hotel's website URL (for automatic knowledge import)</div>
+              <div class="flex items-start gap-2 text-sm"><Check class="w-4 h-4 text-blue-500 shrink-0 mt-0.5" /> A WhatsApp Business account (if you want WhatsApp)</div>
+            </div>
+          </div>
+        </div>
+        <p class="text-xs text-neutral-500 mt-4">No coding skills needed. No command line needed if using one-click deploy.</p>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="deploy">Step 1: Deploy Your Self-Hosted Hotel Chatbot</h2>
+        <p>Choose the deployment method that fits your comfort level. All three get you to the same result.</p>
+
+        <h3>Option A: One-Click Cloud Deploy (easiest)</h3>
+        <p>Click one button. The platform builds and deploys Jack automatically. No terminal, no configuration files.</p>
+
+      </div>
+
+      <!-- Cloud Deploy Options -->
+      <div class="not-prose my-10 grid sm:grid-cols-3 gap-4">
+        <div class="p-5 rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20 text-center">
+          <div class="w-10 h-10 rounded-xl bg-violet-200 dark:bg-violet-700 flex items-center justify-center mx-auto mb-3">
+            <Cloud class="w-5 h-5 text-violet-600 dark:text-violet-300" />
+          </div>
+          <h4 class="font-semibold text-sm mb-1">Railway</h4>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400 mb-3">~$5/month, usage-based</p>
+          <a href="https://railway.com/deploy/W82qDp?referralCode=Aizkfk" class="text-xs text-violet-600 dark:text-violet-400 font-medium hover:underline">Deploy on Railway →</a>
+        </div>
+        <div class="p-5 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20 text-center">
+          <div class="w-10 h-10 rounded-xl bg-blue-200 dark:bg-blue-700 flex items-center justify-center mx-auto mb-3">
+            <Cloud class="w-5 h-5 text-blue-600 dark:text-blue-300" />
+          </div>
+          <h4 class="font-semibold text-sm mb-1">Render</h4>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400 mb-3">Free tier available, $7/mo always-on</p>
+          <a href="https://render.com/deploy?repo=https://github.com/JackTheButler/JackTheButler" class="text-xs text-blue-600 dark:text-blue-400 font-medium hover:underline">Deploy on Render →</a>
+        </div>
+        <div class="p-5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20 text-center">
+          <div class="w-10 h-10 rounded-xl bg-amber-200 dark:bg-amber-700 flex items-center justify-center mx-auto mb-3">
+            <Cloud class="w-5 h-5 text-amber-600 dark:text-amber-300" />
+          </div>
+          <h4 class="font-semibold text-sm mb-1">Zeabur</h4>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400 mb-3">~$5/month, usage-based</p>
+          <a href="https://zeabur.com/templates?repo=JackTheButler/JackTheButler" class="text-xs text-amber-600 dark:text-amber-400 font-medium hover:underline">Deploy on Zeabur →</a>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <p>Build completes in 3-5 minutes. Once deployed, you will see a URL like <code>jack-butler-production.up.railway.app</code> — that is your dashboard.</p>
+
+        <h3>Option B: Docker (self-hosted)</h3>
+        <p>If you have a VPS, NAS, or any server with Docker installed, run one command:</p>
+      </div>
+
+      <!-- Docker Command -->
+      <div class="not-prose my-8">
+        <div class="bg-neutral-900 rounded-xl overflow-hidden">
+          <div class="flex items-center gap-2 px-4 py-2 bg-neutral-800">
+            <Terminal class="w-4 h-4 text-neutral-400" />
+            <span class="text-xs text-neutral-400">Terminal</span>
+          </div>
+          <pre class="px-4 py-4 text-sm text-green-400 overflow-x-auto"><code>docker run -d \
+  --name jack-butler \
+  -p 3000:3000 \
+  -v jack-data:/app/data \
+  -e JWT_SECRET="$(openssl rand -base64 32)" \
+  -e ENCRYPTION_KEY="$(openssl rand -base64 32)" \
+  ghcr.io/jackthebutler/jackthebutler:latest</code></pre>
+        </div>
+        <p class="text-xs text-neutral-500 mt-2">Requires Docker 20.10+, 1GB RAM, 500MB disk. Open <code>http://your-server:3000</code> to access the dashboard.</p>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <p>That is it for deployment. Your self-hosted hotel chatbot is running. Now let us configure it.</p>
+
+        <h2 id="setup-wizard">Step 2: Complete the Setup Wizard</h2>
+        <p>
+          When you first open the dashboard, Jack walks you through a 4-step setup wizard. It takes about 5 minutes.
+        </p>
+      </div>
+
+      <!-- Setup Wizard Steps -->
+      <div class="not-prose my-10 space-y-4">
+        <div class="flex gap-4 p-5 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold text-white" style="background-color: #3b82f6;">1</div>
+          <div>
+            <h4 class="font-semibold text-sm mb-1">Property Information</h4>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">Enter your property name and type (hotel, B&B, vacation rental, or hostel). This sets the tone for AI responses — a luxury hotel gets different language than a backpacker hostel.</p>
+          </div>
+        </div>
+        <div class="flex gap-4 p-5 rounded-xl bg-violet-50 dark:bg-violet-500/10 border border-violet-200 dark:border-violet-500/20">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold text-white" style="background-color: #8b5cf6;">2</div>
+          <div>
+            <h4 class="font-semibold text-sm mb-1">AI Provider</h4>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">Choose your AI engine. <strong>Local AI</strong> is free and works out of the box (~2GB RAM). For better responses, paste an API key for <strong>Anthropic Claude</strong> or <strong>OpenAI GPT</strong> (~$10-20/month for typical hotel volume). You can switch providers anytime.</p>
+          </div>
+        </div>
+        <div class="flex gap-4 p-5 rounded-xl bg-emerald-50 dark:bg-emerald-500/10 border border-emerald-200 dark:border-emerald-500/20">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold text-white" style="background-color: #10b981;">3</div>
+          <div>
+            <h4 class="font-semibold text-sm mb-1">Knowledge Base</h4>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400"><strong>Website Import:</strong> Paste your hotel website URL and Jack automatically scrapes check-in times, room types, amenities, policies, and contact info. <strong>Manual Entry:</strong> Type in your property details directly. You can do both — import first, then add anything it missed.</p>
+          </div>
+        </div>
+        <div class="flex gap-4 p-5 rounded-xl bg-orange-50 dark:bg-orange-500/10 border border-orange-200 dark:border-orange-500/20">
+          <div class="w-8 h-8 rounded-full flex items-center justify-center shrink-0 text-sm font-bold text-white" style="background-color: #f97316;">4</div>
+          <div>
+            <h4 class="font-semibold text-sm mb-1">Admin Account</h4>
+            <p class="text-sm text-neutral-600 dark:text-neutral-400">Create your login credentials. This replaces the default admin account and secures your dashboard. Use a strong password — this is the master account for your chatbot.</p>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <p>After the wizard, you are logged into the dashboard with a working AI chatbot. If you imported your website, test it immediately — ask "What time is checkout?" and see if the answer is correct.</p>
+
+        <h2 id="knowledge-base">Step 3: Train Your Hotel Chatbot Knowledge Base</h2>
+        <p>
+          The setup wizard gives you a starting point. Now flesh it out. Your chatbot is only as good as the information it has access to. Jack uses semantic search — it understands meaning, not just keywords. "What time do you serve breakfast?" matches a knowledge entry titled "morning dining hours" even without the word "breakfast."
+        </p>
+        <p>Go to <strong>Knowledge Base</strong> in the dashboard and add entries across these categories:</p>
+      </div>
+
+      <!-- Knowledge Base Categories -->
+      <div class="not-prose my-10 grid sm:grid-cols-2 gap-4">
+        <div class="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <h4 class="font-semibold text-sm mb-2">Room Types</h4>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400">Descriptions, bed types, capacity, amenities, views. "Standard Double — queen bed, city view, 28sqm, max 2 guests."</p>
+        </div>
+        <div class="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <h4 class="font-semibold text-sm mb-2">Policies</h4>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400">Check-in/out times, cancellation, pets, smoking, noise hours. Be specific — "Check-in from 3pm, early check-in from 1pm subject to availability ($30)."</p>
+        </div>
+        <div class="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <h4 class="font-semibold text-sm mb-2">Amenities</h4>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400">Pool, gym, spa, parking, Wi-Fi, breakfast. Include hours, prices, and any rules.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <h4 class="font-semibold text-sm mb-2">Services</h4>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400">Room service, laundry, concierge, airport transfers, babysitting. Include pricing and how to request.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <h4 class="font-semibold text-sm mb-2">Local Info</h4>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400">Restaurant recommendations, attractions, transport, directions from airport. Guests love local tips.</p>
+        </div>
+        <div class="p-4 rounded-xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+          <h4 class="font-semibold text-sm mb-2">FAQ</h4>
+          <p class="text-xs text-neutral-600 dark:text-neutral-400">Questions your front desk answers daily. "Do you have an iron?" "Is there a pharmacy nearby?" "Can I store luggage after checkout?"</p>
+        </div>
+      </div>
+
+      <div class="not-prose my-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <p class="text-sm text-blue-800 dark:text-blue-200">
+          <strong>Tip:</strong> Most properties need 20-50 knowledge entries to handle common guest questions well. Start with the 20 questions your front desk answers most often, then add more over time.
+        </p>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <h2 id="connect-channels">Step 4: Connect Guest Channels</h2>
+        <p>Jack supports four channels. All conversations land in a single unified inbox — your staff sees WhatsApp, SMS, email, and web chat messages in one place.</p>
+      </div>
+
+      <!-- Channel Setup -->
+      <div class="not-prose my-10 space-y-4">
+        <div class="p-5 rounded-xl bg-green-50 dark:bg-green-500/10 border border-green-200 dark:border-green-500/20">
+          <div class="flex items-center gap-3 mb-3">
+            <MessageSquare class="w-5 h-5 text-green-600 dark:text-green-400" />
+            <h4 class="font-semibold">WhatsApp</h4>
+            <span class="text-xs bg-green-100 dark:bg-green-800 text-green-700 dark:text-green-300 px-2 py-0.5 rounded-full">Most popular</span>
+          </div>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">98% open rate. The #1 channel for international guests. Requires a WhatsApp Business API account through Meta — Jack handles the integration.</p>
+          <p class="text-xs text-neutral-500">Cost: First 1,000 conversations/month free, then per-conversation pricing. <a href="/blog/hotel-whatsapp-automation/" class="text-green-600 dark:text-green-400 hover:underline">Full setup guide →</a></p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-amber-50 dark:bg-amber-500/10 border border-amber-200 dark:border-amber-500/20">
+          <div class="flex items-center gap-3 mb-3">
+            <MessageSquare class="w-5 h-5 text-amber-600 dark:text-amber-400" />
+            <h4 class="font-semibold">Web Chat</h4>
+            <span class="text-xs bg-amber-100 dark:bg-amber-800 text-amber-700 dark:text-amber-300 px-2 py-0.5 rounded-full">Easiest to start</span>
+          </div>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">Add a chat widget to your hotel website. Go to <strong>Engine &gt; Apps &gt; Web Chat</strong>, customize the appearance, save, and copy the embed code into your site.</p>
+          <p class="text-xs text-neutral-500">Cost: Free — included with Jack. <a href="/docs/configuration/webchat/" class="text-amber-600 dark:text-amber-400 hover:underline">Web chat setup docs →</a></p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-blue-50 dark:bg-blue-500/10 border border-blue-200 dark:border-blue-500/20">
+          <div class="flex items-center gap-3 mb-3">
+            <MessageSquare class="w-5 h-5 text-blue-600 dark:text-blue-400" />
+            <h4 class="font-semibold">SMS</h4>
+          </div>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">Universal reach, works on any phone. Connect a Twilio account in <strong>Engine &gt; Apps &gt; SMS</strong>. Best for US domestic guests.</p>
+          <p class="text-xs text-neutral-500">Cost: ~$0.0075/message (Twilio).</p>
+        </div>
+
+        <div class="p-5 rounded-xl bg-purple-50 dark:bg-purple-500/10 border border-purple-200 dark:border-purple-500/20">
+          <div class="flex items-center gap-3 mb-3">
+            <MessageSquare class="w-5 h-5 text-purple-600 dark:text-purple-400" />
+            <h4 class="font-semibold">Email</h4>
+          </div>
+          <p class="text-sm text-neutral-600 dark:text-neutral-400 mb-2">Connect your existing hotel email via SMTP/IMAP. Jack monitors the inbox and auto-responds to guest inquiries. No new email address needed.</p>
+          <p class="text-xs text-neutral-500">Cost: Free — uses your existing email.</p>
+        </div>
+      </div>
+
+      <div class="not-prose my-8 p-4 bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg">
+        <p class="text-sm text-blue-800 dark:text-blue-200">
+          <strong>Start with one channel.</strong> Web chat is the fastest to set up (no third-party accounts needed). Add WhatsApp next for the biggest guest impact. You can always add more channels later — all conversations merge into the same inbox.
+        </p>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+
+        <h2 id="go-live">Step 5: Test Your Hotel Chatbot and Go Live</h2>
+        <p>Before opening to guests, run through these checks:</p>
+
+        <ol>
+          <li><strong>Ask 10 common questions</strong> — checkout time, Wi-Fi password, parking, nearby restaurants. Verify each answer is accurate.</li>
+          <li><strong>Test escalation</strong> — Send a complaint or booking modification request. Confirm it creates a task for staff instead of trying to answer.</li>
+          <li><strong>Try another language</strong> — If you get international guests, send a message in Spanish, French, or Chinese. The AI should detect the language and respond accordingly.</li>
+          <li><strong>Check the dashboard</strong> — Verify conversations appear in the inbox, guest profiles are created, and tasks show up for escalated requests.</li>
+        </ol>
+
+        <p>Once you are satisfied, you are live. Monitor the first few days closely — review conversations daily, fill any knowledge gaps you spot, and adjust escalation rules.</p>
+
+        <h2 id="self-hosted-vs-saas">Self-Hosted vs. SaaS: What You Are Actually Saving</h2>
+      </div>
+
+      <!-- Comparison Table -->
+      <div class="not-prose my-10 overflow-x-auto">
+        <table class="w-full text-left border-collapse text-sm">
+          <thead>
+            <tr class="border-b-2 border-neutral-200 dark:border-neutral-700">
+              <th class="py-3 px-4 font-semibold"></th>
+              <th class="py-3 px-4 font-semibold text-emerald-600 dark:text-emerald-400">Jack (Self-Hosted)</th>
+              <th class="py-3 px-4 font-semibold text-neutral-500">Typical SaaS Chatbot</th>
+            </tr>
+          </thead>
+          <tbody class="text-neutral-600 dark:text-neutral-400">
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">Software cost</td>
+              <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">Free (open source)</td>
+              <td class="py-3 px-4">$200-2,000/month</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">Per-message fees</td>
+              <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">None</td>
+              <td class="py-3 px-4">$0.01-0.10/message</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">Hosting</td>
+              <td class="py-3 px-4">$5-10/month</td>
+              <td class="py-3 px-4">Included</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">AI API (optional)</td>
+              <td class="py-3 px-4">$0-20/month</td>
+              <td class="py-3 px-4">Included (limited)</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">Total monthly cost</td>
+              <td class="py-3 px-4 font-bold text-emerald-600 dark:text-emerald-400">$5-30/month</td>
+              <td class="py-3 px-4 font-bold">$200-2,000+/month</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">Guest data location</td>
+              <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">Your server</td>
+              <td class="py-3 px-4">Vendor's cloud</td>
+            </tr>
+            <tr class="border-b border-neutral-200 dark:border-neutral-800">
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">Vendor lock-in</td>
+              <td class="py-3 px-4 text-emerald-600 dark:text-emerald-400">None — export anytime</td>
+              <td class="py-3 px-4">Contract-dependent</td>
+            </tr>
+            <tr>
+              <td class="py-3 px-4 font-medium text-neutral-900 dark:text-white">Channels included</td>
+              <td class="py-3 px-4">WhatsApp, SMS, Email, Web Chat</td>
+              <td class="py-3 px-4">Varies, often add-ons</td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <p>For a 100-room hotel paying $500/month for a SaaS chatbot, switching to Jack saves <strong>$5,640-5,880 per year</strong>. The trade-off is that you manage your own server — but with one-click cloud deploy, "managing" means clicking "redeploy" when there is an update.</p>
+
+        <h2 id="running-costs">Real Running Costs</h2>
+        <p>Here is what a typical small-to-medium hotel actually pays per month with Jack:</p>
+      </div>
+
+      <!-- Cost Breakdown -->
+      <div class="not-prose my-10 p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
+        <div class="space-y-3">
+          <div class="flex justify-between items-center py-2 border-b border-neutral-200 dark:border-neutral-700">
+            <div>
+              <p class="font-medium text-sm">Cloud hosting (Railway/Render)</p>
+              <p class="text-xs text-neutral-500">Always-on server with persistent storage</p>
+            </div>
+            <span class="font-semibold text-sm">$5-10</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-neutral-200 dark:border-neutral-700">
+            <div>
+              <p class="font-medium text-sm">AI API (Anthropic Claude Haiku)</p>
+              <p class="text-xs text-neutral-500">~500 conversations/month, routine hotel queries</p>
+            </div>
+            <span class="font-semibold text-sm">$5-15</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-neutral-200 dark:border-neutral-700">
+            <div>
+              <p class="font-medium text-sm">WhatsApp Business API</p>
+              <p class="text-xs text-neutral-500">First 1,000 conversations/month free</p>
+            </div>
+            <span class="font-semibold text-sm">$0</span>
+          </div>
+          <div class="flex justify-between items-center py-2 border-b border-neutral-200 dark:border-neutral-700">
+            <div>
+              <p class="font-medium text-sm">Web Chat widget</p>
+              <p class="text-xs text-neutral-500">Included with Jack, unlimited messages</p>
+            </div>
+            <span class="font-semibold text-sm text-emerald-600 dark:text-emerald-400">Free</span>
+          </div>
+          <div class="flex justify-between items-center pt-3">
+            <p class="font-bold">Total</p>
+            <span class="font-bold text-lg text-emerald-600 dark:text-emerald-400">~$15-25/month</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="prose prose-lg dark:prose-invert max-w-none">
+        <p>Want zero API costs? Use Local AI mode (included) or connect <a href="https://ollama.ai" target="_blank" rel="noopener">Ollama</a> for free self-hosted AI. Quality is lower than Claude or GPT but works for basic FAQ handling.</p>
+
+        <h2 id="after-launch">After Launch: What to Do in Your First Month</h2>
+
+        <h3>Week 1: Monitor closely</h3>
+        <p>Check the dashboard daily. Read every conversation. You will quickly spot knowledge gaps — questions the chatbot could not answer or answered incorrectly. Add or update knowledge entries immediately.</p>
+
+        <h3>Week 2: Refine escalation</h3>
+        <p>Look at what gets escalated to staff. If routine questions are being escalated, the knowledge base is missing information. If complaints or complex requests are not being escalated, tighten the escalation rules.</p>
+
+        <h3>Week 3-4: Expand</h3>
+        <p>Add a second channel. If you started with web chat, connect <a href="/blog/hotel-whatsapp-automation/">WhatsApp</a>. Set up automated upsell messages — room upgrades, late checkout, spa treatments. Review your resolution rate: by week 4, you should be handling 60-70% of inquiries without staff involvement.</p>
+
+        <h2 id="faq">Frequently Asked Questions</h2>
+
+        <h3>Do I need to know how to code?</h3>
+        <p>No. One-click deploy handles the technical setup. The dashboard is designed for hotel staff, not developers. Adding knowledge entries, configuring channels, and managing conversations all happen through a visual interface.</p>
+
+        <h3>How is this different from free chatbots like Tidio or Tawk.to?</h3>
+        <p>Generic chatbots are not built for hospitality. They cannot handle WhatsApp, integrate with property management systems, or understand hotel-specific workflows like escalating a room complaint vs. answering a parking question. Jack is purpose-built for hotels. For a detailed comparison, see <a href="/blog/free-hotel-chatbot-solutions/">free hotel chatbot solutions</a>.</p>
+
+        <h3>What happens if my server goes down?</h3>
+        <p>Cloud platforms like Railway and Render have automatic restarts and uptime monitoring. Your chatbot recovers automatically. For Docker deployments, set <code>--restart unless-stopped</code> on the container. All data is in a single SQLite file — back it up regularly by copying the file.</p>
+
+        <h3>Can I customize how the AI responds?</h3>
+        <p>Yes. The knowledge base controls what the AI knows. The system prompt (configurable in settings) controls the tone and personality. You can make it formal for a luxury resort or casual for a beach hostel. You can also set autonomy levels — fully automatic, suggest-then-approve, or manual-only.</p>
+
+        <h3>Is my guest data safe?</h3>
+        <p>Your data never leaves your server. There is no telemetry, no analytics sent to third parties, no data sharing. Guest conversations, profiles, and history are stored in a SQLite database on your own infrastructure. The only external calls are to the AI API (if using cloud AI), and those are stateless — the AI provider does not store your prompts.</p>
+
+        <h3>Can I run Jack alongside my existing hotel software?</h3>
+        <p>Yes. Jack does not replace your PMS, booking engine, or other systems. It sits alongside them as a guest communication layer. PMS integrations allow Jack to pull reservation data and push task updates, but they are optional — Jack works standalone too.</p>
+
+        <h3>How do I update Jack to new versions?</h3>
+        <p>Cloud platforms: click "Redeploy" or enable auto-deploy from the GitHub repository. Docker: run <code>docker compose pull && docker compose up -d</code>. Updates take under a minute and your data persists across versions.</p>
+
+        <h3>What if I outgrow the self-hosted setup?</h3>
+        <p>Since Jack is open source, you can modify anything. Add custom integrations, build new features, or hire a developer to extend it. There is no ceiling — you are not limited by what a SaaS vendor decides to build. The code is on <a href="https://github.com/JackTheButler/JackTheButler" target="_blank" rel="noopener">GitHub</a>.</p>
+
+      </div>
+
+      <!-- CTA Box -->
+      <div class="not-prose my-12 p-8 rounded-2xl bg-gradient-to-r from-emerald-600 to-blue-600 text-white text-center">
+        <h3 class="text-2xl font-bold mb-3 text-white">Deploy Your Open Source Hotel Chatbot</h3>
+        <p class="text-white/90 mb-6 max-w-lg mx-auto">
+          Free software. Your server. Your data. Set up Jack The Butler in under 10 minutes.
+        </p>
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <a
+            href="/hotel-chatbot/"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 font-semibold rounded-full hover:bg-neutral-100 transition-colors"
+          >
+            Get Started Free
+            <ArrowRight class="w-4 h-4" />
+          </a>
+          <a
+            href="https://github.com/JackTheButler/JackTheButler"
+            target="_blank"
+            rel="noopener"
+            class="inline-flex items-center gap-2 px-6 py-3 bg-white/10 text-white font-semibold rounded-full hover:bg-white/20 transition-colors border border-white/20"
+          >
+            View on GitHub
+          </a>
+        </div>
+      </div>
+
+      <ArticleBottomCTA
+        title="Ready to try the only open source hotel chatbot?"
+        description="Deploy Jack The Butler on your own server in 5 minutes. Free forever."
+        buttonText="Start Setup"
+        buttonHref="/hotel-chatbot/"
+      />
+
+    </div>
+  </article>
+
+  <RelatedPosts posts={relatedPosts} />
+
+  <Footer />
+</Layout>
+
+<style>
+  .prose h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 3rem;
+    margin-bottom: 1rem;
+  }
+  .prose h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 2rem;
+    margin-bottom: 0.75rem;
+  }
+  .prose p {
+    color: rgb(82 82 82);
+    margin-bottom: 1rem;
+  }
+  .prose ul, .prose ol {
+    padding-left: 1.5rem;
+    margin-bottom: 1rem;
+    color: rgb(82 82 82);
+  }
+  .prose ul {
+    list-style-type: disc;
+  }
+  .prose ol {
+    list-style-type: decimal;
+  }
+  .prose ul li, .prose ol li {
+    margin-bottom: 0.5rem;
+  }
+  .prose strong {
+    color: rgb(23 23 23);
+  }
+  .prose a {
+    color: rgb(37 99 235);
+  }
+  .prose a:hover {
+    text-decoration: underline;
+  }
+  :global(.dark) .prose p,
+  :global(.dark) .prose ul,
+  :global(.dark) .prose ol {
+    color: rgb(163 163 163);
+  }
+  :global(.dark) .prose strong {
+    color: white;
+  }
+  :global(.dark) .prose a {
+    color: rgb(96 165 250);
+  }
+</style>

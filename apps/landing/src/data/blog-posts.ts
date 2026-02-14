@@ -29,6 +29,16 @@ export const authors: Record<string, Author> = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: 'open-source-hotel-chatbot-setup',
+    title: 'Open Source Hotel Chatbot: Complete Setup Guide (2026)',
+    description: 'Step-by-step guide to deploying a free, self-hosted hotel chatbot on your own server. Deploy an open source hotel chatbot in under 30 minutes — no coding required.',
+    date: '2026-02-16',
+    readTime: '12 min read',
+    category: 'Tutorials',
+    image: '/blog/open-source-setup.jpg',
+    author: authors.arash
+  },
+  {
     slug: 'chatbot-for-hotels',
     title: 'Chatbot for Hotels: Complete Implementation Guide',
     description: 'Step-by-step guide to implementing a hotel chatbot — from defining goals to measuring results. Learn how to choose, deploy, and optimize AI guest communication.',
@@ -69,6 +79,11 @@ export const blogPosts: BlogPost[] = [
     author: authors.arash
   }
 ]
+
+export function getPublishedPosts(): BlogPost[] {
+  const today = new Date().toISOString().split('T')[0]
+  return blogPosts.filter(post => post.date <= today)
+}
 
 export function getPost(slug: string): BlogPost | undefined {
   return blogPosts.find(post => post.slug === slug)

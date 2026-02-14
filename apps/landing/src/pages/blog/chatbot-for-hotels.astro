@@ -12,6 +12,11 @@ const post = getPost('chatbot-for-hotels')!
 
 const relatedPosts = [
   {
+    href: '/blog/open-source-hotel-chatbot-setup/',
+    title: 'Open Source Hotel Chatbot Setup',
+    description: 'Deploy a free, self-hosted hotel chatbot step by step.'
+  },
+  {
     href: '/blog/what-is-hotel-chatbot/',
     title: 'What is a Hotel Chatbot?',
     description: 'Understand the basics of hotel chatbots and how they work.'
@@ -25,7 +30,7 @@ const relatedPosts = [
 ---
 
 <Layout
-  title={`${post.title} | Jack The Butler Blog`}
+  title={post.title}
   description={post.description}
   type="article"
   author={post.author.name}

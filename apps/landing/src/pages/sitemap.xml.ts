@@ -1,5 +1,7 @@
 import type { APIRoute } from 'astro'
-import { blogPosts, authors } from '../data/blog-posts'
+import { getPublishedPosts, authors } from '../data/blog-posts'
+
+const blogPosts = getPublishedPosts()
 
 const site = 'https://jackthebutler.com'
 
