@@ -378,6 +378,12 @@ export class AppConfigService {
       } catch {
         // Extension might not be in registry
       }
+      // Reset responder cache when disabling an AI provider
+      // so the next request picks up the new active provider
+      if (manifest.category === 'ai') {
+        resetResponder();
+        log.info({ extensionId }, 'Responder cache reset after disabling AI provider');
+      }
     }
 
     return {
