@@ -78,10 +78,15 @@ const widget = new ButlerChatWidget({ gatewayOrigin, butlerKey });
         justify-content: center;
         box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
         z-index: 2147483646;
-        transition: transform 150ms ease, box-shadow 150ms ease;
+        transition: transform 300ms ease, box-shadow 150ms ease, opacity 300ms ease;
         padding: 0;
         font-size: 0;
         line-height: 0;
+      }
+      .butler-chat-trigger.butler-hidden {
+        opacity: 0;
+        transform: translateY(80px);
+        pointer-events: none;
       }
       .butler-chat-trigger:hover {
         transform: scale(1.05);
@@ -128,6 +133,18 @@ const widget = new ButlerChatWidget({ gatewayOrigin, butlerKey });
       }
     `;
     document.head.appendChild(ctaStyle);
+
+    // Hide bubble on scroll down, show on scroll up
+    const bubbles = document.querySelectorAll('.butler-chat-trigger');
+    if (bubbles.length > 0) {
+      let lastY = window.scrollY;
+      window.addEventListener('scroll', () => {
+        const y = window.scrollY;
+        const hidden = y > lastY && y > 100;
+        bubbles.forEach((b) => b.classList.toggle('butler-hidden', hidden));
+        lastY = y;
+      }, { passive: true });
+    }
   }
 
   // Expose globally

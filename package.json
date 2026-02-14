@@ -10,6 +10,7 @@
     "dev:website": "pnpm --filter @jack/landing dev",
     "build": "tsc && tsc-alias",
     "build:webchat": "pnpm --filter @jack/webchat build",
+    "test:webchat": "python3 -m http.server 8080 -d apps/webchat",
     "start": "node --env-file=.env dist/index.js",
     "lint": "oxlint src/",
     "lint:fix": "oxlint src/ --fix",

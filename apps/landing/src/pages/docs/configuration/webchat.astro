@@ -128,6 +128,24 @@ import DocsLayout from '../../../layouts/DocsLayout.astro'
 &lt;/body&gt;
 &lt;/html&gt;</code></pre>
 
+  <h2 id="scroll-behavior">Scroll Behavior</h2>
+
+  <p>
+    By default, the floating bubble hides when the user scrolls down and reappears when they scroll back up. This keeps the bubble out of the way while guests are reading content.
+  </p>
+
+  <h3>Disable scroll hide</h3>
+
+  <p>
+    If you want the bubble to stay visible at all times, add this CSS to your website:
+  </p>
+
+  <pre><code>.butler-chat-trigger.butler-hidden &#123;
+  opacity: 1 !important;
+  transform: none !important;
+  pointer-events: auto !important;
+&#125;</code></pre>
+
   <h2 id="how-it-works">How It Works</h2>
 
   <ul>
