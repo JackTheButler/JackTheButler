@@ -39,6 +39,7 @@ interface HotelProfile {
   country?: string;
   timezone: string;
   currency: string;
+  propertyLanguage?: string;
   checkInTime: string;
   checkOutTime: string;
   contactPhone?: string;
@@ -58,6 +59,11 @@ interface CurrencyOption {
 }
 
 interface CountryOption {
+  value: string;
+  label: string;
+}
+
+interface LanguageOption {
   value: string;
   label: string;
 }
@@ -108,6 +114,7 @@ export function SettingsPage() {
     name: '',
     timezone: 'UTC',
     currency: 'USD',
+    propertyLanguage: 'en',
     checkInTime: '15:00',
     checkOutTime: '11:00',
   });
@@ -135,6 +142,12 @@ export function SettingsPage() {
   const { data: countriesData } = useQuery({
     queryKey: ['countries'],
     queryFn: () => api.get<{ countries: CountryOption[] }>('/settings/hotel/countries'),
+  });
+
+  // Fetch languages
+  const { data: languagesData } = useQuery({
+    queryKey: ['languages'],
+    queryFn: () => api.get<{ languages: LanguageOption[] }>('/settings/hotel/languages'),
   });
 
   // Update form when data loads
@@ -340,6 +353,21 @@ export function SettingsPage() {
                           value={profileForm.checkOutTime}
                           onValueChange={(value) => handleProfileChange('checkOutTime', value)}
                           placeholder={t('settings.hotelProfile.selectTime')}
+                          disabled={!canManageSettings}
+                        />
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label>{t('settings.hotelProfile.propertyLanguage')}</Label>
+                        <Combobox
+                          options={languagesData?.languages || []}
+                          value={profileForm.propertyLanguage || 'en'}
+                          onValueChange={(value) => handleProfileChange('propertyLanguage', value)}
+                          placeholder={t('settings.hotelProfile.selectLanguage')}
+                          searchPlaceholder={t('settings.hotelProfile.searchLanguage')}
+                          emptyText={t('settings.hotelProfile.noLanguageFound')}
                           disabled={!canManageSettings}
                         />
                       </div>

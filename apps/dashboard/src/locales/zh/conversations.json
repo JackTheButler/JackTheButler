@@ -28,6 +28,10 @@
       "staff": "员工",
       "system": "系统"
     },
+    "showOriginal": "显示原文",
+    "showTranslation": "显示翻译",
+    "showGuestVersion": "显示客人版本",
+    "showStaffVersion": "显示员工版本",
     "states": {
       "new": "新建",
       "active": "进行中",

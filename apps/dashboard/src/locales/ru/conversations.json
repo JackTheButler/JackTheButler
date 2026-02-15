@@ -28,6 +28,10 @@
       "staff": "Персонал",
       "system": "Система"
     },
+    "showOriginal": "Показать оригинал",
+    "showTranslation": "Показать перевод",
+    "showGuestVersion": "Показать версию гостя",
+    "showStaffVersion": "Показать версию персонала",
     "states": {
       "new": "Новый",
       "active": "Активный",

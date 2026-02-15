@@ -27,6 +27,7 @@ export interface ConversationSummary {
   lastMessageAt?: string | null;
   messageCount: number;
   taskCount: number;
+  guestLanguage?: string | null;
   createdAt: string;
 }
 
@@ -49,4 +50,5 @@ export interface UpdateConversationInput {
   guestId?: string | undefined;
   currentIntent?: string | undefined;
   metadata?: Record<string, unknown> | undefined;
+  guestLanguage?: string | undefined;
 }

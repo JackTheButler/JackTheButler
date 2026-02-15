@@ -28,6 +28,10 @@
       "staff": "कर्मचारी",
       "system": "सिस्टम"
     },
+    "showOriginal": "मूल दिखाएं",
+    "showTranslation": "अनुवाद दिखाएं",
+    "showGuestVersion": "अतिथि संस्करण दिखाएं",
+    "showStaffVersion": "कर्मचारी संस्करण दिखाएं",
     "states": {
       "new": "नया",
       "active": "सक्रिय",

@@ -123,6 +123,7 @@ function createTestDb() {
       last_message_at TEXT,
       resolved_at TEXT,
       idle_warned_at TEXT,
+      guest_language TEXT DEFAULT 'en',
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
@@ -142,6 +143,8 @@ function createTestDb() {
       channel_message_id TEXT,
       delivery_status TEXT DEFAULT 'sent',
       delivery_error TEXT,
+      detected_language TEXT,
+      translated_content TEXT,
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 

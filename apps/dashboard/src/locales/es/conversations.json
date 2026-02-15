@@ -28,6 +28,10 @@
       "staff": "Personal",
       "system": "Sistema"
     },
+    "showOriginal": "Mostrar original",
+    "showTranslation": "Mostrar traducción",
+    "showGuestVersion": "Mostrar versión del huésped",
+    "showStaffVersion": "Mostrar versión del personal",
     "states": {
       "new": "Nuevo",
       "active": "Activo",

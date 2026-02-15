@@ -30,6 +30,7 @@ import type { Responder } from '@/ai/index.js';
 import { defaultResponder } from '@/ai/index.js';
 import type { ClassificationResult } from '@/ai/intent/index.js';
 import { getIntentDefinition } from '@/ai/intent/index.js';
+import { detectAndTranslate, translate, getPropertyLanguage } from '@/services/translation.js';
 
 const log = createLogger('core:processor');
 
@@ -113,12 +114,34 @@ export class MessageProcessor {
       }
     }
 
+    // 3a. Detect language + translate (before saving)
+    let detectedLanguage: string | undefined;
+    let translatedContent: string | undefined;
+
+    const propertyLanguage = await getPropertyLanguage();
+
+    try {
+      const result = await detectAndTranslate(inbound.content, propertyLanguage);
+      detectedLanguage = result.detectedLanguage;
+      translatedContent = result.translatedContent ?? undefined;
+
+      // Update conversation guest language
+      await this.conversationSvc.update(conversation.id, { guestLanguage: detectedLanguage });
+
+      // Pass to responder via metadata (used by RAG, classification, and outbound translation)
+      inbound.metadata = { ...inbound.metadata, detectedLanguage, translatedContent };
+    } catch (error) {
+      log.warn({ error }, 'Language detection failed, saving without translation');
+    }
+
     // 4. Save inbound message
     const savedInbound = await this.conversationSvc.addMessage(conversation.id, {
       direction: 'inbound',
       senderType: 'guest',
       content: inbound.content,
       contentType: inbound.contentType,
+      detectedLanguage,
+      translatedContent,
     });
 
     // Emit message received event
@@ -180,7 +203,7 @@ export class MessageProcessor {
 
         // Create a clear, actionable description — message first, guest context at end
         const contextParts = [guestName, roomInfo, channelInfo].filter(Boolean).join(', ');
-        const taskDescription = `"${inbound.content}" — ${contextParts}`;
+        const taskDescription = `"${translatedContent ?? inbound.content}" — ${contextParts}`;
 
         const taskInput: Parameters<typeof taskService.create>[0] = {
           conversationId: conversation.id,
@@ -366,9 +389,21 @@ export class MessageProcessor {
 
       // Return a contextual pending response to the guest
       const pendingContent = this.getPendingMessage(response.intent, guestContext?.guest?.firstName);
+
+      // Translate pending message to guest language
+      const pendingGuestLang = detectedLanguage ?? conversation.guestLanguage ?? 'en';
+      let translatedPendingContent: string | undefined;
+      if (pendingGuestLang !== propertyLanguage) {
+        try {
+          translatedPendingContent = await translate(pendingContent, pendingGuestLang, propertyLanguage);
+        } catch (error) {
+          log.warn({ error }, 'Pending message translation failed');
+        }
+      }
+
       const pendingResponse: OutboundMessage = {
         conversationId: conversation.id,
-        content: pendingContent,
+        content: translatedPendingContent ?? pendingContent,
         contentType: 'text',
         metadata: {
           pendingApproval: true,
@@ -381,7 +416,8 @@ export class MessageProcessor {
       await this.conversationSvc.addMessage(conversation.id, {
         direction: 'outbound',
         senderType: 'ai',
-        content: pendingResponse.content,
+        content: pendingContent,
+        translatedContent: translatedPendingContent,
         contentType: 'text',
       });
 
@@ -394,11 +430,26 @@ export class MessageProcessor {
       return pendingResponse;
     }
 
+    // 5d. Translate AI response to guest language
+    const outboundGuestLanguage = detectedLanguage ?? conversation.guestLanguage ?? 'en';
+    let translatedResponseContent: string | undefined;
+
+    if (outboundGuestLanguage !== propertyLanguage) {
+      try {
+        translatedResponseContent = await translate(
+          response.content, outboundGuestLanguage, propertyLanguage
+        );
+      } catch (error) {
+        log.warn({ error }, 'Outbound translation failed');
+      }
+    }
+
     // 6. Save outbound message
     const savedOutbound = await this.conversationSvc.addMessage(conversation.id, {
       direction: 'outbound',
       senderType: 'ai',
       content: response.content,
+      translatedContent: translatedResponseContent,
       contentType: 'text',
       intent: response.intent,
       confidence: response.confidence,
@@ -410,7 +461,7 @@ export class MessageProcessor {
       type: EventTypes.MESSAGE_SENT,
       conversationId: conversation.id,
       messageId: savedOutbound.id,
-      content: response.content,
+      content: translatedResponseContent ?? response.content,
       senderType: 'ai',
       timestamp: new Date(),
     });
@@ -421,10 +472,10 @@ export class MessageProcessor {
       'Message processed'
     );
 
-    // 7. Return response for delivery
+    // 7. Return response for delivery (guest receives translated version)
     const result: OutboundMessage = {
       conversationId: conversation.id,
-      content: response.content,
+      content: translatedResponseContent ?? response.content,
       contentType: 'text',
     };
 

@@ -74,4 +74,6 @@ export interface CreateMessageInput {
   intent?: string | undefined;
   confidence?: number | undefined;
   entities?: unknown[] | undefined;
+  detectedLanguage?: string | undefined;
+  translatedContent?: string | undefined;
 }

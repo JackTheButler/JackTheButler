@@ -114,4 +114,5 @@ export interface Conversation {
   createdAt: string;
   messageCount: number;
   taskCount?: number;
+  guestLanguage?: string | null;
 }

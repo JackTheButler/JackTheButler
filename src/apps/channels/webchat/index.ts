@@ -317,7 +317,10 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
           messages: messages.map((m) => ({
             direction: m.direction,
             senderType: m.senderType,
-            content: m.content,
+            // Guest sees: original content for inbound, translated version for outbound
+            content: m.direction === 'outbound' && m.translatedContent
+              ? m.translatedContent
+              : m.content,
             timestamp: m.createdAt,
           })),
         })

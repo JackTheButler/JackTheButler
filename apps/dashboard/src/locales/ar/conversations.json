@@ -28,6 +28,10 @@
       "staff": "موظف",
       "system": "نظام"
     },
+    "showOriginal": "عرض الأصلي",
+    "showTranslation": "عرض الترجمة",
+    "showGuestVersion": "عرض نسخة الضيف",
+    "showStaffVersion": "عرض نسخة الموظف",
     "states": {
       "new": "جديد",
       "active": "نشط",

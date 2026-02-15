@@ -76,6 +76,9 @@
 | hotel virtual assistant | 0 | Easy | 30 | 40 | 🎯 Target |
 | free hotel chatbot | 30 | Medium | 0 | 10 | ✅ Covered |
 | hotel whatsapp bot | 0 | Easy | 0 | 10 | ✅ Covered |
+| hotel ai bot | 4 | Easy | 20 | 10 | 🎯 Target |
+| hotel chat bot | 9 | Easy | 450 | 60 | 🎯 Target |
+| chat bot hotel | 4 | Easy | 450 | 20 | 🎯 Target |
 
 ### Quick Wins (Easy Difficulty, Good Potential)
 | Keyword | Why Target |

@@ -52,6 +52,11 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
                   {conv.taskCount}
                 </span>
               )}
+              {conv.guestLanguage && conv.guestLanguage !== 'en' && (
+                <Badge variant="outline" className="text-xs uppercase px-1.5">
+                  {conv.guestLanguage}
+                </Badge>
+              )}
             </div>
             <Badge variant={conversationStateVariants[conv.state] || 'default'}>
               {t(`conversations.states.${conv.state}`)}

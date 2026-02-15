@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle } from 'lucide-react';
+import { ChevronDown, Languages, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatTime, formatDateTime } from '@/lib/formatters';
@@ -24,6 +24,7 @@ interface ConversationDetails {
   state: string;
   guestId: string | null;
   guestName?: string;
+  guestLanguage?: string | null;
   assignedTo: string | null;
   assignedName?: string;
   currentIntent: string | null;
@@ -39,6 +40,8 @@ interface Message {
   senderId: string | null;
   content: string;
   contentType: string;
+  translatedContent?: string | null;
+  detectedLanguage?: string | null;
   intent: string | null;
   createdAt: string;
 }
@@ -165,14 +168,25 @@ export function ConversationView({ id }: Props) {
       {/* Header */}
       <div className="p-4 border-b shrink-0">
         <div className="flex items-center justify-between">
-          <div>
-            <h2 className="font-medium text-foreground flex items-center gap-3">
-              <ChannelIcon channel={conv.channelType} size="lg" boxed inverted />
-              {conv.guestName || conv.channelId}
-            </h2>
-            {conv.currentIntent && (
-              <p className="text-sm text-muted-foreground">{conv.currentIntent}</p>
-            )}
+          <div className="flex items-center gap-3">
+            <ChannelIcon channel={conv.channelType} size="lg" boxed inverted />
+            <div>
+              <h2 className="font-medium text-foreground">
+                {conv.guestName || conv.channelId}
+              </h2>
+              {(conv.guestLanguage || conv.currentIntent) && (
+                <div className="flex items-center gap-2">
+                  {conv.guestLanguage && conv.guestLanguage !== 'en' && (
+                    <Badge variant="outline" className="text-xs uppercase px-1.5">
+                      {conv.guestLanguage}
+                    </Badge>
+                  )}
+                  {conv.currentIntent && (
+                    <span className="text-sm text-muted-foreground">{conv.currentIntent}</span>
+                  )}
+                </div>
+              )}
+            </div>
           </div>
           <div className="relative" ref={stateMenuRef}>
             {canManageConversations ? (
@@ -313,8 +327,23 @@ export function ConversationView({ id }: Props) {
 
 function MessageBubble({ message, t }: { message: Message; t: (key: string) => string }) {
   const isInbound = message.direction === 'inbound';
+  const [showAlt, setShowAlt] = useState(false);
+  const hasTranslation = !!message.translatedContent;
+
+  // Inbound: secondary is original (guest language)
+  // Outbound: secondary is translatedContent (what guest received)
+  const altContent = isInbound ? message.content : message.translatedContent;
+
+  const toggleLabel = isInbound
+    ? (showAlt ? t('conversations.showTranslation') : t('conversations.showOriginal'))
+    : (showAlt ? t('conversations.showStaffVersion') : t('conversations.showGuestVersion'));
 
   const senderLabel = t(`conversations.senderTypes.${message.senderType}`);
+
+  // Primary content: inbound shows translation (staff language), outbound shows original (staff language)
+  const primaryContent = isInbound
+    ? (message.translatedContent ?? message.content)
+    : message.content;
 
   return (
     <div className={cn('flex', isInbound ? 'justify-start' : 'justify-end')}>
@@ -333,14 +362,44 @@ function MessageBubble({ message, t }: { message: Message; t: (key: string) => s
         >
           {senderLabel}
         </div>
-        <div className="text-sm whitespace-pre-wrap">{message.content}</div>
-        <div
-          className={cn(
-            'text-xs mt-1',
-            isInbound ? 'text-muted-foreground/70' : 'text-white/60'
+        <div className="text-sm whitespace-pre-wrap">{primaryContent}</div>
+        {hasTranslation && (
+          <div className={cn(
+            'grid transition-[grid-template-rows] duration-150 ease-in-out',
+            showAlt ? 'grid-rows-[1fr]' : 'grid-rows-[0fr]'
+          )}>
+            <div className="overflow-hidden">
+              <div className={cn(
+                'text-sm whitespace-pre-wrap mt-2 pt-2 border-t italic',
+                isInbound ? 'border-muted-foreground/20' : 'border-white/20'
+              )}>
+                {altContent}
+              </div>
+            </div>
+          </div>
+        )}
+        <div className="flex items-center justify-between mt-1">
+          <span
+            className={cn(
+              'text-xs',
+              isInbound ? 'text-muted-foreground/70' : 'text-white/60'
+            )}
+          >
+            {formatTime(message.createdAt)}
+          </span>
+          {hasTranslation && (
+            <button
+              onClick={() => setShowAlt(!showAlt)}
+              className={cn(
+                'flex items-center gap-1 text-xs',
+                isInbound ? 'text-muted-foreground hover:text-foreground' : 'text-white/60 hover:text-white/80'
+              )}
+            >
+              <Languages className="w-3 h-3" />
+              {toggleLabel}
+              <ChevronDown className={cn('w-3 h-3 transition-transform', showAlt && 'rotate-180')} />
+            </button>
           )}
-        >
-          {formatTime(message.createdAt)}
         </div>
       </div>
     </div>

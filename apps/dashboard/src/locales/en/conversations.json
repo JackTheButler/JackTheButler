@@ -28,6 +28,10 @@
       "staff": "Staff",
       "system": "System"
     },
+    "showOriginal": "Show original",
+    "showTranslation": "Show translation",
+    "showGuestVersion": "Show guest version",
+    "showStaffVersion": "Show staff version",
     "states": {
       "new": "New",
       "active": "Active",

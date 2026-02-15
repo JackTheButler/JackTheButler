@@ -42,6 +42,7 @@ const hotelProfileSchema = z.object({
   currency: z.string().length(3).default('USD'), // ISO 4217 currency code
   checkInTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)').default('15:00'),
   checkOutTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)').default('11:00'),
+  propertyLanguage: z.string().min(2).max(10).default('en'),
   contactPhone: z.string().max(50).optional(),
   contactEmail: z.string().email().max(200).optional(),
   website: z.string().url().max(500).optional(),
@@ -56,6 +57,7 @@ const DEFAULT_PROFILE: HotelProfile = {
   name: '',
   timezone: 'UTC',
   currency: 'USD',
+  propertyLanguage: 'en',
   checkInTime: '15:00',
   checkOutTime: '11:00',
 };
@@ -91,6 +93,11 @@ hotelProfileRoutes.get('/', requirePermission(PERMISSIONS.SETTINGS_VIEW), async 
 
   try {
     const profile = JSON.parse(row.value) as HotelProfile;
+    // Merge standalone property_language if not set in profile JSON
+    if (!profile.propertyLanguage) {
+      const langRow = db.select().from(settings).where(eq(settings.key, 'property_language')).get();
+      profile.propertyLanguage = langRow?.value ?? 'en';
+    }
     return c.json({ profile, isConfigured: true });
   } catch {
     log.warn('Failed to parse hotel profile, returning defaults');
@@ -130,6 +137,27 @@ hotelProfileRoutes.put('/', requirePermission(PERMISSIONS.SETTINGS_MANAGE), vali
         value: JSON.stringify(profile),
         updatedAt: now,
       })
+      .run();
+  }
+
+  // Dual-write property_language as standalone setting for translation service
+  const langKey = 'property_language';
+  const langRow = await db
+    .select()
+    .from(settings)
+    .where(eq(settings.key, langKey))
+    .get();
+
+  if (langRow) {
+    await db
+      .update(settings)
+      .set({ value: profile.propertyLanguage, updatedAt: now })
+      .where(eq(settings.key, langKey))
+      .run();
+  } else {
+    await db
+      .insert(settings)
+      .values({ key: langKey, value: profile.propertyLanguage, updatedAt: now })
       .run();
   }
 
@@ -544,6 +572,49 @@ hotelProfileRoutes.get('/countries', requirePermission(PERMISSIONS.SETTINGS_VIEW
   ];
 
   return c.json({ countries });
+});
+
+/**
+ * GET /api/v1/settings/hotel/languages
+ * Get list of languages for dropdown
+ */
+hotelProfileRoutes.get('/languages', requirePermission(PERMISSIONS.SETTINGS_VIEW), (c) => {
+  const languages = [
+    { value: 'en', label: 'English' },
+    { value: 'es', label: 'Spanish' },
+    { value: 'fr', label: 'French' },
+    { value: 'de', label: 'German' },
+    { value: 'it', label: 'Italian' },
+    { value: 'pt', label: 'Portuguese' },
+    { value: 'nl', label: 'Dutch' },
+    { value: 'ru', label: 'Russian' },
+    { value: 'zh', label: 'Chinese' },
+    { value: 'ja', label: 'Japanese' },
+    { value: 'ko', label: 'Korean' },
+    { value: 'ar', label: 'Arabic' },
+    { value: 'hi', label: 'Hindi' },
+    { value: 'bn', label: 'Bengali' },
+    { value: 'ur', label: 'Urdu' },
+    { value: 'fa', label: 'Persian' },
+    { value: 'tr', label: 'Turkish' },
+    { value: 'th', label: 'Thai' },
+    { value: 'vi', label: 'Vietnamese' },
+    { value: 'id', label: 'Indonesian' },
+    { value: 'ms', label: 'Malay' },
+    { value: 'pl', label: 'Polish' },
+    { value: 'uk', label: 'Ukrainian' },
+    { value: 'ro', label: 'Romanian' },
+    { value: 'el', label: 'Greek' },
+    { value: 'cs', label: 'Czech' },
+    { value: 'sv', label: 'Swedish' },
+    { value: 'da', label: 'Danish' },
+    { value: 'fi', label: 'Finnish' },
+    { value: 'no', label: 'Norwegian' },
+    { value: 'he', label: 'Hebrew' },
+    { value: 'hu', label: 'Hungarian' },
+  ];
+
+  return c.json({ languages });
 });
 
 export { hotelProfileRoutes };

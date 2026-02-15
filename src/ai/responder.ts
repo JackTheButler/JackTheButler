@@ -16,6 +16,7 @@ import { IntentClassifier, type ClassificationResult } from './intent/index.js';
 import { ConversationService } from '@/services/conversation.js';
 import { createLogger } from '@/utils/logger.js';
 import { getResponseCache, type ResponseCacheService } from './cache.js';
+import { translate, getPropertyLanguage } from '@/services/translation.js';
 import { metrics } from '@/monitoring/index.js';
 
 /**
@@ -67,7 +68,6 @@ const QUICK_REPLY_RE = /\[QUICK_REPLIES:((?:[^|\]]+\|?)+)\]\s*$/;
 const BUTLER_SYSTEM_PROMPT = `You are Jack, a friendly hotel concierge. Be warm, helpful, and BRIEF.
 
 Response rules:
-- Always respond in the language the guest is using. If unsure, default to English
 - Keep responses to 1-2 sentences maximum
 - Sound like a real person, not a corporate bot
 - Don't repeat back what the guest said
@@ -176,11 +176,35 @@ export class AIResponder implements Responder {
       }
     }
 
-    // 1. Classify intent
-    const classification = await this.classifier.classify(message.content);
+    // Resolve property language once for the entire request
+    const propertyLanguage = await getPropertyLanguage();
+
+    // 1. Classify intent (use translated content if available for better accuracy)
+    const classifyContent = (message.metadata?.translatedContent as string) ?? message.content;
+    const classification = await this.classifier.classify(classifyContent);
 
     // 2. Search knowledge base for context
-    const knowledgeContext = await this.knowledge.search(message.content, {
+    // Translate query to English for RAG (KB + embeddings are English-only)
+    const guestLanguage = (message.metadata?.detectedLanguage as string)
+      ?? conversation.guestLanguage ?? 'en';
+    let searchQuery = message.content;
+
+    if (guestLanguage !== 'en') {
+      // Reuse Phase 1 translation if property language is already English
+      const existingTranslation = message.metadata?.translatedContent as string | undefined;
+
+      if (existingTranslation && propertyLanguage === 'en') {
+        searchQuery = existingTranslation;
+      } else {
+        try {
+          searchQuery = await translate(message.content, 'en', guestLanguage);
+        } catch (error) {
+          log.warn({ error }, 'RAG query translation failed, using original');
+        }
+      }
+    }
+
+    const knowledgeContext = await this.knowledge.search(searchQuery, {
       limit: this.maxKnowledgeResults,
       minSimilarity: this.minKnowledgeSimilarity,
     });
@@ -192,8 +216,10 @@ export class AIResponder implements Responder {
     const hotelProfile = await this.getHotelProfile();
 
     // 5. Build the prompt
+    // Use translated content for the prompt so the entire context is in the property language
+    const promptMessage = (message.metadata?.translatedContent as string) ?? message.content;
     const channelActions = message.metadata?.channelActions as ChannelActionsMetadata | undefined;
-    const messages = this.buildPromptMessages(message.content, classification, knowledgeContext, history, guestContext, hotelProfile, channelActions);
+    const messages = this.buildPromptMessages(promptMessage, classification, knowledgeContext, history, guestContext, hotelProfile, channelActions, propertyLanguage);
 
     // 6. Generate response
     metrics.aiRequests.inc();
@@ -239,7 +265,10 @@ export class AIResponder implements Responder {
     );
 
     // Cache the response for FAQ-style queries
-    if (canUseCache && this.cache && classification.confidence > 0.7) {
+    // Skip caching inquiry responses with no KB hits (prevents caching "I don't know" answers)
+    const isInquiry = classification.intent?.startsWith('inquiry');
+    const hasKnowledge = knowledgeContext.length > 0;
+    if (canUseCache && this.cache && classification.confidence > 0.7 && (!isInquiry || hasKnowledge)) {
       this.cache.set(message.content, content, classification.intent).catch((err) => {
         log.error({ err }, 'Failed to cache response');
       });
@@ -306,11 +335,17 @@ export class AIResponder implements Responder {
     guestContext?: GuestContext,
     hotelProfile?: HotelProfile | null,
     channelActions?: ChannelActionsMetadata,
+    propertyLanguage?: string,
   ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
 
     // System prompt with context
     let systemContent = BUTLER_SYSTEM_PROMPT;
+
+    // Tell the AI which language to respond in
+    if (propertyLanguage && propertyLanguage !== 'en') {
+      systemContent += `\n\nIMPORTANT: Respond in ${propertyLanguage}. The guest's messages have been translated for you. Your response will be automatically translated to the guest's language. Do NOT translate your response yourself.`;
+    }
 
     // Add hotel profile if available
     if (hotelProfile) {
@@ -459,14 +494,23 @@ export class AIResponder implements Responder {
     messages.push({ role: 'system', content: systemContent });
 
     // Add conversation history
+    // For inbound messages, use translatedContent (property language) so the AI
+    // sees a coherent conversation in the property language
     for (const msg of history) {
       const role = msg.direction === 'inbound' ? 'user' : 'assistant';
-      messages.push({ role, content: msg.content });
+      const displayContent = msg.direction === 'inbound' && msg.translatedContent
+        ? msg.translatedContent
+        : msg.content;
+      messages.push({ role, content: displayContent });
     }
 
     // Add current message (if not already in history)
+    // Compare against display content (translated for inbound) to avoid duplicates
     const lastHistoryMsg = history[history.length - 1];
-    if (!lastHistoryMsg || lastHistoryMsg.content !== currentMessage) {
+    const lastDisplayContent = lastHistoryMsg?.direction === 'inbound' && lastHistoryMsg.translatedContent
+      ? lastHistoryMsg.translatedContent
+      : lastHistoryMsg?.content;
+    if (!lastHistoryMsg || lastDisplayContent !== currentMessage) {
       messages.push({ role: 'user', content: currentMessage });
     }
 

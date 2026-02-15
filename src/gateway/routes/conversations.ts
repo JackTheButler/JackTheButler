@@ -14,6 +14,7 @@ import { PERMISSIONS } from '@/core/permissions/index.js';
 import type { ContentType, ChannelType } from '@/types/index.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { webchatConnectionManager } from '@/apps/channels/webchat/index.js';
+import { translate, getPropertyLanguage } from '@/services/translation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('api:conversations');
@@ -159,20 +160,34 @@ conversationsRouter.post('/:id/messages', requirePermission(PERMISSIONS.CONVERSA
   // Get conversation to know channel details
   const conversation = await conversationService.getById(id);
 
+  // Translate staff reply to guest language
+  const propertyLanguage = await getPropertyLanguage();
+  const guestLanguage = conversation.guestLanguage ?? 'en';
+  let translatedContent: string | undefined;
+
+  if (guestLanguage !== propertyLanguage) {
+    try {
+      translatedContent = await translate(body.content, guestLanguage, propertyLanguage);
+    } catch (err) {
+      log.warn({ err }, 'Staff reply translation failed');
+    }
+  }
+
   const message = await conversationService.addMessage(id, {
     direction: 'outbound',
     senderType: 'staff',
     senderId: userId,
     content: body.content,
+    translatedContent,
     contentType: body.contentType as ContentType,
   });
 
-  // Send through channel adapter
+  // Send through channel adapter (guest receives translated version)
   try {
     await sendToChannel(
       conversation.channelType as ChannelType,
       conversation.channelId,
-      body.content
+      translatedContent ?? body.content
     );
   } catch (err) {
     // Log error but don't fail the request - message is saved

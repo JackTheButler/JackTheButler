@@ -261,6 +261,9 @@ export const conversations = sqliteTable(
     // Timeout tracking
     idleWarnedAt: text('idle_warned_at'),
 
+    // Translation
+    guestLanguage: text('guest_language').default('en'),
+
     createdAt: text('created_at')
       .notNull()
       .default(sql`(datetime('now'))`),
@@ -317,6 +320,10 @@ export const messages = sqliteTable(
     // Delivery status: pending, sent, delivered, read, failed
     deliveryStatus: text('delivery_status').default('sent'),
     deliveryError: text('delivery_error'),
+
+    // Translation
+    detectedLanguage: text('detected_language'),
+    translatedContent: text('translated_content'),
 
     createdAt: text('created_at')
       .notNull()

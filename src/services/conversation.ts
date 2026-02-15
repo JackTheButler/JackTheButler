@@ -174,6 +174,7 @@ export class ConversationService {
         guestLastName: guests.lastName,
         assignedTo: conversations.assignedTo,
         currentIntent: conversations.currentIntent,
+        guestLanguage: conversations.guestLanguage,
         lastMessageAt: conversations.lastMessageAt,
         createdAt: conversations.createdAt,
       })
@@ -220,6 +221,7 @@ export class ConversationService {
         createdAt: c.createdAt,
         messageCount: messageCounts.get(c.id) || 0,
         taskCount: taskCounts.get(c.id) || 0,
+        guestLanguage: c.guestLanguage,
       };
 
       if (guestName) {
@@ -270,6 +272,7 @@ export class ConversationService {
       resolvedAt: conversation.resolvedAt,
       messageCount,
       taskCount,
+      guestLanguage: conversation.guestLanguage,
       createdAt: conversation.createdAt,
       updatedAt: conversation.updatedAt,
     };
@@ -311,6 +314,10 @@ export class ConversationService {
 
     if (input.currentIntent !== undefined) {
       updates.currentIntent = input.currentIntent;
+    }
+
+    if (input.guestLanguage !== undefined) {
+      updates.guestLanguage = input.guestLanguage;
     }
 
     if (input.metadata !== undefined) {
@@ -366,6 +373,8 @@ export class ConversationService {
       intent: input.intent ?? null,
       confidence: input.confidence ?? null,
       entities: input.entities ? JSON.stringify(input.entities) : null,
+      detectedLanguage: input.detectedLanguage ?? null,
+      translatedContent: input.translatedContent ?? null,
       deliveryStatus: 'sent',
       createdAt: now,
     });
