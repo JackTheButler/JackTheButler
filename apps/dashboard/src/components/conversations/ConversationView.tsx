@@ -66,7 +66,6 @@ export function ConversationView({ id }: Props) {
   const { data: msgData, isLoading: loadingMessages } = useQuery({
     queryKey: ['messages', id],
     queryFn: () => api.get<{ messages: Message[] }>(`/conversations/${id}/messages`),
-    refetchInterval: 5000,
   });
 
   const { data: taskData } = useQuery({
@@ -172,7 +171,7 @@ export function ConversationView({ id }: Props) {
             <ChannelIcon channel={conv.channelType} size="lg" boxed inverted />
             <div>
               <h2 className="font-medium text-foreground">
-                {conv.guestName || conv.channelId}
+                {conv.guestName || formatChannelId(conv.channelType, conv.channelId)}
               </h2>
               {(conv.guestLanguage || conv.currentIntent) && (
                 <div className="flex items-center gap-2">
@@ -540,3 +539,14 @@ function TaskCard({
   );
 }
 
+function formatChannelId(channel: string, id: string): string {
+  if (channel === 'whatsapp' || channel === 'sms') {
+    if (id.length > 6) {
+      const prefix = id.startsWith('+') ? '' : '+';
+      return `${prefix}${id.slice(0, -4)}****`;
+    }
+  }
+  if (channel === 'webchat') return 'Web Visitor';
+  if (channel === 'email') return id;
+  return 'Guest';
+}

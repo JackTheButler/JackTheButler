@@ -32,6 +32,15 @@ export function useWebSocket() {
           // Also refresh conversations list if on Inbox page
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
           break;
+        case 'conversation:message': {
+          const payload = message.payload as { conversationId?: string } | undefined;
+          if (payload?.conversationId) {
+            queryClient.invalidateQueries({ queryKey: ['messages', payload.conversationId] });
+            queryClient.invalidateQueries({ queryKey: ['conversation', payload.conversationId] });
+          }
+          queryClient.invalidateQueries({ queryKey: ['conversations'] });
+          break;
+        }
         case 'connected':
           console.log('[WebSocket] Connected', message.payload);
           break;

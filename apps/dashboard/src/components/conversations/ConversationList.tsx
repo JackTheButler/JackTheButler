@@ -76,6 +76,8 @@ function formatChannelId(channel: string, id: string): string {
       return `${prefix}${id.slice(0, -4)}****`;
     }
   }
-  return id;
+  if (channel === 'webchat') return 'Web Visitor';
+  if (channel === 'email') return id;
+  return 'Guest';
 }
 

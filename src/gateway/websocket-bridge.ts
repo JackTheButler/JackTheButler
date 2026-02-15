@@ -8,7 +8,7 @@
  */
 
 import { events, EventTypes } from '@/events/index.js';
-import type { ModelDownloadProgressEvent } from '@/types/events.js';
+import type { AppEvent, ModelDownloadProgressEvent } from '@/types/events.js';
 import { broadcast } from './websocket.js';
 import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
@@ -57,6 +57,16 @@ export function setupWebSocketBridge() {
   events.on(EventTypes.CONVERSATION_UPDATED, broadcastConversationStats);
   events.on(EventTypes.CONVERSATION_ESCALATED, broadcastConversationStats);
   events.on(EventTypes.CONVERSATION_RESOLVED, broadcastConversationStats);
+
+  // Broadcast new messages so the dashboard can update instantly
+  const broadcastNewMessage = (event: AppEvent) => {
+    if ('conversationId' in event && event.conversationId) {
+      broadcast({ type: 'conversation:message', payload: { conversationId: event.conversationId } });
+    }
+  };
+
+  events.on(EventTypes.MESSAGE_RECEIVED, broadcastNewMessage);
+  events.on(EventTypes.MESSAGE_SENT, broadcastNewMessage);
 
   // ─────────────────────────────────────────────────────────────
   // Approval Events
