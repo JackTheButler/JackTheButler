@@ -46,6 +46,8 @@ RUN pnpm --filter @jack/webchat build
 # ===================
 FROM node:22-slim
 
+ARG VERSION=dev
+
 WORKDIR /app
 
 # Install build dependencies for better-sqlite3 and runtime deps for ONNX

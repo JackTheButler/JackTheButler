@@ -12,7 +12,7 @@ import {
   Crown,
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { formatDate, formatTime } from '@/lib/formatters';
+import { formatDate } from '@/lib/formatters';
 import {
   getReservationStatusFilters,
   reservationStatusVariants,
