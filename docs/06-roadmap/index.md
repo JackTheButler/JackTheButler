@@ -13,7 +13,8 @@ Future features and improvements planned for Jack The Butler.
 | [Auth Backend](./005-auth-backend.md) | In Progress | High | Registration, password recovery, email verification, admin approval |
 | [Web Chat Widget](./006-web-chat-widget.md) | In Progress | Medium | Embeddable chat widget for hotel websites with AI + form-based actions (Phase 1 complete) |
 | [Multilingual Translation](./007-multilingual-translation.md) | Released | High | Automatic translation of guest messages, AI responses, and staff replies across all channels |
-| [PMS Sync Freshness](./008-pms-sync-freshness.md) | Planned | High | Staleness guards for critical paths reading cached PMS reservation data |
+| [PMS Sync Freshness](./008-pms-sync-freshness.md) | Released | High | Staleness guards for critical paths reading cached PMS reservation data (Phases 1-3 complete) |
+| [PMS Provider Adapters](./009-pms-providers.md) | Planned | High | Production adapters for Mews, Cloudbeds, Oracle OPERA Cloud, Apaleo, and Protel |
 
 ## How to Propose Features
 

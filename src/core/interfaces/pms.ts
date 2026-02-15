@@ -11,7 +11,7 @@
 /**
  * Source identifier for external systems
  */
-export type IntegrationSource = 'mews' | 'cloudbeds' | 'opera' | 'apaleo' | 'manual' | 'mock';
+export type IntegrationSource = 'mews' | 'cloudbeds' | 'opera' | 'apaleo' | 'protel' | 'manual' | 'mock';
 
 /**
  * Guest preference

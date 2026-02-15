@@ -7,3 +7,4 @@
  */
 
 export { MockPMSAdapter, createMockPMSAdapter, manifest as mockManifest } from './mock.js';
+export { MewsPMSAdapter, createMewsPMSAdapter, manifest as mewsManifest } from './mews.js';
