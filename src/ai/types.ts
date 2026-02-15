@@ -10,6 +10,7 @@ export type {
   CompletionMessage,
   CompletionRequest,
   CompletionResponse,
+  ModelTier,
   TokenUsage,
   EmbeddingRequest,
   EmbeddingResponse,

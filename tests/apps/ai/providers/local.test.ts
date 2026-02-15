@@ -142,7 +142,7 @@ describe('Local AI Manifest', () => {
 
   it('should have config schema', () => {
     expect(Array.isArray(manifest.configSchema)).toBe(true);
-    expect(manifest.configSchema.length).toBe(2);
+    expect(manifest.configSchema.length).toBe(3);
 
     const embeddingField = manifest.configSchema.find((f) => f.key === 'embeddingModel');
     expect(embeddingField).toBeDefined();
@@ -151,6 +151,10 @@ describe('Local AI Manifest', () => {
     const completionField = manifest.configSchema.find((f) => f.key === 'completionModel');
     expect(completionField).toBeDefined();
     expect(completionField?.required).toBe(false);
+
+    const utilityField = manifest.configSchema.find((f) => f.key === 'utilityModel');
+    expect(utilityField).toBeDefined();
+    expect(utilityField?.required).toBe(false);
   });
 
   it('should create provider via factory', () => {

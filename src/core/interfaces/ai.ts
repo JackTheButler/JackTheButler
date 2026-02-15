@@ -22,6 +22,13 @@ export interface CompletionMessage {
 }
 
 /**
+ * Model tier for completion requests.
+ * - 'completion': Primary model for generating guest responses (default)
+ * - 'utility': Smaller/faster model for translation, classification, and search queries
+ */
+export type ModelTier = 'completion' | 'utility';
+
+/**
  * Request to generate a completion
  */
 export interface CompletionRequest {
@@ -29,6 +36,8 @@ export interface CompletionRequest {
   maxTokens?: number | undefined;
   temperature?: number | undefined;
   stopSequences?: string[] | undefined;
+  /** Which model tier to use. Defaults to 'completion'. */
+  modelTier?: ModelTier | undefined;
 }
 
 /**
@@ -76,7 +85,8 @@ export interface AIProvider {
   readonly name: string;
 
   /**
-   * Generate a completion from the model
+   * Generate a completion from the model.
+   * Pass modelTier: 'utility' for lightweight tasks (translation, classification).
    */
   complete(request: CompletionRequest): Promise<CompletionResponse>;
 

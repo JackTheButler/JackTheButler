@@ -49,6 +49,7 @@ interface OllamaTagsResponse {
 export interface OllamaConfig {
   baseUrl?: string;
   model?: string;
+  utilityModel?: string;
   embeddingModel?: string;
 }
 
@@ -60,15 +61,17 @@ export class OllamaProvider implements AIProvider, BaseProvider {
   readonly name = 'ollama';
   private baseUrl: string;
   private model: string;
+  private utilityModel: string;
   private embeddingModel: string;
 
   constructor(config: OllamaConfig = {}) {
     this.baseUrl = config.baseUrl || DEFAULT_BASE_URL;
     this.model = config.model || DEFAULT_MODEL;
+    this.utilityModel = config.utilityModel || this.model;
     this.embeddingModel = config.embeddingModel || DEFAULT_EMBEDDING_MODEL;
 
     log.info(
-      { baseUrl: this.baseUrl, model: this.model, embeddingModel: this.embeddingModel },
+      { baseUrl: this.baseUrl, model: this.model, utilityModel: this.utilityModel, embeddingModel: this.embeddingModel },
       'Ollama provider initialized'
     );
   }
@@ -126,6 +129,7 @@ export class OllamaProvider implements AIProvider, BaseProvider {
    * Generate a completion using Ollama
    */
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
+    const model = request.modelTier === 'utility' ? this.utilityModel : this.model;
     const systemMessage = request.messages.find((m) => m.role === 'system');
     const conversationMessages = request.messages.filter((m) => m.role !== 'system');
 
@@ -144,13 +148,13 @@ export class OllamaProvider implements AIProvider, BaseProvider {
     }
     prompt += '### Assistant\n';
 
-    log.debug({ promptLength: prompt.length }, 'Sending completion request');
+    log.debug({ promptLength: prompt.length, model }, 'Sending completion request');
 
     const response = await fetch(`${this.baseUrl}/api/generate`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: this.model,
+        model,
         prompt,
         stream: false,
         options: {
@@ -245,12 +249,20 @@ export const manifest: AIAppManifest = {
     },
     {
       key: 'model',
-      label: 'Model',
+      label: 'Completion Model',
       type: 'text',
       required: false,
-      description: 'Model name for completions (must be pulled first)',
+      description: 'Primary model for generating guest responses (must be pulled first)',
       default: DEFAULT_MODEL,
       placeholder: 'llama3.1',
+    },
+    {
+      key: 'utilityModel',
+      label: 'Utility Model',
+      type: 'text',
+      required: false,
+      description: 'Smaller model for translation, classification, and search queries. Falls back to completion model if not set.',
+      placeholder: 'llama3.2:1b',
     },
     {
       key: 'embeddingModel',

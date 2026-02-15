@@ -51,6 +51,7 @@ export class IntentClassifier {
         ],
         maxTokens: 150,
         temperature: 0.1, // Low temperature for consistent classification
+        modelTier: 'utility',
       });
 
       const result = this.parseResponse(response.content);

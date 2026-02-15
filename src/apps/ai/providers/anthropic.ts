@@ -30,6 +30,7 @@ const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
 export interface AnthropicConfig {
   apiKey: string;
   model?: string;
+  utilityModel?: string;
   maxTokens?: number;
 }
 
@@ -41,6 +42,7 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
   readonly name = 'claude';
   private client: Anthropic;
   private model: string;
+  private utilityModel: string;
   private maxTokens: number;
 
   constructor(config: AnthropicConfig) {
@@ -50,9 +52,10 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
 
     this.client = new Anthropic({ apiKey: config.apiKey });
     this.model = config.model || DEFAULT_MODEL;
+    this.utilityModel = config.utilityModel || this.model;
     this.maxTokens = config.maxTokens || 1024;
 
-    log.info({ model: this.model }, 'Anthropic provider initialized');
+    log.info({ model: this.model, utilityModel: this.utilityModel }, 'Anthropic provider initialized');
   }
 
   /**
@@ -96,16 +99,17 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
    * Generate a completion using Claude
    */
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
+    const model = request.modelTier === 'utility' ? this.utilityModel : this.model;
     const systemMessage = request.messages.find((m) => m.role === 'system');
     const otherMessages = request.messages.filter((m) => m.role !== 'system');
 
     log.debug(
-      { messageCount: otherMessages.length, hasSystem: !!systemMessage },
+      { messageCount: otherMessages.length, hasSystem: !!systemMessage, model },
       'Sending completion request'
     );
 
     const createParams: Anthropic.MessageCreateParamsNonStreaming = {
-      model: this.model,
+      model,
       max_tokens: request.maxTokens || this.maxTokens,
       messages: otherMessages.map((m) => ({
         role: m.role as 'user' | 'assistant',
@@ -222,15 +226,27 @@ export const manifest: AIAppManifest = {
     },
     {
       key: 'model',
-      label: 'Model',
+      label: 'Completion Model',
       type: 'select',
       required: false,
-      description: 'Claude model to use',
+      description: 'Primary model for generating guest responses and conversations',
       default: DEFAULT_MODEL,
       options: [
         { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4 (Recommended)' },
         { value: 'claude-opus-4-20250514', label: 'Claude Opus 4 (Most Capable)' },
         { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku (Fastest)' },
+      ],
+    },
+    {
+      key: 'utilityModel',
+      label: 'Utility Model',
+      type: 'select',
+      required: false,
+      description: 'Smaller model for translation, classification, and search queries. Falls back to completion model if not set.',
+      default: 'claude-3-5-haiku-20241022',
+      options: [
+        { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku (Recommended)' },
+        { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
       ],
     },
     {

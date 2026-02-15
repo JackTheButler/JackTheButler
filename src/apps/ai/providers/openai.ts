@@ -31,6 +31,7 @@ const DEFAULT_EMBEDDING_MODEL = 'text-embedding-3-small';
 export interface OpenAIConfig {
   apiKey: string;
   model?: string;
+  utilityModel?: string;
   embeddingModel?: string;
   maxTokens?: number;
   baseUrl?: string;
@@ -44,6 +45,7 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
   readonly name = 'openai';
   private client: OpenAI;
   private model: string;
+  private utilityModel: string;
   private embeddingModel: string;
   private maxTokens: number;
 
@@ -57,11 +59,12 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
       baseURL: config.baseUrl,
     });
     this.model = config.model || DEFAULT_MODEL;
+    this.utilityModel = config.utilityModel || this.model;
     this.embeddingModel = config.embeddingModel || DEFAULT_EMBEDDING_MODEL;
     this.maxTokens = config.maxTokens || 1024;
 
     log.info(
-      { model: this.model, embeddingModel: this.embeddingModel },
+      { model: this.model, utilityModel: this.utilityModel, embeddingModel: this.embeddingModel },
       'OpenAI provider initialized'
     );
   }
@@ -102,10 +105,11 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
    * Generate a completion using OpenAI
    */
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
-    log.debug({ messageCount: request.messages.length }, 'Sending completion request');
+    const model = request.modelTier === 'utility' ? this.utilityModel : this.model;
+    log.debug({ messageCount: request.messages.length, model }, 'Sending completion request');
 
     const createParams: OpenAI.ChatCompletionCreateParamsNonStreaming = {
-      model: this.model,
+      model,
       max_tokens: request.maxTokens || this.maxTokens,
       messages: request.messages.map((m) => ({
         role: m.role,
@@ -204,15 +208,27 @@ export const manifest: AIAppManifest = {
     },
     {
       key: 'model',
-      label: 'Model',
+      label: 'Completion Model',
       type: 'select',
       required: false,
-      description: 'GPT model to use for completions',
+      description: 'Primary model for generating guest responses and conversations',
       default: DEFAULT_MODEL,
       options: [
         { value: 'gpt-4o', label: 'GPT-4o (Recommended)' },
         { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Faster)' },
         { value: 'gpt-4-turbo', label: 'GPT-4 Turbo' },
+      ],
+    },
+    {
+      key: 'utilityModel',
+      label: 'Utility Model',
+      type: 'select',
+      required: false,
+      description: 'Smaller model for translation, classification, and search queries. Falls back to completion model if not set.',
+      default: 'gpt-4o-mini',
+      options: [
+        { value: 'gpt-4o-mini', label: 'GPT-4o Mini (Recommended)' },
+        { value: 'gpt-4o', label: 'GPT-4o' },
       ],
     },
     {

@@ -67,6 +67,7 @@ Text: "${text}"`,
     ],
     maxTokens: 2048,
     temperature: 0.1,
+    modelTier: 'utility',
   });
 
   const parsed = parseJsonResponse(response.content);
@@ -110,6 +111,7 @@ Text: "${text}"`,
     ],
     maxTokens: 2048,
     temperature: 0.1,
+    modelTier: 'utility',
   });
 
   return response.content.trim();

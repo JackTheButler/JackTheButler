@@ -37,6 +37,7 @@ const COMPLETION_MODEL = 'onnx-community/Llama-3.2-1B-Instruct-ONNX';
 export interface LocalConfig {
   embeddingModel?: string;
   completionModel?: string;
+  utilityModel?: string;
   cacheDir?: string;
 }
 
@@ -91,19 +92,22 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 
   private embeddingModel: string;
   private completionModel: string;
+  private utilityModel: string;
   private embeddingPipeline: FeatureExtractionPipeline | null = null;
-  private completionPipeline: TextGenerationPipeline | null = null;
+  private completionPipelines = new Map<string, TextGenerationPipeline>();
+  private loadingPipelines = new Set<string>();
   private isLoadingEmbedding = false;
-  private isLoadingCompletion = false;
 
   constructor(config: LocalConfig = {}) {
     this.embeddingModel = config.embeddingModel || EMBEDDING_MODEL;
     this.completionModel = config.completionModel || COMPLETION_MODEL;
+    this.utilityModel = config.utilityModel || this.completionModel;
 
     log.info(
       {
         embeddingModel: this.embeddingModel,
         completionModel: this.completionModel,
+        utilityModel: this.utilityModel,
       },
       'Local AI provider initialized'
     );
@@ -211,30 +215,27 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
   }
 
   /**
-   * Get or create the completion pipeline (lazy loaded)
+   * Get or create a text generation pipeline by model name (lazy loaded, cached).
    */
-  private async getCompletionPipeline(): Promise<TextGenerationPipeline> {
-    if (this.completionPipeline) {
-      return this.completionPipeline;
-    }
+  private async getTextPipeline(modelName: string): Promise<TextGenerationPipeline> {
+    const cached = this.completionPipelines.get(modelName);
+    if (cached) return cached;
 
-    // Prevent concurrent loading
-    if (this.isLoadingCompletion) {
-      log.debug('Waiting for completion model to finish loading...');
-      while (this.isLoadingCompletion) {
+    // Prevent concurrent loading of the same model
+    if (this.loadingPipelines.has(modelName)) {
+      log.debug({ model: modelName }, 'Waiting for model to finish loading...');
+      while (this.loadingPipelines.has(modelName)) {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
-      if (this.completionPipeline) {
-        return this.completionPipeline;
-      }
+      const ready = this.completionPipelines.get(modelName);
+      if (ready) return ready;
     }
 
-    this.isLoadingCompletion = true;
+    this.loadingPipelines.add(modelName);
     try {
-      log.info({ model: this.completionModel }, 'Loading completion model (this may take a moment on first run)...');
-      const { pipeline } = await getTransformers();
+      log.info({ model: modelName }, 'Loading text generation model (this may take a moment on first run)...');
+      const { pipeline: createPipeline } = await getTransformers();
 
-      // Emit progress events during model download
       const progressCallback = (progress: {
         status: string;
         file?: string;
@@ -250,7 +251,7 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
           loaded?: number;
           total?: number;
         } = {
-          model: this.completionModel,
+          model: modelName,
           status: progress.status as 'initiate' | 'download' | 'progress' | 'done' | 'ready',
         };
         if (progress.file) payload.file = progress.file;
@@ -265,14 +266,15 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
         });
       };
 
-      this.completionPipeline = (await pipeline('text-generation', this.completionModel, {
+      const p = (await createPipeline('text-generation', modelName, {
         progress_callback: progressCallback,
       })) as unknown as TextGenerationPipeline;
 
-      log.info({ model: this.completionModel }, 'Completion model loaded');
-      return this.completionPipeline;
+      this.completionPipelines.set(modelName, p);
+      log.info({ model: modelName }, 'Text generation model loaded');
+      return p;
     } finally {
-      this.isLoadingCompletion = false;
+      this.loadingPipelines.delete(modelName);
     }
   }
 
@@ -314,18 +316,16 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
    * a fallback for when no cloud AI is configured.
    */
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
+    const modelName = request.modelTier === 'utility' ? this.utilityModel : this.completionModel;
     const startTime = Date.now();
     log.debug(
-      { messageCount: request.messages.length, maxTokens: request.maxTokens },
+      { messageCount: request.messages.length, model: modelName },
       'Generating local completion'
     );
 
-    const generator = await this.getCompletionPipeline();
+    const generator = await this.getTextPipeline(modelName);
+    const prompt = this.buildPrompt(request.messages, modelName);
 
-    // Build prompt from messages
-    const prompt = this.buildPrompt(request.messages);
-
-    // Generate response
     const outputs = (await generator(prompt, {
       max_new_tokens: request.maxTokens || 256,
       temperature: request.temperature ?? 0.7,
@@ -333,7 +333,6 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
       top_p: 0.95,
     })) as { generated_text: string }[];
 
-    // Extract generated text - remove the input prompt from the output
     const generated = outputs[0]?.generated_text || '';
     const content = generated.slice(prompt.length).trim();
 
@@ -353,15 +352,15 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
   /**
    * Build a prompt string from messages based on the model's chat template
    */
-  private buildPrompt(messages: { role: string; content: string }[]): string {
+  private buildPrompt(messages: { role: string; content: string }[], modelName: string): string {
     // Detect model type and use appropriate format
-    if (this.completionModel.includes('Llama-3')) {
+    if (modelName.includes('Llama-3')) {
       return this.buildLlamaPrompt(messages);
-    } else if (this.completionModel.includes('gemma')) {
+    } else if (modelName.includes('gemma')) {
       return this.buildGemmaPrompt(messages);
-    } else if (this.completionModel.includes('SmolLM')) {
+    } else if (modelName.includes('SmolLM')) {
       return this.buildChatMLPrompt(messages);
-    } else if (this.completionModel.includes('Phi-3')) {
+    } else if (modelName.includes('Phi-3')) {
       return this.buildPhi3Prompt(messages);
     }
     // Default to ChatML (most common)
@@ -471,13 +470,24 @@ export const manifest: AIAppManifest = {
       label: 'Completion Model',
       type: 'select',
       required: false,
-      description: 'Model for text generation. Only used if completion is enabled above.',
+      description: 'Primary model for generating guest responses and conversations',
       default: COMPLETION_MODEL,
       options: [
         { value: 'onnx-community/Llama-3.2-1B-Instruct-ONNX', label: 'Llama 3.2 1B (1.2GB, 128K context, Default)' },
         { value: 'onnx-community/gemma-3-1b-it-ONNX', label: 'Gemma 3 1B (1GB, Google)' },
         { value: 'HuggingFaceTB/SmolLM2-1.7B-Instruct', label: 'SmolLM2 1.7B (3.4GB, Balanced)' },
         { value: 'onnx-community/Phi-3-mini-4k-instruct-onnx', label: 'Phi-3 Mini (2GB, Best Quality)' },
+      ],
+    },
+    {
+      key: 'utilityModel',
+      label: 'Utility Model',
+      type: 'select',
+      required: false,
+      description: 'Smaller model for translation, classification, and search queries. Falls back to completion model if not set.',
+      options: [
+        { value: 'onnx-community/Llama-3.2-1B-Instruct-ONNX', label: 'Llama 3.2 1B (1.2GB, Default)' },
+        { value: 'onnx-community/gemma-3-1b-it-ONNX', label: 'Gemma 3 1B (1GB, Google)' },
       ],
     },
   ],
