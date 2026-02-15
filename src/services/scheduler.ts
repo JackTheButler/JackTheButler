@@ -7,7 +7,7 @@
 
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
-import { pmsSyncService } from './pms-sync.js';
+import { pmsSyncService, getPMSSyncConfig } from './pms-sync.js';
 
 const log = createLogger('scheduler');
 
@@ -33,9 +33,10 @@ export class Scheduler {
   start(): void {
     const config = loadConfig();
 
-    // PMS Sync job
+    // PMS Sync job — interval from PMS app config, or code default (15 min)
     if (config.pms.provider !== 'mock' || config.env === 'development') {
-      this.scheduleJob('pms-sync', config.pms.syncInterval * 1000, async () => {
+      const { syncIntervalMs } = getPMSSyncConfig();
+      this.scheduleJob('pms-sync', syncIntervalMs, async () => {
         await this.runPMSSync();
       });
     }

@@ -14,6 +14,7 @@ import { db, reservations, conversations } from '@/db/index.js';
 import type { Guest, Reservation } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
 import { guestService, normalizePhone } from '@/services/guest.js';
+import { pmsSyncService } from '@/services/pms-sync.js';
 
 const log = createLogger('core:guest-context');
 
@@ -173,7 +174,13 @@ export class GuestContextService {
    */
   private async buildContext(guest: Guest, conversationId?: string): Promise<GuestContext> {
     // Get active reservation
-    const reservation = await this.findActiveReservation(guest.id);
+    let reservation = await this.findActiveReservation(guest.id);
+
+    // Refresh from PMS if stale
+    if (reservation) {
+      const fresh = await pmsSyncService.refreshIfStale(reservation.id);
+      if (fresh) reservation = fresh;
+    }
 
     // Get conversation history if provided
     let conversationHistory = { totalMessages: 0, previousTopics: [] as string[] };
@@ -222,7 +229,7 @@ export class GuestContextService {
         and(
           eq(reservations.guestId, guestId),
           sql`${reservations.departureDate} >= ${today}`,
-          sql`${reservations.status} IN ('confirmed', 'in_house', 'checked_in')`
+          sql`${reservations.status} IN ('confirmed', 'checked_in')`
         )
       )
       .orderBy(reservations.arrivalDate)
@@ -260,7 +267,7 @@ export class GuestContextService {
       departureDate: reservation.departureDate,
       status: reservation.status,
       specialRequests,
-      isCheckedIn: reservation.status === 'in_house',
+      isCheckedIn: reservation.status === 'checked_in',
       stayDuration,
       daysRemaining: Math.max(0, daysRemaining),
     };

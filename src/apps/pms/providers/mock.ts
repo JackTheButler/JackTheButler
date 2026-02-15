@@ -359,7 +359,24 @@ export const manifest: PMSAppManifest = {
   version: '1.0.0',
   description: 'In-memory PMS for testing and development with sample data',
   icon: '🧪',
-  configSchema: [],
+  configSchema: [
+    {
+      key: 'stalenessThreshold',
+      label: 'Staleness Threshold (seconds)',
+      type: 'number',
+      required: false,
+      description: 'How old (in seconds) cached reservation data can be before refreshing from PMS. Default: 300 (5 min).',
+      default: 300,
+    },
+    {
+      key: 'syncInterval',
+      label: 'Sync Interval (seconds)',
+      type: 'number',
+      required: false,
+      description: 'How often to poll PMS for updated reservations. Default: 900 (15 min).',
+      default: 900,
+    },
+  ],
   features: {
     reservations: true,
     guests: true,

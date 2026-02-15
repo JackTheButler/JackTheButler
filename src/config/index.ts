@@ -97,7 +97,6 @@ const configSchema = z.object({
     clientSecret: z.string().optional(),
     propertyId: z.string().optional(),
     webhookSecret: z.string().optional(),
-    syncInterval: z.coerce.number().int().min(60).default(300), // seconds
   }),
 });
 
@@ -181,7 +180,6 @@ export function loadConfig(): Config {
       clientSecret: process.env.PMS_CLIENT_SECRET,
       propertyId: process.env.PMS_PROPERTY_ID,
       webhookSecret: process.env.PMS_WEBHOOK_SECRET,
-      syncInterval: process.env.PMS_SYNC_INTERVAL,
     },
   };
 

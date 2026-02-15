@@ -211,7 +211,7 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 | New service | `src/services/task.ts` |
 | New AI app | `src/apps/ai/providers/anthropic.ts` |
 | New channel app | `src/apps/channels/sms/twilio.ts` |
-| New PMS app | `src/apps/pms/mock.ts` |
+| New PMS app | `src/apps/pms/providers/mock.ts` (must include `stalenessThreshold` and `syncInterval` in `configSchema` — see [PMS spec](docs/04-specs/pms/index.md)) |
 | New tool app | `src/apps/tools/site-scraper/index.ts` |
 | App manifest types | `src/apps/types.ts` |
 | Core interface | `src/core/interfaces/channel.ts` |

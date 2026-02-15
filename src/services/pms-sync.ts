@@ -16,7 +16,14 @@ import type { Guest, Reservation } from '@/db/schema.js';
 
 const log = createLogger('pms-sync');
 
+/** Default staleness threshold: 5 minutes */
+const DEFAULT_STALENESS_THRESHOLD_MS = 5 * 60 * 1000;
+/** Default sync interval: 15 minutes */
+const DEFAULT_SYNC_INTERVAL_S = 900;
+
 export class PMSSyncService {
+  private pendingRefreshes = new Map<string, Promise<Reservation | null>>();
+
   /**
    * Sync all reservations modified since last sync
    */
@@ -159,6 +166,11 @@ export class PMSSyncService {
         existingRes.departureDate !== pmsRes.departureDate;
 
       if (!hasChanges) {
+        // Still update syncedAt so freshness checks know we verified with PMS
+        await db
+          .update(reservations)
+          .set({ syncedAt: now })
+          .where(eq(reservations.id, existingRes.id));
         return 'unchanged';
       }
 
@@ -293,12 +305,106 @@ export class PMSSyncService {
   }
 
   /**
+   * Refresh a reservation if its local data is stale
+   *
+   * Returns the (possibly refreshed) reservation, or null if not found locally.
+   * If the PMS is unavailable, returns stale local data rather than failing.
+   */
+  async refreshIfStale(reservationId: string, maxAgeMs?: number): Promise<Reservation | null> {
+    // Load reservation from DB
+    const [reservation] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.id, reservationId))
+      .limit(1);
+
+    if (!reservation) return null;
+
+    // Check if a PMS adapter is active
+    const adapter = getAppRegistry().getActivePMSAdapter();
+    if (!adapter) return reservation; // No PMS = local is source of truth
+
+    // Determine staleness threshold
+    const pmsApp = getAppRegistry().getActivePMSApp();
+    const configThresholdS = pmsApp?.config?.stalenessThreshold as number | undefined;
+    const thresholdMs = configThresholdS
+      ? configThresholdS * 1000
+      : (maxAgeMs ?? DEFAULT_STALENESS_THRESHOLD_MS);
+
+    // Check if data is fresh enough
+    const syncedAtMs = new Date(reservation.syncedAt).getTime();
+    if (Date.now() - syncedAtMs < thresholdMs) {
+      return reservation;
+    }
+
+    // Dedup concurrent refreshes for the same reservation
+    const pending = this.pendingRefreshes.get(reservationId);
+    if (pending) return pending;
+
+    const refreshPromise = this.doRefresh(reservation, adapter).finally(() => {
+      this.pendingRefreshes.delete(reservationId);
+    });
+
+    this.pendingRefreshes.set(reservationId, refreshPromise);
+    return refreshPromise;
+  }
+
+  /**
+   * Refresh a reservation looked up by confirmation number
+   */
+  async refreshReservationByConfirmation(
+    confirmationNumber: string,
+    maxAgeMs?: number
+  ): Promise<Reservation | null> {
+    const [reservation] = await db
+      .select()
+      .from(reservations)
+      .where(eq(reservations.confirmationNumber, confirmationNumber))
+      .limit(1);
+
+    if (!reservation) return null;
+
+    return this.refreshIfStale(reservation.id, maxAgeMs);
+  }
+
+  /**
+   * Perform the actual PMS fetch and upsert
+   */
+  private async doRefresh(
+    reservation: Reservation,
+    adapter: { getReservation(id: string): Promise<NormalizedReservation | null>; getReservationByConfirmation(cn: string): Promise<NormalizedReservation | null> }
+  ): Promise<Reservation | null> {
+    try {
+      const pmsData = reservation.externalId
+        ? await adapter.getReservation(reservation.externalId)
+        : await adapter.getReservationByConfirmation(reservation.confirmationNumber);
+
+      if (pmsData) {
+        await this.upsertReservation(pmsData);
+        // Re-read the updated record
+        const [fresh] = await db
+          .select()
+          .from(reservations)
+          .where(eq(reservations.id, reservation.id))
+          .limit(1);
+        log.debug({ reservationId: reservation.id }, 'Refreshed stale reservation from PMS');
+        return fresh ?? reservation;
+      }
+
+      return reservation;
+    } catch (err) {
+      log.warn({ err, reservationId: reservation.id }, 'PMS unavailable during refresh, using stale data');
+      return reservation;
+    }
+  }
+
+  /**
    * Map PMS status to our internal status
    */
   private mapReservationStatus(pmsStatus: NormalizedReservation['status']): string {
     const statusMap: Record<string, string> = {
       confirmed: 'confirmed',
-      checked_in: 'in_house',
+      checked_in: 'checked_in',
       checked_out: 'checked_out',
       cancelled: 'cancelled',
       no_show: 'no_show',
@@ -311,3 +417,21 @@ export class PMSSyncService {
  * Singleton instance
  */
 export const pmsSyncService = new PMSSyncService();
+
+/**
+ * Read sync config from the active PMS app, with code defaults as fallback.
+ */
+export function getPMSSyncConfig(): { stalenessThresholdMs: number; syncIntervalMs: number } {
+  const pmsApp = getAppRegistry().getActivePMSApp();
+  const configThresholdS = pmsApp?.config?.stalenessThreshold as number | undefined;
+  const configIntervalS = pmsApp?.config?.syncInterval as number | undefined;
+
+  return {
+    stalenessThresholdMs: configThresholdS
+      ? configThresholdS * 1000
+      : DEFAULT_STALENESS_THRESHOLD_MS,
+    syncIntervalMs: configIntervalS
+      ? configIntervalS * 1000
+      : DEFAULT_SYNC_INTERVAL_S * 1000,
+  };
+}

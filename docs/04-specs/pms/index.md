@@ -148,8 +148,14 @@ Jack syncs PMS data to local database for:
 - Guest context building
 
 **Sync methods:**
-1. **Polling** — Periodic fetch of modified records
+1. **Polling** — Periodic fetch of modified records (interval configured per PMS via `syncInterval`)
 2. **Webhooks** — Real-time push from PMS
+
+**Freshness guarantees:**
+
+The local `reservations` table is a cache. Critical code paths (AI guest context, webchat verification) check the `syncedAt` timestamp before acting. If data is older than the provider's `stalenessThreshold`, a fresh single-record lookup is made via `getReservation()` or `getReservationByConfirmation()`. Automations run a bulk `syncReservations()` before evaluating triggers.
+
+> **Important for new providers:** `getReservation()` and `getReservationByConfirmation()` are used by the freshness system to refresh individual stale records. These must return accurate, up-to-date data from the PMS API — not cached or batched results. Every PMS API supports single-record lookup. See [PMS Sync Freshness](../../06-roadmap/008-pms-sync-freshness.md) for full design.
 
 ---
 
@@ -179,6 +185,10 @@ Each PMS provider has its own config schema:
 | `clientSecret` | OAuth client secret |
 | `propertyId` | Hotel property identifier |
 | `webhookSecret` | Secret for webhook verification |
+| `stalenessThreshold` | **Required.** How old cached reservation data can be (in seconds) before the system fetches fresh data from the PMS for critical operations. Default varies per provider (code fallback: 300s / 5 min). |
+| `syncInterval` | **Required.** How often to poll the PMS for reservation changes (in seconds). Acts as a safety net for missed webhooks. Default varies per provider (code fallback: 900s / 15 min). |
+
+> **Note for new providers:** Every PMS provider must include `stalenessThreshold` and `syncInterval` in its `configSchema` with sensible defaults for that provider's API rate limits and webhook reliability. If omitted, the system falls back to code defaults (5 min / 15 min), but providers should set their own. See `src/apps/pms/providers/mock.ts` as a reference.
 
 ---
 

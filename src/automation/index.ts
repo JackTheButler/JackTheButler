@@ -27,6 +27,7 @@ import { processPendingRetries, createExecution, scheduleRetry, updateExecutionS
 import type { ActionDefinition } from './types.js';
 import { createLogger } from '@/utils/logger.js';
 import { generateId } from '@/utils/id.js';
+import { pmsSyncService } from '@/services/pms-sync.js';
 
 const log = createLogger('automation');
 
@@ -39,6 +40,7 @@ const log = createLogger('automation');
 export class AutomationEngine {
   private schedulerInterval: NodeJS.Timeout | null = null;
   private retryInterval: NodeJS.Timeout | null = null;
+  private lastPreTriggerSync: Date | null = null;
 
   constructor() {
     log.info('Automation engine initialized');
@@ -151,6 +153,14 @@ export class AutomationEngine {
    */
   async runScheduledTriggers(): Promise<ExecutionResult[]> {
     log.debug('Running scheduled triggers');
+
+    // Ensure local reservation data is fresh before evaluating triggers
+    try {
+      await pmsSyncService.syncReservations(this.lastPreTriggerSync ?? undefined);
+      this.lastPreTriggerSync = new Date();
+    } catch (err) {
+      log.warn({ err }, 'Pre-trigger PMS sync failed, proceeding with local data');
+    }
 
     // Get all enabled time-based rules
     const rules = await db

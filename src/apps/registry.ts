@@ -452,6 +452,18 @@ export class AppRegistry {
   }
 
   /**
+   * Get the first active PMS app (includes config, not just adapter)
+   */
+  getActivePMSApp(): RegisteredApp | undefined {
+    for (const [, ext] of this.apps) {
+      if (ext.manifest.category === 'pms' && ext.status === 'active') {
+        return ext;
+      }
+    }
+    return undefined;
+  }
+
+  /**
    * Get status summary for all apps
    */
   getStatusSummary(): Array<{
