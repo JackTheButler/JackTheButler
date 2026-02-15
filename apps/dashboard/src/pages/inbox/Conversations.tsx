@@ -2,6 +2,7 @@ import { useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
+import { cn } from '@/lib/utils';
 import { getConversationStateFilters } from '@/lib/config';
 import { ConversationList, ConversationView } from '@/components';
 import { ConversationListSkeleton } from '@/components';
@@ -27,9 +28,9 @@ export function ConversationsPage() {
   const conversationStateFilters = getConversationStateFilters(t);
 
   return (
-    <div className="flex h-[calc(100vh-56px)]">
+    <div className={cn('flex h-[calc(100vh-56px)]', selectedId && 'max-md:fixed max-md:inset-0 max-md:h-screen max-md:z-40 max-md:bg-background')}>
       {/* Sidebar */}
-      <div className="w-80 border-e bg-card flex flex-col">
+      <div className={`w-full md:w-80 border-e bg-card flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
         {/* Filters */}
         <div className="p-3 border-b">
           <FilterTabs
@@ -54,9 +55,9 @@ export function ConversationsPage() {
       </div>
 
       {/* Main */}
-      <div className={`flex-1 ${selectedId ? 'bg-background' : 'bg-muted/50'}`}>
+      <div className={`flex-1 min-w-0 w-full ${selectedId ? 'flex flex-col' : 'hidden md:flex md:items-center md:justify-center'} ${selectedId ? 'bg-background' : 'bg-muted/50'}`}>
         {selectedId ? (
-          <ConversationView id={selectedId} />
+          <ConversationView id={selectedId} onBack={() => setSelectedId(null)} />
         ) : (
           <div className="h-full flex items-center justify-center text-muted-foreground">
             {t('inbox.selectConversation')}

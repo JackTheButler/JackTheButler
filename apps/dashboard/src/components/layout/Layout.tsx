@@ -716,7 +716,7 @@ function HeaderBar({
   };
 
   return (
-    <header className="bg-card border-b h-14 flex-shrink-0 flex items-center justify-between px-4 sm:px-6">
+    <header className="bg-card border-b h-14 flex-shrink-0 flex items-center justify-between px-2 sm:px-6">
       <div className="flex items-center gap-3">
         {/* Mobile menu toggle */}
         <button

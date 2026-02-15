@@ -17,7 +17,7 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
   const { t } = useTranslation();
 
   return (
-    <div className="flex-1 overflow-y-auto">
+    <div className="flex-1 overflow-y-auto scrollbar-hide">
       {conversations.map((conv) => (
         <button
           key={conv.id}

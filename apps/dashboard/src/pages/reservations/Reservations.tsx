@@ -12,7 +12,7 @@ import {
   Crown,
 } from 'lucide-react';
 import { api } from '@/lib/api';
-import { formatDate } from '@/lib/formatters';
+import { formatDate, formatTime } from '@/lib/formatters';
 import {
   getReservationStatusFilters,
   reservationStatusVariants,
@@ -65,6 +65,7 @@ export function ReservationsPage() {
     {
       key: 'confirmationNumber',
       header: t('reservations.confirmation'),
+      className: 'min-w-[100px]',
       render: (reservation) => (
         <span className="text-sm font-mono font-medium">
           {reservation.confirmationNumber}
@@ -74,6 +75,7 @@ export function ReservationsPage() {
     {
       key: 'guest',
       header: t('common.guest'),
+      className: 'min-w-[150px]',
       render: (reservation) => (
         reservation.guest ? (
           <div>
@@ -99,6 +101,7 @@ export function ReservationsPage() {
     {
       key: 'room',
       header: t('common.room'),
+      className: 'min-w-[100px]',
       render: (reservation) => (
         <div className="text-sm">
           {reservation.roomNumber || '-'}
@@ -111,20 +114,17 @@ export function ReservationsPage() {
     {
       key: 'arrivalDate',
       header: t('reservations.arrival'),
+      className: 'min-w-[140px]',
       render: (reservation) => (
-        <div className="text-sm">
+        <span className="text-sm">
           {formatDate(reservation.arrivalDate)}
-          {reservation.estimatedArrival && (
-            <span className="text-muted-foreground ms-1">
-              {reservation.estimatedArrival}
-            </span>
-          )}
-        </div>
+        </span>
       ),
     },
     {
       key: 'departureDate',
       header: t('reservations.departure'),
+      className: 'min-w-[140px]',
       render: (reservation) => (
         <span className="text-sm">
           {formatDate(reservation.departureDate)}
@@ -134,6 +134,7 @@ export function ReservationsPage() {
     {
       key: 'status',
       header: t('common.status'),
+      className: 'min-w-[90px]',
       render: (reservation) => (
         <Badge variant={reservationStatusVariants[reservation.status]} className="capitalize">
           {reservation.status.replace('_', ' ')}
@@ -143,6 +144,7 @@ export function ReservationsPage() {
     {
       key: 'actions',
       header: '',
+      className: 'w-10',
       render: () => (
         <ChevronRight className="w-5 h-5 text-muted-foreground rtl:rotate-180" />
       ),

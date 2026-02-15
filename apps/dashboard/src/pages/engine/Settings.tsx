@@ -209,17 +209,18 @@ export function SettingsPage() {
 
   return (
     <PageContainer>
-      <div className="flex gap-8">
-        {/* Vertical Tab Navigation */}
-        <nav className="w-48 flex-shrink-0">
-          <ul className="space-y-1">
+      <div className="flex flex-col md:flex-row gap-4 md:gap-8">
+        {/* Horizontal Tab Navigation (mobile) / Vertical (desktop) */}
+        <nav className="flex-shrink-0 md:w-48">
+          <ul className="flex md:flex-col gap-1 overflow-x-auto pb-2 md:pb-0 scrollbar-hide">
             {tabs.map((tabItem) => (
-              <li key={tabItem.id}>
+              <li key={tabItem.id} className="flex-shrink-0">
                 <button
                   onClick={() => !tabItem.disabled && handleTabChange(tabItem.id)}
                   disabled={tabItem.disabled}
                   className={cn(
-                    'w-full flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors text-start',
+                    'flex items-center gap-2 px-3 py-2 text-sm font-medium rounded-md transition-colors whitespace-nowrap',
+                    'w-full text-start',
                     tabItem.disabled
                       ? 'opacity-50 cursor-not-allowed text-muted-foreground'
                       : activeTab === tabItem.id
@@ -236,7 +237,7 @@ export function SettingsPage() {
             ))}
           </ul>
           {version && (
-            <p className="mt-4 px-3 flex items-center gap-2 text-xs text-muted-foreground/50"><img src="/logo.svg" alt="" className="h-4 w-4 opacity-50 dark:invert" />{version}</p>
+            <p className="hidden md:flex mt-4 px-3 items-center gap-2 text-xs text-muted-foreground/50"><img src="/logo.svg" alt="" className="h-4 w-4 opacity-50 dark:invert" />{version}</p>
           )}
         </nav>
 
@@ -285,7 +286,7 @@ export function SettingsPage() {
                         />
                       </div>
 
-                      <div className="grid grid-cols-2 gap-4">
+                      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                         <div className="grid gap-2">
                           <Label htmlFor="city">{t('settings.hotelProfile.city')}</Label>
                           <Input
@@ -315,7 +316,7 @@ export function SettingsPage() {
                   <div className="space-y-4 pt-4 border-t">
                     <h3 className="text-sm font-medium text-muted-foreground">{t('settings.hotelProfile.regionalSettings')}</h3>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="grid gap-2">
                         <Label>{t('settings.hotelProfile.timezone')} *</Label>
                         <Combobox
@@ -342,7 +343,7 @@ export function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="grid gap-2">
                         <Label>{t('settings.hotelProfile.checkInTime')}</Label>
                         <TimeSelect
@@ -363,7 +364,7 @@ export function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="grid gap-2">
                         <Label>{t('settings.hotelProfile.propertyLanguage')}</Label>
                         <Combobox
@@ -383,7 +384,7 @@ export function SettingsPage() {
                   <div className="space-y-4 pt-4 border-t">
                     <h3 className="text-sm font-medium text-muted-foreground">{t('settings.hotelProfile.contactInfo')}</h3>
 
-                    <div className="grid grid-cols-2 gap-4">
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                       <div className="grid gap-2">
                         <Label htmlFor="contactPhone">{t('settings.hotelProfile.phone')}</Label>
                         <Input

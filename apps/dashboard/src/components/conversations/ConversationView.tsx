@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ChevronDown, Languages, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Languages, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle } from 'lucide-react';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatTime, formatDateTime } from '@/lib/formatters';
@@ -15,6 +15,7 @@ import { ChannelIcon } from '@/components/shared/ChannelIcon';
 
 interface Props {
   id: string;
+  onBack?: () => void;
 }
 
 interface ConversationDetails {
@@ -46,7 +47,7 @@ interface Message {
   createdAt: string;
 }
 
-export function ConversationView({ id }: Props) {
+export function ConversationView({ id, onBack }: Props) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
   const { can } = usePermissions();
@@ -165,9 +166,14 @@ export function ConversationView({ id }: Props) {
   return (
     <div className="h-full flex flex-col bg-card">
       {/* Header */}
-      <div className="p-4 border-b shrink-0">
+      <div className="p-2 sm:p-4 border-b shrink-0">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
+            {onBack && (
+              <button onClick={onBack} className="md:hidden p-1 -ml-1 text-muted-foreground hover:text-foreground">
+                <ArrowLeft className="h-5 w-5" />
+              </button>
+            )}
             <ChannelIcon channel={conv.channelType} size="lg" boxed inverted />
             <div>
               <h2 className="font-medium text-foreground">
@@ -248,7 +254,7 @@ export function ConversationView({ id }: Props) {
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto scrollbar-hide p-2 sm:p-4 space-y-3">
         {loadingMessages ? (
           <div className="text-center text-muted-foreground">{t('conversations.loadingMessages')}</div>
         ) : messages.length === 0 ? (
