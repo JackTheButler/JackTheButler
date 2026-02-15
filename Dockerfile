@@ -7,6 +7,8 @@
 # ===================
 FROM node:22-slim AS builder
 
+ARG VERSION=dev
+
 WORKDIR /app
 
 # Install build dependencies for better-sqlite3 and native modules
@@ -77,6 +79,7 @@ RUN mkdir -p /app/data
 VOLUME /app/data
 
 # Environment defaults
+ENV APP_VERSION=$VERSION
 ENV NODE_ENV=production
 ENV PORT=3000
 ENV DATABASE_PATH=/app/data/jack.db

@@ -5,6 +5,7 @@ import { useMutation, useQuery } from '@tanstack/react-query';
 import { AlertTriangle, Sparkles, Building2, Users, Shield, Lock } from 'lucide-react';
 import { api } from '@/lib/api';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
+import { useSystemStatus } from '@/hooks/useSystemStatus';
 import { UsersContent } from '@/pages/settings/Users';
 import { RolesContent } from '@/pages/settings/Roles';
 import { SecurityContent } from '@/pages/settings/Security';
@@ -79,6 +80,7 @@ export function SettingsPage() {
   const { can } = usePermissions();
   const canViewAdmin = can(PERMISSIONS.ADMIN_VIEW);
   const canManageSettings = can(PERMISSIONS.SETTINGS_MANAGE);
+  const { version } = useSystemStatus();
 
   // Get active tab from URL, default to 'profile'
   const requestedTab: SettingsTab = VALID_TABS.includes(tab as SettingsTab) ? (tab as SettingsTab) : 'profile';
@@ -233,6 +235,9 @@ export function SettingsPage() {
               </li>
             ))}
           </ul>
+          {version && (
+            <p className="mt-4 px-3 flex items-center gap-2 text-xs text-muted-foreground/50"><img src="/logo.svg" alt="" className="h-4 w-4 opacity-50 dark:invert" />{version}</p>
+          )}
         </nav>
 
         {/* Tab Content */}

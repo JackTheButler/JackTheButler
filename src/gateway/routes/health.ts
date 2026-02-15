@@ -8,6 +8,7 @@ import { Hono } from 'hono';
 import { isDatabaseHealthy } from '@/db/index.js';
 import { scheduler } from '@/services/scheduler.js';
 import { getMetrics } from '@/monitoring/index.js';
+import { getVersion } from '@/config/version.js';
 
 const health = new Hono();
 
@@ -57,7 +58,7 @@ health.get('/', (c) => {
 
   return c.json({
     status: dbHealthy ? 'healthy' : 'unhealthy',
-    version: '1.0.0',
+    version: getVersion(),
     uptime: process.uptime(),
     checks: {
       database: dbHealthy ? 'ok' : 'error',
@@ -76,7 +77,7 @@ health.get('/info', (c) => {
 
   return c.json({
     name: 'Jack The Butler',
-    version: '1.0.0',
+    version: getVersion(),
     nodeVersion: process.version,
     platform: process.platform,
     uptime: process.uptime(),

@@ -26,6 +26,7 @@ export interface CompletedStep {
  * System status response from the API
  */
 export interface SystemStatus {
+  version?: string;
   healthy: boolean;
   issues: SystemIssue[];
   completedSteps: CompletedStep[];
@@ -71,5 +72,6 @@ export function useSystemStatus() {
     providers: query.data?.providers ?? null,
     apps: query.data?.apps ?? null,
     knowledgeBase: query.data?.knowledgeBase ?? null,
+    version: query.data?.version ?? null,
   };
 }

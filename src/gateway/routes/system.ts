@@ -10,6 +10,7 @@ import { Hono } from 'hono';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import { getAppRegistry } from '@/apps/index.js';
+import { getVersion } from '@/config/version.js';
 import type { AIAppManifest } from '@/apps/types.js';
 import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { count, isNull, eq } from 'drizzle-orm';
@@ -201,7 +202,8 @@ systemRoutes.get('/status', async (c) => {
     }
   }
 
-  const status: SystemStatus = {
+  const status: SystemStatus & { version: string } = {
+    version: getVersion(),
     healthy: issues.filter((i) => i.severity === 'critical').length === 0,
     issues,
     completedSteps,
