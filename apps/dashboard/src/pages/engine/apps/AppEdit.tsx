@@ -133,6 +133,36 @@ const fieldLabelKeys: Record<string, string> = {
   logoUrl: 'appEdit.fields.logoUrl',
   welcomeMessage: 'appEdit.fields.welcomeMessage',
   allowedDomains: 'appEdit.fields.allowedDomains',
+  // AI providers
+  utilityModel: 'appEdit.fields.utilityModel',
+  apiKey: 'appEdit.fields.apiKey',
+  model: 'appEdit.fields.completionModel',
+  maxTokens: 'appEdit.fields.maxTokens',
+  baseUrl: 'appEdit.fields.baseUrl',
+  // WhatsApp
+  accessToken: 'appEdit.fields.accessToken',
+  phoneNumberId: 'appEdit.fields.phoneNumberId',
+  verifyToken: 'appEdit.fields.verifyToken',
+  appSecret: 'appEdit.fields.appSecret',
+  // SMS - Twilio
+  accountSid: 'appEdit.fields.accountSid',
+  authToken: 'appEdit.fields.authToken',
+  phoneNumber: 'appEdit.fields.phoneNumber',
+  // Email - SMTP
+  smtpHost: 'appEdit.fields.smtpHost',
+  smtpPort: 'appEdit.fields.smtpPort',
+  smtpSecure: 'appEdit.fields.smtpSecure',
+  smtpUser: 'appEdit.fields.smtpUser',
+  smtpPass: 'appEdit.fields.smtpPass',
+  fromAddress: 'appEdit.fields.fromAddress',
+  fromName: 'appEdit.fields.fromName',
+  // Email - Gmail
+  email: 'appEdit.fields.email',
+  appPassword: 'appEdit.fields.appPassword',
+  // Email - Mailgun
+  domain: 'appEdit.fields.domain',
+  region: 'appEdit.fields.region',
+  webhookSigningKey: 'appEdit.fields.webhookSigningKey',
 };
 
 const fieldDescriptionKeys: Record<string, string> = {
@@ -144,6 +174,38 @@ const fieldDescriptionKeys: Record<string, string> = {
   logoUrl: 'appEdit.fields.logoUrlDescription',
   welcomeMessage: 'appEdit.fields.welcomeMessageDescription',
   allowedDomains: 'appEdit.fields.allowedDomainsDescription',
+  // AI providers
+  utilityModel: 'appEdit.fields.utilityModelDescription',
+  apiKey: 'appEdit.fields.apiKeyDescription',
+  model: 'appEdit.fields.completionModelDescription',
+  embeddingModel: 'appEdit.fields.embeddingModelDescription',
+  completionModel: 'appEdit.fields.completionModelDescription',
+  maxTokens: 'appEdit.fields.maxTokensDescription',
+  baseUrl: 'appEdit.fields.baseUrlDescription',
+  // WhatsApp
+  accessToken: 'appEdit.fields.accessTokenDescription',
+  phoneNumberId: 'appEdit.fields.phoneNumberIdDescription',
+  verifyToken: 'appEdit.fields.verifyTokenDescription',
+  appSecret: 'appEdit.fields.appSecretDescription',
+  // SMS - Twilio
+  accountSid: 'appEdit.fields.accountSidDescription',
+  authToken: 'appEdit.fields.authTokenDescription',
+  phoneNumber: 'appEdit.fields.phoneNumberDescription',
+  // Email - SMTP
+  smtpHost: 'appEdit.fields.smtpHostDescription',
+  smtpPort: 'appEdit.fields.smtpPortDescription',
+  smtpSecure: 'appEdit.fields.smtpSecureDescription',
+  smtpUser: 'appEdit.fields.smtpUserDescription',
+  smtpPass: 'appEdit.fields.smtpPassDescription',
+  fromAddress: 'appEdit.fields.fromAddressDescription',
+  fromName: 'appEdit.fields.fromNameDescription',
+  // Email - Gmail
+  email: 'appEdit.fields.emailDescription',
+  appPassword: 'appEdit.fields.appPasswordDescription',
+  // Email - Mailgun
+  domain: 'appEdit.fields.domainDescription',
+  region: 'appEdit.fields.regionDescription',
+  webhookSigningKey: 'appEdit.fields.webhookSigningKeyDescription',
 };
 
 const optionLabelKeys: Record<string, string> = {
@@ -153,6 +215,8 @@ const optionLabelKeys: Record<string, string> = {
   'buttonIcon.bell': 'appEdit.fields.buttonIconBell',
   'buttonIcon.dots': 'appEdit.fields.buttonIconDots',
   'buttonIcon.headset': 'appEdit.fields.buttonIconHeadset',
+  'region.us': 'appEdit.fields.regionUS',
+  'region.eu': 'appEdit.fields.regionEU',
 };
 
 /** SVG icons for the webchat button icon picker */
