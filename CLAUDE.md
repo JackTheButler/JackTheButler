@@ -235,3 +235,13 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 5. **Small commits** - One logical change per commit
 6. **Use .js extensions** - All local imports must use `.js` (ESM requirement)
 7. **Update docs if patterns changed** - If you change a pattern, update CLAUDE.md to match
+
+## After Writing Code — Verification Checklist
+
+**MANDATORY: Before declaring any task done, run through these checks on every function you wrote or modified.**
+
+1. **Async try-catch**: For every `async` function with `try-catch`, verify `await` is used before `return` inside the try block. `return someAsyncCall()` without `await` makes the `catch` block dead code.
+2. **Interface completeness**: For every interface method implementation, check that ALL input fields are either handled or explicitly logged/documented as unsupported. Silent no-ops are bugs.
+3. **Missing credential path**: For every security check (auth, signatures, tokens), trace the code path where the credential is MISSING entirely (not just wrong). If a header/token is absent, it must still be rejected — not silently skipped.
+4. **Scale limits**: For every batch operation (bulk API calls, array parameters), consider what happens at 10x and 100x scale. Are there API payload size limits? Chunk large arrays.
+5. **Batch/collection inputs**: For every webhook, event handler, or function that receives a collection, trace the path where the input has MORE items than expected. Handle all items, not just the first.

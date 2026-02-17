@@ -22,7 +22,7 @@ import type {
 } from '@/core/interfaces/pms.js';
 import type { PMSAppManifest } from '../../types.js';
 import { createLogger } from '@/utils/logger.js';
-import { createHmac } from 'node:crypto';
+import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const log = createLogger('extensions:pms:mews');
 
@@ -94,10 +94,6 @@ interface MewsWebhookPayload {
   Events: MewsWebhookEvent[];
 }
 
-interface MewsPaginatedResponse<T> {
-  Cursor?: string;
-  [key: string]: T[] | string | undefined;
-}
 
 // ==================
 // MewsClient — HTTP helper
@@ -149,27 +145,31 @@ class MewsClient {
     throw lastError || new Error(`Mews API request failed after ${MAX_RETRIES} retries`);
   }
 
-  async requestPaginated<T extends Record<string, unknown>>(
+  async requestPaginated<TItem>(
     endpoint: string,
     body: Record<string, unknown>,
     resultKey: string,
     pageSize: number = DEFAULT_PAGE_SIZE
-  ): Promise<unknown[]> {
-    const results: unknown[] = [];
+  ): Promise<TItem[]> {
+    const results: TItem[] = [];
     let cursor: string | undefined;
 
     do {
-      const response = await this.request<T>(endpoint, {
-        ...body,
-        Limitation: { Count: pageSize, Cursor: cursor },
-      });
+      const limitBody: Record<string, unknown> = { ...body };
+      if (cursor) {
+        limitBody.Limitation = { Count: pageSize, Cursor: cursor };
+      } else {
+        limitBody.Limitation = { Count: pageSize };
+      }
+
+      const response = await this.request<Record<string, unknown>>(endpoint, limitBody);
 
       const items = response[resultKey];
       if (Array.isArray(items)) {
-        results.push(...items);
+        results.push(...(items as TItem[]));
       }
 
-      cursor = (response as MewsPaginatedResponse<unknown>).Cursor;
+      cursor = typeof response.Cursor === 'string' ? response.Cursor : undefined;
     } while (cursor);
 
     return results;
@@ -192,6 +192,8 @@ function mapMewsReservationStatus(state: string): ReservationStatus {
       return 'checked_out';
     case 'Canceled':
       return 'cancelled';
+    case 'NoShow':
+      return 'no_show';
     default:
       log.warn({ state }, 'Unknown Mews reservation state, defaulting to confirmed');
       return 'confirmed';
@@ -294,12 +296,16 @@ export class MewsPMSAdapter implements PMSAdapter {
   private resourceCategoryCache?: MewsResourceCategory[];
 
   constructor(config: PMSConfig) {
-    const clientToken = (config.options?.clientToken as string) || config.clientId || '';
-    const accessToken = (config.options?.accessToken as string) || config.apiKey || '';
-    const baseUrl = config.apiUrl || MEWS_PRODUCTION_URL;
+    // The registry passes a flat Record<string, unknown> with keys matching configSchema,
+    // cast as PMSConfig. Read Mews-specific keys from the flat object directly.
+    const flat = config as unknown as Record<string, unknown>;
+    const clientToken = (flat.clientToken as string) || config.clientId || '';
+    const accessToken = (flat.accessToken as string) || config.apiKey || '';
+    const baseUrl = (flat.apiUrl as string) || config.apiUrl || MEWS_PRODUCTION_URL;
 
-    this.propertyId = config.propertyId || '';
-    if (config.webhookSecret) this.webhookSecret = config.webhookSecret;
+    this.propertyId = (flat.propertyId as string) || config.propertyId || '';
+    const webhookSecret = (flat.webhookSecret as string) || config.webhookSecret;
+    if (webhookSecret) this.webhookSecret = webhookSecret;
     this.client = new MewsClient(baseUrl, clientToken, accessToken);
 
     log.info({ propertyId: this.propertyId }, 'Mews PMS adapter initialized');
@@ -311,14 +317,31 @@ export class MewsPMSAdapter implements PMSAdapter {
 
   async testConnection(): Promise<boolean> {
     try {
-      await this.client.request('enterprises/get', {
-        EnterpriseIds: [this.propertyId],
-      });
+      // configuration/get validates credentials and returns the enterprise info
+      const config = await this.client.request<{ Enterprise: { Id: string; Name: string } }>(
+        'configuration/get',
+        {}
+      );
+
+      // Verify the enterprise ID matches what was configured (if non-empty)
+      if (this.propertyId && config.Enterprise.Id !== this.propertyId) {
+        log.error(
+          { expected: this.propertyId, actual: config.Enterprise.Id },
+          'Enterprise ID mismatch — AccessToken belongs to a different property'
+        );
+        return false;
+      }
+
+      // If no propertyId was configured, learn it from the API
+      if (!this.propertyId) {
+        this.propertyId = config.Enterprise.Id;
+        log.info({ propertyId: this.propertyId }, 'Auto-discovered Mews enterprise ID');
+      }
 
       // Discover and cache the bookable service ID
       await this.discoverServiceId();
 
-      log.info('Mews connection test successful');
+      log.info({ enterprise: config.Enterprise.Name }, 'Mews connection test successful');
       return true;
     } catch (err) {
       log.error({ err }, 'Mews connection test failed');
@@ -362,7 +385,7 @@ export class MewsPMSAdapter implements PMSAdapter {
       const res = response.Reservations[0];
       if (!res) return null;
 
-      return this.enrichReservation(res);
+      return await this.enrichReservation(res);
     } catch (err) {
       log.error({ err, externalId }, 'Failed to get Mews reservation');
       return null;
@@ -386,7 +409,7 @@ export class MewsPMSAdapter implements PMSAdapter {
       const res = response.Reservations[0];
       if (!res) return null;
 
-      return this.enrichReservation(res);
+      return await this.enrichReservation(res);
     } catch (err) {
       log.error({ err, confirmationNumber }, 'Failed to get Mews reservation by confirmation');
       return null;
@@ -401,17 +424,48 @@ export class MewsPMSAdapter implements PMSAdapter {
         ServiceIds: [serviceId],
       };
 
-      // Date range filter
+      // Arrival date filter — Mews requires full ISO datetime
       if (query.arrivalFrom || query.arrivalTo) {
         body.StartUtc = {
-          ...(query.arrivalFrom && { StartUtc: query.arrivalFrom }),
-          ...(query.arrivalTo && { EndUtc: query.arrivalTo }),
+          ...(query.arrivalFrom && { StartUtc: toMewsDateTime(query.arrivalFrom) }),
+          ...(query.arrivalTo && { EndUtc: toMewsDateTime(query.arrivalTo) }),
+        };
+      } else if (!query.departureFrom && !query.departureTo && !query.modifiedSince) {
+        // Default to 1-year window to avoid unbounded queries (only if no other time filter)
+        const oneYearAgo = new Date();
+        oneYearAgo.setFullYear(oneYearAgo.getFullYear() - 1);
+        body.StartUtc = { StartUtc: oneYearAgo.toISOString() };
+      }
+
+      // Departure date filter
+      if (query.departureFrom || query.departureTo) {
+        body.EndUtc = {
+          ...(query.departureFrom && { StartUtc: toMewsDateTime(query.departureFrom) }),
+          ...(query.departureTo && { EndUtc: toMewsDateTime(query.departureTo) }),
+        };
+      }
+
+      // Modified since filter
+      if (query.modifiedSince) {
+        body.UpdatedUtc = {
+          StartUtc: query.modifiedSince.toISOString(),
+          EndUtc: new Date().toISOString(),
         };
       }
 
       // Status filter
       if (query.status) {
         body.States = [mapJackStatusToMews(query.status)];
+      }
+
+      // If searching by email, find customer IDs first and pass to reservation query
+      let emailCustomerIds: Set<string> | undefined;
+      if (query.guestEmail) {
+        const customers = await this.searchCustomersByEmail(query.guestEmail);
+        if (customers.length === 0) return [];
+        emailCustomerIds = new Set(customers.map((c) => c.Id));
+        // Pass CustomerIds server-side to reduce result set
+        body.CustomerIds = [...emailCustomerIds];
       }
 
       const response = await this.client.request<{ Reservations: MewsReservation[] }>(
@@ -421,11 +475,9 @@ export class MewsPMSAdapter implements PMSAdapter {
 
       let reservations = response.Reservations;
 
-      // If searching by email, find customer IDs first and filter
-      if (query.guestEmail) {
-        const customers = await this.searchCustomersByEmail(query.guestEmail);
-        const customerIds = new Set(customers.map((c) => c.Id));
-        reservations = reservations.filter((r) => customerIds.has(r.CustomerId));
+      // Client-side safety net for email filter (in case Mews ignores CustomerIds)
+      if (emailCustomerIds) {
+        reservations = reservations.filter((r) => emailCustomerIds!.has(r.CustomerId));
       }
 
       // Enrich all reservations
@@ -468,7 +520,7 @@ export class MewsPMSAdapter implements PMSAdapter {
         effectiveSince = threeMonthsAgo;
       }
 
-      const response = await this.client.request<{ Reservations: MewsReservation[] }>(
+      const reservations = await this.client.requestPaginated<MewsReservation>(
         'reservations/getAll',
         {
           ServiceIds: [serviceId],
@@ -476,10 +528,11 @@ export class MewsPMSAdapter implements PMSAdapter {
             StartUtc: effectiveSince.toISOString(),
             EndUtc: now.toISOString(),
           },
-        }
+        },
+        'Reservations'
       );
 
-      return this.enrichReservations(response.Reservations);
+      return this.enrichReservations(reservations);
     } catch (err) {
       log.error({ err }, 'Failed to get modified Mews reservations');
       return [];
@@ -561,7 +614,7 @@ export class MewsPMSAdapter implements PMSAdapter {
 
   async getAllRooms(): Promise<NormalizedRoom[]> {
     try {
-      return this.fetchAllRooms();
+      return await this.fetchAllRooms();
     } catch (err) {
       log.error({ err }, 'Failed to get all Mews rooms');
       return [];
@@ -604,13 +657,36 @@ export class MewsPMSAdapter implements PMSAdapter {
     }
 
     if (event.Type === 'Resource') {
-      // Room status change — re-fetch room data
       log.info({ resourceId: event.Id }, 'Mews resource webhook event');
+
+      // Fetch the resource to get current state
+      let room: NormalizedRoom | undefined;
+      try {
+        const resourceResponse = await this.client.request<{ Resources: MewsResource[] }>(
+          'resources/getAll',
+          { ResourceIds: [event.Id] }
+        );
+        const resource = resourceResponse.Resources[0];
+        if (resource) {
+          const categories = await this.getResourceCategories();
+          const category = categories.find((c) => c.Id === resource.ResourceCategoryId);
+          room = mapMewsResource(resource, category);
+        }
+      } catch (err) {
+        log.warn({ err, resourceId: event.Id }, 'Failed to fetch resource for webhook event');
+      }
+
+      const eventData: PMSEvent['data'] = {};
+      if (room) {
+        eventData.room = room;
+        eventData.newStatus = room.status;
+      }
+
       return {
         type: 'room.status_changed',
         source: 'mews',
         timestamp: new Date().toISOString(),
-        data: {},
+        data: eventData,
       };
     }
 
@@ -625,7 +701,10 @@ export class MewsPMSAdapter implements PMSAdapter {
     }
 
     const computed = createHmac('sha256', this.webhookSecret).update(payload).digest('hex');
-    return computed === signature;
+    const computedBuf = Buffer.from(computed, 'hex');
+    const signatureBuf = Buffer.from(signature, 'hex');
+    if (computedBuf.length !== signatureBuf.length) return false;
+    return timingSafeEqual(computedBuf, signatureBuf);
   }
 
   // ==================
@@ -642,13 +721,17 @@ export class MewsPMSAdapter implements PMSAdapter {
     return response.Results;
   }
 
-  private async enrichReservation(res: MewsReservation): Promise<NormalizedReservation> {
+  private async enrichReservation(res: MewsReservation): Promise<NormalizedReservation | null> {
     // Fetch customer
     const customerResponse = await this.client.request<{ Customers: MewsCustomer[] }>(
       'customers/getAll',
       { CustomerIds: [res.CustomerId] }
     );
-    const customer = customerResponse.Customers[0]!;
+    const customer = customerResponse.Customers[0];
+    if (!customer) {
+      log.warn({ customerId: res.CustomerId, reservationId: res.Id }, 'Customer not found for reservation');
+      return null;
+    }
 
     // Fetch resource (room) if assigned
     let resource: MewsResource | undefined;
@@ -678,34 +761,50 @@ export class MewsPMSAdapter implements PMSAdapter {
   ): Promise<NormalizedReservation[]> {
     if (reservations.length === 0) return [];
 
-    // Batch-fetch all referenced customers
+    // Batch-fetch all referenced customers (chunked to avoid exceeding API limits)
     const customerIds = [...new Set(reservations.map((r) => r.CustomerId))];
-    const customerResponse = await this.client.request<{ Customers: MewsCustomer[] }>(
-      'customers/getAll',
-      { CustomerIds: customerIds }
-    );
-    const customerMap = new Map(customerResponse.Customers.map((c) => [c.Id, c]));
+    const allCustomers: MewsCustomer[] = [];
+    for (let i = 0; i < customerIds.length; i += DEFAULT_PAGE_SIZE) {
+      const chunk = customerIds.slice(i, i + DEFAULT_PAGE_SIZE);
+      const response = await this.client.request<{ Customers: MewsCustomer[] }>(
+        'customers/getAll',
+        { CustomerIds: chunk }
+      );
+      allCustomers.push(...response.Customers);
+    }
+    const customerMap = new Map(allCustomers.map((c) => [c.Id, c]));
 
-    // Batch-fetch all referenced resources
+    // Batch-fetch all referenced resources (chunked)
     const resourceIds = [
       ...new Set(reservations.map((r) => r.AssignedResourceId).filter(Boolean) as string[]),
     ];
     let resourceMap = new Map<string, MewsResource>();
 
     if (resourceIds.length > 0) {
-      const resourceResponse = await this.client.request<{ Resources: MewsResource[] }>(
-        'resources/getAll',
-        { ResourceIds: resourceIds }
-      );
-      resourceMap = new Map(resourceResponse.Resources.map((r) => [r.Id, r]));
+      const allResources: MewsResource[] = [];
+      for (let i = 0; i < resourceIds.length; i += DEFAULT_PAGE_SIZE) {
+        const chunk = resourceIds.slice(i, i + DEFAULT_PAGE_SIZE);
+        const response = await this.client.request<{ Resources: MewsResource[] }>(
+          'resources/getAll',
+          { ResourceIds: chunk }
+        );
+        allResources.push(...response.Resources);
+      }
+      resourceMap = new Map(allResources.map((r) => [r.Id, r]));
     }
 
     // Fetch categories
     const categories = await this.getResourceCategories();
     const categoryMap = new Map(categories.map((c) => [c.Id, c]));
 
-    return reservations.map((res) => {
-      const customer = customerMap.get(res.CustomerId)!;
+    const results: NormalizedReservation[] = [];
+
+    for (const res of reservations) {
+      const customer = customerMap.get(res.CustomerId);
+      if (!customer) {
+        log.warn({ customerId: res.CustomerId, reservationId: res.Id }, 'Customer not found for reservation, skipping');
+        continue;
+      }
       const resource = res.AssignedResourceId
         ? resourceMap.get(res.AssignedResourceId)
         : undefined;
@@ -715,8 +814,10 @@ export class MewsPMSAdapter implements PMSAdapter {
           ? categoryMap.get(res.RequestedResourceCategoryId)
           : undefined;
 
-      return mapMewsReservation(res, customer, resource, category);
-    });
+      results.push(mapMewsReservation(res, customer, resource, category));
+    }
+
+    return results;
   }
 
   private async getResourceCategories(): Promise<MewsResourceCategory[]> {
@@ -758,6 +859,12 @@ export class MewsPMSAdapter implements PMSAdapter {
 // Helpers
 // ==================
 
+/** Ensure a date string has a time component for Mews (e.g. "2026-02-15" → "2026-02-15T00:00:00Z") */
+function toMewsDateTime(dateStr: string): string {
+  if (dateStr.includes('T')) return dateStr;
+  return `${dateStr}T00:00:00Z`;
+}
+
 function mapJackStatusToMews(status: ReservationStatus): string {
   switch (status) {
     case 'confirmed':
@@ -775,6 +882,13 @@ function mapJackStatusToMews(status: ReservationStatus): string {
   }
 }
 
+/**
+ * Map reservation status to a webhook event type.
+ * Note: Mews webhook payloads contain only entity IDs, so we can't distinguish
+ * newly created vs updated reservations. All non-terminal statuses map to
+ * 'reservation.updated'. This is safe because processEventWebhook() treats
+ * 'reservation.created' and 'reservation.updated' identically (both upsert).
+ */
 function mapReservationToEventType(status: ReservationStatus): PMSEventType {
   switch (status) {
     case 'checked_in':
@@ -817,13 +931,6 @@ export const manifest: PMSAppManifest = {
       type: 'password',
       required: true,
       description: 'Mews API client token (from Mews Marketplace)',
-    },
-    {
-      key: 'propertyId',
-      label: 'Enterprise ID',
-      type: 'text',
-      required: true,
-      description: 'Mews enterprise (property) identifier',
     },
     {
       key: 'apiUrl',

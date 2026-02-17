@@ -118,8 +118,8 @@ const fullCanonicalUrl = `https://jackthebutler.com${canonicalUrl === '/' ? '' :
       ]
     })} />
 
-    <!-- FAQ Schema -->
-    <script type="application/ld+json" set:html={JSON.stringify({
+    <!-- FAQ Schema (homepage only — blog posts define their own) -->
+    {type === 'website' && <script type="application/ld+json" set:html={JSON.stringify({
       "@context": "https://schema.org",
       "@type": "FAQPage",
       "mainEntity": [
@@ -164,7 +164,7 @@ const fullCanonicalUrl = `https://jackthebutler.com${canonicalUrl === '/' ? '' :
           }
         }
       ]
-    })} />
+    })} />}
   </head>
   <body class="bg-white dark:bg-neutral-950 text-neutral-900 dark:text-neutral-100 antialiased transition-colors">
     <!-- Google Tag Manager (noscript) -->

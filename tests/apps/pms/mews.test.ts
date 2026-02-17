@@ -18,18 +18,19 @@ const { MewsPMSAdapter, createMewsPMSAdapter, manifest } = await import(
 // Test Helpers
 // ==================
 
-function createConfig(overrides: Partial<PMSConfig> = {}): PMSConfig {
+/**
+ * Create a config matching the flat shape the registry actually passes.
+ * Keys correspond to configSchema entries, NOT PMSConfig field names.
+ */
+function createFlatConfig(overrides: Record<string, unknown> = {}): PMSConfig {
   return {
-    provider: 'mews',
+    clientToken: 'client-token-123',
+    accessToken: 'access-token-456',
     apiUrl: 'https://api.mews-demo.com/api/connector/v1',
     propertyId: 'enterprise-001',
     webhookSecret: 'test-secret',
-    options: {
-      clientToken: 'client-token-123',
-      accessToken: 'access-token-456',
-    },
     ...overrides,
-  };
+  } as unknown as PMSConfig;
 }
 
 function mockApiResponse(data: unknown, status = 200) {
@@ -53,16 +54,6 @@ const MOCK_CUSTOMER = {
   LoyaltyCode: 'Gold',
   Classifications: ['Vip'],
   Notes: 'Prefers high floor',
-};
-
-const MOCK_CUSTOMER_2 = {
-  Id: 'cust-002',
-  FirstName: 'Sarah',
-  LastName: 'Johnson',
-  Email: 'sarah@example.com',
-  Phone: '+14155555678',
-  LanguageCode: 'en-US',
-  Classifications: [],
 };
 
 const MOCK_RESERVATION = {
@@ -126,13 +117,55 @@ describe('MewsPMSAdapter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    adapter = new MewsPMSAdapter(createConfig());
+    adapter = new MewsPMSAdapter(createFlatConfig());
+  });
+
+  describe('constructor (config mapping)', () => {
+    it('should read credentials from flat config keys', async () => {
+      setupFetchMock({
+        'configuration/get': { Enterprise: { Id: 'enterprise-001', Name: 'Test Hotel' } },
+        'services/getAll': { Services: [MOCK_SERVICE] },
+      });
+
+      await adapter.testConnection();
+
+      // Verify the tokens were injected into the request body
+      const call = mockFetch.mock.calls[0]!;
+      const body = JSON.parse((call[1] as { body: string }).body);
+      expect(body.ClientToken).toBe('client-token-123');
+      expect(body.AccessToken).toBe('access-token-456');
+    });
+
+    it('should fall back to PMSConfig fields when flat keys are absent', async () => {
+      // Simulate old-style PMSConfig (e.g. from tests)
+      const legacyConfig: PMSConfig = {
+        provider: 'mews',
+        apiUrl: 'https://api.mews-demo.com/api/connector/v1',
+        clientId: 'legacy-client',
+        apiKey: 'legacy-access',
+        propertyId: 'enterprise-002',
+      };
+
+      const legacyAdapter = new MewsPMSAdapter(legacyConfig);
+
+      setupFetchMock({
+        'configuration/get': { Enterprise: { Id: 'enterprise-002', Name: 'Legacy Hotel' } },
+        'services/getAll': { Services: [MOCK_SERVICE] },
+      });
+
+      await legacyAdapter.testConnection();
+
+      const call = mockFetch.mock.calls[0]!;
+      const body = JSON.parse((call[1] as { body: string }).body);
+      expect(body.ClientToken).toBe('legacy-client');
+      expect(body.AccessToken).toBe('legacy-access');
+    });
   });
 
   describe('testConnection', () => {
     it('should return true with valid credentials', async () => {
       setupFetchMock({
-        'enterprises/get': { Enterprises: [{ Id: 'enterprise-001', Name: 'Test Hotel' }] },
+        'configuration/get': { Enterprise: { Id: 'enterprise-001', Name: 'Test Hotel' } },
         'services/getAll': { Services: [MOCK_SERVICE] },
       });
 
@@ -149,7 +182,7 @@ describe('MewsPMSAdapter', () => {
 
     it('should discover and cache serviceId', async () => {
       setupFetchMock({
-        'enterprises/get': { Enterprises: [{ Id: 'enterprise-001' }] },
+        'configuration/get': { Enterprise: { Id: 'enterprise-001', Name: 'Test Hotel' } },
         'services/getAll': { Services: [MOCK_SERVICE, { Id: 'svc-002', Name: 'Spa', Type: 'Other' }] },
       });
 
@@ -157,7 +190,7 @@ describe('MewsPMSAdapter', () => {
 
       // Second call should use cached serviceId (no additional services/getAll call)
       setupFetchMock({
-        'reservations/getAll': { Reservations: [] },
+        'reservations/getAll': { Reservations: [], Cursor: undefined },
       });
 
       await adapter.getModifiedReservations(new Date());
@@ -202,6 +235,17 @@ describe('MewsPMSAdapter', () => {
       const result = await adapter.getReservation('non-existent');
       expect(result).toBeNull();
     });
+
+    it('should return null when customer is missing', async () => {
+      setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
+        'reservations/getAll': { Reservations: [MOCK_RESERVATION] },
+        'customers/getAll': { Customers: [] },
+      });
+
+      const result = await adapter.getReservation('res-001');
+      expect(result).toBeNull();
+    });
   });
 
   describe('getReservationByConfirmation', () => {
@@ -229,7 +273,7 @@ describe('MewsPMSAdapter', () => {
   });
 
   describe('getModifiedReservations', () => {
-    it('should use UpdatedUtc filter', async () => {
+    it('should use UpdatedUtc filter with pagination', async () => {
       setupFetchMock({
         'services/getAll': { Services: [MOCK_SERVICE] },
         'reservations/getAll': { Reservations: [MOCK_RESERVATION] },
@@ -243,12 +287,14 @@ describe('MewsPMSAdapter', () => {
 
       expect(results).toHaveLength(1);
 
-      // Verify UpdatedUtc was set in the request
+      // Verify UpdatedUtc and Limitation were set in the request
       const reservationCall = mockFetch.mock.calls.find((c: unknown[]) =>
         (c[0] as string).includes('reservations/getAll')
       );
       const body = JSON.parse((reservationCall![1] as { body: string }).body);
       expect(body.UpdatedUtc.StartUtc).toBe(since.toISOString());
+      expect(body.Limitation).toBeDefined();
+      expect(body.Limitation.Count).toBe(100);
     });
 
     it('should clamp since date to 3-month max window', async () => {
@@ -271,6 +317,175 @@ describe('MewsPMSAdapter', () => {
       const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
       // Allow 1 second tolerance
       expect(Math.abs(startUtc.getTime() - threeMonthsAgo.getTime())).toBeLessThan(1000);
+    });
+  });
+
+  describe('searchReservations', () => {
+    it('should add default 1-year window when no date filter', async () => {
+      setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
+        'reservations/getAll': { Reservations: [] },
+      });
+
+      await adapter.searchReservations({ status: 'confirmed' });
+
+      const reservationCall = mockFetch.mock.calls.find((c: unknown[]) =>
+        (c[0] as string).includes('reservations/getAll')
+      );
+      const body = JSON.parse((reservationCall![1] as { body: string }).body);
+
+      // Should have a StartUtc default window
+      expect(body.StartUtc).toBeDefined();
+      expect(body.StartUtc.StartUtc).toBeDefined();
+    });
+
+    it('should convert date-only strings to full datetime', async () => {
+      setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
+        'reservations/getAll': { Reservations: [] },
+      });
+
+      await adapter.searchReservations({ arrivalFrom: '2026-02-15', arrivalTo: '2026-02-20' });
+
+      const reservationCall = mockFetch.mock.calls.find((c: unknown[]) =>
+        (c[0] as string).includes('reservations/getAll')
+      );
+      const body = JSON.parse((reservationCall![1] as { body: string }).body);
+      expect(body.StartUtc.StartUtc).toBe('2026-02-15T00:00:00Z');
+      expect(body.StartUtc.EndUtc).toBe('2026-02-20T00:00:00Z');
+    });
+
+    it('should search customers first when filtering by email', async () => {
+      const callOrder: string[] = [];
+      mockFetch.mockImplementation(async (url: string) => {
+        if ((url as string).includes('services/getAll')) {
+          return mockApiResponse({ Services: [MOCK_SERVICE] });
+        }
+        if ((url as string).includes('customers/search')) {
+          callOrder.push('customers/search');
+          return mockApiResponse({ Results: [MOCK_CUSTOMER] });
+        }
+        if ((url as string).includes('reservations/getAll')) {
+          callOrder.push('reservations/getAll');
+          return mockApiResponse({
+            Reservations: [MOCK_RESERVATION],
+          });
+        }
+        if ((url as string).includes('customers/getAll')) {
+          return mockApiResponse({ Customers: [MOCK_CUSTOMER] });
+        }
+        if ((url as string).includes('resources/getAll')) {
+          return mockApiResponse({ Resources: [MOCK_RESOURCE] });
+        }
+        if ((url as string).includes('resourceCategories/getAll')) {
+          return mockApiResponse({ ResourceCategories: [MOCK_RESOURCE_CATEGORY] });
+        }
+        return mockApiResponse({ error: 'Not found' }, 404);
+      });
+
+      await adapter.searchReservations({ guestEmail: 'john@example.com' });
+
+      // customers/search should come BEFORE reservations/getAll
+      expect(callOrder[0]).toBe('customers/search');
+      expect(callOrder[1]).toBe('reservations/getAll');
+    });
+
+    it('should return empty when email search finds no customers', async () => {
+      setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
+        'customers/search': { Results: [] },
+      });
+
+      const results = await adapter.searchReservations({ guestEmail: 'nobody@example.com' });
+      expect(results).toHaveLength(0);
+
+      // Should NOT have called reservations/getAll
+      const reservationCalls = mockFetch.mock.calls.filter((c: unknown[]) =>
+        (c[0] as string).includes('reservations/getAll')
+      );
+      expect(reservationCalls).toHaveLength(0);
+    });
+
+    it('should map departure filters to Mews EndUtc', async () => {
+      setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
+        'reservations/getAll': { Reservations: [] },
+      });
+
+      await adapter.searchReservations({ departureFrom: '2026-02-20', departureTo: '2026-02-25' });
+
+      const reservationCall = mockFetch.mock.calls.find((c: unknown[]) =>
+        (c[0] as string).includes('reservations/getAll')
+      );
+      const body = JSON.parse((reservationCall![1] as { body: string }).body);
+      expect(body.EndUtc.StartUtc).toBe('2026-02-20T00:00:00Z');
+      expect(body.EndUtc.EndUtc).toBe('2026-02-25T00:00:00Z');
+    });
+
+    it('should map modifiedSince to Mews UpdatedUtc', async () => {
+      setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
+        'reservations/getAll': { Reservations: [] },
+      });
+
+      const since = new Date('2026-02-14T00:00:00Z');
+      await adapter.searchReservations({ modifiedSince: since });
+
+      const reservationCall = mockFetch.mock.calls.find((c: unknown[]) =>
+        (c[0] as string).includes('reservations/getAll')
+      );
+      const body = JSON.parse((reservationCall![1] as { body: string }).body);
+      expect(body.UpdatedUtc.StartUtc).toBe(since.toISOString());
+      expect(body.UpdatedUtc.EndUtc).toBeDefined();
+    });
+
+    it('should skip default 1-year window when departure or modifiedSince filter is present', async () => {
+      setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
+        'reservations/getAll': { Reservations: [] },
+      });
+
+      await adapter.searchReservations({ departureFrom: '2026-02-20' });
+
+      const reservationCall = mockFetch.mock.calls.find((c: unknown[]) =>
+        (c[0] as string).includes('reservations/getAll')
+      );
+      const body = JSON.parse((reservationCall![1] as { body: string }).body);
+      // Should NOT have a default StartUtc window since departure filter is present
+      expect(body.StartUtc).toBeUndefined();
+      expect(body.EndUtc).toBeDefined();
+    });
+
+    it('should pass CustomerIds server-side when filtering by email', async () => {
+      mockFetch.mockImplementation(async (url: string) => {
+        if ((url as string).includes('services/getAll')) {
+          return mockApiResponse({ Services: [MOCK_SERVICE] });
+        }
+        if ((url as string).includes('customers/search')) {
+          return mockApiResponse({ Results: [MOCK_CUSTOMER] });
+        }
+        if ((url as string).includes('reservations/getAll')) {
+          return mockApiResponse({ Reservations: [MOCK_RESERVATION] });
+        }
+        if ((url as string).includes('customers/getAll')) {
+          return mockApiResponse({ Customers: [MOCK_CUSTOMER] });
+        }
+        if ((url as string).includes('resources/getAll')) {
+          return mockApiResponse({ Resources: [MOCK_RESOURCE] });
+        }
+        if ((url as string).includes('resourceCategories/getAll')) {
+          return mockApiResponse({ ResourceCategories: [MOCK_RESOURCE_CATEGORY] });
+        }
+        return mockApiResponse({ error: 'Not found' }, 404);
+      });
+
+      await adapter.searchReservations({ guestEmail: 'john@example.com' });
+
+      const reservationCall = mockFetch.mock.calls.find((c: unknown[]) =>
+        (c[0] as string).includes('reservations/getAll')
+      );
+      const body = JSON.parse((reservationCall![1] as { body: string }).body);
+      expect(body.CustomerIds).toEqual(['cust-001']);
     });
   });
 
@@ -369,6 +584,15 @@ describe('MewsPMSAdapter', () => {
     });
   });
 
+  describe('getAllRooms (error handling)', () => {
+    it('should return empty array on API failure', async () => {
+      mockFetch.mockResolvedValue(mockApiResponse({ error: 'Server error' }, 500));
+
+      const rooms = await adapter.getAllRooms();
+      expect(rooms).toEqual([]);
+    });
+  });
+
   describe('getRoomStatus', () => {
     it('should find room by number', async () => {
       setupFetchMock({
@@ -418,13 +642,34 @@ describe('MewsPMSAdapter', () => {
       expect(event).toBeNull();
     });
 
-    it('should handle resource events', async () => {
+    it('should fetch room data for resource events', async () => {
+      setupFetchMock({
+        'resources/getAll': { Resources: [MOCK_RESOURCE] },
+        'resourceCategories/getAll': { ResourceCategories: [MOCK_RESOURCE_CATEGORY] },
+      });
+
       const event = await adapter.parseWebhook({
         Events: [{ Type: 'Resource', Id: 'room-415' }],
       });
 
       expect(event).not.toBeNull();
       expect(event!.type).toBe('room.status_changed');
+      expect(event!.data.room).toBeDefined();
+      expect(event!.data.room!.number).toBe('415');
+      expect(event!.data.newStatus).toBe('occupied');
+    });
+
+    it('should still return event when resource fetch fails', async () => {
+      mockFetch.mockResolvedValue(mockApiResponse({ error: 'fail' }, 500));
+
+      const event = await adapter.parseWebhook({
+        Events: [{ Type: 'Resource', Id: 'room-415' }],
+      });
+
+      expect(event).not.toBeNull();
+      expect(event!.type).toBe('room.status_changed');
+      // Room data unavailable, but event is still returned
+      expect(event!.data.room).toBeUndefined();
     });
   });
 
@@ -438,13 +683,23 @@ describe('MewsPMSAdapter', () => {
       expect(result).toBe(true);
     });
 
-    it('should reject invalid signature', () => {
-      const result = adapter.verifyWebhookSignature('{"Events":[]}', 'bad-signature');
+    it('should reject invalid signature', async () => {
+      const { createHmac } = await import('node:crypto');
+      // Create a valid-format hex string that's the wrong value
+      const payload = '{"Events":[]}';
+      const wrongSecret = createHmac('sha256', 'wrong-secret').update(payload).digest('hex');
+
+      const result = adapter.verifyWebhookSignature(payload, wrongSecret);
+      expect(result).toBe(false);
+    });
+
+    it('should reject signature of wrong length', () => {
+      const result = adapter.verifyWebhookSignature('{"Events":[]}', 'aabb');
       expect(result).toBe(false);
     });
 
     it('should pass when no webhook secret is configured', () => {
-      const noSecretAdapter = new MewsPMSAdapter(createConfig({ webhookSecret: undefined }));
+      const noSecretAdapter = new MewsPMSAdapter(createFlatConfig({ webhookSecret: undefined }));
       const result = noSecretAdapter.verifyWebhookSignature('anything', 'anything');
       expect(result).toBe(true);
     });
@@ -484,6 +739,80 @@ describe('MewsPMSAdapter', () => {
       expect(result).toBeNull();
     });
   });
+
+  describe('enrichReservations (chunked batch fetch)', () => {
+    it('should chunk customer fetches for large result sets', async () => {
+      // Create 150 reservations with unique customer IDs to force chunking (batch size = 100)
+      const manyReservations = Array.from({ length: 150 }, (_, i) => ({
+        ...MOCK_RESERVATION,
+        Id: `res-${i}`,
+        CustomerId: `cust-${i}`,
+        AssignedResourceId: undefined,
+        RequestedResourceCategoryId: 'cat-001',
+      }));
+      const manyCustomers = Array.from({ length: 150 }, (_, i) => ({
+        ...MOCK_CUSTOMER,
+        Id: `cust-${i}`,
+      }));
+
+      let customerGetAllCalls = 0;
+      mockFetch.mockImplementation(async (url: string) => {
+        if ((url as string).includes('services/getAll')) {
+          return mockApiResponse({ Services: [MOCK_SERVICE] });
+        }
+        if ((url as string).includes('reservations/getAll')) {
+          return mockApiResponse({ Reservations: manyReservations });
+        }
+        if ((url as string).includes('customers/getAll')) {
+          customerGetAllCalls++;
+          // Return the subset of customers requested
+          const requestBody = JSON.parse(
+            (mockFetch.mock.calls[mockFetch.mock.calls.length - 1]![1] as { body: string }).body
+          );
+          const requestedIds = new Set(requestBody.CustomerIds as string[]);
+          return mockApiResponse({
+            Customers: manyCustomers.filter((c) => requestedIds.has(c.Id)),
+          });
+        }
+        if ((url as string).includes('resourceCategories/getAll')) {
+          return mockApiResponse({ ResourceCategories: [MOCK_RESOURCE_CATEGORY] });
+        }
+        return mockApiResponse({ error: 'Not found' }, 404);
+      });
+
+      const results = await adapter.getModifiedReservations(new Date('2026-02-14T00:00:00Z'));
+
+      expect(results).toHaveLength(150);
+      // Should have made 2 chunked calls for 150 customers (100 + 50)
+      expect(customerGetAllCalls).toBe(2);
+    });
+  });
+
+  describe('enrichReservations (missing customer)', () => {
+    it('should skip reservations with missing customers', async () => {
+      const reservation2 = {
+        ...MOCK_RESERVATION,
+        Id: 'res-002',
+        CustomerId: 'cust-missing',
+        Number: 'CONF-456',
+      };
+
+      setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
+        'reservations/getAll': { Reservations: [MOCK_RESERVATION, reservation2], Cursor: undefined },
+        // Only cust-001 is returned, cust-missing is not
+        'customers/getAll': { Customers: [MOCK_CUSTOMER] },
+        'resources/getAll': { Resources: [MOCK_RESOURCE] },
+        'resourceCategories/getAll': { ResourceCategories: [MOCK_RESOURCE_CATEGORY] },
+      });
+
+      const results = await adapter.getModifiedReservations(new Date('2026-02-14T00:00:00Z'));
+
+      // Should have 1 result (res-002 skipped due to missing customer)
+      expect(results).toHaveLength(1);
+      expect(results[0]!.externalId).toBe('res-001');
+    });
+  });
 });
 
 describe('Status Mapping', () => {
@@ -491,7 +820,7 @@ describe('Status Mapping', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    adapter = new MewsPMSAdapter(createConfig());
+    adapter = new MewsPMSAdapter(createFlatConfig());
   });
 
   it('should map all Mews reservation states correctly', async () => {
@@ -502,6 +831,7 @@ describe('Status Mapping', () => {
       Canceled: 'cancelled',
       Optional: 'confirmed',
       Requested: 'confirmed',
+      NoShow: 'no_show',
     };
 
     for (const [mewsState, expectedStatus] of Object.entries(states)) {
@@ -541,7 +871,6 @@ describe('Mews Manifest', () => {
       .map((f: { key: string }) => f.key);
     expect(requiredKeys).toContain('accessToken');
     expect(requiredKeys).toContain('clientToken');
-    expect(requiredKeys).toContain('propertyId');
   });
 
   it('should include stalenessThreshold and syncInterval', () => {
@@ -551,7 +880,7 @@ describe('Mews Manifest', () => {
   });
 
   it('should create adapter instance via factory', () => {
-    const config = createConfig();
+    const config = createFlatConfig();
     const instance = createMewsPMSAdapter(config);
     expect(instance).toBeInstanceOf(MewsPMSAdapter);
     expect(instance.provider).toBe('mews');

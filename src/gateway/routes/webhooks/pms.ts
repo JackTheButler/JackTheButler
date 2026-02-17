@@ -223,21 +223,27 @@ pmsWebhooks.post('/mews', async (c) => {
     return c.json({ error: 'PMS mismatch' }, 400);
   }
 
-  // Verify signature if adapter supports it
-  if (adapter.verifyWebhookSignature && signature) {
-    if (!adapter.verifyWebhookSignature(body, signature)) {
-      log.warn('Invalid Mews webhook signature');
+  // Verify signature if adapter supports it (always check — missing header is a rejection)
+  if (adapter.verifyWebhookSignature) {
+    if (!adapter.verifyWebhookSignature(body, signature || '')) {
+      log.warn('Invalid or missing Mews webhook signature');
       return c.json({ error: 'Invalid signature' }, 401);
     }
   }
 
-  // Parse webhook
+  // Parse webhook — Mews can batch multiple events in one payload
   if (adapter.parseWebhook) {
-    const event = await adapter.parseWebhook(JSON.parse(body), { 'x-mews-signature': signature || '' });
-    if (event) {
-      processEventWebhook(event).catch((err) => {
-        log.error({ err }, 'Error processing Mews webhook');
-      });
+    const parsed = JSON.parse(body) as { Events?: Array<{ Type: string; Id: string }> };
+    const events = Array.isArray(parsed?.Events) ? parsed.Events : [];
+
+    for (const evt of events) {
+      const singlePayload = { Events: [evt] };
+      const event = await adapter.parseWebhook(singlePayload, { 'x-mews-signature': signature || '' });
+      if (event) {
+        processEventWebhook(event).catch((err) => {
+          log.error({ err, eventType: evt.Type, eventId: evt.Id }, 'Error processing Mews webhook event');
+        });
+      }
     }
   }
 

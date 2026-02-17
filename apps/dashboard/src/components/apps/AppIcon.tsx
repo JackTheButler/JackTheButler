@@ -21,6 +21,13 @@ const customIcons: Record<string, string> = {
   smartphone: '/icons/smartphone.svg',
   building: '/icons/building.svg',
   'chat-round': '/icons/chat-round.svg',
+  mews: '/icons/mews.svg',
+  cloudbeds: '/icons/cloudbeds.svg',
+  ollama: '/icons/ollama.svg',
+  claude: '/icons/claude.svg',
+  openai: '/icons/openai.svg',
+  gmail: '/icons/gmail.svg',
+  sendgrid: '/icons/sendgrid.svg',
 };
 
 // Mapping app/provider IDs to icons
@@ -34,24 +41,34 @@ const iconMapping: Record<string, LucideIcon | string> = {
   pms: 'building',
 
   // AI Providers
-  anthropic: Brain,
-  openai: Brain,
-  ollama: Brain,
+  anthropic: 'claude',
+  openai: 'openai',
+  ollama: 'ollama',
+  'ai-ollama': 'ollama',
 
   // Channel Providers
   meta: 'whatsapp',
+  'whatsapp-meta': 'whatsapp',
   twilio: 'twilio',
+  'sms-twilio': 'twilio',
   vonage: Smartphone,
   smtp: Mail,
+  'email-smtp': 'email',
+  'email-gmail-smtp': 'gmail',
   mailgun: 'mailgun',
-  sendgrid: Mail,
+  'email-mailgun': 'mailgun',
+  sendgrid: 'sendgrid',
+  'email-sendgrid': 'sendgrid',
   builtin: 'chat-round',
+  'channel-webchat': 'chat-round',
 
   // PMS Providers
   mock: Settings,
-  mews: 'building',
+  mews: 'mews',
+  'pms-mews': 'mews',
   opera: 'building',
-  cloudbeds: 'building',
+  cloudbeds: 'cloudbeds',
+  'pms-cloudbeds': 'cloudbeds',
 };
 
 // Category icons
