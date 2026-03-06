@@ -161,6 +161,20 @@ pnpm db:migrate
 pnpm dev
 ```
 
+#### Development Commands
+
+| Command | Description |
+|---------|-------------|
+| `pnpm dev` | Start full dev server (API + dashboard) |
+| `pnpm dev:dashboard` | Start only the staff dashboard |
+| `pnpm dev:webchat` | Start the guest webchat widget |
+| `pnpm dev:website` | Start the landing page |
+| `pnpm build:webchat` | Build webchat widget for production |
+| `pnpm test` | Run all tests |
+| `pnpm test:webchat` | Serve webchat locally on port 8080 for manual testing |
+| `pnpm typecheck` | TypeScript type checking |
+| `pnpm lint` | Run linter |
+
 ### API & WebSocket Access
 
 | Interface | URL | Description |

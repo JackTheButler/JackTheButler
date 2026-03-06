@@ -29,6 +29,36 @@ export const authors: Record<string, Author> = {
 
 export const blogPosts: BlogPost[] = [
   {
+    slug: 'best-hotel-chatbots',
+    title: '10 Best Hotel Chatbots Compared: Features, Pricing & Reviews (2026)',
+    description: 'Compare the top 10 hotel chatbot solutions. See features, pricing, pros/cons, and find the best chatbot for your needs and budget.',
+    date: '2026-03-24',
+    readTime: '15 min read',
+    category: 'Guides',
+    image: '/blog/best-hotel-chatbots.jpg',
+    author: authors.arash
+  },
+  {
+    slug: 'hotel-virtual-assistant',
+    title: 'Hotel Virtual Assistant: AI-Powered Guest Service Guide (2026)',
+    description: 'Learn how hotel virtual assistants use AI to handle guest requests and improve service quality 24/7 without additional staff.',
+    date: '2026-03-17',
+    readTime: '9 min read',
+    category: 'Education',
+    image: '/blog/hotel-virtual-assistant.jpg',
+    author: authors.arash
+  },
+  {
+    slug: 'guest-messaging-platform',
+    title: 'Guest Messaging Platform: Complete Guide for Hotels (2026)',
+    description: 'Discover how guest messaging platforms transform hotel communication. Compare features, pricing, and learn how to choose the right solution.',
+    date: '2026-03-10',
+    readTime: '10 min read',
+    category: 'Guides',
+    image: '/blog/guest-messaging-platform.jpg',
+    author: authors.arash
+  },
+  {
     slug: 'open-source-hotel-chatbot-setup',
     title: 'Open Source Hotel Chatbot: Complete Setup Guide (2026)',
     description: 'Step-by-step guide to deploying a free, self-hosted hotel chatbot on your own server. Deploy an open source hotel chatbot in under 30 minutes — no coding required.',

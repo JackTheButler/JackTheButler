@@ -64,8 +64,9 @@ jack/
 # Development
 pnpm install              # Install dependencies
 pnpm dev                  # Start development server (with hot reload)
-pnpm dev:gateway          # Start only API server
 pnpm dev:dashboard        # Start only dashboard
+pnpm dev:webchat          # Start webchat widget dev server
+pnpm dev:website          # Start landing page dev server
 
 # Database
 pnpm db:generate          # Generate migrations from schema changes
@@ -78,10 +79,11 @@ pnpm db:studio            # Open Drizzle Studio
 pnpm test                 # Run all tests
 pnpm test:watch           # Run in watch mode
 pnpm test:coverage        # Run with coverage report
-pnpm test:e2e             # Run end-to-end tests
+pnpm test:webchat         # Serve webchat on port 8080 for manual testing
 
 # Build & Deploy
 pnpm build                # Build for production
+pnpm build:webchat        # Build webchat widget for production
 pnpm start                # Start production server
 pnpm docker:build         # Build Docker image
 pnpm docker:run           # Run Docker container
