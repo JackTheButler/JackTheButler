@@ -35,7 +35,7 @@ export const blogPosts: BlogPost[] = [
     date: '2026-03-24',
     readTime: '15 min read',
     category: 'Guides',
-    image: '/blog/best-hotel-chatbots.jpg',
+    image: '/blog/best-hotel-chatbots.jpeg',
     author: authors.arash
   },
   {
@@ -45,7 +45,7 @@ export const blogPosts: BlogPost[] = [
     date: '2026-03-17',
     readTime: '9 min read',
     category: 'Education',
-    image: '/blog/hotel-virtual-assistant.jpg',
+    image: '/blog/hotel-virtual-assistant.jpeg',
     author: authors.arash
   },
   {
@@ -55,7 +55,7 @@ export const blogPosts: BlogPost[] = [
     date: '2026-03-06',
     readTime: '10 min read',
     category: 'Guides',
-    image: '/blog/guest-messaging-platform.jpg',
+    image: '/blog/guest-messaging-platform.jpeg',
     author: authors.arash
   },
   {
@@ -65,7 +65,7 @@ export const blogPosts: BlogPost[] = [
     date: '2026-02-16',
     readTime: '12 min read',
     category: 'Tutorials',
-    image: '/blog/open-source-setup.jpg',
+    image: '/blog/open-source-hotel-chatbot-setup.jpeg',
     author: authors.arash
   },
   {
@@ -75,7 +75,7 @@ export const blogPosts: BlogPost[] = [
     date: '2026-02-14',
     readTime: '14 min read',
     category: 'Guides',
-    image: '/blog/chatbot-for-hotels.jpg',
+    image: '/blog/chatbot-for-hotels.jpeg',
     author: authors.arash
   },
   {
@@ -85,7 +85,7 @@ export const blogPosts: BlogPost[] = [
     date: '2026-02-09',
     readTime: '8 min read',
     category: 'Guides',
-    image: '/blog/free-chatbots.jpg',
+    image: '/blog/free-hotel-chatbot-solutions.jpeg',
     author: authors.arash
   },
   {
@@ -95,7 +95,7 @@ export const blogPosts: BlogPost[] = [
     date: '2026-02-08',
     readTime: '12 min read',
     category: 'Education',
-    image: '/blog/hotel-chatbot-guide.jpg',
+    image: '/blog/what-is-hotel-chatbot.jpeg',
     author: authors.arash
   },
   {
@@ -105,7 +105,7 @@ export const blogPosts: BlogPost[] = [
     date: '2026-02-07',
     readTime: '10 min read',
     category: 'Tutorials',
-    image: '/blog/whatsapp-hotels.jpg',
+    image: '/blog/hotel-whatsapp-automation.jpeg',
     author: authors.arash
   }
 ]

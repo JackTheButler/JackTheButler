@@ -28,7 +28,8 @@ const posts = getPublishedPosts()
     <div class="max-w-5xl mx-auto">
       <a href={`/blog/${posts[0].slug}/`} class="group block">
         <div class="relative rounded-3xl overflow-hidden bg-gradient-to-br from-blue-600 to-emerald-600 p-8 md:p-12">
-          <div class="absolute inset-0 bg-black/20"></div>
+          {posts[0].image && <img src={posts[0].image} alt={posts[0].title} class="absolute inset-0 w-full h-full object-cover" loading="eager" />}
+          <div class="absolute inset-0 bg-gradient-to-t from-black/90 via-black/75 to-black/60"></div>
           <div class="relative z-10 max-w-2xl">
             <span class="inline-block px-3 py-1 rounded-full bg-white/20 text-white text-sm font-medium mb-4">
               {posts[0].category}
@@ -63,7 +64,11 @@ const posts = getPublishedPosts()
       <div class="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
         {posts.map((post) => (
           <a href={`/blog/${post.slug}/`} class="group block">
-            <article class="h-full p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
+            <article class="h-full rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors overflow-hidden">
+              {post.image && (
+                <img src={post.image} alt={post.title} class="w-full h-40 object-cover" loading="lazy" />
+              )}
+              <div class="p-6">
               <span class="inline-block px-3 py-1 rounded-full bg-blue-100 dark:bg-blue-500/10 text-blue-700 dark:text-blue-400 text-xs font-medium mb-4">
                 {post.category}
               </span>
@@ -82,6 +87,7 @@ const posts = getPublishedPosts()
                   Read
                   <ArrowRight class="w-3.5 h-3.5" />
                 </span>
+              </div>
               </div>
             </article>
           </a>

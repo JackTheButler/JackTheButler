@@ -21,6 +21,7 @@ const articleSchema = {
     "url": `https://jackthebutler.com/blog/author/${post.author.slug}/`,
     "sameAs": post.author.linkedin ? [post.author.linkedin] : []
   },
+  "image": post.image ? `https://jackthebutler.com${post.image}` : undefined,
   "publisher": {
     "@type": "Organization",
     "name": "Jack The Butler",

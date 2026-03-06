@@ -39,4 +39,7 @@ const { post } = Astro.props
       {post.readTime}
     </span>
   </div>
+  {post.image && (
+    <img src={post.image} alt={post.title} class="w-full rounded-2xl mt-8" loading="eager" />
+  )}
 </header>
