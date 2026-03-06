@@ -10,6 +10,7 @@ interface Props {
   type?: 'website' | 'article'
   author?: string
   publishedTime?: string
+  showIntro?: boolean
 }
 
 const {
@@ -18,7 +19,8 @@ const {
   canonical,
   type = 'website',
   author,
-  publishedTime
+  publishedTime,
+  showIntro = false
 } = Astro.props
 
 const canonicalUrl = canonical || Astro.url.pathname
@@ -171,7 +173,7 @@ const fullCanonicalUrl = `https://jackthebutler.com${canonicalUrl === '/' ? '' :
     <noscript><iframe src="https://www.googletagmanager.com/ns.html?id=GTM-K2SKD2W6"
     height="0" width="0" style="display:none;visibility:hidden"></iframe></noscript>
 
-    <Intro />
+    {showIntro && <Intro />}
     <Header />
     <main class="opacity-0 animate-fadeIn">
       <slot />
