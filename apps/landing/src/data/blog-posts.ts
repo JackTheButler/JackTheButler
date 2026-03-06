@@ -52,7 +52,7 @@ export const blogPosts: BlogPost[] = [
     slug: 'guest-messaging-platform',
     title: 'Guest Messaging Platform: Complete Guide for Hotels (2026)',
     description: 'Discover how guest messaging platforms transform hotel communication. Compare features, pricing, and learn how to choose the right solution.',
-    date: '2026-03-10',
+    date: '2026-03-06',
     readTime: '10 min read',
     category: 'Guides',
     image: '/blog/guest-messaging-platform.jpg',
