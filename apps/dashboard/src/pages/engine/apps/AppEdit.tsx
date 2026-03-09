@@ -35,6 +35,7 @@ import { Label } from '@/components/ui/label';
 import { Switch } from '@/components/ui/switch';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { AppIcon, PageContainer } from '@/components';
+import { WebchatPreview } from './WebchatPreview';
 
 type AppStatus = 'not_configured' | 'configured' | 'connected' | 'error' | 'disabled';
 
@@ -247,10 +248,12 @@ function ConfigForm({
   app,
   onSaved,
   canManage,
+  onFormDataChange,
 }: {
   app: App;
   onSaved: () => void;
   canManage: boolean;
+  onFormDataChange?: (data: Record<string, string | boolean>) => void;
 }) {
   const { t } = useTranslation();
   const queryClient = useQueryClient();
@@ -267,6 +270,11 @@ function ConfigForm({
     return initial;
   });
   const [showPasswords, setShowPasswords] = useState<Record<string, boolean>>({});
+
+  const updateFormData = (next: Record<string, string | boolean>) => {
+    setFormData(next);
+    onFormDataChange?.(next);
+  };
 
   const saveMutation = useMutation({
     mutationFn: (data: { enabled: boolean; config: Record<string, string | boolean> }) =>
@@ -290,8 +298,8 @@ function ConfigForm({
     setShowPasswords((prev) => ({ ...prev, [key]: !prev[key] }));
   };
 
-  return (
-    <form onSubmit={handleSubmit} className="space-y-5">
+  const fields = (
+    <div className="space-y-5">
       {app.configSchema.map((field) => {
         const fieldLabel = fieldLabelKeys[field.key] ? t(fieldLabelKeys[field.key]) : field.label;
         return (
@@ -307,7 +315,7 @@ function ConfigForm({
               <Switch
                 id={field.key}
                 checked={formData[field.key] === true}
-                onCheckedChange={(checked) => setFormData({ ...formData, [field.key]: checked })}
+                onCheckedChange={(checked) => updateFormData({ ...formData, [field.key]: checked })}
                 disabled={!canManage}
               />
             </div>
@@ -327,7 +335,7 @@ function ConfigForm({
                         key={opt.value}
                         type="button"
                         disabled={!canManage}
-                        onClick={() => setFormData({ ...formData, [field.key]: opt.value })}
+                        onClick={() => updateFormData({ ...formData, [field.key]: opt.value })}
                         title={optionLabelKeys[`buttonIcon.${opt.value}`] ? t(optionLabelKeys[`buttonIcon.${opt.value}`]) : opt.label}
                         className={cn(
                           'flex items-center justify-center w-12 h-12 rounded-lg border-2 transition-colors',
@@ -356,7 +364,7 @@ function ConfigForm({
               ) : field.type === 'select' && field.options ? (
                 <Select
                   value={String(formData[field.key] || '')}
-                  onValueChange={(value) => setFormData({ ...formData, [field.key]: value })}
+                  onValueChange={(value) => updateFormData({ ...formData, [field.key]: value })}
                   required={field.required}
                   disabled={!canManage}
                 >
@@ -380,13 +388,13 @@ function ConfigForm({
                     type="color"
                     id={field.key}
                     value={String(formData[field.key] || field.default || '#000000')}
-                    onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                    onChange={(e) => updateFormData({ ...formData, [field.key]: e.target.value })}
                     disabled={!canManage}
                     className="h-9 w-12 cursor-pointer rounded border border-input bg-background p-0.5 disabled:cursor-not-allowed disabled:opacity-50"
                   />
                   <Input
                     value={String(formData[field.key] || '')}
-                    onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                    onChange={(e) => updateFormData({ ...formData, [field.key]: e.target.value })}
                     placeholder={field.placeholder}
                     className="flex-1 font-mono"
                     disabled={!canManage}
@@ -398,7 +406,7 @@ function ConfigForm({
                     id={field.key}
                     type={field.type === 'password' && !showPasswords[field.key] ? 'password' : 'text'}
                     value={String(formData[field.key] || '')}
-                    onChange={(e) => setFormData({ ...formData, [field.key]: e.target.value })}
+                    onChange={(e) => updateFormData({ ...formData, [field.key]: e.target.value })}
                     placeholder={field.placeholder}
                     required={field.required}
                     className={field.type === 'password' ? 'pe-12' : ''}
@@ -444,6 +452,12 @@ function ConfigForm({
           )}
         </div>
       )}
+    </div>
+  );
+
+  return (
+    <form onSubmit={handleSubmit}>
+      {fields}
     </form>
   );
 }
@@ -676,6 +690,7 @@ export function AppEditPage() {
   const queryClient = useQueryClient();
   const { can } = usePermissions();
   const canManageSettings = can(PERMISSIONS.SETTINGS_MANAGE);
+  const [webchatFormData, setWebchatFormData] = useState<Record<string, string | boolean>>({});
 
   const { data: app, isLoading, error } = useQuery({
     queryKey: ['app', appId],
@@ -751,7 +766,7 @@ export function AppEditPage() {
       </div>
 
       <div className="space-y-6">
-        {/* Connection Status */}
+        {/* Connection Status — full width */}
         {app.config && (
           <Card>
             <CardHeader>
@@ -763,27 +778,64 @@ export function AppEditPage() {
           </Card>
         )}
 
-        {/* Configuration Form */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="text-base">{t('appEdit.configuration')}</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <ConfigForm
-              key={app.id}
-              app={app}
-              onSaved={() => {}}
-              canManage={canManageSettings}
-            />
-          </CardContent>
-        </Card>
+        {/* Configuration + Preview (2-col for webchat, full width otherwise) */}
+        {app.id === 'channel-webchat' ? (
+          <div className="grid grid-cols-1 xl:grid-cols-2 gap-6 items-start">
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base">{t('appEdit.configuration')}</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <ConfigForm
+                  key={app.id}
+                  app={app}
+                  onSaved={() => {}}
+                  canManage={canManageSettings}
+                  onFormDataChange={setWebchatFormData}
+                />
+              </CardContent>
+            </Card>
+            <div className="xl:sticky xl:top-6">
+              <Card>
+                <CardHeader>
+                  <CardTitle className="text-base">{t('appEdit.preview', 'Preview')}</CardTitle>
+                </CardHeader>
+                <CardContent className="flex justify-center py-6 px-6">
+                  <WebchatPreview
+                    primaryColor={String(webchatFormData.primaryColor || app.config?.primaryColor || '#0084ff')}
+                    headerBackground={String(webchatFormData.headerBackground || app.config?.headerBackground || '#1a1a2e')}
+                    botName={String(webchatFormData.botName || app.config?.botName || '')}
+                    logoUrl={String(webchatFormData.logoUrl || app.config?.logoUrl || '')}
+                    welcomeMessage={String(webchatFormData.welcomeMessage || app.config?.welcomeMessage || '')}
+                    buttonIcon={String(webchatFormData.buttonIcon || app.config?.buttonIcon || 'chat')}
+                    theme={String(webchatFormData.theme || app.config?.theme || 'light')}
+                  />
+                </CardContent>
+              </Card>
+            </div>
+          </div>
+        ) : (
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-base">{t('appEdit.configuration')}</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <ConfigForm
+                key={app.id}
+                app={app}
+                onSaved={() => {}}
+                canManage={canManageSettings}
+              />
+            </CardContent>
+          </Card>
+        )}
 
-        {/* Embed Code (webchat only) */}
+        {/* Embed Code — full width */}
         {app.id === 'channel-webchat' && app.config?.widgetKey && (
           <EmbedCode widgetKey={String(app.config.widgetKey)} />
         )}
 
-        {/* Activity Logs */}
+        {/* Activity Logs — full width */}
         {app.config && (
           <Card>
             <CardHeader>
@@ -798,31 +850,21 @@ export function AppEditPage() {
           </Card>
         )}
 
-        {/* Danger Zone */}
+        {/* Danger Zone — full width */}
         {app.config && canManageSettings && (
           <Card className="border-red-200">
             <CardHeader>
               <CardTitle className="text-base text-red-600">{t('appEdit.dangerZone')}</CardTitle>
             </CardHeader>
             <CardContent className="space-y-4">
-              <p className="text-sm text-muted-foreground">
-                {t('appEdit.removeConfig')}
-              </p>
+              <p className="text-sm text-muted-foreground">{t('appEdit.removeConfig')}</p>
               <Button
                 variant="outline"
-                onClick={() => {
-                  if (confirm(t('appEdit.removeConfirm'))) {
-                    deleteMutation.mutate();
-                  }
-                }}
+                onClick={() => { if (confirm(t('appEdit.removeConfirm'))) deleteMutation.mutate(); }}
                 disabled={deleteMutation.isPending}
                 className="text-red-600 border-red-300 hover:bg-red-50 hover:text-red-700"
               >
-                {deleteMutation.isPending ? (
-                  <Spinner size="sm" className="me-2" />
-                ) : (
-                  <Trash2 className="w-4 h-4 me-2" />
-                )}
+                {deleteMutation.isPending ? <Spinner size="sm" className="me-2" /> : <Trash2 className="w-4 h-4 me-2" />}
                 {t('appEdit.removeConfiguration')}
               </Button>
             </CardContent>

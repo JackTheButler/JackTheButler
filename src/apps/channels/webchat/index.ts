@@ -326,7 +326,7 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
         })
       );
     } catch (error) {
-      log.warn({ error, sessionId, conversationId: session.conversationId }, 'Failed to load history');
+      log.warn({ err: error, sessionId, conversationId: session.conversationId }, 'Failed to load history');
     }
   }
 
@@ -357,7 +357,7 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
         })
       );
     } catch (error) {
-      log.warn({ error, sessionId }, 'Failed to send welcome message');
+      log.warn({ err: error, sessionId }, 'Failed to send welcome message');
     }
   }
 
@@ -394,7 +394,7 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
           return;
         }
         handleGuestMessage(sessionId, ws, parsed.content).catch((error) => {
-          log.error({ error, sessionId }, 'Failed to process webchat message');
+          log.error({ err: error, sessionId }, 'Failed to process webchat message');
           webchatConnectionManager.send(sessionId, {
             type: 'error',
             message: t(sessionLoc, 'errors.processingError'),
@@ -405,7 +405,7 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
 
       log.debug({ type: parsed.type, sessionId }, 'Unknown webchat message type');
     } catch (error) {
-      log.warn({ error, sessionId }, 'Invalid webchat message');
+      log.warn({ err: error, sessionId }, 'Invalid webchat message');
       ws.send(JSON.stringify({ type: 'error', message: t(getSessionLocale(sessionId), 'errors.invalidMessage') }));
     }
   });
@@ -422,7 +422,7 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
 
   // Handle errors
   ws.on('error', (error) => {
-    log.error({ error, sessionId }, 'Guest webchat error');
+    log.error({ err: error, sessionId }, 'Guest webchat error');
     webchatConnectionManager.remove(sessionId, ws);
   });
 }

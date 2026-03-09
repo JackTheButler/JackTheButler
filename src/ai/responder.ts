@@ -204,10 +204,15 @@ export class AIResponder implements Responder {
       }
     }
 
-    const knowledgeContext = await this.knowledge.search(searchQuery, {
-      limit: this.maxKnowledgeResults,
-      minSimilarity: this.minKnowledgeSimilarity,
-    });
+    let knowledgeContext: Awaited<ReturnType<typeof this.knowledge.search>> = [];
+    try {
+      knowledgeContext = await this.knowledge.search(searchQuery, {
+        limit: this.maxKnowledgeResults,
+        minSimilarity: this.minKnowledgeSimilarity,
+      });
+    } catch (error) {
+      log.warn({ err: error }, 'Knowledge base search skipped — embedding provider unavailable');
+    }
 
     // 3. Get conversation history
     const history = await this.getConversationHistory(conversation.id);

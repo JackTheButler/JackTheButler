@@ -65,7 +65,7 @@ export class MessageProcessor {
         guestId = guest.id;
         log.debug({ guestId, phone: inbound.channelId }, 'Guest identified by phone');
       } catch (error) {
-        log.warn({ error, phone: inbound.channelId }, 'Failed to identify guest by phone');
+        log.warn({ err: error, phone: inbound.channelId }, 'Failed to identify guest by phone');
       }
     }
 
@@ -89,7 +89,7 @@ export class MessageProcessor {
       try {
         await guestContextService.matchConversation(conversation.id, { phone: inbound.channelId });
       } catch (error) {
-        log.warn({ error, conversationId: conversation.id }, 'Failed to match guest by phone');
+        log.warn({ err: error, conversationId: conversation.id }, 'Failed to match guest by phone');
       }
     }
 
@@ -110,7 +110,7 @@ export class MessageProcessor {
           );
         }
       } catch (error) {
-        log.warn({ error, conversationId: conversation.id }, 'Failed to load guest context');
+        log.warn({ err: error, conversationId: conversation.id }, 'Failed to load guest context');
       }
     }
 
@@ -293,7 +293,7 @@ export class MessageProcessor {
               timestamp: new Date(),
             });
           } catch (error) {
-            log.error({ error, conversationId: conversation.id }, 'Failed to create task');
+            log.error({ err: error, conversationId: conversation.id }, 'Failed to create task');
           }
         }
       }

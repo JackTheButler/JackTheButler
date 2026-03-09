@@ -72,8 +72,8 @@ async function initializeAIResponder(): Promise<Responder | null> {
       return null;
     }
 
-    // Get embedding provider (same as completion provider for now)
-    const embeddingProvider = provider;
+    // Get embedding provider — may differ from completion provider
+    const embeddingProvider = registry.getEmbeddingProvider() ?? provider;
 
     const responder = new AIResponder({
       provider,
