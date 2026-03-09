@@ -28,8 +28,8 @@ const DEFAULT_BASE_URL = 'http://localhost:11434';
 /**
  * Ollama API response types
  */
-interface OllamaGenerateResponse {
-  response: string;
+interface OllamaChatResponse {
+  message: { role: string; content: string };
   done: boolean;
   eval_count?: number;
   prompt_eval_count?: number;
@@ -130,32 +130,15 @@ export class OllamaProvider implements AIProvider, BaseProvider {
    */
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
     const model = request.modelTier === 'utility' ? this.utilityModel : this.model;
-    const systemMessage = request.messages.find((m) => m.role === 'system');
-    const conversationMessages = request.messages.filter((m) => m.role !== 'system');
 
-    // Build prompt in Ollama format
-    let prompt = '';
-    if (systemMessage) {
-      prompt += `### System\n${systemMessage.content}\n\n`;
-    }
+    log.debug({ messageCount: request.messages.length, model }, 'Sending completion request');
 
-    for (const msg of conversationMessages) {
-      if (msg.role === 'user') {
-        prompt += `### User\n${msg.content}\n\n`;
-      } else if (msg.role === 'assistant') {
-        prompt += `### Assistant\n${msg.content}\n\n`;
-      }
-    }
-    prompt += '### Assistant\n';
-
-    log.debug({ promptLength: prompt.length, model }, 'Sending completion request');
-
-    const response = await fetch(`${this.baseUrl}/api/generate`, {
+    const response = await fetch(`${this.baseUrl}/api/chat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
         model,
-        prompt,
+        messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
         stream: false,
         options: {
           num_predict: request.maxTokens || 1024,
@@ -169,7 +152,7 @@ export class OllamaProvider implements AIProvider, BaseProvider {
       throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
     }
 
-    const data = (await response.json()) as OllamaGenerateResponse;
+    const data = (await response.json()) as OllamaChatResponse;
 
     log.debug(
       {
@@ -180,7 +163,7 @@ export class OllamaProvider implements AIProvider, BaseProvider {
     );
 
     return {
-      content: data.response.trim(),
+      content: data.message.content.trim(),
       usage: {
         inputTokens: data.prompt_eval_count || 0,
         outputTokens: data.eval_count || 0,

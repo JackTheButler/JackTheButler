@@ -152,48 +152,13 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
   }
 
   /**
-   * Generate embeddings
-   *
-   * Note: Claude doesn't have a native embedding API.
-   * This uses a simple hash-based approach for testing.
-   * For production, use OpenAI or another embedding service.
+   * Embeddings are not supported by Anthropic.
+   * Configure OpenAI, Ollama, or Local as the embedding provider.
    */
-  async embed(request: EmbeddingRequest): Promise<EmbeddingResponse> {
-    log.warn('Claude does not support embeddings natively, using fallback');
-
-    const embedding = this.createFallbackEmbedding(request.text);
-
-    return {
-      embedding,
-      usage: { inputTokens: 0, outputTokens: 0 },
-    };
-  }
-
-  /**
-   * Create a fallback embedding (for testing only)
-   */
-  private createFallbackEmbedding(text: string): number[] {
-    const dimensions = 1536;
-    const embedding: number[] = Array.from({ length: dimensions }, () => 0);
-
-    for (let i = 0; i < text.length; i++) {
-      const charCode = text.charCodeAt(i);
-      const idx = (i * 7 + charCode) % dimensions;
-      const current = embedding[idx] ?? 0;
-      embedding[idx] = (current + charCode / 255) % 1;
-    }
-
-    const magnitude = Math.sqrt(embedding.reduce((sum, val) => sum + val * val, 0));
-    if (magnitude > 0) {
-      for (let i = 0; i < dimensions; i++) {
-        const val = embedding[i];
-        if (val !== undefined) {
-          embedding[i] = val / magnitude;
-        }
-      }
-    }
-
-    return embedding;
+  async embed(_request: EmbeddingRequest): Promise<EmbeddingResponse> {
+    throw new Error(
+      'Anthropic does not support embeddings. Configure OpenAI, Ollama, or Local as your embedding provider.'
+    );
   }
 }
 

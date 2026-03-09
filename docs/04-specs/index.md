@@ -38,6 +38,12 @@ Technical specifications for Jack The Butler.
 | [File Uploads](features/file-uploads.md) | Media handling | Planned |
 | [Vector Search](features/vector-search.md) | Semantic search | Planned |
 
+## AI
+
+| Document | Description | Status |
+|----------|-------------|--------|
+| [AI Providers](ai/index.md) | Provider interface and implementation guide | Implemented |
+
 ## PMS
 
 | Document | Description | Status |
