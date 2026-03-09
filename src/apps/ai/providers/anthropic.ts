@@ -22,7 +22,7 @@ const log = createLogger('extensions:ai:anthropic');
 /**
  * Default Claude model
  */
-const DEFAULT_MODEL = 'claude-sonnet-4-20250514';
+const DEFAULT_MODEL = 'claude-sonnet-4-6';
 
 /**
  * Anthropic provider configuration
@@ -232,9 +232,9 @@ export const manifest: AIAppManifest = {
       description: 'Primary model for generating guest responses and conversations',
       default: DEFAULT_MODEL,
       options: [
-        { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4 (Recommended)' },
-        { value: 'claude-opus-4-20250514', label: 'Claude Opus 4 (Most Capable)' },
-        { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku (Fastest)' },
+        { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 (Recommended)' },
+        { value: 'claude-opus-4-6', label: 'Claude Opus 4.6 (Most Capable)' },
+        { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (Fastest)' },
       ],
     },
     {
@@ -243,10 +243,10 @@ export const manifest: AIAppManifest = {
       type: 'select',
       required: false,
       description: 'Smaller model for translation, classification, and search queries. Falls back to completion model if not set.',
-      default: 'claude-3-5-haiku-20241022',
+      default: 'claude-haiku-4-5-20251001',
       options: [
-        { value: 'claude-3-5-haiku-20241022', label: 'Claude 3.5 Haiku (Recommended)' },
-        { value: 'claude-sonnet-4-20250514', label: 'Claude Sonnet 4' },
+        { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (Recommended)' },
+        { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
       ],
     },
     {
