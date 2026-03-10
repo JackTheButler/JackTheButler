@@ -165,7 +165,7 @@ export const apps: App[] = [
     slug: 'mews',
     category: 'pms',
     summary: 'Modern cloud PMS with open API for seamless integration.',
-    status: 'coming-soon',
+    status: 'available',
   },
   {
     id: 'cloudbeds',

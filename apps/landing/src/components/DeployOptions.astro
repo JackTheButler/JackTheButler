@@ -1,6 +1,6 @@
 ---
 // Deployment options cards
-import { Terminal, Copy } from '@lucide/astro'
+import { Terminal, Copy, Calendar } from '@lucide/astro'
 ---
 
 <section id="deploy" class="py-24 px-6">
@@ -99,6 +99,29 @@ import { Terminal, Copy } from '@lucide/astro'
             </button>
           </div>
         </div>
+      </div>
+    </div>
+
+    <!-- Assisted Setup Card -->
+    <div class="install-card animate-on-scroll mt-6 p-8 rounded-2xl bg-blue-600 dark:bg-blue-600/80 border border-blue-500">
+      <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl bg-white/15 flex items-center justify-center shrink-0">
+            <Calendar class="w-7 h-7 text-white" />
+          </div>
+          <div>
+            <h3 class="text-xl font-semibold text-white mb-1">Go Live in 5 Minutes</h3>
+            <p class="text-blue-100 text-sm">Book a free 30-minute call. By the end, your guests never wait for a reply again.</p>
+          </div>
+        </div>
+        <a
+          href="https://calendly.com/a-karimzadeh/30min"
+          target="_blank"
+          rel="noopener"
+          class="shrink-0 inline-flex items-center justify-center gap-2 px-6 py-3 bg-white hover:bg-blue-50 text-blue-600 font-semibold rounded-xl transition-colors"
+        >
+          Book a Call
+        </a>
       </div>
     </div>
   </div>

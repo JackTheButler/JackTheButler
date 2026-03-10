@@ -1,6 +1,6 @@
 ---
 // Footer with final CTA and structured navigation
-import { Github } from '@lucide/astro'
+import { Calendar } from '@lucide/astro'
 ---
 
 <footer class="py-24 px-6 border-t border-neutral-200 dark:border-neutral-800">
@@ -15,17 +15,19 @@ import { Github } from '@lucide/astro'
       </p>
       <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
         <a
-          href="https://railway.com/deploy/jack-the-butler"
+          href="https://calendly.com/a-karimzadeh/30min"
+          target="_blank"
+          rel="noopener"
           class="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold rounded-full transition-colors"
         >
-          Deploy Free on Railway
+          <Calendar class="w-5 h-5" />
+          Book a Free Setup Call
         </a>
         <a
-          href="https://github.com/JackTheButler/JackTheButler"
+          href="https://railway.com/deploy/jack-the-butler"
           class="inline-flex items-center gap-2 px-8 py-4 text-neutral-700 dark:text-neutral-300 font-semibold rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
         >
-          <Github class="w-5 h-5" />
-          View on GitHub
+          Deploy Free on Railway
         </a>
       </div>
     </div>

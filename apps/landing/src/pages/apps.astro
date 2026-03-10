@@ -132,11 +132,11 @@ const categoryIcons: Record<AppCategory, any> = {
               >
                 <div class="flex items-start gap-4">
                   <!-- Logo -->
-                  <div class="w-12 h-12 rounded-xl bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center shrink-0 overflow-hidden">
+                  <div class={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 overflow-hidden ${app.status === 'available' ? 'bg-neutral-900 dark:bg-white' : 'bg-neutral-100 dark:bg-neutral-800'}`}>
                     {app.logo ? (
                       <img src={app.logo} alt={app.name} class="w-8 h-8 object-contain" />
                     ) : (
-                      <Icon class="w-6 h-6 text-neutral-400" />
+                      <Icon class={`w-6 h-6 ${app.status === 'available' ? 'text-white dark:text-neutral-900' : 'text-neutral-400'}`} />
                     )}
                   </div>
 
