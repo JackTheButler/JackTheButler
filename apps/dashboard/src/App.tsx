@@ -19,7 +19,7 @@ import { AutomationsPage } from '@/pages/engine/automations/Automations';
 import { AutomationEditPage } from '@/pages/engine/automations/AutomationEdit';
 import { AutomationGeneratePage } from '@/pages/engine/automations/AutomationGenerate';
 import { AutonomyPage } from '@/pages/engine/autonomy/Autonomy';
-import { SettingsPage } from '@/pages/engine/Settings';
+import { SettingsPage } from '@/pages/settings/Settings';
 import { ApprovalsPage } from '@/pages/review-center/Approvals';
 import { SiteScraperPage } from '@/pages/tools/SiteScraper';
 import { KnowledgeBasePage } from '@/pages/tools/KnowledgeBase';
