@@ -24,7 +24,8 @@ const { reversed = false, filled = false } = Astro.props
       <svg class="w-full h-full -rotate-90" viewBox="0 0 160 160">
         <circle cx="80" cy="80" r="68" fill="none" stroke="currentColor" stroke-width="6" class="text-neutral-100 dark:text-neutral-800"/>
         <circle id="clock-arc" cx="80" cy="80" r="68" fill="none" stroke="url(#clockGrad)" stroke-width="6"
-          stroke-dasharray="427" stroke-dashoffset="427" stroke-linecap="round"/>
+          stroke-dasharray="427" stroke-dashoffset="427" stroke-linecap="round"
+          style="transition: stroke-dashoffset 1s linear"/>
         <defs>
           <linearGradient id="clockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
             <stop offset="0%" stop-color="#6366f1"/>
@@ -33,7 +34,7 @@ const { reversed = false, filled = false } = Astro.props
         </defs>
       </svg>
       <div class="absolute inset-0 flex flex-col items-center justify-center">
-        <p id="clock-time" class="text-2xl font-bold tabular-nums">8:00am</p>
+        <p id="clock-time" class="text-2xl font-bold tabular-nums">12:00am</p>
         <p class="text-xs text-neutral-400 mt-0.5">always on</p>
       </div>
     </div>
@@ -48,60 +49,44 @@ const { reversed = false, filled = false } = Astro.props
 </FeatureRow>
 
 <script>
-  // simMin = minutes from midnight (0–1439)
-  const nightMessages = [
-    { time: '8:15am',  msg: 'What time is breakfast?',    resolved: true,  simMin: 495  },
-    { time: '11:30am', msg: 'Can I get a late checkout?', resolved: true,  simMin: 690  },
-    { time: '2:47pm',  msg: 'Pool opening hours?',        resolved: true,  simMin: 887  },
-    { time: '6:05pm',  msg: 'Dinner reservation for 2?',  resolved: true,  simMin: 1085 },
-    { time: '10:12pm', msg: 'Extra pillows please',       resolved: true,  simMin: 1332 },
-    { time: '12:03am', msg: 'WiFi password?',             resolved: true,  simMin: 3    },
-    { time: '1:17am',  msg: "Heating isn't working",      resolved: false, simMin: 77   },
-    { time: '4:51am',  msg: 'Taxi for 6am please',        resolved: true,  simMin: 291  },
+  // vMin = minutes from midnight (0–1439), cycle runs 00:00 → 23:59
+  const messages = [
+    { time: '12:03am', msg: 'WiFi password?',                   resolved: true,  vMin: 3    },
+    { time: '1:17am',  msg: "Heating isn't working",            resolved: false, vMin: 77   },
+    { time: '2:45am',  msg: 'Wake-up call for 7am?',            resolved: true,  vMin: 165  },
+    { time: '4:51am',  msg: 'Taxi for 6am please',              resolved: true,  vMin: 291  },
+    { time: '8:15am',  msg: 'What time is breakfast?',          resolved: true,  vMin: 495  },
+    { time: '9:00am',  msg: 'Can I get a late checkout?',       resolved: true,  vMin: 540  },
+    { time: '9:30am',  msg: 'Is parking included?',             resolved: true,  vMin: 570  },
+    { time: '1:15pm',  msg: 'Restaurant recommendations nearby?', resolved: true, vMin: 795 },
+    { time: '2:47pm',  msg: 'Pool opening hours?',              resolved: true,  vMin: 887  },
+    { time: '4:20pm',  msg: 'Can I store luggage after checkout?', resolved: true, vMin: 980 },
+    { time: '6:05pm',  msg: 'Dinner reservation for 2?',        resolved: true,  vMin: 1085 },
+    { time: '7:45pm',  msg: "What's the spa closing time?",     resolved: true,  vMin: 1185 },
+    { time: '8:50pm',  msg: 'Is room service still available?', resolved: true,  vMin: 1250 },
+    { time: '10:12pm', msg: 'Extra pillows please',             resolved: true,  vMin: 1332 },
   ]
 
-  // Simulate full 24h. 6 sim-min per real second → full cycle = 4 min.
-  const NIGHT_DURATION = 24 * 60 // 1440 min
-  const SIM_SPEED = 6
-  let simMin = 480 // start at 8:00am, just before first message
+  const DAY_START = 0     // 00:00 midnight
+  const DAY_END = 1440    // 23:59 → next midnight
+  const SIM_SPEED = 40    // sim-minutes per real second → full cycle ~36s
+  const CIRC = 427
+  let vMin = DAY_START
+  let timer: ReturnType<typeof setInterval> | null = null
 
-  function formatSimTime(m: number) {
-    const total = m % NIGHT_DURATION
+  function formatTime(v: number) {
+    const total = v % 1440
     const h = Math.floor(total / 60)
-    const min = total % 60
+    const m = total % 60
     const ampm = h >= 12 ? 'pm' : 'am'
     const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
-    return `${h12}:${String(min).padStart(2, '0')}${ampm}`
+    return `${h12}:${String(m).padStart(2, '0')}${ampm}`
   }
 
-  function updateClock() {
-    simMin = (simMin + SIM_SPEED) % NIGHT_DURATION
-    const el = document.getElementById('clock-time')
-    if (el) el.textContent = formatSimTime(simMin)
-    const arc = document.getElementById('clock-arc')
-    if (arc) {
-      const fraction = simMin / NIGHT_DURATION
-      arc.setAttribute('stroke-dashoffset', String(427 * (1 - fraction)))
-    }
-  }
-
-  let feedInitialized = false
-  let feedIdx = 0
-
-  function addFeedItem() {
+  function showMessage(item: typeof messages[0]) {
     const feed = document.getElementById('night-feed')
     if (!feed) return
-    if (!feedInitialized) {
-      feed.innerHTML = ''
-      feedInitialized = true
-    }
-    const idx = feedIdx % nightMessages.length
-    if (idx === 0) simMin = 480 // reset to 8am on loop
-    const item = nightMessages[idx]
-    feedIdx++
-    // Snap clock to match the message time
-    simMin = item.simMin
-    updateClock()
+    if (feed.querySelector('[aria-hidden]')) feed.innerHTML = ''
 
     const row = document.createElement('div')
     row.className = 'flex items-center gap-3 p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 feed-item'
@@ -115,27 +100,64 @@ const { reversed = false, filled = false } = Astro.props
             : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>'}
         </svg>
       </div>`
-    feed.insertBefore(row, feed.firstChild)
+    feed.appendChild(row)
 
-    // Fade out the oldest item before removing
     const children = Array.from(feed.children) as HTMLElement[]
     if (children.length > 3) {
-      const oldest = children[children.length - 1]
+      const oldest = children[0] as HTMLElement
       oldest.style.transition = 'opacity 0.3s ease'
       oldest.style.opacity = '0'
       setTimeout(() => oldest.remove(), 300)
     }
   }
 
+  function resetFeed() {
+    const feed = document.getElementById('night-feed')
+    if (feed) feed.innerHTML = `
+      <div class="h-[40px] rounded-lg opacity-0" aria-hidden="true"></div>
+      <div class="h-[40px] rounded-lg opacity-0" aria-hidden="true"></div>
+      <div class="h-[40px] rounded-lg opacity-0" aria-hidden="true"></div>`
+  }
+
+  function tick() {
+    const prev = vMin
+    vMin += SIM_SPEED
+
+    // Trigger any messages whose time falls in this tick's window
+    messages.forEach(msg => {
+      if (msg.vMin > prev && msg.vMin <= vMin) showMessage(msg)
+    })
+
+    // Update clock display
+    const el = document.getElementById('clock-time')
+    if (el) el.textContent = formatTime(vMin)
+
+    // Update arc (progress through the cycle, 0 → full)
+    const arc = document.getElementById('clock-arc')
+    if (arc) {
+      const fraction = Math.min((vMin - DAY_START) / (DAY_END - DAY_START), 1)
+      arc.setAttribute('stroke-dashoffset', String(CIRC * (1 - fraction)))
+    }
+
+    if (vMin >= DAY_END) {
+      if (timer) clearInterval(timer)
+      setTimeout(startClock, 2500)
+    }
+  }
+
+  function startClock() {
+    vMin = DAY_START
+    resetFeed()
+    const el = document.getElementById('clock-time')
+    if (el) el.textContent = '12:00am'
+    const arc = document.getElementById('clock-arc')
+    if (arc) arc.setAttribute('stroke-dashoffset', String(CIRC))
+    timer = setInterval(tick, 1000)
+  }
+
   const section = document.querySelector('[data-feature="runs-while-you-sleep"]')
   const clockObserver = new IntersectionObserver((entries) => {
-    if (entries[0].isIntersecting) {
-      updateClock()
-      setInterval(updateClock, 1000)
-      addFeedItem()
-      setInterval(addFeedItem, 2200)
-      clockObserver.disconnect()
-    }
+    if (entries[0].isIntersecting) { startClock(); clockObserver.disconnect() }
   }, { threshold: 0.3 })
   if (section) clockObserver.observe(section)
 </script>
