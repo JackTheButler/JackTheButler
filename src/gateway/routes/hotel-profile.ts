@@ -42,6 +42,7 @@ const hotelProfileSchema = z.object({
   currency: z.string().length(3).default('USD'), // ISO 4217 currency code
   checkInTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)').default('15:00'),
   checkOutTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, 'Invalid time format (HH:MM)').default('11:00'),
+  totalRooms: z.number().int().positive().optional(),
   propertyLanguage: z.string().min(2).max(10).default('en'),
   contactPhone: z.string().max(50).optional(),
   contactEmail: z.string().email().max(200).optional(),

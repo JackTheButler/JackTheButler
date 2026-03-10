@@ -43,6 +43,7 @@ interface HotelProfile {
   propertyLanguage?: string;
   checkInTime: string;
   checkOutTime: string;
+  totalRooms?: number;
   contactPhone?: string;
   contactEmail?: string;
   website?: string;
@@ -374,6 +375,18 @@ export function SettingsPage() {
                           placeholder={t('settings.hotelProfile.selectLanguage')}
                           searchPlaceholder={t('settings.hotelProfile.searchLanguage')}
                           emptyText={t('settings.hotelProfile.noLanguageFound')}
+                          disabled={!canManageSettings}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="totalRooms">Total Rooms</Label>
+                        <Input
+                          id="totalRooms"
+                          type="number"
+                          min={1}
+                          value={profileForm.totalRooms ?? ''}
+                          onChange={(e) => handleProfileChange('totalRooms', e.target.value ? Number(e.target.value) : undefined)}
+                          placeholder="e.g. 45"
                           disabled={!canManageSettings}
                         />
                       </div>

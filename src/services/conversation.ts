@@ -233,6 +233,23 @@ export class ConversationService {
   }
 
   /**
+   * Count conversations matching the same filters as list()
+   */
+  async count(options: Pick<ListConversationsOptions, 'state' | 'assignedTo'> = {}): Promise<number> {
+    const conditions = [];
+    if (options.state) conditions.push(eq(conversations.state, options.state));
+    if (options.assignedTo) conditions.push(eq(conversations.assignedTo, options.assignedTo));
+
+    const query = db
+      .select({ count: sql<number>`count(*)` })
+      .from(conversations)
+      .$dynamic();
+
+    const result = await (conditions.length > 0 ? query.where(and(...conditions)) : query).get();
+    return result?.count ?? 0;
+  }
+
+  /**
    * Get conversation details with related data
    */
   async getDetails(id: string): Promise<ConversationDetails> {

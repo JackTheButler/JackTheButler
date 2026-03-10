@@ -71,19 +71,25 @@ conversationsRouter.get('/stats', requirePermission(PERMISSIONS.CONVERSATIONS_VI
 conversationsRouter.get('/', requirePermission(PERMISSIONS.CONVERSATIONS_VIEW), validateQuery(listQuerySchema), async (c) => {
   const query = c.get('validatedQuery') as z.infer<typeof listQuerySchema>;
 
-  const conversations = await conversationService.list({
-    state: query.state,
-    assignedTo: query.assignedTo,
-    limit: query.limit,
-    offset: query.offset,
-  });
+  const [conversations, total] = await Promise.all([
+    conversationService.list({
+      state: query.state,
+      assignedTo: query.assignedTo,
+      limit: query.limit,
+      offset: query.offset,
+    }),
+    conversationService.count({
+      state: query.state,
+      assignedTo: query.assignedTo,
+    }),
+  ]);
 
   return c.json({
     conversations,
     pagination: {
       limit: query.limit,
       offset: query.offset,
-      total: conversations.length, // TODO: add total count
+      total,
     },
   });
 });

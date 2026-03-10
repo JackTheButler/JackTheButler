@@ -8,7 +8,7 @@
 
 import { Hono } from 'hono';
 import { eq, desc, sql, and, gte } from 'drizzle-orm';
-import { db, reservations, guests, conversations, tasks } from '@/db/index.js';
+import { db, reservations, guests, conversations, tasks, settings } from '@/db/index.js';
 import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 
@@ -68,10 +68,13 @@ reservationRoutes.get('/today', requirePermission(PERMISSIONS.RESERVATIONS_VIEW)
     )
     .get();
 
-  // Total rooms (from settings or hardcoded for now)
-  const totalRooms = 100; // TODO: Get from settings
+  // Total rooms from hotel profile settings
+  const profileRow = await db.select().from(settings).where(eq(settings.key, 'hotel_profile')).get();
+  const totalRooms: number | null = profileRow
+    ? (JSON.parse(profileRow.value) as { totalRooms?: number }).totalRooms ?? null
+    : null;
   const inHouse = inHouseResult?.count || 0;
-  const occupancyRate = Math.round((inHouse / totalRooms) * 100);
+  const occupancyRate = totalRooms ? Math.round((inHouse / totalRooms) * 100) : null;
 
   return c.json({
     date: todayStr,
