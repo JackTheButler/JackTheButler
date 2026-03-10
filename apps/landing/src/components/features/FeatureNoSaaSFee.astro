@@ -1,0 +1,79 @@
+---
+import FeatureRow from './FeatureRow.astro'
+interface Props { reversed?: boolean; filled?: boolean }
+const { reversed = false, filled = false } = Astro.props
+---
+
+<FeatureRow
+  featureId="no-saas-fee"
+  badge="Open Source"
+  badgeColor="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+  title="No Monthly Fee. Ever."
+  description="Jack is open source and self-hosted. You pay for your own server — typically a few dollars a month. No per-message billing, no platform fees, no vendor deciding to raise prices or shut down."
+  bullets={[
+    'MIT licensed — free to use, modify, and self-host',
+    "Your data lives on your server, not someone else's cloud",
+    'No lock-in — export everything, anytime',
+  ]}
+  reversed={reversed}
+  filled={filled}
+>
+  <div class="w-full max-w-sm space-y-5">
+    <!-- Competitors -->
+    <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-sm p-5">
+      <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-3">Typical SaaS chatbot</p>
+      <div class="space-y-2" id="saas-costs">
+        {[
+          { label: 'Monthly platform fee', val: '$299/mo' },
+          { label: 'Per-message charge', val: '$0.04/msg' },
+          { label: 'Setup fee', val: '$500' },
+          { label: 'Data export', val: 'Extra' },
+          { label: 'Your data stays private', val: '✗' },
+        ].map(r => (
+          <div class="flex items-center justify-between text-sm">
+            <span class="text-neutral-500">{r.label}</span>
+            <span class="font-semibold text-red-500">{r.val}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+    <!-- Jack -->
+    <div class="rounded-2xl border-2 border-emerald-400 dark:border-emerald-600 bg-white dark:bg-neutral-900 shadow-lg p-5 relative">
+      <div class="absolute -top-3 left-5 px-2.5 py-0.5 bg-emerald-500 text-white text-xs font-bold rounded-full">Jack The Butler</div>
+      <div class="space-y-2 mt-1" id="jack-costs">
+        {[
+          { label: 'Monthly platform fee', val: '$0' },
+          { label: 'Per-message charge', val: '$0' },
+          { label: 'Setup fee', val: '$0' },
+          { label: 'Data export', val: 'Always free' },
+          { label: 'Your data stays private', val: '✓' },
+        ].map((r, i) => (
+          <div class="flex items-center justify-between text-sm jack-cost-row opacity-0" style={`transition-delay: ${i * 0.1}s`}>
+            <span class="text-neutral-600 dark:text-neutral-400">{r.label}</span>
+            <span class={`font-semibold ${r.val === '✓' ? 'text-emerald-500' : 'text-emerald-600 dark:text-emerald-400'}`}>{r.val}</span>
+          </div>
+        ))}
+      </div>
+    </div>
+  </div>
+</FeatureRow>
+
+<script>
+  function runSaasAnimation() {
+    const rows = document.querySelectorAll('.jack-cost-row') as NodeListOf<HTMLElement>
+    rows.forEach(r => { r.style.opacity = '0' })
+    rows.forEach((r, i) => {
+      setTimeout(() => {
+        r.style.transition = `opacity 0.35s ease ${i * 0.12}s`
+        r.style.opacity = '1'
+        if (i === rows.length - 1) setTimeout(runSaasAnimation, 4000)
+      }, i * 200 + 400)
+    })
+  }
+
+  const section = document.querySelector('[data-feature="no-saas-fee"]')
+  const saasObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) { runSaasAnimation(); saasObserver.disconnect() }
+  }, { threshold: 0.3 })
+  if (section) saasObserver.observe(section)
+</script>

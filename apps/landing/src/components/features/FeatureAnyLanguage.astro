@@ -1,0 +1,122 @@
+---
+import FeatureRow from './FeatureRow.astro'
+interface Props { reversed?: boolean; filled?: boolean }
+const { reversed = false, filled = false } = Astro.props
+---
+
+<FeatureRow
+  featureId="any-language"
+  badge="Global Reach"
+  badgeColor="bg-emerald-100 dark:bg-emerald-900/40 text-emerald-700 dark:text-emerald-300"
+  title="Works in Any Language"
+  description="Guests write in their language. Jack replies in the same language — automatically. No setup, no translation plugins, no extra charge."
+  bullets={[
+    '95+ languages supported out of the box',
+    "Detects and matches the guest's language automatically",
+    'Staff dashboard always shown in your preferred language',
+  ]}
+  reversed={reversed}
+  filled={filled}
+>
+  <!-- Live language cycling card -->
+  <div class="w-full max-w-sm">
+    <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl p-6">
+      <p class="text-xs font-semibold text-neutral-400 uppercase tracking-wide mb-4">Guest message received</p>
+      <!-- Active language card -->
+      <div id="lang-card" class="p-5 rounded-xl border-2 border-blue-200 dark:border-blue-800 bg-blue-50 dark:bg-blue-900/20 mb-4">
+        <div class="flex items-center gap-3 mb-3">
+          <span id="lang-flag" class="text-3xl transition-all duration-300">🇬🇧</span>
+          <div>
+            <p id="lang-code" class="text-xs font-bold text-neutral-500">EN</p>
+            <p id="lang-name" class="text-sm font-semibold">English</p>
+          </div>
+        </div>
+        <p id="lang-msg" class="text-neutral-700 dark:text-neutral-300 text-sm leading-relaxed font-medium h-[40px] overflow-hidden"></p>
+      </div>
+      <!-- Jack's reply -->
+      <div class="flex items-start gap-3 p-4 rounded-xl bg-neutral-50 dark:bg-neutral-800">
+        <div class="w-7 h-7 rounded-full bg-neutral-900 dark:bg-white shrink-0 flex items-center justify-center">
+          <img src="/butler.svg" alt="" class="w-4 h-4 dark:invert invert" />
+        </div>
+        <p id="lang-reply" class="text-sm text-neutral-600 dark:text-neutral-400 leading-relaxed h-[56px] overflow-hidden"></p>
+      </div>
+      <!-- Language dots -->
+      <div class="flex items-center justify-center gap-2 mt-4">
+        {[0,1,2,3,4,5].map(i => (
+          <div class="lang-dot w-1.5 h-1.5 rounded-full bg-neutral-300 dark:bg-neutral-600 transition-all duration-300" data-index={i}></div>
+        ))}
+      </div>
+    </div>
+  </div>
+</FeatureRow>
+
+<script>
+  const languages = [
+    { flag: '🇬🇧', code: 'EN', name: 'English',  rtl: false, msg: 'Is breakfast included?',              reply: "Yes! Breakfast is served 7–10am in the main dining room. It's included with your room." },
+    { flag: '🇫🇷', code: 'FR', name: 'French',   rtl: false, msg: 'Le petit-déjeuner est-il inclus ?',   reply: 'Oui ! Le petit-déjeuner est servi de 7h à 10h dans la salle à manger principale.' },
+    { flag: '🇪🇸', code: 'ES', name: 'Spanish',  rtl: false, msg: '¿Está incluido el desayuno?',         reply: '¡Sí! El desayuno se sirve de 7 a 10h en el comedor principal. Está incluido.' },
+    { flag: '🇩🇪', code: 'DE', name: 'German',   rtl: false, msg: 'Ist das Frühstück inklusive?',        reply: 'Ja! Das Frühstück wird von 7–10 Uhr im Hauptspeisesaal serviert.' },
+    { flag: '🇸🇦', code: 'AR', name: 'Arabic',   rtl: true,  msg: 'هل الإفطار مشمول؟',                  reply: 'نعم! يُقدَّم الإفطار من الساعة ٧ حتى ١٠ صباحاً في قاعة الطعام الرئيسية.' },
+    { flag: '🇨🇳', code: 'ZH', name: 'Chinese',  rtl: false, msg: '早餐包含在内吗？',                    reply: '是的！早餐在主餐厅供应，时间为早上7点至10点，含在房费中。' },
+  ]
+  let langIdx = 0
+
+  function updateLang(idx: number) {
+    const l = languages[idx]
+    const card = document.getElementById('lang-card')
+    const flag = document.getElementById('lang-flag')
+    const code = document.getElementById('lang-code')
+    const name = document.getElementById('lang-name')
+    const msg  = document.getElementById('lang-msg')
+    const reply = document.getElementById('lang-reply')
+    if (!card || !flag || !code || !name || !msg || !reply) return
+
+    card.style.opacity = '0'
+    card.style.transform = 'translateY(6px)'
+    reply.style.opacity = '0'
+
+    setTimeout(() => {
+      flag.textContent = l.flag
+      code.textContent = l.code
+      name.textContent = l.name
+      msg.textContent = l.msg
+      msg.setAttribute('dir', l.rtl ? 'rtl' : 'ltr')
+      card.style.opacity = '1'
+      card.style.transform = 'translateY(0)'
+    }, 250)
+
+    setTimeout(() => {
+      if (reply) {
+        reply.textContent = l.reply
+        reply.setAttribute('dir', l.rtl ? 'rtl' : 'ltr')
+      }
+      reply.style.opacity = '1'
+    }, 700)
+
+    document.querySelectorAll('.lang-dot').forEach((dot, i) => {
+      const el = dot as HTMLElement
+      if (i === idx) {
+        el.style.width = '20px'
+        el.style.backgroundColor = '#3b82f6'
+      } else {
+        el.style.width = '6px'
+        el.style.backgroundColor = ''
+      }
+    })
+  }
+
+  const langCard = document.getElementById('lang-card')
+  if (langCard) {
+    langCard.style.transition = 'opacity 0.25s ease, transform 0.25s ease'
+  }
+  const langReply = document.getElementById('lang-reply')
+  if (langReply) {
+    langReply.style.transition = 'opacity 0.3s ease'
+  }
+
+  updateLang(0)
+  setInterval(() => {
+    langIdx = (langIdx + 1) % languages.length
+    updateLang(langIdx)
+  }, 2800)
+</script>

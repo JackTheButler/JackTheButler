@@ -1,0 +1,111 @@
+---
+import FeatureRow from './FeatureRow.astro'
+interface Props { reversed?: boolean; filled?: boolean }
+const { reversed = false, filled = false } = Astro.props
+---
+
+<FeatureRow
+  featureId="stay-in-control"
+  badge="Human in the Loop"
+  badgeColor="bg-red-100 dark:bg-red-900/40 text-red-700 dark:text-red-300"
+  title="You Stay in Control"
+  description="Jack handles routine messages automatically and escalates anything complex or sensitive to your team. You see every conversation and can step in at any time."
+  bullets={[
+    'Smart escalation — urgent issues reach staff instantly',
+    'Staff can take over any conversation with one click',
+    'Full audit log of every message and action',
+  ]}
+  reversed={reversed}
+  filled={filled}
+>
+  <div class="w-full max-w-sm">
+    <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+        <p class="font-semibold text-sm">Conversations</p>
+        <span id="escalation-badge" class="px-2.5 py-1 text-xs bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-full font-medium flex items-center gap-1.5">
+          <span class="w-1.5 h-1.5 rounded-full bg-red-500 animate-pulse inline-block"></span>
+          1 needs attention
+        </span>
+      </div>
+      <div id="escalation-list" class="divide-y divide-neutral-100 dark:divide-neutral-800">
+        <!-- JS-driven -->
+      </div>
+    </div>
+  </div>
+</FeatureRow>
+
+<script>
+  const convItems = [
+    { name: 'Anya L.',   room: '108', msg: 'Could I get a wine list?',        tag: 'Handled',   color: 'emerald', time: 'now' },
+    { name: 'David K.',  room: '301', msg: "My AC is broken, it's very hot",  tag: 'Escalated', color: 'red',     time: '4m ago' },
+    { name: 'James T.',  room: '215', msg: 'Thanks, all good!',               tag: 'Resolved',  color: 'neutral', time: '12m ago' },
+    { name: 'Priya S.',  room: '412', msg: 'Room service menu please',        tag: 'Handled',   color: 'emerald', time: '18m ago' },
+  ]
+  let escStep = 0
+
+  function tagClass(color: string) {
+    if (color === 'red')     return 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
+    if (color === 'emerald') return 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+    return 'bg-neutral-100 dark:bg-neutral-800 text-neutral-500'
+  }
+
+  function buildEscRow(item: typeof convItems[0], visible: boolean) {
+    const row = document.createElement('div')
+    row.className = 'px-5 py-4 flex items-start gap-3'
+    row.style.transition = 'opacity 0.35s ease, transform 0.35s ease'
+    row.style.opacity = visible ? '1' : '0'
+    row.style.transform = visible ? 'translateY(0)' : 'translateY(-8px)'
+    row.innerHTML = `
+      <div class="w-9 h-9 rounded-full bg-neutral-200 dark:bg-neutral-700 flex items-center justify-center text-sm font-bold shrink-0">${item.name[0]}</div>
+      <div class="flex-1 min-w-0">
+        <div class="flex items-center justify-between gap-2 mb-0.5">
+          <p class="text-sm font-medium text-neutral-900 dark:text-white">${item.name} <span class="text-neutral-400 font-normal">· ${item.room}</span></p>
+          <p class="text-xs text-neutral-400 shrink-0">${item.time}</p>
+        </div>
+        <p class="text-xs text-neutral-500 truncate">${item.msg}</p>
+        <span class="mt-1.5 inline-block px-2 py-0.5 text-xs rounded-full font-medium ${tagClass(item.color)}">${item.tag}</span>
+      </div>`
+    return row
+  }
+
+  let escRows: HTMLElement[] = []
+
+  function initEscalation() {
+    const list = document.getElementById('escalation-list')
+    if (!list) return
+    list.innerHTML = ''
+    escRows = convItems.map((item) => {
+      const row = buildEscRow(item, false)
+      list.appendChild(row)
+      return row
+    })
+  }
+
+  function runEscalation() {
+    initEscalation()
+    escRows.forEach(r => { r.style.opacity = '0'; r.style.transform = 'translateY(-8px)' })
+    escStep = 0
+    const interval = setInterval(() => {
+      if (escStep < escRows.length) {
+        const row = escRows[escStep]
+        row.style.opacity = '1'
+        row.style.transform = 'translateY(0)'
+        if (escStep === 1) row.style.background = 'rgba(239,68,68,0.04)'
+      }
+      escStep++
+      if (escStep >= convItems.length) {
+        clearInterval(interval)
+        setTimeout(runEscalation, 3000)
+      }
+    }, 1100)
+  }
+
+  const section = document.querySelector('[data-feature="stay-in-control"]')
+  const escObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      runEscalation()
+      escObserver.disconnect()
+    }
+  }, { threshold: 0.3 })
+  if (section) escObserver.observe(section)
+</script>

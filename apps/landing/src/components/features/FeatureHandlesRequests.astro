@@ -1,0 +1,107 @@
+---
+import FeatureRow from './FeatureRow.astro'
+interface Props { reversed?: boolean; filled?: boolean }
+const { reversed = false, filled = false } = Astro.props
+---
+
+<FeatureRow
+  featureId="handles-requests"
+  badge="Automation"
+  badgeColor="bg-orange-100 dark:bg-orange-900/40 text-orange-700 dark:text-orange-300"
+  title="Handles Requests Automatically"
+  description="Towels, restaurant bookings, late checkouts — Jack captures each request, logs it as a task, and routes it to the right team member. No calls, no stickies, no missed requests."
+  bullets={[
+    'Creates and assigns tasks from guest messages',
+    'Integrates with your PMS and operations workflow',
+    'Notifies staff with full context — no back-and-forth',
+  ]}
+  reversed={reversed}
+  filled={filled}
+>
+  <div class="w-full max-w-sm">
+    <div class="rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl overflow-hidden">
+      <div class="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800 flex items-center justify-between">
+        <p class="font-semibold text-sm">Today's Tasks</p>
+        <span id="task-badge" class="px-2.5 py-1 text-xs bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 rounded-full font-medium">0 done</span>
+      </div>
+      <div id="task-list" class="divide-y divide-neutral-100 dark:divide-neutral-800">
+        <!-- JS-driven -->
+      </div>
+    </div>
+  </div>
+</FeatureRow>
+
+<script>
+  const tasks = [
+    { icon: '🛎️', task: 'Extra towels · Room 204', dept: 'Housekeeping' },
+    { icon: '🍽️', task: 'Table for 2 at 7pm',      dept: 'Restaurant' },
+    { icon: '🔑', task: 'Late checkout request',    dept: 'Front desk' },
+    { icon: '🧳', task: 'Luggage storage on departure', dept: 'Concierge' },
+  ]
+
+  function buildTaskRow(t: typeof tasks[0], done: boolean) {
+    const row = document.createElement('div')
+    row.className = 'flex items-start gap-3 px-5 py-4 task-row' + (done ? ' done' : '')
+    row.innerHTML = `
+      <span class="text-xl mt-0.5 shrink-0">${t.icon}</span>
+      <div class="flex-1 min-w-0">
+        <p class="text-sm font-medium ${done ? 'line-through text-neutral-400' : 'text-neutral-900 dark:text-white'}">${t.task}</p>
+        <p class="text-xs text-neutral-400 mt-0.5">${t.dept}</p>
+      </div>
+      <div class="shrink-0 w-6 h-6 rounded-full border-2 flex items-center justify-center transition-all duration-300 ${done ? 'bg-emerald-500 border-emerald-500' : 'border-neutral-300 dark:border-neutral-600'}">
+        ${done ? '<svg class="w-3.5 h-3.5 text-white checkmark-svg" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/></svg>' : ''}
+      </div>`
+    return row
+  }
+
+  function initTaskList() {
+    const list = document.getElementById('task-list')
+    const badge = document.getElementById('task-badge')
+    if (!list) return
+    list.innerHTML = ''
+    tasks.forEach(t => list.appendChild(buildTaskRow(t, false)))
+    if (badge) {
+      badge.textContent = '0 done'
+      badge.className = 'px-2.5 py-1 text-xs rounded-full font-medium bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+    }
+  }
+
+  function completeTask(index: number) {
+    const list = document.getElementById('task-list')
+    const badge = document.getElementById('task-badge')
+    if (!list) return
+    const rows = list.querySelectorAll('.task-row')
+    const row = rows[index] as HTMLElement
+    if (!row) return
+    // Replace only this row with its done version (triggers checkmark animation once)
+    const newRow = buildTaskRow(tasks[index], true)
+    list.replaceChild(newRow, row)
+    if (badge) {
+      const doneCount = index + 1
+      badge.textContent = `${doneCount} done`
+      badge.className = 'px-2.5 py-1 text-xs rounded-full font-medium bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
+    }
+  }
+
+  function runTaskAnimation() {
+    initTaskList()
+    let done = 0
+    const interval = setInterval(() => {
+      completeTask(done)
+      done++
+      if (done >= tasks.length) {
+        clearInterval(interval)
+        setTimeout(runTaskAnimation, 2500)
+      }
+    }, 900)
+  }
+
+  const section = document.querySelector('[data-feature="handles-requests"]')
+  const taskObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      runTaskAnimation()
+      taskObserver.disconnect()
+    }
+  }, { threshold: 0.3 })
+  if (section) taskObserver.observe(section)
+</script>

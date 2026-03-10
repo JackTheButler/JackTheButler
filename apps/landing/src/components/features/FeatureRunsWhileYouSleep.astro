@@ -1,0 +1,141 @@
+---
+import FeatureRow from './FeatureRow.astro'
+interface Props { reversed?: boolean; filled?: boolean }
+const { reversed = false, filled = false } = Astro.props
+---
+
+<FeatureRow
+  featureId="runs-while-you-sleep"
+  badge="24/7 Operation"
+  badgeColor="bg-indigo-100 dark:bg-indigo-900/40 text-indigo-700 dark:text-indigo-300"
+  title="Runs While You Sleep"
+  description="Most guest messages come after 9pm. Jack handles the night shift — no night reception, no missed enquiries, no lost bookings. Once deployed, it just runs."
+  bullets={[
+    'Self-hosted — runs on your server, no external dependency',
+    'Zero-downtime deployments and automatic restarts',
+    'Urgent requests escalated immediately via WhatsApp or email',
+  ]}
+  reversed={reversed}
+  filled={filled}
+>
+  <div class="w-full max-w-sm rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl p-6 text-center">
+    <!-- Animated clock -->
+    <div class="relative w-44 h-44 mx-auto mb-6">
+      <svg class="w-full h-full -rotate-90" viewBox="0 0 160 160">
+        <circle cx="80" cy="80" r="68" fill="none" stroke="currentColor" stroke-width="6" class="text-neutral-100 dark:text-neutral-800"/>
+        <circle id="clock-arc" cx="80" cy="80" r="68" fill="none" stroke="url(#clockGrad)" stroke-width="6"
+          stroke-dasharray="427" stroke-dashoffset="427" stroke-linecap="round"/>
+        <defs>
+          <linearGradient id="clockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stop-color="#6366f1"/>
+            <stop offset="100%" stop-color="#10b981"/>
+          </linearGradient>
+        </defs>
+      </svg>
+      <div class="absolute inset-0 flex flex-col items-center justify-center">
+        <p id="clock-time" class="text-2xl font-bold tabular-nums">8:00am</p>
+        <p class="text-xs text-neutral-400 mt-0.5">always on</p>
+      </div>
+    </div>
+    <!-- Rolling message feed -->
+    <div id="night-feed" class="space-y-2 overflow-hidden h-[132px] flex flex-col justify-end">
+      <!-- Pre-fill with invisible placeholders to hold height -->
+      <div class="h-[40px] rounded-lg opacity-0" aria-hidden="true"></div>
+      <div class="h-[40px] rounded-lg opacity-0" aria-hidden="true"></div>
+      <div class="h-[40px] rounded-lg opacity-0" aria-hidden="true"></div>
+    </div>
+  </div>
+</FeatureRow>
+
+<script>
+  // simMin = minutes from midnight (0–1439)
+  const nightMessages = [
+    { time: '8:15am',  msg: 'What time is breakfast?',    resolved: true,  simMin: 495  },
+    { time: '11:30am', msg: 'Can I get a late checkout?', resolved: true,  simMin: 690  },
+    { time: '2:47pm',  msg: 'Pool opening hours?',        resolved: true,  simMin: 887  },
+    { time: '6:05pm',  msg: 'Dinner reservation for 2?',  resolved: true,  simMin: 1085 },
+    { time: '10:12pm', msg: 'Extra pillows please',       resolved: true,  simMin: 1332 },
+    { time: '12:03am', msg: 'WiFi password?',             resolved: true,  simMin: 3    },
+    { time: '1:17am',  msg: "Heating isn't working",      resolved: false, simMin: 77   },
+    { time: '4:51am',  msg: 'Taxi for 6am please',        resolved: true,  simMin: 291  },
+  ]
+
+  // Simulate full 24h. 6 sim-min per real second → full cycle = 4 min.
+  const NIGHT_DURATION = 24 * 60 // 1440 min
+  const SIM_SPEED = 6
+  let simMin = 480 // start at 8:00am, just before first message
+
+  function formatSimTime(m: number) {
+    const total = m % NIGHT_DURATION
+    const h = Math.floor(total / 60)
+    const min = total % 60
+    const ampm = h >= 12 ? 'pm' : 'am'
+    const h12 = h === 0 ? 12 : h > 12 ? h - 12 : h
+    return `${h12}:${String(min).padStart(2, '0')}${ampm}`
+  }
+
+  function updateClock() {
+    simMin = (simMin + SIM_SPEED) % NIGHT_DURATION
+    const el = document.getElementById('clock-time')
+    if (el) el.textContent = formatSimTime(simMin)
+    const arc = document.getElementById('clock-arc')
+    if (arc) {
+      const fraction = simMin / NIGHT_DURATION
+      arc.setAttribute('stroke-dashoffset', String(427 * (1 - fraction)))
+    }
+  }
+
+  let feedInitialized = false
+  let feedIdx = 0
+
+  function addFeedItem() {
+    const feed = document.getElementById('night-feed')
+    if (!feed) return
+    if (!feedInitialized) {
+      feed.innerHTML = ''
+      feedInitialized = true
+    }
+    const idx = feedIdx % nightMessages.length
+    if (idx === 0) simMin = 480 // reset to 8am on loop
+    const item = nightMessages[idx]
+    feedIdx++
+    // Snap clock to match the message time
+    simMin = item.simMin
+    updateClock()
+
+    const row = document.createElement('div')
+    row.className = 'flex items-center gap-3 p-2.5 rounded-lg bg-neutral-50 dark:bg-neutral-800 feed-item'
+    row.innerHTML = `
+      <p class="text-xs text-neutral-400 w-14 shrink-0">${item.time}</p>
+      <p class="text-xs text-neutral-700 dark:text-neutral-300 flex-1 truncate">${item.msg}</p>
+      <div class="w-4 h-4 rounded-full flex items-center justify-center shrink-0 ${item.resolved ? 'bg-emerald-500' : 'bg-orange-400'}">
+        <svg class="w-2.5 h-2.5 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          ${item.resolved
+            ? '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7"/>'
+            : '<path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M13 10V3L4 14h7v7l9-11h-7z"/>'}
+        </svg>
+      </div>`
+    feed.insertBefore(row, feed.firstChild)
+
+    // Fade out the oldest item before removing
+    const children = Array.from(feed.children) as HTMLElement[]
+    if (children.length > 3) {
+      const oldest = children[children.length - 1]
+      oldest.style.transition = 'opacity 0.3s ease'
+      oldest.style.opacity = '0'
+      setTimeout(() => oldest.remove(), 300)
+    }
+  }
+
+  const section = document.querySelector('[data-feature="runs-while-you-sleep"]')
+  const clockObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) {
+      updateClock()
+      setInterval(updateClock, 1000)
+      addFeedItem()
+      setInterval(addFeedItem, 2200)
+      clockObserver.disconnect()
+    }
+  }, { threshold: 0.3 })
+  if (section) clockObserver.observe(section)
+</script>

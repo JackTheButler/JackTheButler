@@ -1,0 +1,136 @@
+---
+import FeatureRow from './FeatureRow.astro'
+interface Props { reversed?: boolean; filled?: boolean }
+const { reversed = false, filled = false } = Astro.props
+---
+
+<FeatureRow
+  featureId="upsell"
+  badge="Revenue"
+  badgeColor="bg-yellow-100 dark:bg-yellow-900/40 text-yellow-700 dark:text-yellow-300"
+  title="Upsell at the Right Moment"
+  description="Jack recognises upsell opportunities mid-conversation and offers the right add-on at the right time — late checkout, room upgrades, spa bookings, breakfast. No pushy sales, just helpful suggestions that convert."
+  bullets={[
+    'Late checkout, upgrades, spa, dining — all handled in chat',
+    'Offer triggered naturally from guest context, not scripts',
+    'Every accepted upsell logged and visible in the dashboard',
+  ]}
+  reversed={reversed}
+  filled={filled}
+>
+  <div class="w-full max-w-sm rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 p-5 shadow-xl">
+    <div class="flex items-center gap-3 mb-4 pb-3 border-b border-neutral-200 dark:border-neutral-800">
+      <div class="w-8 h-8 rounded-full bg-neutral-900 dark:bg-white flex items-center justify-center">
+        <img src="/butler.svg" alt="" class="w-5 h-5 dark:invert invert" />
+      </div>
+      <div class="flex-1">
+        <p class="text-sm font-semibold">Jack</p>
+      </div>
+      <div id="upsell-revenue" class="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400 text-xs font-semibold opacity-0 transition-opacity duration-500">
+        +£0 revenue
+      </div>
+    </div>
+    <div id="upsell-messages" class="space-y-3 h-[180px] overflow-hidden flex flex-col justify-end"></div>
+    <div class="mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-800 flex gap-2">
+      <div class="flex-1 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700"></div>
+      <div class="w-8 h-8 rounded-full bg-blue-600"></div>
+    </div>
+  </div>
+</FeatureRow>
+
+<script>
+  const upsellConversations = [
+    [
+      { role: 'guest', text: 'What time is checkout?' },
+      { role: 'ai',    text: 'Checkout is at 11am. Want to stay until 2pm? Late checkout is just £20.', upsell: true },
+      { role: 'guest', text: 'Yes please!' },
+      { role: 'ai',    text: 'Done! Late checkout until 2pm confirmed. Enjoy your morning ☕', revenue: 20 },
+    ],
+    [
+      { role: 'guest', text: 'Is there a spa at the hotel?' },
+      { role: 'ai',    text: "Yes! The spa is open 9am–8pm. I can book a 60-min massage for £65 — want me to check availability?", upsell: true },
+      { role: 'guest', text: 'That sounds great!' },
+      { role: 'ai',    text: "Booked! Massage at 4pm tomorrow in the spa. You're all set 🧖", revenue: 65 },
+    ],
+    [
+      { role: 'guest', text: 'Do you have a sea view room available?' },
+      { role: 'ai',    text: 'We do! A sea view upgrade from your current room is available for £35/night. Shall I switch you?', upsell: true },
+      { role: 'guest', text: 'Yes!' },
+      { role: 'ai',    text: 'Upgraded! Room 412 with ocean view. Enjoy the view 🌊', revenue: 35 },
+    ],
+  ]
+  let upsellIdx = 0
+  let upsellBubbleIdx = 0
+  let totalRevenue = 0
+
+  function appendUpsellBubble(role: string, text: string, upsell = false) {
+    const container = document.getElementById('upsell-messages')
+    if (!container) return
+    const wrap = document.createElement('div')
+    wrap.className = role === 'guest' ? 'flex justify-end chat-entry' : 'flex chat-entry'
+    const bubble = document.createElement('div')
+    bubble.className = role === 'guest'
+      ? 'bg-blue-600 text-white text-sm rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]'
+      : upsell
+        ? 'bg-yellow-50 dark:bg-yellow-900/20 border border-yellow-200 dark:border-yellow-700 text-sm rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]'
+        : 'bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]'
+    bubble.textContent = text
+    wrap.appendChild(bubble)
+    container.appendChild(wrap)
+  }
+
+  function showUpsellTyping() {
+    const container = document.getElementById('upsell-messages')
+    if (!container) return
+    const wrap = document.createElement('div')
+    wrap.id = 'upsell-typing'
+    wrap.className = 'flex chat-entry'
+    wrap.innerHTML = `<div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1">
+      <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span></div>`
+    container.appendChild(wrap)
+  }
+
+  function runUpsellStep() {
+    const conv = upsellConversations[upsellIdx]
+    if (upsellBubbleIdx >= conv.length) {
+      setTimeout(() => {
+        const container = document.getElementById('upsell-messages')
+        if (container) container.innerHTML = ''
+        upsellIdx = (upsellIdx + 1) % upsellConversations.length
+        upsellBubbleIdx = 0
+        runUpsellStep()
+      }, 3000)
+      return
+    }
+    const msg = conv[upsellBubbleIdx]
+    if (msg.role === 'ai') {
+      showUpsellTyping()
+      setTimeout(() => {
+        document.getElementById('upsell-typing')?.remove()
+        appendUpsellBubble('ai', msg.text, !!(msg as any).upsell)
+        if ((msg as any).revenue) {
+          totalRevenue += (msg as any).revenue
+          const badge = document.getElementById('upsell-revenue')
+          if (badge) {
+            badge.textContent = `+£${totalRevenue} revenue`
+            badge.style.opacity = '1'
+            badge.classList.add('upsell-pop')
+            setTimeout(() => badge.classList.remove('upsell-pop'), 400)
+          }
+        }
+        upsellBubbleIdx++
+        setTimeout(runUpsellStep, 900)
+      }, 1200)
+    } else {
+      appendUpsellBubble('guest', msg.text)
+      upsellBubbleIdx++
+      setTimeout(runUpsellStep, 700)
+    }
+  }
+
+  const section = document.querySelector('[data-feature="upsell"]')
+  const upsellObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) { runUpsellStep(); upsellObserver.disconnect() }
+  }, { threshold: 0.3 })
+  if (section) upsellObserver.observe(section)
+</script>

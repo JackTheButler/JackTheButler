@@ -1,6 +1,6 @@
 ---
 // Header with logo, navigation, and theme toggle
-import { Github, Menu, X, Home, FileText, Rocket, Play, Package } from '@lucide/astro'
+import { Github, Menu, X, Home, FileText, Rocket, Play, Package, Sparkles } from '@lucide/astro'
 
 const pathname = Astro.url.pathname
 const isActive = (href: string) => pathname.startsWith(href)
@@ -39,13 +39,16 @@ const linkClass = (href: string) => isActive(href)
         <a href="https://demo.jackthebutler.com/" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
           Try Demo
         </a>
-        <a href="/apps/" class={linkClass('/apps/')}>
+        <a href="/features/" class={linkClass('/features/')}>
+          Features
+        </a>
+        <a href="/apps/" class={`hidden lg:block ${linkClass('/apps/')}`}>
           Apps
         </a>
-        <a href="/docs/getting-started/introduction/" class={linkClass('/docs/')}>
+        <a href="/docs/getting-started/introduction/" class={`hidden lg:block ${linkClass('/docs/')}`}>
           Docs
         </a>
-        <a href="https://github.com/JackTheButler/JackTheButler" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
+        <a href="https://github.com/JackTheButler/JackTheButler" class="hidden lg:block text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
           <Github class="w-5 h-5" />
         </a>
       </nav>
@@ -87,6 +90,10 @@ const linkClass = (href: string) => isActive(href)
       <a href="https://demo.jackthebutler.com/" class="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
         <Play class="w-4 h-4" />
         Try Demo
+      </a>
+      <a href="/features/" class={`flex items-center gap-2 ${isActive('/features/') ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'} transition-colors`}>
+        <Sparkles class="w-4 h-4" />
+        Features
       </a>
       <a href="/apps/" class={`flex items-center gap-2 ${isActive('/apps/') ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'} transition-colors`}>
         <Package class="w-4 h-4" />

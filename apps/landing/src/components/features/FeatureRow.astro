@@ -1,0 +1,32 @@
+---
+interface Props {
+  badge: string
+  badgeColor: string
+  title: string
+  description: string
+  bullets: string[]
+  reversed?: boolean
+  filled?: boolean
+  featureId?: string
+}
+const { badge, badgeColor, title, description, bullets, reversed = false, filled = false, featureId } = Astro.props
+---
+
+<section
+  class={`feature-row py-20 px-6 ${filled ? 'bg-neutral-50 dark:bg-neutral-900/30' : 'border-t border-neutral-100 dark:border-neutral-800/60'}`}
+  data-feature={featureId}
+>
+  <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+    <div class={`feature-text ${reversed ? 'order-1 md:order-2' : ''}`}>
+      <span class={`feature-badge ${badgeColor}`}>{badge}</span>
+      <h2 class="feature-title">{title}</h2>
+      <p class="feature-desc">{description}</p>
+      <ul class="feature-list">
+        {bullets.map(b => <li>{b}</li>)}
+      </ul>
+    </div>
+    <div class={`feature-visual flex justify-center ${reversed ? 'order-2 md:order-1' : ''}`}>
+      <slot />
+    </div>
+  </div>
+</section>

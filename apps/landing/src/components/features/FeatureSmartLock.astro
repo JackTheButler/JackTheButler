@@ -1,0 +1,131 @@
+---
+import FeatureRow from './FeatureRow.astro'
+interface Props { reversed?: boolean; filled?: boolean }
+const { reversed = false, filled = false } = Astro.props
+---
+
+<FeatureRow
+  featureId="smart-lock"
+  badge="Smart Lock"
+  badgeColor="bg-neutral-100 dark:bg-neutral-800 text-neutral-700 dark:text-neutral-300"
+  title="Check In Without the Queue"
+  description="Jack connects to your smart locks and sends each guest their door code via WhatsApp at check-in time. Guests go straight to their room. Reception handles exceptions, not every arrival."
+  bullets={[
+    'Code delivered automatically when room is ready',
+    'Works with major smart lock providers',
+    "Reception notified if guest doesn't confirm receipt",
+  ]}
+  reversed={reversed}
+  filled={filled}
+>
+  <div class="w-full max-w-[260px]">
+    <!-- Phone mockup -->
+    <div class="relative mx-auto rounded-[2rem] border-4 border-neutral-900 dark:border-neutral-700 bg-neutral-900 shadow-2xl overflow-hidden" style="aspect-ratio: 9/18;">
+      <!-- Screen -->
+      <div class="absolute inset-0 bg-white dark:bg-neutral-950 flex flex-col">
+        <!-- WhatsApp header -->
+        <div class="bg-emerald-600 px-4 pt-8 pb-3 flex items-center gap-3">
+          <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center">
+            <img src="/butler.svg" alt="" class="w-5 h-5 invert" />
+          </div>
+          <div>
+            <p class="text-white text-sm font-semibold">Jack The Butler</p>
+            <p class="text-emerald-200 text-xs">online</p>
+          </div>
+        </div>
+        <!-- Chat area -->
+        <div class="flex-1 p-3 bg-[#e5ddd5] dark:bg-neutral-800 flex flex-col justify-end gap-2">
+          <div id="lock-bubble-1" class="max-w-[85%] self-start bg-white dark:bg-neutral-700 rounded-xl rounded-tl-sm p-3 shadow-sm opacity-0">
+            <p class="text-xs text-neutral-700 dark:text-neutral-200">Hi Sarah! Your room is ready. 🎉</p>
+            <p class="text-[10px] text-neutral-400 text-right mt-1">14:03</p>
+          </div>
+          <div id="lock-bubble-2" class="max-w-[85%] self-start bg-white dark:bg-neutral-700 rounded-xl rounded-tl-sm p-3 shadow-sm opacity-0">
+            <p class="text-xs text-neutral-700 dark:text-neutral-200 mb-2">Your door code for Room 204:</p>
+            <div class="flex gap-1.5 justify-center">
+              {['4','8','2','1'].map(d => (
+                <div class="w-8 h-10 rounded-lg bg-neutral-900 dark:bg-neutral-900 flex items-center justify-center text-white font-bold text-lg">{d}</div>
+              ))}
+            </div>
+            <p class="text-[10px] text-neutral-400 text-right mt-2">14:03</p>
+          </div>
+        </div>
+      </div>
+      <!-- Notch -->
+      <div class="absolute top-0 left-1/2 -translate-x-1/2 w-24 h-6 bg-neutral-900 dark:bg-neutral-700 rounded-b-2xl"></div>
+    </div>
+    <!-- Lock widget below phone -->
+    <div class="mt-5 flex justify-center">
+      <div id="lock-card" class="flex items-center gap-4 px-5 py-4 rounded-2xl bg-neutral-900 dark:bg-neutral-800 shadow-lg transition-all duration-500" style="min-width:200px">
+        <!-- Lock SVG -->
+        <div id="lock-icon-wrap" class="w-12 h-12 rounded-xl bg-white/10 flex items-center justify-center shrink-0 transition-all duration-500">
+          <svg id="lock-svg" viewBox="0 0 40 40" class="w-7 h-7" fill="none" overflow="hidden">
+            <!-- Body -->
+            <rect id="lock-body" x="7" y="18" width="26" height="17" rx="3.5" fill="white" style="transition: fill 0.4s ease"/>
+            <!-- Keyhole -->
+            <circle cx="20" cy="26" r="3" id="lock-keyhole-outer" fill="#171717" style="transition: fill 0.4s ease"/>
+            <rect x="18.5" y="27" width="3" height="4" rx="1" id="lock-keyhole-stem" fill="#171717" style="transition: fill 0.4s ease"/>
+            <!-- Shackle -->
+            <path id="lock-shackle"
+              d="M12 18V11A8 8 0 0 1 28 11V18"
+              stroke="white" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" fill="none"
+              style="transition: d 0.5s cubic-bezier(0.4,0,0.2,1), stroke 0.4s ease"/>
+          </svg>
+        </div>
+        <!-- Status text -->
+        <div>
+          <p id="lock-status-label" class="text-xs text-neutral-400 mb-0.5">Room 204</p>
+          <p id="lock-status-text" class="text-sm font-semibold text-white">Locked</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</FeatureRow>
+
+<script>
+  function runLockAnimation() {
+    const b1           = document.getElementById('lock-bubble-1')
+    const b2           = document.getElementById('lock-bubble-2')
+    const iconWrap     = document.getElementById('lock-icon-wrap')
+    const shackle      = document.getElementById('lock-shackle')
+    const body         = document.getElementById('lock-body')
+    const keyholeOuter = document.getElementById('lock-keyhole-outer')
+    const keyholeStem  = document.getElementById('lock-keyhole-stem')
+    const statusText   = document.getElementById('lock-status-text')
+
+    // Reset to locked state
+    if (b1) { b1.style.opacity = '0'; b1.style.transform = 'translateY(8px)'; b1.style.transition = 'opacity 0.35s ease, transform 0.35s ease' }
+    if (b2) { b2.style.opacity = '0'; b2.style.transform = 'translateY(8px)'; b2.style.transition = 'opacity 0.35s ease, transform 0.35s ease' }
+    if (shackle)   { shackle.setAttribute('d', 'M12 18V11A8 8 0 0 1 28 11V18'); shackle.setAttribute('stroke', 'white') }
+    if (body)      body.setAttribute('fill', 'white')
+    if (keyholeOuter) keyholeOuter.setAttribute('fill', '#171717')
+    if (keyholeStem)  keyholeStem.setAttribute('fill', '#171717')
+    if (iconWrap)  iconWrap.style.backgroundColor = 'rgba(255,255,255,0.1)'
+    if (statusText) { statusText.textContent = 'Locked'; statusText.style.color = 'white' }
+
+    // Bubbles appear
+    setTimeout(() => {
+      if (b1) { b1.style.opacity = '1'; b1.style.transform = 'translateY(0)' }
+    }, 600)
+    setTimeout(() => {
+      if (b2) { b2.style.opacity = '1'; b2.style.transform = 'translateY(0)' }
+    }, 1400)
+
+    // Unlock
+    setTimeout(() => {
+      if (shackle)   { shackle.setAttribute('d', 'M12 18V11A8 8 0 0 1 28 11V11'); shackle.setAttribute('stroke', '#4ade80') }
+      if (body)      body.setAttribute('fill', '#22c55e')
+      if (keyholeOuter) keyholeOuter.setAttribute('fill', '#16a34a')
+      if (keyholeStem)  keyholeStem.setAttribute('fill', '#16a34a')
+      if (iconWrap)  iconWrap.style.backgroundColor = 'rgba(34,197,94,0.2)'
+      if (statusText) { statusText.textContent = 'Unlocked'; statusText.style.color = '#4ade80' }
+    }, 2600)
+
+    setTimeout(runLockAnimation, 5000)
+  }
+
+  const section = document.querySelector('[data-feature="smart-lock"]')
+  const lockObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) { runLockAnimation(); lockObserver.disconnect() }
+  }, { threshold: 0.3 })
+  if (section) lockObserver.observe(section)
+</script>

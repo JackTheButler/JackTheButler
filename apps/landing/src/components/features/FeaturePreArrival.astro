@@ -1,0 +1,90 @@
+---
+import FeatureRow from './FeatureRow.astro'
+interface Props { reversed?: boolean; filled?: boolean }
+const { reversed = false, filled = false } = Astro.props
+---
+
+<FeatureRow
+  featureId="pre-arrival"
+  badge="Guest Journey"
+  badgeColor="bg-sky-100 dark:bg-sky-900/40 text-sky-700 dark:text-sky-300"
+  title="Pre-arrival That Sells Itself"
+  description="Jack automatically reaches out before guests arrive — sharing arrival info, offering early check-in, prompting a dinner reservation. Guests arrive prepared, front desk gets fewer calls, and you earn more per stay."
+  bullets={[
+    'Fully automated — triggers from your PMS booking data',
+    'Each message personalised to the guest and stay',
+    'Upsells woven in naturally — not as a sales blast',
+  ]}
+  reversed={reversed}
+  filled={filled}
+>
+  <div class="w-full max-w-sm rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-white dark:bg-neutral-900 shadow-xl overflow-hidden">
+    <div class="px-5 py-4 border-b border-neutral-100 dark:border-neutral-800">
+      <p class="font-semibold text-sm">Pre-arrival Sequence</p>
+      <p class="text-xs text-neutral-400 mt-0.5">Booking: Sarah M. · Check-in Fri 14 Mar</p>
+    </div>
+    <div id="arrival-steps" class="divide-y divide-neutral-100 dark:divide-neutral-800"></div>
+  </div>
+</FeatureRow>
+
+<script>
+  const arrivalSteps = [
+    { days: '7 days before', label: 'Booking confirmed',        detail: 'Welcome email + WiFi info sent',          status: 'done' },
+    { days: '3 days before', label: 'Early check-in offer',     detail: 'Upgrade + early arrival upsell sent',     status: 'done' },
+    { days: '1 day before',  label: 'Arrival info sent',        detail: 'Parking, directions, check-in time',      status: 'done' },
+    { days: 'Day of arrival',label: 'Room ready notification',  detail: 'Door code sent via WhatsApp',             status: 'active' },
+    { days: '+3 days',       label: 'Mid-stay check-in',        detail: 'Anything we can help with?',              status: 'pending' },
+  ]
+
+  function renderArrivalSteps(count: number) {
+    const list = document.getElementById('arrival-steps')
+    if (!list) return
+    list.innerHTML = ''
+    arrivalSteps.forEach((step, i) => {
+      const visible = i < count
+      const row = document.createElement('div')
+      row.className = 'flex items-stretch gap-4 px-5'
+      row.style.opacity = visible ? '1' : '0'
+      row.style.transition = 'opacity 0.4s ease'
+      const dotColor = step.status === 'done'
+        ? 'bg-emerald-500 ring-4 ring-emerald-100 dark:ring-emerald-900/40'
+        : step.status === 'active'
+          ? 'bg-blue-500 ring-4 ring-blue-100 dark:ring-blue-900/40'
+          : 'bg-neutral-300 dark:bg-neutral-600 ring-4 ring-neutral-100 dark:ring-neutral-800'
+      row.innerHTML = `
+        <div class="flex flex-col items-center shrink-0">
+          ${i > 0 ? '<div class="w-px bg-neutral-200 dark:bg-neutral-700" style="height:14px"></div>' : '<div style="height:14px"></div>'}
+          <div class="w-3 h-3 rounded-full shrink-0 ${dotColor}"></div>
+          ${i < arrivalSteps.length - 1 ? '<div class="w-px flex-1 bg-neutral-200 dark:bg-neutral-700 mt-1"></div>' : ''}
+        </div>
+        <div class="flex-1 min-w-0 py-3">
+          <p class="text-xs text-neutral-400 mb-0.5">${step.days}</p>
+          <p class="text-sm font-medium ${step.status === 'pending' ? 'text-neutral-400' : 'text-neutral-900 dark:text-white'}">${step.label}</p>
+          <p class="text-xs text-neutral-500 mt-0.5">${step.detail}</p>
+        </div>
+        ${step.status === 'done' ? '<svg class="w-4 h-4 text-emerald-500 shrink-0" style="margin-top:14px" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>' : ''}`
+      list.appendChild(row)
+    })
+  }
+
+  function runArrivalAnimation() {
+    let count = 0
+    renderArrivalSteps(arrivalSteps.length)
+    const rows = document.querySelectorAll('#arrival-steps > div') as NodeListOf<HTMLElement>
+    rows.forEach(r => { r.style.opacity = '0' })
+    const interval = setInterval(() => {
+      count++
+      if (rows[count - 1]) rows[count - 1].style.opacity = '1'
+      if (count >= arrivalSteps.length) {
+        clearInterval(interval)
+        setTimeout(runArrivalAnimation, 3500)
+      }
+    }, 700)
+  }
+
+  const section = document.querySelector('[data-feature="pre-arrival"]')
+  const arrivalObserver = new IntersectionObserver((entries) => {
+    if (entries[0].isIntersecting) { runArrivalAnimation(); arrivalObserver.disconnect() }
+  }, { threshold: 0.3 })
+  if (section) arrivalObserver.observe(section)
+</script>

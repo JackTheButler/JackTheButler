@@ -1,0 +1,127 @@
+---
+import FeatureRow from './FeatureRow.astro'
+interface Props { reversed?: boolean; filled?: boolean }
+const { reversed = false, filled = false } = Astro.props
+---
+
+<FeatureRow
+  featureId="instant-replies"
+  badge="Always On"
+  badgeColor="bg-blue-100 dark:bg-blue-900/40 text-blue-700 dark:text-blue-300"
+  title="Instant Guest Replies"
+  description="Jack responds to guest messages in seconds — at 3am, on weekends, during peak check-in. No one waits. No question goes unanswered."
+  bullets={[
+    'WhatsApp, SMS, email, and web chat — all channels covered',
+    'Powered by your own AI — no shared model, no data leaks',
+    'Trained on your property info, policies, and FAQ',
+  ]}
+  reversed={reversed}
+  filled={filled}
+>
+  <!-- Chat demo with looping bubble animation -->
+  <div class="w-full max-w-sm rounded-2xl border border-neutral-200 dark:border-neutral-800 bg-neutral-50 dark:bg-neutral-900 p-5 shadow-xl">
+    <div class="flex items-center gap-3 mb-4 pb-3 border-b border-neutral-200 dark:border-neutral-800">
+      <div class="w-8 h-8 rounded-full bg-neutral-900 dark:bg-white flex items-center justify-center">
+        <img src="/butler.svg" alt="" class="w-5 h-5 dark:invert invert" />
+      </div>
+      <div>
+        <p class="text-sm font-semibold">Jack</p>
+        <p class="text-xs text-emerald-500 flex items-center gap-1">
+          <span class="w-1.5 h-1.5 rounded-full bg-emerald-500 inline-block"></span> Online
+        </p>
+      </div>
+    </div>
+    <div id="chat-messages" class="space-y-3 h-[160px] overflow-hidden flex flex-col justify-end">
+      <!-- JS-driven -->
+    </div>
+    <div class="mt-4 pt-3 border-t border-neutral-200 dark:border-neutral-800 flex gap-2">
+      <div class="flex-1 h-8 rounded-full bg-neutral-200 dark:bg-neutral-700"></div>
+      <div class="w-8 h-8 rounded-full bg-blue-600"></div>
+    </div>
+  </div>
+</FeatureRow>
+
+<script>
+  const chatConversations = [
+    [
+      { role: 'guest', text: 'What time is check-in?' },
+      { role: 'ai', text: 'Check-in is from 3pm. Early check-in from 12pm is available for £15 — want me to add it?' },
+      { role: 'guest', text: 'Yes please!' },
+      { role: 'ai', text: "Done! Early check-in at 12pm has been added to your booking. See you then 🎉" },
+    ],
+    [
+      { role: 'guest', text: 'Is the pool open now?' },
+      { role: 'ai', text: "The pool is open 7am – 10pm daily. It's open right now — enjoy!" },
+    ],
+    [
+      { role: 'guest', text: 'Can I get extra towels?' },
+      { role: 'ai', text: "Of course! I've logged a request with housekeeping. They'll bring them to room 204 within 20 minutes." },
+      { role: 'guest', text: 'Thanks!' },
+      { role: 'ai', text: "You're welcome! Let me know if you need anything else." },
+    ],
+  ]
+  let chatIdx = 0
+  let bubbleIdx = 0
+  let chatTimer: ReturnType<typeof setTimeout>
+
+  function appendBubble(role: string, text: string) {
+    const container = document.getElementById('chat-messages')
+    if (!container) return
+    const wrap = document.createElement('div')
+    wrap.className = role === 'guest' ? 'flex justify-end chat-entry' : 'flex chat-entry'
+    const bubble = document.createElement('div')
+    bubble.className = role === 'guest'
+      ? 'bg-blue-600 text-white text-sm rounded-2xl rounded-br-md px-4 py-2.5 max-w-[85%]'
+      : 'bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 text-sm rounded-2xl rounded-bl-md px-4 py-2.5 max-w-[85%]'
+    bubble.textContent = text
+    wrap.appendChild(bubble)
+    container.appendChild(wrap)
+    container.scrollTop = container.scrollHeight
+  }
+
+  function showTyping() {
+    const container = document.getElementById('chat-messages')
+    if (!container) return
+    const wrap = document.createElement('div')
+    wrap.id = 'typing-wrap'
+    wrap.className = 'flex chat-entry'
+    wrap.innerHTML = `<div class="bg-white dark:bg-neutral-800 border border-neutral-200 dark:border-neutral-700 rounded-2xl rounded-bl-md px-4 py-3 flex items-center gap-1">
+      <span class="typing-dot"></span><span class="typing-dot"></span><span class="typing-dot"></span>
+    </div>`
+    container.appendChild(wrap)
+  }
+
+  function removeTyping() {
+    document.getElementById('typing-wrap')?.remove()
+  }
+
+  function runChatStep() {
+    const conv = chatConversations[chatIdx]
+    if (bubbleIdx >= conv.length) {
+      chatTimer = setTimeout(() => {
+        const container = document.getElementById('chat-messages')
+        if (container) container.innerHTML = ''
+        chatIdx = (chatIdx + 1) % chatConversations.length
+        bubbleIdx = 0
+        runChatStep()
+      }, 3000)
+      return
+    }
+    const msg = conv[bubbleIdx]
+    if (msg.role === 'ai') {
+      showTyping()
+      chatTimer = setTimeout(() => {
+        removeTyping()
+        appendBubble('ai', msg.text)
+        bubbleIdx++
+        chatTimer = setTimeout(runChatStep, 900)
+      }, 1200)
+    } else {
+      appendBubble('guest', msg.text)
+      bubbleIdx++
+      chatTimer = setTimeout(runChatStep, 700)
+    }
+  }
+
+  setTimeout(runChatStep, 600)
+</script>
