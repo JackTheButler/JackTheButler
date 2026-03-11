@@ -15,6 +15,7 @@ import { appConfigService } from '@/services/app-config.js';
 import { resetResponder } from '@/ai/index.js';
 import { getAutomationEngine } from '@/automation/index.js';
 import { subscribeAutomationToEvents } from '@/automation/event-subscriber.js';
+import { subscribeActivityLogToEvents } from '@/services/activity-log.js';
 
 const APP_NAME = 'Jack The Butler';
 const VERSION = '1.0.0';
@@ -138,6 +139,9 @@ async function main(): Promise<void> {
     // Subscribe automation engine to system events
     subscribeAutomationToEvents();
     logger.info('Automation event subscribers registered');
+
+    // Subscribe activity log to system events (Layer 1)
+    subscribeActivityLogToEvents();
 
     // Note: Email is now handled via extensions (Mailgun, SendGrid, Gmail SMTP)
     // Inbound email uses webhooks instead of IMAP polling

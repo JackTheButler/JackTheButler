@@ -7,6 +7,7 @@
  */
 
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:channels:whatsapp:meta');
@@ -77,6 +78,7 @@ export class MetaWhatsAppProvider implements BaseProvider {
   private accessToken: string;
   private phoneNumberId: string;
   private baseUrl: string;
+  readonly appLog = createAppLogger('channel', 'whatsapp-meta');
 
   constructor(config: MetaWhatsAppConfig) {
     if (!config.accessToken || !config.phoneNumberId) {
@@ -98,13 +100,17 @@ export class MetaWhatsAppProvider implements BaseProvider {
     try {
       // Get phone number details to verify credentials
       const url = `${this.baseUrl}?fields=display_phone_number,verified_name,quality_rating`;
-      const response = await fetch(url, {
-        headers: {
-          Authorization: `Bearer ${this.accessToken}`,
-        },
+      const { response, data } = await this.appLog('connection_test', {}, async () => {
+        const res = await fetch(url, { headers: { Authorization: `Bearer ${this.accessToken}` } });
+        const d = await res.json();
+        const result = { response: res, data: d };
+        return withLogContext(result, {
+          httpStatus: res.status,
+          phoneNumber: (d as { display_phone_number?: string }).display_phone_number,
+          verifiedName: (d as { verified_name?: string }).verified_name,
+          qualityRating: (d as { quality_rating?: string }).quality_rating,
+        });
       });
-
-      const data = await response.json();
       const latencyMs = Date.now() - startTime;
 
       if (!response.ok) {
@@ -154,30 +160,32 @@ export class MetaWhatsAppProvider implements BaseProvider {
 
     log.debug({ to: request.to, type: request.type }, 'Sending message');
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify(body),
-    });
-
-    const data = await response.json();
-
-    if (!response.ok) {
-      const error = data as APIError;
-      log.error(
-        {
-          status: response.status,
-          error: error.error,
+    const result = await this.appLog('send_message', { to: request.to }, async () => {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
         },
-        'Failed to send message'
-      );
-      throw new Error(`WhatsApp API error: ${error.error.message}`);
-    }
-
-    const result = data as SendMessageResponse;
+        body: JSON.stringify(body),
+      });
+      const json = await res.json();
+      if (!res.ok) {
+        const error = json as APIError;
+        log.error({ status: res.status, error: error.error }, 'Failed to send message');
+        throw new AppLogError(`WhatsApp API error: ${error.error.message}`, {
+          httpStatus: res.status,
+          errorCode: error.error.code,
+          traceId: error.error.fbtrace_id,
+        });
+      }
+      const typed = json as SendMessageResponse;
+      return withLogContext(typed, {
+        httpStatus: res.status,
+        messageId: typed.messages?.[0]?.id,
+        waId: typed.contacts?.[0]?.wa_id,
+      });
+    });
 
     log.info(
       {
@@ -210,22 +218,20 @@ export class MetaWhatsAppProvider implements BaseProvider {
   async markAsRead(messageId: string): Promise<void> {
     const url = `${this.baseUrl}/messages`;
 
-    const response = await fetch(url, {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${this.accessToken}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        messaging_product: 'whatsapp',
-        status: 'read',
-        message_id: messageId,
-      }),
+    await this.appLog('mark_as_read', { messageId }, async () => {
+      const res = await fetch(url, {
+        method: 'POST',
+        headers: {
+          Authorization: `Bearer ${this.accessToken}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ messaging_product: 'whatsapp', status: 'read', message_id: messageId }),
+      });
+      if (!res.ok) {
+        log.warn({ messageId, status: res.status }, 'Failed to mark message as read');
+      }
+      return withLogContext(res, { httpStatus: res.status });
     });
-
-    if (!response.ok) {
-      log.warn({ messageId, status: response.status }, 'Failed to mark message as read');
-    }
   }
 
   /**

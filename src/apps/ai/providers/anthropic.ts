@@ -15,6 +15,7 @@ import type {
   EmbeddingResponse,
 } from '@/core/interfaces/ai.js';
 import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:ai:anthropic');
@@ -44,6 +45,7 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
   private model: string;
   private utilityModel: string;
   private maxTokens: number;
+  readonly appLog = createAppLogger('ai', 'anthropic');
 
   constructor(config: AnthropicConfig) {
     if (!config.apiKey) {
@@ -65,10 +67,16 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
     const startTime = Date.now();
     try {
       // Send a minimal request to verify the API key works
-      const response = await this.client.messages.create({
-        model: this.model,
-        max_tokens: 10,
-        messages: [{ role: 'user', content: 'Hi' }],
+      const response = await this.appLog('connection_test', { model: this.model }, async () => {
+        const result = await this.client.messages.create({
+          model: this.model,
+          max_tokens: 10,
+          messages: [{ role: 'user', content: 'Hi' }],
+        });
+        return withLogContext(result, {
+          inputTokens: result.usage.input_tokens,
+          outputTokens: result.usage.output_tokens,
+        });
       });
 
       const latencyMs = Date.now() - startTime;
@@ -127,7 +135,15 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
       createParams.stop_sequences = request.stopSequences;
     }
 
-    const response = await this.client.messages.create(createParams);
+    const response = await this.appLog('completion', { model }, async () => {
+      const result = await this.client.messages.create(createParams);
+      return withLogContext(result, {
+        messageId: result.id,
+        inputTokens: result.usage.input_tokens,
+        outputTokens: result.usage.output_tokens,
+        stopReason: result.stop_reason,
+      });
+    });
 
     const textContent = response.content.find((c) => c.type === 'text');
     const content = textContent?.type === 'text' ? textContent.text : '';

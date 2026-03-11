@@ -9,6 +9,7 @@
 
 import Mailgun from 'mailgun.js';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 import * as crypto from 'crypto';
 
@@ -59,6 +60,7 @@ export class MailgunProvider implements BaseProvider {
   private fromAddress: string;
   private fromName: string;
   private webhookSigningKey: string | undefined;
+  readonly appLog = createAppLogger('channel', 'email-mailgun');
 
   constructor(config: MailgunConfig) {
     if (!config.apiKey || !config.domain || !config.fromAddress) {
@@ -95,7 +97,10 @@ export class MailgunProvider implements BaseProvider {
     const startTime = Date.now();
     try {
       // Verify domain exists and is accessible
-      const domainInfo = await this.client.domains.get(this.domain);
+      const domainInfo = await this.appLog('connection_test', { domain: this.domain }, async () => {
+        const result = await this.client.domains.get(this.domain);
+        return withLogContext(result, { domainState: (result as { state?: string }).state });
+      });
       const latencyMs = Date.now() - startTime;
 
       return {
@@ -167,10 +172,13 @@ export class MailgunProvider implements BaseProvider {
       }
 
       // Cast to expected type - we've ensured the required properties are present
-      const result = await this.client.messages.create(
-        this.domain,
-        messageData as Parameters<typeof this.client.messages.create>[1]
-      );
+      const result = await this.appLog('send_email', { to: options.to }, async () => {
+        const res = await this.client.messages.create(this.domain, messageData as Parameters<typeof this.client.messages.create>[1]);
+        return withLogContext(res, {
+          messageId: (res as unknown as { id?: string }).id,
+          statusCode: (res as unknown as { status?: number }).status,
+        });
+      });
 
       log.info(
         {

@@ -23,6 +23,7 @@ import { webchatActionService } from '@/services/webchat-action.js';
 import type { WebChatSession } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
+import { events, EventTypes } from '@/events/index.js';
 import { resolveLocale, t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
 import type { IncomingMessage } from 'node:http';
@@ -295,6 +296,13 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
   webchatConnectionManager.add(sessionId, ws);
   setSessionLocale(sessionId, locale);
 
+  events.emit({
+    type: EventTypes.WEBCHAT_CONNECTED,
+    sessionId,
+    restored,
+    timestamp: new Date(),
+  });
+
   // Send session info
   ws.send(
     JSON.stringify({
@@ -418,12 +426,19 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
       sessionLocales.delete(sessionId);
     }
     log.info({ sessionId }, 'Guest webchat disconnected');
+    events.emit({ type: EventTypes.WEBCHAT_DISCONNECTED, sessionId, timestamp: new Date() });
   });
 
   // Handle errors
   ws.on('error', (error) => {
     log.error({ err: error, sessionId }, 'Guest webchat error');
     webchatConnectionManager.remove(sessionId, ws);
+    events.emit({
+      type: EventTypes.WEBCHAT_ERROR,
+      sessionId,
+      error: error instanceof Error ? error.message : String(error),
+      timestamp: new Date(),
+    });
   });
 }
 

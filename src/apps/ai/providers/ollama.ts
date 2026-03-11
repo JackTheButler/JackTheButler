@@ -14,6 +14,7 @@ import type {
   EmbeddingResponse,
 } from '@/core/interfaces/ai.js';
 import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:ai:ollama');
@@ -63,6 +64,7 @@ export class OllamaProvider implements AIProvider, BaseProvider {
   private model: string;
   private utilityModel: string;
   private embeddingModel: string;
+  readonly appLog = createAppLogger('ai', 'ollama');
 
   constructor(config: OllamaConfig = {}) {
     this.baseUrl = config.baseUrl || DEFAULT_BASE_URL;
@@ -83,13 +85,14 @@ export class OllamaProvider implements AIProvider, BaseProvider {
     const startTime = Date.now();
     try {
       // Check if Ollama server is running and get available models
-      const response = await fetch(`${this.baseUrl}/api/tags`);
-
-      if (!response.ok) {
-        throw new Error(`Ollama server returned ${response.status}`);
-      }
-
-      const data = (await response.json()) as OllamaTagsResponse;
+      const data = await this.appLog('connection_test', { baseUrl: this.baseUrl }, async () => {
+        const response = await fetch(`${this.baseUrl}/api/tags`);
+        if (!response.ok) {
+          throw new AppLogError(`Ollama server returned ${response.status}`, { httpStatus: response.status });
+        }
+        const result = await response.json() as OllamaTagsResponse;
+        return withLogContext(result, { modelCount: (result as OllamaTagsResponse).models?.length ?? 0 });
+      });
       const latencyMs = Date.now() - startTime;
 
       const modelNames = data.models.map((m) => m.name);
@@ -133,26 +136,27 @@ export class OllamaProvider implements AIProvider, BaseProvider {
 
     log.debug({ messageCount: request.messages.length, model }, 'Sending completion request');
 
-    const response = await fetch(`${this.baseUrl}/api/chat`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
-        stream: false,
-        options: {
-          num_predict: request.maxTokens || 1024,
-          temperature: request.temperature || 0.7,
-          stop: request.stopSequences,
-        },
-      }),
+    const data = await this.appLog('completion', { model }, async () => {
+      const response = await fetch(`${this.baseUrl}/api/chat`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model,
+          messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
+          stream: false,
+          options: {
+            num_predict: request.maxTokens || 1024,
+            temperature: request.temperature || 0.7,
+            stop: request.stopSequences,
+          },
+        }),
+      });
+      if (!response.ok) {
+        throw new AppLogError(`Ollama API error: ${response.status} ${response.statusText}`, { httpStatus: response.status });
+      }
+      const data = await response.json() as OllamaChatResponse;
+      return withLogContext(data, { promptTokens: data.prompt_eval_count, completionTokens: data.eval_count });
     });
-
-    if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = (await response.json()) as OllamaChatResponse;
 
     log.debug(
       {
@@ -178,20 +182,18 @@ export class OllamaProvider implements AIProvider, BaseProvider {
   async embed(request: EmbeddingRequest): Promise<EmbeddingResponse> {
     log.debug({ textLength: request.text.length }, 'Generating embedding');
 
-    const response = await fetch(`${this.baseUrl}/api/embeddings`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model: this.embeddingModel,
-        prompt: request.text,
-      }),
+    const data = await this.appLog('embedding', { model: this.embeddingModel }, async () => {
+      const response = await fetch(`${this.baseUrl}/api/embeddings`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ model: this.embeddingModel, prompt: request.text }),
+      });
+      if (!response.ok) {
+        throw new AppLogError(`Ollama API error: ${response.status} ${response.statusText}`, { httpStatus: response.status });
+      }
+      const data = await response.json() as OllamaEmbeddingResponse;
+      return withLogContext(data, { dimensions: (data as OllamaEmbeddingResponse).embedding?.length });
     });
-
-    if (!response.ok) {
-      throw new Error(`Ollama API error: ${response.status} ${response.statusText}`);
-    }
-
-    const data = (await response.json()) as OllamaEmbeddingResponse;
 
     log.debug({ dimensions: data.embedding.length }, 'Embedding generated');
 

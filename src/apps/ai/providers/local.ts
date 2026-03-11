@@ -17,6 +17,7 @@ import type {
 import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
 import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
+import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
 
 const log = createLogger('extensions:ai:local');
 
@@ -90,6 +91,8 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
   readonly id = 'local';
   readonly name = 'local';
 
+  readonly appLog = createAppLogger('ai', 'local');
+
   private embeddingModel: string;
   private completionModel: string;
   private utilityModel: string;
@@ -121,8 +124,9 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
     try {
       log.debug('Testing local AI provider by loading embedding model...');
 
-      // Try to load the embedding pipeline (this downloads the model if needed)
-      await this.getEmbeddingPipeline();
+      await this.appLog('connection_test', { model: this.embeddingModel }, () =>
+        this.getEmbeddingPipeline()
+      );
 
       const latencyMs = Date.now() - startTime;
 
@@ -282,30 +286,23 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
    * Generate embeddings using local transformer model
    */
   async embed(request: EmbeddingRequest): Promise<EmbeddingResponse> {
-    const startTime = Date.now();
     log.debug({ textLength: request.text.length }, 'Generating local embedding');
 
-    const extractor = await this.getEmbeddingPipeline();
+    return this.appLog('embedding', { model: this.embeddingModel }, async () => {
+      const extractor = await this.getEmbeddingPipeline();
 
-    // Run the model with mean pooling and normalization
-    const output = await extractor(request.text, {
-      pooling: 'mean',
-      normalize: true,
+      const output = await extractor(request.text, {
+        pooling: 'mean',
+        normalize: true,
+      });
+
+      const embedding = Array.from(output.data as Float32Array);
+      log.debug({ dimensions: embedding.length }, 'Local embedding generated');
+
+      return withLogContext({ embedding, usage: { inputTokens: 0, outputTokens: 0 } }, {
+        dimensions: embedding.length,
+      });
     });
-
-    // Extract the embedding array from the tensor
-    const embedding = Array.from(output.data as Float32Array);
-
-    const latencyMs = Date.now() - startTime;
-    log.debug(
-      { dimensions: embedding.length, latencyMs },
-      'Local embedding generated'
-    );
-
-    return {
-      embedding,
-      usage: { inputTokens: 0, outputTokens: 0 },
-    };
   }
 
   /**
@@ -317,36 +314,28 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
    */
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
     const modelName = request.modelTier === 'utility' ? this.utilityModel : this.completionModel;
-    const startTime = Date.now();
-    log.debug(
-      { messageCount: request.messages.length, model: modelName },
-      'Generating local completion'
-    );
+    log.debug({ messageCount: request.messages.length, model: modelName }, 'Generating local completion');
 
-    const generator = await this.getTextPipeline(modelName);
-    const prompt = this.buildPrompt(request.messages, modelName);
+    return this.appLog('completion', { model: modelName }, async () => {
+      const generator = await this.getTextPipeline(modelName);
+      const prompt = this.buildPrompt(request.messages, modelName);
 
-    const outputs = (await generator(prompt, {
-      max_new_tokens: request.maxTokens || 256,
-      temperature: request.temperature ?? 0.7,
-      do_sample: true,
-      top_p: 0.95,
-    })) as { generated_text: string }[];
+      const outputs = (await generator(prompt, {
+        max_new_tokens: request.maxTokens || 256,
+        temperature: request.temperature ?? 0.7,
+        do_sample: true,
+        top_p: 0.95,
+      })) as { generated_text: string }[];
 
-    const generated = outputs[0]?.generated_text || '';
-    const content = generated.slice(prompt.length).trim();
+      const generated = outputs[0]?.generated_text || '';
+      const content = generated.slice(prompt.length).trim();
 
-    const latencyMs = Date.now() - startTime;
-    log.debug(
-      { contentLength: content.length, latencyMs },
-      'Local completion generated'
-    );
+      log.debug({ contentLength: content.length }, 'Local completion generated');
 
-    return {
-      content,
-      usage: { inputTokens: 0, outputTokens: 0 },
-      stopReason: 'end_turn',
-    };
+      return withLogContext({ content, usage: { inputTokens: 0, outputTokens: 0 }, stopReason: 'end_turn' }, {
+        contentLength: content.length,
+      });
+    });
   }
 
   /**

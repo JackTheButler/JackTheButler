@@ -21,6 +21,7 @@ import type {
   PMSConfig,
 } from '@/core/interfaces/pms.js';
 import type { PMSAppManifest } from '../../types.js';
+import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
@@ -100,6 +101,8 @@ interface MewsWebhookPayload {
 // ==================
 
 class MewsClient {
+  readonly appLog = createAppLogger('pms', 'pms-mews');
+
   constructor(
     private baseUrl: string,
     private clientToken: string,
@@ -107,6 +110,7 @@ class MewsClient {
   ) {}
 
   async request<T>(endpoint: string, body: Record<string, unknown> = {}): Promise<T> {
+    return this.appLog('api_request', { endpoint }, async () => {
     const url = `${this.baseUrl}/${endpoint}`;
     const payload = {
       ClientToken: this.clientToken,
@@ -136,13 +140,24 @@ class MewsClient {
 
       if (!response.ok) {
         const text = await response.text();
-        throw new Error(`Mews API error ${response.status} on ${endpoint}: ${text}`);
+        let responseBody: unknown = text;
+        try { responseBody = JSON.parse(text); } catch { /* keep as string */ }
+        throw new AppLogError(`Mews API error ${response.status} on ${endpoint}: ${text}`, {
+          httpStatus: response.status,
+          responseBody,
+        });
       }
 
-      return (await response.json()) as T;
+      const json = await response.json() as T;
+      const firstArray = Object.values(json as object).find(Array.isArray);
+      return withLogContext(json as object, {
+        httpStatus: response.status,
+        itemCount: firstArray?.length ?? undefined,
+      }) as T;
     }
 
     throw lastError || new Error(`Mews API request failed after ${MAX_RETRIES} retries`);
+    }); // appLog
   }
 
   async requestPaginated<TItem>(

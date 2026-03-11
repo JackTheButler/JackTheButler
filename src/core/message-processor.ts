@@ -24,6 +24,7 @@ import { getTaskRouter, type GuestContext as TaskRouterContext } from './task-ro
 import { getAutonomyEngine, type GuestContext as AutonomyContext } from './autonomy.js';
 import { getApprovalQueue } from './approval-queue.js';
 import { createLogger } from '@/utils/logger.js';
+import { writeActivityLog } from '@/services/activity-log.js';
 import { events, EventTypes } from '@/events/index.js';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
 import type { Responder } from '@/ai/index.js';
@@ -51,6 +52,12 @@ export class MessageProcessor {
    */
   async process(inbound: InboundMessage): Promise<OutboundMessage> {
     const startTime = Date.now();
+    let conversationId: string | undefined;
+    let savedInboundId: string | undefined;
+    let processorOutcome: 'success' | 'failed' = 'failed';
+    let outcomeDetails: Record<string, unknown> = {};
+
+    try {
 
     log.info(
       { messageId: inbound.id, channel: inbound.channel, channelId: inbound.channelId },
@@ -75,6 +82,7 @@ export class MessageProcessor {
       inbound.channelId,
       guestId
     );
+    conversationId = conversation.id;
 
     log.debug(
       { conversationId: conversation.id, guestId: conversation.guestId },
@@ -143,6 +151,8 @@ export class MessageProcessor {
       detectedLanguage,
       translatedContent,
     });
+
+    savedInboundId = savedInbound.id;
 
     // Emit message received event
     events.emit({
@@ -427,6 +437,17 @@ export class MessageProcessor {
         'Message processed (pending approval)'
       );
 
+      processorOutcome = 'success';
+      outcomeDetails = {
+        actionTaken: 'approval_queued',
+        intent: response.intent,
+        confidence: response.confidence,
+        detectedLanguage,
+        escalated: escalationDecision.shouldEscalate,
+        taskCreated: !!response.metadata?.taskCreated,
+        approvalId: approvalItem.id,
+        approvalReason: !canAutoExecute ? 'autonomy_level' : 'low_confidence',
+      };
       return pendingResponse;
     }
 
@@ -463,6 +484,7 @@ export class MessageProcessor {
       messageId: savedOutbound.id,
       content: translatedResponseContent ?? response.content,
       senderType: 'ai',
+      channel: inbound.channel,
       timestamp: new Date(),
     });
 
@@ -483,7 +505,51 @@ export class MessageProcessor {
       result.metadata = response.metadata;
     }
 
+    processorOutcome = 'success';
+    outcomeDetails = {
+      actionTaken: 'responded',
+      intent: response.intent,
+      confidence: response.confidence,
+      detectedLanguage,
+      escalated: escalationDecision?.shouldEscalate ?? false,
+      taskCreated: !!response.metadata?.taskCreated,
+      taskId: response.metadata?.taskId ?? undefined,
+      responseLength: result.content.length,
+    };
     return result;
+
+    } catch (err: unknown) {
+      outcomeDetails = { actionTaken: 'failed', error: err instanceof Error ? err.message : String(err) };
+      if (conversationId && savedInboundId) {
+        try {
+          events.emit({
+            type: EventTypes.MESSAGE_FAILED,
+            conversationId,
+            messageId: savedInboundId,
+            channel: inbound.channel,
+            error: err instanceof Error ? err.message : String(err),
+            timestamp: new Date(),
+          });
+        } catch {
+          // Never let event emission affect the original error
+        }
+      }
+      throw err;
+    } finally {
+      try {
+        writeActivityLog(
+          inbound.channel,
+          'processor.outcome',
+          processorOutcome,
+          conversationId,
+          undefined,
+          Date.now() - startTime,
+          outcomeDetails
+        );
+      } catch {
+        // Never let a log write replace the original error or block the response
+      }
+    }
   }
 
   /**

@@ -21,3 +21,4 @@ export {
   getClientIp,
   type RateLimitConfig,
 } from './security.js';
+export { webhookLogger } from './webhook-logger.js';

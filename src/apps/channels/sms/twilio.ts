@@ -9,6 +9,7 @@
 import twilio from 'twilio';
 import type { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message.js';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:channels:sms:twilio');
@@ -30,6 +31,7 @@ export class TwilioProvider implements BaseProvider {
   private client: twilio.Twilio;
   private phoneNumber: string;
   private accountSid: string;
+  readonly appLog = createAppLogger('channel', 'sms-twilio');
 
   constructor(config: TwilioConfig) {
     if (!config.accountSid || !config.authToken || !config.phoneNumber) {
@@ -50,7 +52,13 @@ export class TwilioProvider implements BaseProvider {
     const startTime = Date.now();
     try {
       // Fetch account info to verify credentials
-      const account = await this.client.api.accounts(this.accountSid).fetch();
+      const account = await this.appLog('connection_test', {}, async () => {
+        const result = await this.client.api.accounts(this.accountSid).fetch();
+        return withLogContext(result, {
+          accountName: result.friendlyName,
+          accountStatus: result.status,
+        });
+      });
       const latencyMs = Date.now() - startTime;
 
       // Also verify the phone number exists
@@ -95,10 +103,12 @@ export class TwilioProvider implements BaseProvider {
   async sendMessage(to: string, body: string): Promise<MessageInstance> {
     log.debug({ to, bodyLength: body.length }, 'Sending SMS');
 
-    const message = await this.client.messages.create({
-      to,
-      from: this.phoneNumber,
-      body,
+    const message = await this.appLog('send_sms', { to }, async () => {
+      const result = await this.client.messages.create({ to, from: this.phoneNumber, body });
+      return withLogContext(result, {
+        messageSid: result.sid,
+        status: result.status,
+      });
     });
 
     log.info({ sid: message.sid, to, status: message.status }, 'SMS sent');

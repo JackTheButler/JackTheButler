@@ -15,6 +15,7 @@ import type {
   EmbeddingResponse,
 } from '@/core/interfaces/ai.js';
 import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:ai:openai');
@@ -48,6 +49,7 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
   private utilityModel: string;
   private embeddingModel: string;
   private maxTokens: number;
+  readonly appLog = createAppLogger('ai', 'openai');
 
   constructor(config: OpenAIConfig) {
     if (!config.apiKey) {
@@ -76,7 +78,10 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
     const startTime = Date.now();
     try {
       // List models to verify the API key works
-      const models = await this.client.models.list();
+      const models = await this.appLog('connection_test', {}, async () => {
+        const result = await this.client.models.list();
+        return withLogContext(result, { modelCount: result.data.length });
+      });
       const latencyMs = Date.now() - startTime;
 
       return {
@@ -124,7 +129,15 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
       createParams.stop = request.stopSequences;
     }
 
-    const response = await this.client.chat.completions.create(createParams);
+    const response = await this.appLog('completion', { model }, async () => {
+      const result = await this.client.chat.completions.create(createParams);
+      return withLogContext(result, {
+        messageId: result.id,
+        inputTokens: result.usage?.prompt_tokens,
+        outputTokens: result.usage?.completion_tokens,
+        finishReason: result.choices[0]?.finish_reason,
+      });
+    });
 
     const content = response.choices[0]?.message?.content || '';
     const usage = response.usage;
@@ -154,9 +167,12 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
   async embed(request: EmbeddingRequest): Promise<EmbeddingResponse> {
     log.debug({ textLength: request.text.length }, 'Generating embedding');
 
-    const response = await this.client.embeddings.create({
-      model: this.embeddingModel,
-      input: request.text,
+    const response = await this.appLog('embedding', { model: this.embeddingModel }, async () => {
+      const result = await this.client.embeddings.create({ model: this.embeddingModel, input: request.text });
+      return withLogContext(result, {
+        inputTokens: result.usage?.prompt_tokens,
+        dimensions: result.data[0]?.embedding.length,
+      });
     });
 
     const embedding = response.data[0]?.embedding || [];

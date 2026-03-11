@@ -467,6 +467,7 @@ export class ApprovalQueue {
           messageId: item.id, // Use approval ID as reference
           content,
           senderType: 'ai',
+          channel: conversation.channelType as import('@/types/channel.js').ChannelType,
           timestamp: new Date(),
         });
         break;

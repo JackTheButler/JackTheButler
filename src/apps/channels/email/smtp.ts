@@ -10,6 +10,7 @@ import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:channels:email:smtp');
@@ -61,6 +62,7 @@ export class SMTPProvider implements BaseProvider {
   private fromAddress: string;
   private fromName: string;
   private smtpHost: string;
+  readonly appLog = createAppLogger('channel', 'email-smtp');
 
   constructor(config: SMTPConfig) {
     if (!config.smtpHost || !config.fromAddress) {
@@ -95,7 +97,9 @@ export class SMTPProvider implements BaseProvider {
   async testConnection(): Promise<ConnectionTestResult> {
     const startTime = Date.now();
     try {
-      await this.transporter.verify();
+      await this.appLog('connection_test', { smtpHost: this.smtpHost }, () =>
+        this.transporter.verify()
+      );
       const latencyMs = Date.now() - startTime;
 
       return {
@@ -141,14 +145,14 @@ export class SMTPProvider implements BaseProvider {
     );
 
     try {
-      const result = await this.transporter.sendMail({
-        from,
-        to: options.to,
-        subject: options.subject,
-        text: options.text,
-        html: options.html,
-        inReplyTo: options.inReplyTo,
-        references: options.references?.join(' '),
+      const result = await this.appLog('send_email', { to: options.to }, async () => {
+        const res = await this.transporter.sendMail({ from, to: options.to, subject: options.subject, text: options.text, html: options.html, inReplyTo: options.inReplyTo, references: options.references?.join(' ') });
+        return withLogContext(res, {
+          messageId: res.messageId,
+          accepted: res.accepted,
+          rejected: res.rejected,
+          serverResponse: res.response,
+        });
       });
 
       log.info(

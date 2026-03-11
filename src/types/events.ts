@@ -50,6 +50,11 @@ export const EventTypes = {
 
   // Staff notification events
   STAFF_NOTIFICATION: 'staff.notification',
+
+  // WebChat lifecycle events
+  WEBCHAT_CONNECTED: 'webchat.connected',
+  WEBCHAT_DISCONNECTED: 'webchat.disconnected',
+  WEBCHAT_ERROR: 'webchat.error',
 } as const;
 
 export type EventType = (typeof EventTypes)[keyof typeof EventTypes];
@@ -75,6 +80,17 @@ export interface MessageReceivedEvent extends BaseEvent {
 }
 
 /**
+ * Message failed event
+ */
+export interface MessageFailedEvent extends BaseEvent {
+  type: typeof EventTypes.MESSAGE_FAILED;
+  conversationId: string;
+  messageId: string;
+  channel: ChannelType;
+  error: string;
+}
+
+/**
  * Message sent event
  */
 export interface MessageSentEvent extends BaseEvent {
@@ -83,6 +99,7 @@ export interface MessageSentEvent extends BaseEvent {
   messageId: string;
   content: string;
   senderType: SenderType;
+  channel: ChannelType;
 }
 
 /**
@@ -273,11 +290,38 @@ export interface StaffNotificationEvent extends BaseEvent {
 }
 
 /**
+ * WebChat guest connected event
+ */
+export interface WebchatConnectedEvent extends BaseEvent {
+  type: typeof EventTypes.WEBCHAT_CONNECTED;
+  sessionId: string;
+  restored: boolean;
+}
+
+/**
+ * WebChat guest disconnected event
+ */
+export interface WebchatDisconnectedEvent extends BaseEvent {
+  type: typeof EventTypes.WEBCHAT_DISCONNECTED;
+  sessionId: string;
+}
+
+/**
+ * WebChat connection error event
+ */
+export interface WebchatErrorEvent extends BaseEvent {
+  type: typeof EventTypes.WEBCHAT_ERROR;
+  sessionId: string;
+  error: string;
+}
+
+/**
  * Union of all event types
  */
 export type AppEvent =
   | MessageReceivedEvent
   | MessageSentEvent
+  | MessageFailedEvent
   | ConversationCreatedEvent
   | ConversationUpdatedEvent
   | ConversationEscalatedEvent
@@ -293,7 +337,10 @@ export type AppEvent =
   | ReservationCheckedInEvent
   | ReservationCheckedOutEvent
   | ReservationCancelledEvent
-  | StaffNotificationEvent;
+  | StaffNotificationEvent
+  | WebchatConnectedEvent
+  | WebchatDisconnectedEvent
+  | WebchatErrorEvent;
 
 /**
  * Event handler function type

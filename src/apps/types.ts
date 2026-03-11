@@ -161,9 +161,27 @@ export interface ConnectionTestResult {
 }
 
 /**
- * Base provider interface with connection testing
+ * Instrumentation logger returned by createAppLogger().
+ * Defined here so BaseProvider can require it without a circular import.
+ */
+export type AppLogger = <T>(
+  eventType: string,
+  details: Record<string, unknown>,
+  fn: () => Promise<T>
+) => Promise<T>;
+
+/**
+ * Base provider interface with connection testing and observability.
+ *
+ * Every adapter MUST set:
+ *   readonly appLog = createAppLogger(manifest.category, manifest.id);
+ *
+ * This is enforced by TypeScript — missing appLog causes a compile error.
+ * The exact arguments (manifest.category, manifest.id) are required so the
+ * System Health dashboard can locate logs without any extra configuration.
  */
 export interface BaseProvider {
   readonly id: string;
+  readonly appLog: AppLogger;
   testConnection(): Promise<ConnectionTestResult>;
 }

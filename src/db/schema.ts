@@ -717,6 +717,45 @@ export type AppLog = typeof appLogs.$inferSelect;
 export type NewAppLog = typeof appLogs.$inferInsert;
 
 // ===================
+// Activity Log
+// ===================
+
+/**
+ * Activity log for business events
+ * Captures messages, conversations, WebSocket lifecycle, processor outcomes, and scheduler runs.
+ * Written by the event subscriber (Layer 1), message processor (Layer 4), and scheduler (Layer 5).
+ * Purged automatically after 30 days.
+ */
+export const activityLog = sqliteTable(
+  'activity_log',
+  {
+    id: text('id').primaryKey(),
+    // Channel or system origin: whatsapp | webchat | sms | email | system
+    source: text('source').notNull(),
+    // Event type: message.received | message.sent | message.failed | conversation.escalated
+    //             processor.outcome | webchat.connected | webchat.disconnected | scheduler.outcome
+    eventType: text('event_type').notNull(),
+    // Status: success | failed | warning
+    status: text('status').notNull(),
+    conversationId: text('conversation_id'),
+    errorMessage: text('error_message'),
+    latencyMs: integer('latency_ms'),
+    details: text('details'), // JSON — shape varies by eventType, see roadmap data model
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_activity_log_created').on(table.createdAt), // required for 30-day purge queries
+    index('idx_activity_log_source').on(table.source),
+    index('idx_activity_log_status').on(table.status),
+  ]
+);
+
+export type ActivityLog = typeof activityLog.$inferSelect;
+export type NewActivityLog = typeof activityLog.$inferInsert;
+
+// ===================
 // Audit Log
 // ===================
 

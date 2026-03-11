@@ -2,13 +2,14 @@ import { useState, useEffect } from 'react';
 import { useParams, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { AlertTriangle, Sparkles, Building2, Users, Shield, Lock } from 'lucide-react';
+import { AlertTriangle, Sparkles, Building2, Users, Shield, Lock, Activity } from 'lucide-react';
 import { api } from '@/lib/api';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
 import { UsersContent } from '@/pages/settings/Users';
 import { RolesContent } from '@/pages/settings/Roles';
 import { SecurityContent } from '@/pages/settings/Security';
+import { HealthContent } from '@/pages/settings/Health';
 import { PageContainer, ActionItems, DemoDataCard } from '@/components';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -70,9 +71,9 @@ interface LanguageOption {
   label: string;
 }
 
-type SettingsTab = 'profile' | 'users' | 'roles' | 'security' | 'quick-setup' | 'danger-zone';
+type SettingsTab = 'profile' | 'users' | 'roles' | 'security' | 'health' | 'quick-setup' | 'danger-zone';
 
-const VALID_TABS: SettingsTab[] = ['profile', 'users', 'roles', 'security', 'quick-setup', 'danger-zone'];
+const VALID_TABS: SettingsTab[] = ['profile', 'users', 'roles', 'security', 'health', 'quick-setup', 'danger-zone'];
 
 export function SettingsPage() {
   const { t } = useTranslation();
@@ -92,6 +93,7 @@ export function SettingsPage() {
     users: canViewAdmin,
     roles: canViewAdmin,
     security: canViewAdmin,
+    health: true,
     'quick-setup': canManageSettings,
     'danger-zone': canManageSettings,
   };
@@ -169,7 +171,7 @@ export function SettingsPage() {
     },
   });
 
-  const handleProfileChange = (field: keyof HotelProfile, value: string) => {
+  const handleProfileChange = (field: keyof HotelProfile, value: string | number | undefined) => {
     setProfileForm((prev) => ({ ...prev, [field]: value }));
   };
 
@@ -199,7 +201,7 @@ export function SettingsPage() {
 
   const tabs = [
     { id: 'profile' as const, label: t('settings.hotelProfile.title'), icon: Building2 },
-    // Admin tabs (show but disable if no permission)
+    { id: 'health' as const, label: 'System Health', icon: Activity },
     { id: 'users' as const, label: t('nav.users'), icon: Users, disabled: !canViewAdmin },
     { id: 'roles' as const, label: t('nav.roles'), icon: Shield, disabled: !canViewAdmin },
     { id: 'security' as const, label: t('settings.security.title'), icon: Lock, disabled: !canViewAdmin },
@@ -457,6 +459,9 @@ export function SettingsPage() {
               )}
             </div>
           )}
+
+          {/* System Health Tab */}
+          {activeTab === 'health' && <HealthContent />}
 
           {/* Users Tab */}
           {activeTab === 'users' && <UsersContent />}

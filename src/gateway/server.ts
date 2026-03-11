@@ -11,7 +11,7 @@ import { healthRoutes } from './routes/health.js';
 import { setupRoutes } from './routes/setup.js';
 import { apiRoutes } from './routes/api.js';
 import { webhookRoutes } from './routes/webhooks/index.js';
-import { errorHandler, requestLogger, securityHeaders, apiRateLimit } from './middleware/index.js';
+import { errorHandler, requestLogger, securityHeaders, apiRateLimit, webhookLogger } from './middleware/index.js';
 
 /**
  * Create and configure the Hono app
@@ -77,6 +77,7 @@ export function createApp() {
   app.route('/api/v1/setup', setupRoutes);
 
   // Webhook routes (no auth, uses signature verification)
+  app.use('/webhooks/*', webhookLogger);
   app.route('/webhooks', webhookRoutes);
 
   // API rate limiting (100 req/min per IP)

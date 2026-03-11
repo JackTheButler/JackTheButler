@@ -214,6 +214,7 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 | New AI app | `src/apps/ai/providers/anthropic.ts` (see also [AI spec](docs/04-specs/ai/index.md)) |
 | New channel app | `src/apps/channels/sms/twilio.ts` |
 | New PMS app | `src/apps/pms/providers/mock.ts` (must include `stalenessThreshold` and `syncInterval` in `configSchema` — see [PMS spec](docs/04-specs/pms/index.md)) |
+| Outbound API call in any adapter | **Must use `createAppLogger(manifest.category, manifest.id)`** from `src/apps/instrumentation.ts` — never call external SDKs or fetch directly. The exact arguments `(manifest.category, manifest.id)` are required so the System Health dashboard can locate logs without any extra config. |
 | New tool app | `src/apps/tools/site-scraper/index.ts` |
 | App manifest types | `src/apps/types.ts` |
 | Core interface | `src/core/interfaces/channel.ts` |
@@ -237,6 +238,7 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 5. **Small commits** - One logical change per commit
 6. **Use .js extensions** - All local imports must use `.js` (ESM requirement)
 7. **Update docs if patterns changed** - If you change a pattern, update CLAUDE.md to match
+8. **Wrap all outbound calls** - Every adapter class must declare `readonly appLog = createAppLogger(manifest.category, manifest.id)` from `src/apps/instrumentation.ts` and wrap all outbound calls with it. This is enforced by TypeScript — `BaseProvider` requires `appLog`, so missing it causes a compile error (`pnpm typecheck`). The arguments **must** be `manifest.category` and `manifest.id` exactly — the System Health endpoint derives app identity from these values automatically.
 
 ## After Writing Code — Verification Checklist
 

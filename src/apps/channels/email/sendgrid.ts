@@ -9,6 +9,7 @@
 
 import sgMail from '@sendgrid/mail';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:channels:email:sendgrid');
@@ -50,6 +51,7 @@ export class SendGridProvider implements BaseProvider {
   private fromAddress: string;
   private fromName: string;
   private apiKey: string;
+  readonly appLog = createAppLogger('channel', 'email-sendgrid');
 
   constructor(config: SendGridConfig) {
     if (!config.apiKey || !config.fromAddress) {
@@ -78,12 +80,15 @@ export class SendGridProvider implements BaseProvider {
       // SendGrid doesn't have a dedicated "verify" endpoint
       // We'll make a request to the API and check if authentication works
       // Using the suppressions endpoint as a lightweight check
-      const response = await fetch('https://api.sendgrid.com/v3/user/profile', {
-        method: 'GET',
-        headers: {
-          Authorization: `Bearer ${this.apiKey}`,
-          'Content-Type': 'application/json',
-        },
+      const response = await this.appLog('connection_test', { fromAddress: this.fromAddress }, async () => {
+        const res = await fetch('https://api.sendgrid.com/v3/user/profile', {
+          method: 'GET',
+          headers: { Authorization: `Bearer ${this.apiKey}`, 'Content-Type': 'application/json' },
+        });
+        if (!res.ok) {
+          throw new AppLogError(`SendGrid connection failed: ${res.status}`, { httpStatus: res.status });
+        }
+        return withLogContext(res, { httpStatus: res.status });
       });
 
       const latencyMs = Date.now() - startTime;
@@ -166,7 +171,13 @@ export class SendGridProvider implements BaseProvider {
         }
       }
 
-      const [response] = await sgMail.send(msg);
+      const [response] = await this.appLog('send_email', { to: options.to }, async () => {
+        const result = await sgMail.send(msg);
+        return withLogContext(result, {
+          statusCode: result[0]?.statusCode,
+          messageId: result[0]?.headers?.['x-message-id'],
+        });
+      });
 
       log.info(
         {

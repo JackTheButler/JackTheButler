@@ -12,6 +12,7 @@ import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
 import { createLogger } from '@/utils/logger.js';
+import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
 
 const log = createLogger('extensions:channels:email:gmail-smtp');
 
@@ -57,6 +58,7 @@ export interface GmailSendResult {
  */
 export class GmailSMTPProvider implements BaseProvider {
   readonly id = 'gmail-smtp';
+  readonly appLog = createAppLogger('channel', 'email-gmail-smtp');
   private transporter: Transporter<SMTPTransport.SentMessageInfo>;
   private email: string;
   private fromName: string;
@@ -94,16 +96,15 @@ export class GmailSMTPProvider implements BaseProvider {
   async testConnection(): Promise<ConnectionTestResult> {
     const startTime = Date.now();
     try {
-      await this.transporter.verify();
+      await this.appLog('connection_test', { host: GMAIL_SMTP.host, email: this.email }, () =>
+        this.transporter.verify()
+      );
       const latencyMs = Date.now() - startTime;
 
       return {
         success: true,
         message: 'Successfully connected to Gmail SMTP',
-        details: {
-          email: this.email,
-          smtpHost: GMAIL_SMTP.host,
-        },
+        details: { email: this.email, smtpHost: GMAIL_SMTP.host },
         latencyMs,
       };
     } catch (error) {
@@ -111,7 +112,6 @@ export class GmailSMTPProvider implements BaseProvider {
       const message = error instanceof Error ? error.message : 'Unknown error';
       log.error({ error }, 'Gmail SMTP connection test failed');
 
-      // Provide helpful hints based on common errors
       let hint = 'Check email and App Password';
       if (message.includes('Invalid login') || message.includes('auth')) {
         hint = 'Invalid credentials. Make sure you are using an App Password, not your regular Google password. Enable 2FA first, then generate an App Password at: Google Account → Security → 2FA → App Passwords';
@@ -120,10 +120,7 @@ export class GmailSMTPProvider implements BaseProvider {
       return {
         success: false,
         message: `Connection failed: ${message}`,
-        details: {
-          email: this.email,
-          hint,
-        },
+        details: { email: this.email, hint },
         latencyMs,
       };
     }
@@ -145,7 +142,7 @@ export class GmailSMTPProvider implements BaseProvider {
       'Sending email via Gmail SMTP'
     );
 
-    try {
+    return this.appLog('send_email', { to: options.to }, async () => {
       const result = await this.transporter.sendMail({
         from,
         to: options.to,
@@ -156,23 +153,20 @@ export class GmailSMTPProvider implements BaseProvider {
         references: options.references?.join(' '),
       });
 
-      log.info(
-        {
-          messageId: result.messageId,
-          to: options.to,
-        },
-        'Email sent successfully via Gmail SMTP'
-      );
+      log.info({ messageId: result.messageId, to: options.to }, 'Email sent successfully via Gmail SMTP');
 
-      return {
+      const enriched = {
         messageId: result.messageId,
         accepted: result.accepted as string[],
         rejected: result.rejected as string[],
       };
-    } catch (error) {
-      log.error({ err: error, to: options.to }, 'Failed to send email via Gmail SMTP');
-      throw error;
-    }
+      return withLogContext(enriched, {
+        messageId: result.messageId,
+        accepted: result.accepted,
+        rejected: result.rejected,
+        serverResponse: result.response,
+      });
+    });
   }
 
   /**
