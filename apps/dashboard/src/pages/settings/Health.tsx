@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { useSystemHealth, type AppHealthItem } from '@/hooks/useSystemHealth';
+import { useSystemHealth, type AppHealthItem, type HealthStatus } from '@/hooks/useSystemHealth';
 import { useSystemLogs, type LogEntry } from '@/hooks/useSystemLogs';
 import { useLiveLogs } from '@/hooks/useLiveLogs';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -27,7 +27,6 @@ import { AppIcon } from '@/components';
 
 type AppActivity = AppHealthItem;
 
-type LogStatus = 'success' | 'failed' | 'warning';
 
 const LOG_VISIBLE_DEFAULT = 20;
 
