@@ -232,6 +232,8 @@ export class AIResponder implements Responder {
       messages,
       maxTokens: 500,
       temperature: 0.7,
+      purpose: 'response_generation',
+      onComplete: (content) => ({ responsePreview: content.length > 120 ? `${content.slice(0, 120)}…` : content }),
     });
 
     const duration = Date.now() - startTime;

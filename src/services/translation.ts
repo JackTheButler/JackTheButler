@@ -68,6 +68,14 @@ Text: "${text}"`,
     maxTokens: 2048,
     temperature: 0.1,
     modelTier: 'utility',
+    purpose: 'language_detection',
+    onComplete: (content) => {
+      const p = parseJsonResponse(content);
+      return {
+        detectedLanguage: p?.language ?? null,
+        translated: !!p?.translation,
+      };
+    },
   });
 
   const parsed = parseJsonResponse(response.content);
@@ -112,6 +120,7 @@ Text: "${text}"`,
     maxTokens: 2048,
     temperature: 0.1,
     modelTier: 'utility',
+    purpose: 'translation',
   });
 
   return response.content.trim();

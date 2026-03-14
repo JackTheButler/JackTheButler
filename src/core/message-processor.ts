@@ -505,6 +505,7 @@ export class MessageProcessor {
       result.metadata = response.metadata;
     }
 
+    const knowledgeContext = response.metadata?.knowledgeContext as Array<{ title: string; similarity: number }> | undefined;
     processorOutcome = 'success';
     outcomeDetails = {
       actionTaken: 'responded',
@@ -515,6 +516,8 @@ export class MessageProcessor {
       taskCreated: !!response.metadata?.taskCreated,
       taskId: response.metadata?.taskId ?? undefined,
       responseLength: result.content.length,
+      knowledgeHits: knowledgeContext?.length ?? 0,
+      ...(knowledgeContext?.[0] && { topKnowledgeMatch: knowledgeContext[0].title, topKnowledgeSimilarity: knowledgeContext[0].similarity }),
     };
     return result;
 

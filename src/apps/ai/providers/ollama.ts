@@ -136,7 +136,7 @@ export class OllamaProvider implements AIProvider, BaseProvider {
 
     log.debug({ messageCount: request.messages.length, model }, 'Sending completion request');
 
-    const data = await this.appLog('completion', { model }, async () => {
+    const data = await this.appLog('completion', { model, ...(request.purpose && { purpose: request.purpose }) }, async () => {
       const response = await fetch(`${this.baseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -155,7 +155,9 @@ export class OllamaProvider implements AIProvider, BaseProvider {
         throw new AppLogError(`Ollama API error: ${response.status} ${response.statusText}`, { httpStatus: response.status });
       }
       const data = await response.json() as OllamaChatResponse;
-      return withLogContext(data, { promptTokens: data.prompt_eval_count, completionTokens: data.eval_count });
+      const text = data.message.content.trim();
+      const onCompleteContext = request.onComplete?.(text) ?? {};
+      return withLogContext(data, { promptTokens: data.prompt_eval_count, completionTokens: data.eval_count, ...onCompleteContext });
     });
 
     log.debug(

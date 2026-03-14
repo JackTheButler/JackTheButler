@@ -316,7 +316,7 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
     const modelName = request.modelTier === 'utility' ? this.utilityModel : this.completionModel;
     log.debug({ messageCount: request.messages.length, model: modelName }, 'Generating local completion');
 
-    return this.appLog('completion', { model: modelName }, async () => {
+    return this.appLog('completion', { model: modelName, ...(request.purpose && { purpose: request.purpose }) }, async () => {
       const generator = await this.getTextPipeline(modelName);
       const prompt = this.buildPrompt(request.messages, modelName);
 
@@ -332,8 +332,10 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 
       log.debug({ contentLength: content.length }, 'Local completion generated');
 
+      const onCompleteContext = request.onComplete?.(content) ?? {};
       return withLogContext({ content, usage: { inputTokens: 0, outputTokens: 0 }, stopReason: 'end_turn' }, {
         contentLength: content.length,
+        ...onCompleteContext,
       });
     });
   }

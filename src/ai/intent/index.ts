@@ -44,6 +44,7 @@ export class IntentClassifier {
     const userPrompt = this.buildUserPrompt(message);
 
     try {
+      let parsed: ClassificationResult | undefined;
       const response = await this.provider.complete({
         messages: [
           { role: 'system', content: systemPrompt },
@@ -52,9 +53,14 @@ export class IntentClassifier {
         maxTokens: 150,
         temperature: 0.1, // Low temperature for consistent classification
         modelTier: 'utility',
+        purpose: 'intent_classification',
+        onComplete: (content) => {
+          parsed = this.parseResponse(content);
+          return { intent: parsed.intent, confidence: parsed.confidence };
+        },
       });
 
-      const result = this.parseResponse(response.content);
+      const result = parsed ?? this.parseResponse(response.content);
 
       log.info(
         {

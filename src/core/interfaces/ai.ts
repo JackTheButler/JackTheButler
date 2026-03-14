@@ -38,6 +38,10 @@ export interface CompletionRequest {
   stopSequences?: string[] | undefined;
   /** Which model tier to use. Defaults to 'completion'. */
   modelTier?: ModelTier | undefined;
+  /** Human-readable label for what this call is for (logged in app_logs for debugging) */
+  purpose?: string | undefined;
+  /** Called with the response text inside the appLog callback so the result can be merged into the log row */
+  onComplete?: (content: string) => Record<string, unknown>;
 }
 
 /**

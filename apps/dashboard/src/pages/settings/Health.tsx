@@ -160,8 +160,8 @@ function AppHealthCard({ app }: { app: AppActivity }) {
   return (
     <div className={cn(
       'p-4 rounded-lg border',
-      app.status === 'error'   && 'border-destructive/30 bg-destructive/5',
-      app.status === 'warning' && 'border-warning/30 bg-warning/5',
+      app.status === 'error'   && 'border-[hsl(var(--error-border))] bg-destructive/5',
+      app.status === 'warning' && 'border-warning-border bg-warning/5',
       (app.status === 'healthy' || app.status === 'unknown') && 'border-border',
     )}>
       <div className="flex-1 min-w-0">

@@ -129,13 +129,16 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
       createParams.stop = request.stopSequences;
     }
 
-    const response = await this.appLog('completion', { model }, async () => {
+    const response = await this.appLog('completion', { model, ...(request.purpose && { purpose: request.purpose }) }, async () => {
       const result = await this.client.chat.completions.create(createParams);
+      const text = result.choices[0]?.message?.content || '';
+      const onCompleteContext = request.onComplete?.(text) ?? {};
       return withLogContext(result, {
         messageId: result.id,
         inputTokens: result.usage?.prompt_tokens,
         outputTokens: result.usage?.completion_tokens,
         finishReason: result.choices[0]?.finish_reason,
+        ...onCompleteContext,
       });
     });
 
