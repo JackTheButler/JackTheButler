@@ -48,6 +48,9 @@ export const PERMISSIONS = {
   // Admin (users, roles)
   ADMIN_VIEW: 'admin:view',
   ADMIN_MANAGE: 'admin:manage',
+
+  // System Health
+  HEALTH_VIEW: 'health:view',
 } as const;
 
 export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];

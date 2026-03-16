@@ -313,7 +313,7 @@ function LogRow({ entry, isNew = false, now }: { entry: LogEntry; isNew?: boolea
 
 export function HealthContent() {
   const { can } = usePermissions();
-  const isAdmin = can(PERMISSIONS.SETTINGS_MANAGE);
+  const isAdmin = can(PERMISSIONS.HEALTH_VIEW);
 
   const [now, setNow] = useState(() => Date.now());
   useEffect(() => {

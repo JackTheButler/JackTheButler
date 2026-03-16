@@ -47,6 +47,9 @@ export const PERMISSIONS = {
   // Administration (users, roles, audit)
   ADMIN_VIEW: 'admin:view',
   ADMIN_MANAGE: 'admin:manage',
+
+  // System Health
+  HEALTH_VIEW: 'health:view',
 } as const;
 
 /**
@@ -188,6 +191,14 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     description: 'Manage users, roles, and system settings',
     group: 'admin',
   },
+
+  // System Health
+  {
+    key: PERMISSIONS.HEALTH_VIEW,
+    label: 'View System Health',
+    description: 'View app health status and system logs',
+    group: 'health',
+  },
 ];
 
 /**
@@ -238,6 +249,11 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     key: 'admin',
     label: 'Administration',
     permissions: PERMISSION_DEFINITIONS.filter((p) => p.group === 'admin'),
+  },
+  {
+    key: 'health',
+    label: 'System Health',
+    permissions: PERMISSION_DEFINITIONS.filter((p) => p.group === 'health'),
   },
 ];
 

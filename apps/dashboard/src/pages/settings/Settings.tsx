@@ -82,6 +82,7 @@ export function SettingsPage() {
   const { can } = usePermissions();
   const canViewAdmin = can(PERMISSIONS.ADMIN_VIEW);
   const canManageSettings = can(PERMISSIONS.SETTINGS_MANAGE);
+  const canViewHealth = can(PERMISSIONS.HEALTH_VIEW);
   const { version } = useSystemStatus();
 
   // Get active tab from URL, default to 'profile'
@@ -93,7 +94,7 @@ export function SettingsPage() {
     users: canViewAdmin,
     roles: canViewAdmin,
     security: canViewAdmin,
-    health: true,
+    health: canViewHealth,
     'quick-setup': canManageSettings,
     'danger-zone': canManageSettings,
   };
@@ -201,7 +202,7 @@ export function SettingsPage() {
 
   const tabs = [
     { id: 'profile' as const, label: t('settings.hotelProfile.title'), icon: Building2 },
-    { id: 'health' as const, label: 'System Health', icon: Activity },
+    { id: 'health' as const, label: 'System Health', icon: Activity, disabled: !canViewHealth },
     { id: 'users' as const, label: t('nav.users'), icon: Users, disabled: !canViewAdmin },
     { id: 'roles' as const, label: t('nav.roles'), icon: Shield, disabled: !canViewAdmin },
     { id: 'security' as const, label: t('settings.security.title'), icon: Lock, disabled: !canViewAdmin },

@@ -359,7 +359,7 @@ export function describeError(errorRaw: string | null, category: string): string
  * GET /api/v1/system/health
  * Returns one health card per active connected app.
  */
-systemRoutes.get('/health', requirePermission(PERMISSIONS.SETTINGS_VIEW), (c) => {
+systemRoutes.get('/health', requirePermission(PERMISSIONS.HEALTH_VIEW), (c) => {
   const registry = getAppRegistry();
   const activeApps = registry.getAll().filter((a) => a.status === 'active');
 
@@ -486,7 +486,7 @@ systemRoutes.get('/health', requirePermission(PERMISSIONS.SETTINGS_VIEW), (c) =>
  * Returns a unified log stream from both activity_log and app_logs tables.
  * Supports server-side filtering by source, status, and date range.
  */
-systemRoutes.get('/logs', requirePermission(PERMISSIONS.SETTINGS_MANAGE), (c) => {
+systemRoutes.get('/logs', requirePermission(PERMISSIONS.HEALTH_VIEW), (c) => {
   const source = c.req.query('source') ?? 'all';
   const status = c.req.query('status') ?? 'all';
   const from   = c.req.query('from')   ?? '';

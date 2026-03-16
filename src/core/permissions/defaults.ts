@@ -52,6 +52,8 @@ export const DEFAULT_ROLES: Omit<Role, 'createdAt' | 'updatedAt'>[] = [
       PERMISSIONS.SETTINGS_MANAGE,
       // View-only admin (can see users but not manage)
       PERMISSIONS.ADMIN_VIEW,
+      // System health
+      PERMISSIONS.HEALTH_VIEW,
     ],
     isSystem: true,
   },
