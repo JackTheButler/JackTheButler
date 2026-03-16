@@ -14,14 +14,21 @@ export const headerStyles = `
 }
 
 .butler-header-icon {
-  font-size: 20px;
-  line-height: 1;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--butler-logo-radius, 50%);
+  background: rgba(255, 255, 255, 0.18);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  color: var(--butler-text-on-header);
 }
 
 .butler-header-logo {
   width: 32px;
   height: 32px;
-  border-radius: 50%;
+  border-radius: var(--butler-logo-radius, 50%);
   object-fit: cover;
 }
 

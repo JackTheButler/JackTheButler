@@ -267,6 +267,10 @@ export class ButlerChatWidget {
       }
     }
 
+    if (cfg.logoRadius) {
+      overrides.push(`--butler-logo-radius: ${cfg.logoRadius}`);
+    }
+
     if (overrides.length > 0) {
       const overrideStyle = document.createElement('style');
       overrideStyle.textContent = `:host { ${overrides.join('; ')}; }`;

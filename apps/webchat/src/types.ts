@@ -120,6 +120,7 @@ export interface WidgetRemoteConfig {
   primaryColor: string;
   headerBackground: string;
   logoUrl: string | null;
+  logoRadius: string | null;
   welcomeMessage: string | null;
   locale?: string;
   strings?: WidgetStrings;

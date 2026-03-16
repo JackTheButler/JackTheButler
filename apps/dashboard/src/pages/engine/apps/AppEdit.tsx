@@ -806,6 +806,7 @@ export function AppEditPage() {
                     headerBackground={String(webchatFormData.headerBackground || app.config?.headerBackground || '#1a1a2e')}
                     botName={String(webchatFormData.botName || app.config?.botName || '')}
                     logoUrl={String(webchatFormData.logoUrl || app.config?.logoUrl || '')}
+                    logoRadius={String(webchatFormData.logoRadius || app.config?.logoRadius || '')}
                     welcomeMessage={String(webchatFormData.welcomeMessage || app.config?.welcomeMessage || '')}
                     buttonIcon={String(webchatFormData.buttonIcon || app.config?.buttonIcon || 'chat')}
                     theme={String(webchatFormData.theme || app.config?.theme || 'light')}

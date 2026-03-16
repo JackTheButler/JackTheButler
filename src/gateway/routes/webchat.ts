@@ -103,6 +103,7 @@ webchatRouter.get('/config', async (c) => {
     primaryColor: '#0084ff',
     headerBackground: '#1a1a2e',
     logoUrl: null as string | null,
+    logoRadius: null as string | null,
     welcomeMessage: null as string | null,
   };
 
@@ -132,6 +133,7 @@ webchatRouter.get('/config', async (c) => {
     primaryColor: (cfg.primaryColor as string) || defaults.primaryColor,
     headerBackground: (cfg.headerBackground as string) || defaults.headerBackground,
     logoUrl: (cfg.logoUrl as string) || defaults.logoUrl,
+    logoRadius: (cfg.logoRadius as string) || defaults.logoRadius,
     welcomeMessage: (cfg.welcomeMessage as string) || defaults.welcomeMessage,
     ...localeFields,
   });

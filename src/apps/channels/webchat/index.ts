@@ -611,6 +611,15 @@ export const manifest: ChannelAppManifest = {
       description: 'URL to a logo image shown in the chat header',
     },
     {
+      key: 'logoRadius',
+      label: 'Logo Border Radius',
+      type: 'text',
+      required: false,
+      placeholder: '50%',
+      description: 'CSS border-radius for the logo (e.g. 50% for circle, 8px for rounded, 0 for square)',
+      default: '50%',
+    },
+    {
       key: 'welcomeMessage',
       label: 'Welcome Message',
       type: 'text',

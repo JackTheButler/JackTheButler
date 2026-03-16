@@ -33,6 +33,7 @@ export interface WebchatPreviewProps {
   headerBackground: string;
   botName: string;
   logoUrl: string;
+  logoRadius: string;
   welcomeMessage: string;
   buttonIcon: string;
   theme: string;
@@ -44,6 +45,7 @@ export function WebchatPreview({
   headerBackground,
   botName,
   logoUrl,
+  logoRadius,
   welcomeMessage,
   buttonIcon,
   theme,
@@ -122,8 +124,9 @@ export function WebchatPreview({
           >
             {/* Logo or fallback icon — matches .butler-header-logo */}
             <div
-              className="w-8 h-8 rounded-full shrink-0 overflow-hidden flex items-center justify-center"
+              className="w-8 h-8 shrink-0 overflow-hidden flex items-center justify-center"
               style={{
+                borderRadius: logoRadius || '50%',
                 background:
                   headerText === '#ffffff' ? 'rgba(255,255,255,0.18)' : 'rgba(0,0,0,0.1)',
               }}
