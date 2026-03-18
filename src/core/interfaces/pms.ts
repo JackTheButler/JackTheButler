@@ -39,15 +39,8 @@ export interface NormalizedGuest {
   notes?: string;
 }
 
-/**
- * Reservation status normalized across PMSes
- */
-export type ReservationStatus =
-  | 'confirmed'
-  | 'checked_in'
-  | 'checked_out'
-  | 'cancelled'
-  | 'no_show';
+import type { ReservationStatus } from '@jack/shared';
+export type { ReservationStatus } from '@jack/shared';
 
 /**
  * Normalized reservation from any PMS

@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
+import { WILDCARD_PERMISSION } from '@jack/shared';
 
 /**
  * User role information
@@ -52,10 +53,6 @@ interface AuthState {
   hasAllPermissions: (permissions: string[]) => boolean;
 }
 
-/**
- * Wildcard permission that grants all access
- */
-const WILDCARD_PERMISSION = '*';
 
 /**
  * Transform API response to User object

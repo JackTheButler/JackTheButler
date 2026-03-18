@@ -11,11 +11,11 @@ import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { NotFoundError } from '@/errors/index.js';
 import { events, EventTypes } from '@/events/index.js';
+import type { TaskStatus, TaskPriority } from '@jack/shared';
+export type { TaskStatus, TaskPriority } from '@jack/shared';
 
 const log = createLogger('task');
 
-export type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
-export type TaskPriority = 'urgent' | 'high' | 'standard' | 'low';
 export type TaskType = 'housekeeping' | 'maintenance' | 'concierge' | 'room_service' | 'other';
 
 export type TaskSource = 'manual' | 'auto' | 'automation';

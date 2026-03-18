@@ -17,6 +17,9 @@ importers:
       '@huggingface/transformers':
         specifier: ^3.4.0
         version: 3.8.1
+      '@jack/shared':
+        specifier: workspace:*
+        version: link:packages/shared
       '@sendgrid/mail':
         specifier: ^8.1.6
         version: 8.1.6
@@ -111,6 +114,9 @@ importers:
 
   apps/dashboard:
     dependencies:
+      '@jack/shared':
+        specifier: workspace:*
+        version: link:../../packages/shared
       '@radix-ui/react-dialog':
         specifier: ^1.1.15
         version: 1.1.15(@types/react-dom@18.3.7(@types/react@18.3.27))(@types/react@18.3.27)(react-dom@18.3.1(react@18.3.1))(react@18.3.1)
@@ -239,6 +245,12 @@ importers:
       vite:
         specifier: ^6.0.7
         version: 6.4.1(@types/node@22.19.7)(jiti@2.6.1)(lightningcss@1.30.2)(tsx@4.21.0)
+
+  packages/shared:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
 
 packages:
 

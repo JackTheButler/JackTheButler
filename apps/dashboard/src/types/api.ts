@@ -2,12 +2,12 @@
  * Shared API types for the dashboard.
  */
 
-// --- Status Types ---
+import type { ConversationState, ChannelType, TaskStatus, ReservationStatus } from '@jack/shared';
 
-export type TaskStatus = 'pending' | 'assigned' | 'in_progress' | 'completed' | 'cancelled';
+export type { ConversationState, ChannelType, TaskStatus, ReservationStatus };
+
+// --- Status Types ---
 export type TaskSource = 'manual' | 'auto' | 'automation';
-export type ReservationStatus = 'confirmed' | 'checked_in' | 'checked_out' | 'cancelled' | 'no_show';
-export type ConversationState = 'new' | 'active' | 'escalated' | 'resolved' | 'closed';
 
 // --- Guest ---
 
@@ -103,9 +103,9 @@ export interface Task {
 
 export interface Conversation {
   id: string;
-  channelType: string;
+  channelType: ChannelType;
   channelId: string;
-  state: ConversationState | string;
+  state: ConversationState;
   guestId: string | null;
   guestName?: string;
   assignedTo: string | null;

@@ -171,272 +171,19 @@ export class MessageProcessor {
     log.debug({ conversationId: conversation.id, intent: response.intent }, 'Response generated');
 
     // 5a. Check if task should be created (TaskRouter)
-    if (response.intent && response.confidence && response.confidence >= 0.6) {
-      const taskRouter = getTaskRouter();
-
-      // Build classification result from response
-      const classification: ClassificationResult = {
-        intent: response.intent,
-        confidence: response.confidence,
-        department: getIntentDefinition(response.intent)?.department ?? null,
-        requiresAction: getIntentDefinition(response.intent)?.requiresAction ?? false,
-      };
-
-      // Build task router context from guest context
-      const taskContext: TaskRouterContext = {
-        guestId: guestContext?.guest?.id ?? 'unknown',
-        firstName: guestContext?.guest?.firstName ?? 'Guest',
-        lastName: guestContext?.guest?.lastName ?? '',
-      };
-      // Add optional fields only if they have values
-      if (guestContext?.reservation?.roomNumber) {
-        taskContext.roomNumber = guestContext.reservation.roomNumber;
-      }
-      if (guestContext?.guest?.loyaltyTier) {
-        taskContext.loyaltyTier = guestContext.guest.loyaltyTier;
-      }
-      if (guestContext?.guest?.language) {
-        taskContext.language = guestContext.guest.language;
-      }
-
-      const routingDecision = taskRouter.process(classification, taskContext);
-
-      if (routingDecision.shouldCreateTask && routingDecision.department) {
-        // Build a contextual task description
-        const guestName = guestContext?.guest
-          ? `${guestContext.guest.firstName} ${guestContext.guest.lastName}`
-          : 'Guest';
-        const roomInfo = guestContext?.reservation?.roomNumber
-          ? `Room ${guestContext.reservation.roomNumber}`
-          : '';
-        const channelInfo = inbound.channel ? `via ${inbound.channel}` : '';
-
-        // Create a clear, actionable description — message first, guest context at end
-        const contextParts = [guestName, roomInfo, channelInfo].filter(Boolean).join(', ');
-        const taskDescription = `"${translatedContent ?? inbound.content}" — ${contextParts}`;
-
-        const taskInput: Parameters<typeof taskService.create>[0] = {
-          conversationId: conversation.id,
-          messageId: savedInbound.id,
-          source: 'auto',
-          type: (routingDecision.taskType ?? 'other') as TaskType,
-          department: routingDecision.department,
-          description: taskDescription,
-          priority: routingDecision.priority,
-        };
-        if (guestContext?.reservation?.roomNumber) {
-          taskInput.roomNumber = guestContext.reservation.roomNumber;
-        }
-
-        // Check if task creation requires approval
-        if (routingDecision.requiresApproval) {
-          // Queue task for approval instead of creating directly
-          const approvalQueue = getApprovalQueue();
-          const actionType = routingDecision.taskType === 'housekeeping'
-            ? 'createHousekeepingTask'
-            : routingDecision.taskType === 'maintenance'
-              ? 'createMaintenanceTask'
-              : routingDecision.taskType === 'concierge'
-                ? 'createConciergeTask'
-                : routingDecision.taskType === 'room_service'
-                  ? 'createRoomServiceTask'
-                  : 'createConciergeTask';
-
-          const approvalItem = await approvalQueue.queueForApproval({
-            type: 'task',
-            actionType,
-            actionData: taskInput as unknown as Record<string, unknown>,
-            conversationId: conversation.id,
-            guestId: guestContext?.guest?.id ?? undefined,
-          });
-
-          log.info(
-            {
-              approvalId: approvalItem.id,
-              conversationId: conversation.id,
-              taskType: routingDecision.taskType,
-              department: routingDecision.department,
-            },
-            'Task queued for approval'
-          );
-
-          // Add approval info to response metadata
-          response.metadata = {
-            ...response.metadata,
-            taskPendingApproval: true,
-            approvalId: approvalItem.id,
-            taskDepartment: routingDecision.department,
-            taskPriority: routingDecision.priority,
-          };
-        } else {
-          // Create task directly
-          try {
-            const task = await taskService.create(taskInput);
-
-            log.info(
-              {
-                taskId: task.id,
-                conversationId: conversation.id,
-                department: routingDecision.department,
-                priority: routingDecision.priority,
-              },
-              'Auto-created task from guest request'
-            );
-
-            // Add task info to response metadata
-            response.metadata = {
-              ...response.metadata,
-              taskCreated: true,
-              taskId: task.id,
-              taskDepartment: routingDecision.department,
-              taskPriority: routingDecision.priority,
-            };
-
-            // Emit task created event
-            events.emit({
-              type: EventTypes.TASK_CREATED,
-              taskId: task.id,
-              conversationId: conversation.id,
-              type_: routingDecision.taskType ?? 'other',
-              department: routingDecision.department,
-              priority: routingDecision.priority,
-              timestamp: new Date(),
-            });
-          } catch (error) {
-            log.error({ err: error, conversationId: conversation.id }, 'Failed to create task');
-          }
-        }
-      }
-    }
+    await this.handleTaskRouting(response, inbound, conversation, savedInbound, guestContext, translatedContent);
 
     // 5b. Check for escalation
-    const escalationManager = getEscalationManager();
-    const escalationDecision = await escalationManager.shouldEscalate(
-      conversation.id,
-      inbound.content,
-      response.confidence ?? 0.5
-    );
-
-    if (escalationDecision.shouldEscalate) {
-      log.info(
-        {
-          conversationId: conversation.id,
-          reasons: escalationDecision.reasons,
-          priority: escalationDecision.priority,
-        },
-        'Escalating conversation'
-      );
-
-      // Update conversation state to escalated
-      await this.conversationSvc.update(conversation.id, { state: 'escalated' });
-
-      // Emit escalation event
-      events.emit({
-        type: EventTypes.CONVERSATION_ESCALATED,
-        conversationId: conversation.id,
-        reasons: escalationDecision.reasons,
-        priority: escalationDecision.priority,
-        timestamp: new Date(),
-      });
-
-      // Append escalation notice to response, preserving the AI's answer
-      const escalationNotice = escalationDecision.priority === 'urgent'
-        ? "I'm also connecting you with a staff member who will be with you shortly."
-        : "I'm also connecting you with a staff member who can assist you further.";
-      response.content = `${response.content}\n\n${escalationNotice}`;
-      response.metadata = {
-        ...response.metadata,
-        escalated: true,
-        escalationReasons: escalationDecision.reasons,
-        escalationPriority: escalationDecision.priority,
-      };
-    }
+    const escalationDecision = await this.handleEscalation(response, inbound, conversation);
 
     // 5c. Check autonomy settings for response approval
-    const autonomyEngine = getAutonomyEngine();
-    await autonomyEngine.ensureLoaded();
-
-    // Build autonomy context
-    const autonomyContext: AutonomyContext = {
-      guestId: guestContext?.guest?.id ?? undefined,
-      loyaltyTier: guestContext?.guest?.loyaltyTier ?? undefined,
-      roomNumber: guestContext?.reservation?.roomNumber ?? undefined,
-    };
-
-    // Check if we can auto-execute the response
-    const canAutoExecute = autonomyEngine.canAutoExecute('respondToGuest', autonomyContext);
-
-    // Also check confidence-based autonomy decision
-    const confidenceDecision = autonomyEngine.shouldAutoExecuteByConfidence(
-      response.confidence ?? 0.5
+    const approvalResult = await this.handleAutonomyCheck(
+      response, conversation, guestContext, detectedLanguage, propertyLanguage
     );
 
-    if (!canAutoExecute || confidenceDecision === 'approval_required') {
-      // Queue response for staff approval
-      const approvalQueue = getApprovalQueue();
-      const approvalItem = await approvalQueue.queueForApproval({
-        type: 'response',
-        actionType: 'respondToGuest',
-        actionData: {
-          conversationId: conversation.id,
-          content: response.content,
-          intent: response.intent,
-          confidence: response.confidence,
-          metadata: response.metadata,
-        },
-        conversationId: conversation.id,
-        guestId: guestContext?.guest?.id ?? undefined,
-      });
-
-      log.info(
-        {
-          conversationId: conversation.id,
-          approvalId: approvalItem.id,
-          reason: !canAutoExecute ? 'autonomy_level' : 'low_confidence',
-        },
-        'Response queued for approval'
-      );
-
-      // Return a contextual pending response to the guest
-      const pendingContent = this.getPendingMessage(response.intent, guestContext?.guest?.firstName);
-
-      // Translate pending message to guest language
-      const pendingGuestLang = detectedLanguage ?? conversation.guestLanguage ?? 'en';
-      let translatedPendingContent: string | undefined;
-      if (pendingGuestLang !== propertyLanguage) {
-        try {
-          translatedPendingContent = await translate(pendingContent, pendingGuestLang, propertyLanguage);
-        } catch (error) {
-          log.warn({ error }, 'Pending message translation failed');
-        }
-      }
-
-      const pendingResponse: OutboundMessage = {
-        conversationId: conversation.id,
-        content: translatedPendingContent ?? pendingContent,
-        contentType: 'text',
-        metadata: {
-          pendingApproval: true,
-          approvalId: approvalItem.id,
-          originalResponse: response.content,
-        },
-      };
-
-      // Save the pending response message
-      await this.conversationSvc.addMessage(conversation.id, {
-        direction: 'outbound',
-        senderType: 'ai',
-        content: pendingContent,
-        translatedContent: translatedPendingContent,
-        contentType: 'text',
-      });
-
+    if (approvalResult) {
       const duration = Date.now() - startTime;
-      log.info(
-        { conversationId: conversation.id, duration, pendingApproval: true },
-        'Message processed (pending approval)'
-      );
-
+      log.info({ conversationId: conversation.id, duration, pendingApproval: true }, 'Message processed (pending approval)');
       processorOutcome = 'success';
       outcomeDetails = {
         actionTaken: 'approval_queued',
@@ -445,10 +192,10 @@ export class MessageProcessor {
         detectedLanguage,
         escalated: escalationDecision.shouldEscalate,
         taskCreated: !!response.metadata?.taskCreated,
-        approvalId: approvalItem.id,
-        approvalReason: !canAutoExecute ? 'autonomy_level' : 'low_confidence',
+        approvalId: approvalResult.approvalId,
+        approvalReason: approvalResult.approvalReason,
       };
-      return pendingResponse;
+      return approvalResult.pendingResponse;
     }
 
     // 5d. Translate AI response to guest language
@@ -551,6 +298,250 @@ export class MessageProcessor {
         );
       } catch {
         // Never let a log write replace the original error or block the response
+      }
+    }
+  }
+
+  /**
+   * Check autonomy settings and confidence to decide if response needs staff approval.
+   * Returns pending response info if approval is required, or null to proceed automatically.
+   */
+  private async handleAutonomyCheck(
+    response: Awaited<ReturnType<Responder['generate']>>,
+    conversation: { id: string; guestLanguage?: string | null },
+    guestContext: GuestContext | undefined,
+    detectedLanguage: string | undefined,
+    propertyLanguage: string
+  ): Promise<{ pendingResponse: OutboundMessage; approvalId: string; approvalReason: string } | null> {
+    const autonomyEngine = getAutonomyEngine();
+    await autonomyEngine.ensureLoaded();
+
+    const autonomyContext: AutonomyContext = {
+      guestId: guestContext?.guest?.id ?? undefined,
+      loyaltyTier: guestContext?.guest?.loyaltyTier ?? undefined,
+      roomNumber: guestContext?.reservation?.roomNumber ?? undefined,
+    };
+
+    const canAutoExecute = autonomyEngine.canAutoExecute('respondToGuest', autonomyContext);
+    const confidenceDecision = autonomyEngine.shouldAutoExecuteByConfidence(response.confidence ?? 0.5);
+
+    if (canAutoExecute && confidenceDecision !== 'approval_required') return null;
+
+    const approvalQueue = getApprovalQueue();
+    const approvalItem = await approvalQueue.queueForApproval({
+      type: 'response',
+      actionType: 'respondToGuest',
+      actionData: {
+        conversationId: conversation.id,
+        content: response.content,
+        intent: response.intent,
+        confidence: response.confidence,
+        metadata: response.metadata,
+      },
+      conversationId: conversation.id,
+      guestId: guestContext?.guest?.id ?? undefined,
+    });
+
+    const approvalReason = !canAutoExecute ? 'autonomy_level' : 'low_confidence';
+    log.info({ conversationId: conversation.id, approvalId: approvalItem.id, reason: approvalReason }, 'Response queued for approval');
+
+    const pendingContent = this.getPendingMessage(response.intent, guestContext?.guest?.firstName);
+    const pendingGuestLang = detectedLanguage ?? conversation.guestLanguage ?? 'en';
+    let translatedPendingContent: string | undefined;
+    if (pendingGuestLang !== propertyLanguage) {
+      try {
+        translatedPendingContent = await translate(pendingContent, pendingGuestLang, propertyLanguage);
+      } catch (error) {
+        log.warn({ error }, 'Pending message translation failed');
+      }
+    }
+
+    await this.conversationSvc.addMessage(conversation.id, {
+      direction: 'outbound',
+      senderType: 'ai',
+      content: pendingContent,
+      translatedContent: translatedPendingContent,
+      contentType: 'text',
+    });
+
+    return {
+      approvalId: approvalItem.id,
+      approvalReason,
+      pendingResponse: {
+        conversationId: conversation.id,
+        content: translatedPendingContent ?? pendingContent,
+        contentType: 'text',
+        metadata: {
+          pendingApproval: true,
+          approvalId: approvalItem.id,
+          originalResponse: response.content,
+        },
+      },
+    };
+  }
+
+  /**
+   * Check if the conversation should be escalated and update state accordingly.
+   * Mutates response.content and response.metadata if escalated.
+   * Returns the escalation decision for use in outcome logging.
+   */
+  private async handleEscalation(
+    response: Awaited<ReturnType<Responder['generate']>>,
+    inbound: InboundMessage,
+    conversation: { id: string }
+  ): Promise<{ shouldEscalate: boolean }> {
+    const escalationManager = getEscalationManager();
+    const escalationDecision = await escalationManager.shouldEscalate(
+      conversation.id,
+      inbound.content,
+      response.confidence ?? 0.5
+    );
+
+    if (escalationDecision.shouldEscalate) {
+      log.info(
+        { conversationId: conversation.id, reasons: escalationDecision.reasons, priority: escalationDecision.priority },
+        'Escalating conversation'
+      );
+
+      await this.conversationSvc.update(conversation.id, { state: 'escalated' });
+
+      events.emit({
+        type: EventTypes.CONVERSATION_ESCALATED,
+        conversationId: conversation.id,
+        reasons: escalationDecision.reasons,
+        priority: escalationDecision.priority,
+        timestamp: new Date(),
+      });
+
+      const escalationNotice = escalationDecision.priority === 'urgent'
+        ? "I'm also connecting you with a staff member who will be with you shortly."
+        : "I'm also connecting you with a staff member who can assist you further.";
+      response.content = `${response.content}\n\n${escalationNotice}`;
+      response.metadata = {
+        ...response.metadata,
+        escalated: true,
+        escalationReasons: escalationDecision.reasons,
+        escalationPriority: escalationDecision.priority,
+      };
+    }
+
+    return escalationDecision;
+  }
+
+  /**
+   * Route the response intent to a task, queuing for approval or creating directly.
+   * Mutates response.metadata with task info.
+   */
+  private async handleTaskRouting(
+    response: Awaited<ReturnType<Responder['generate']>>,
+    inbound: InboundMessage,
+    conversation: { id: string },
+    savedInbound: { id: string },
+    guestContext: GuestContext | undefined,
+    translatedContent: string | undefined
+  ): Promise<void> {
+    if (!response.intent || !response.confidence || response.confidence < 0.6) return;
+
+    const taskRouter = getTaskRouter();
+
+    const classification: ClassificationResult = {
+      intent: response.intent,
+      confidence: response.confidence,
+      department: getIntentDefinition(response.intent)?.department ?? null,
+      requiresAction: getIntentDefinition(response.intent)?.requiresAction ?? false,
+    };
+
+    const taskContext: TaskRouterContext = {
+      guestId: guestContext?.guest?.id ?? 'unknown',
+      firstName: guestContext?.guest?.firstName ?? 'Guest',
+      lastName: guestContext?.guest?.lastName ?? '',
+    };
+    if (guestContext?.reservation?.roomNumber) taskContext.roomNumber = guestContext.reservation.roomNumber;
+    if (guestContext?.guest?.loyaltyTier) taskContext.loyaltyTier = guestContext.guest.loyaltyTier;
+    if (guestContext?.guest?.language) taskContext.language = guestContext.guest.language;
+
+    const routingDecision = taskRouter.process(classification, taskContext);
+    if (!routingDecision.shouldCreateTask || !routingDecision.department) return;
+
+    const guestName = guestContext?.guest
+      ? `${guestContext.guest.firstName} ${guestContext.guest.lastName}`
+      : 'Guest';
+    const roomInfo = guestContext?.reservation?.roomNumber ? `Room ${guestContext.reservation.roomNumber}` : '';
+    const channelInfo = inbound.channel ? `via ${inbound.channel}` : '';
+    const contextParts = [guestName, roomInfo, channelInfo].filter(Boolean).join(', ');
+    const taskDescription = `"${translatedContent ?? inbound.content}" — ${contextParts}`;
+
+    const taskInput: Parameters<typeof taskService.create>[0] = {
+      conversationId: conversation.id,
+      messageId: savedInbound.id,
+      source: 'auto',
+      type: (routingDecision.taskType ?? 'other') as TaskType,
+      department: routingDecision.department,
+      description: taskDescription,
+      priority: routingDecision.priority,
+    };
+    if (guestContext?.reservation?.roomNumber) taskInput.roomNumber = guestContext.reservation.roomNumber;
+
+    if (routingDecision.requiresApproval) {
+      const approvalQueue = getApprovalQueue();
+      const actionType = routingDecision.taskType === 'housekeeping'
+        ? 'createHousekeepingTask'
+        : routingDecision.taskType === 'maintenance'
+          ? 'createMaintenanceTask'
+          : routingDecision.taskType === 'concierge'
+            ? 'createConciergeTask'
+            : routingDecision.taskType === 'room_service'
+              ? 'createRoomServiceTask'
+              : 'createConciergeTask';
+
+      const approvalItem = await approvalQueue.queueForApproval({
+        type: 'task',
+        actionType,
+        actionData: taskInput as unknown as Record<string, unknown>,
+        conversationId: conversation.id,
+        guestId: guestContext?.guest?.id ?? undefined,
+      });
+
+      log.info(
+        { approvalId: approvalItem.id, conversationId: conversation.id, taskType: routingDecision.taskType, department: routingDecision.department },
+        'Task queued for approval'
+      );
+
+      response.metadata = {
+        ...response.metadata,
+        taskPendingApproval: true,
+        approvalId: approvalItem.id,
+        taskDepartment: routingDecision.department,
+        taskPriority: routingDecision.priority,
+      };
+    } else {
+      try {
+        const task = await taskService.create(taskInput);
+
+        log.info(
+          { taskId: task.id, conversationId: conversation.id, department: routingDecision.department, priority: routingDecision.priority },
+          'Auto-created task from guest request'
+        );
+
+        response.metadata = {
+          ...response.metadata,
+          taskCreated: true,
+          taskId: task.id,
+          taskDepartment: routingDecision.department,
+          taskPriority: routingDecision.priority,
+        };
+
+        events.emit({
+          type: EventTypes.TASK_CREATED,
+          taskId: task.id,
+          conversationId: conversation.id,
+          type_: routingDecision.taskType ?? 'other',
+          department: routingDecision.department,
+          priority: routingDecision.priority,
+          timestamp: new Date(),
+        });
+      } catch (error) {
+        log.error({ err: error, conversationId: conversation.id }, 'Failed to create task');
       }
     }
   }

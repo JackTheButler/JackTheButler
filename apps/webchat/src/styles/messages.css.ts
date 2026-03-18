@@ -118,9 +118,9 @@ export const messageStyles = `
 .butler-quick-reply {
   padding: 5px 12px;
   border-radius: 14px;
-  border: 1px solid var(--butler-color-primary);
+  border: 1px solid var(--butler-border-color);
   background: transparent;
-  color: var(--butler-color-primary);
+  color: var(--butler-text-primary);
   font-size: var(--butler-font-size-small);
   font-family: inherit;
   cursor: pointer;
@@ -130,11 +130,13 @@ export const messageStyles = `
 .butler-quick-reply:hover:not(:disabled) {
   background: var(--butler-color-primary);
   color: var(--butler-text-on-primary);
+  border-color: var(--butler-color-primary);
 }
 
 .butler-quick-reply--selected {
   background: var(--butler-color-primary);
   color: var(--butler-text-on-primary);
+  border-color: var(--butler-color-primary);
 }
 
 .butler-quick-reply--faded {

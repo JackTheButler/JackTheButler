@@ -8,7 +8,7 @@
     "dev:dashboard": "pnpm --filter @jack/dashboard dev",
     "dev:webchat": "pnpm --filter @jack/webchat dev",
     "dev:website": "pnpm --filter @jack/landing dev",
-    "build": "tsc && tsc-alias",
+    "build": "pnpm --filter @jack/shared build && tsc && tsc-alias",
     "build:webchat": "pnpm --filter @jack/webchat build",
     "test:webchat": "python3 -m http.server 8080 -d apps/webchat",
     "start": "node --env-file=.env dist/index.js",
@@ -16,7 +16,7 @@
     "lint:fix": "oxlint src/ --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
     "format:check": "prettier --check \"src/**/*.ts\" \"tests/**/*.ts\"",
-    "typecheck": "tsc --noEmit && pnpm --filter @jack/dashboard typecheck && pnpm --filter @jack/webchat typecheck",
+    "typecheck": "pnpm --filter @jack/shared build && tsc --noEmit && pnpm --filter @jack/dashboard typecheck && pnpm --filter @jack/webchat typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
     "test:coverage": "vitest run --coverage",
@@ -60,7 +60,12 @@
     "typescript": "^5.7.0",
     "vitest": "^2.1.0"
   },
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
   "dependencies": {
+    "@jack/shared": "workspace:*",
     "@anthropic-ai/sdk": "^0.71.2",
     "@hono/node-server": "^1.19.9",
     "@huggingface/transformers": "^3.4.0",

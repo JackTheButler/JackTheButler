@@ -6,10 +6,10 @@
 
 import type { ChannelType } from './channel.js';
 
-/**
- * Conversation states
- */
-export type ConversationState = 'new' | 'active' | 'escalated' | 'resolved' | 'closed';
+// Single source of truth in @jack/shared — imported for local use and re-exported
+// so existing imports are unchanged.
+import type { ConversationState } from '@jack/shared';
+export type { ConversationState } from '@jack/shared';
 
 /**
  * Conversation summary for lists

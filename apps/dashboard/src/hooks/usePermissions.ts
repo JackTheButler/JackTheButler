@@ -8,52 +8,10 @@
 
 import { useAuth } from './useAuth';
 
-/**
- * Permission constants matching backend PERMISSIONS
- * Import these for type-safe permission checks
- */
-export const PERMISSIONS = {
-  // Conversations
-  CONVERSATIONS_VIEW: 'conversations:view',
-  CONVERSATIONS_MANAGE: 'conversations:manage',
-
-  // Guests
-  GUESTS_VIEW: 'guests:view',
-  GUESTS_MANAGE: 'guests:manage',
-
-  // Reservations
-  RESERVATIONS_VIEW: 'reservations:view',
-  RESERVATIONS_MANAGE: 'reservations:manage',
-
-  // Tasks
-  TASKS_VIEW: 'tasks:view',
-  TASKS_MANAGE: 'tasks:manage',
-
-  // Approvals
-  APPROVALS_VIEW: 'approvals:view',
-  APPROVALS_MANAGE: 'approvals:manage',
-
-  // Knowledge Base
-  KNOWLEDGE_VIEW: 'knowledge:view',
-  KNOWLEDGE_MANAGE: 'knowledge:manage',
-
-  // Automations
-  AUTOMATIONS_VIEW: 'automations:view',
-  AUTOMATIONS_MANAGE: 'automations:manage',
-
-  // Settings
-  SETTINGS_VIEW: 'settings:view',
-  SETTINGS_MANAGE: 'settings:manage',
-
-  // Admin (users, roles)
-  ADMIN_VIEW: 'admin:view',
-  ADMIN_MANAGE: 'admin:manage',
-
-  // System Health
-  HEALTH_VIEW: 'health:view',
-} as const;
-
-export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
+// Single source of truth lives in @jack/shared — re-exported here so all
+// existing dashboard imports continue to work without any changes.
+export { PERMISSIONS } from '@jack/shared';
+export type { Permission } from '@jack/shared';
 
 /**
  * Permission utilities returned by usePermissions hook

@@ -7,60 +7,11 @@
 
 import type { PermissionDefinition, PermissionGroup } from './types.js';
 
-/**
- * All available permissions in the system.
- * Format: resource:action (view or manage)
- */
-export const PERMISSIONS = {
-  // Conversations
-  CONVERSATIONS_VIEW: 'conversations:view',
-  CONVERSATIONS_MANAGE: 'conversations:manage',
-
-  // Guests
-  GUESTS_VIEW: 'guests:view',
-  GUESTS_MANAGE: 'guests:manage',
-
-  // Reservations
-  RESERVATIONS_VIEW: 'reservations:view',
-  RESERVATIONS_MANAGE: 'reservations:manage',
-
-  // Tasks
-  TASKS_VIEW: 'tasks:view',
-  TASKS_MANAGE: 'tasks:manage',
-
-  // Approvals
-  APPROVALS_VIEW: 'approvals:view',
-  APPROVALS_MANAGE: 'approvals:manage',
-
-  // Knowledge
-  KNOWLEDGE_VIEW: 'knowledge:view',
-  KNOWLEDGE_MANAGE: 'knowledge:manage',
-
-  // Automations
-  AUTOMATIONS_VIEW: 'automations:view',
-  AUTOMATIONS_MANAGE: 'automations:manage',
-
-  // Settings & Apps
-  SETTINGS_VIEW: 'settings:view',
-  SETTINGS_MANAGE: 'settings:manage',
-
-  // Administration (users, roles, audit)
-  ADMIN_VIEW: 'admin:view',
-  ADMIN_MANAGE: 'admin:manage',
-
-  // System Health
-  HEALTH_VIEW: 'health:view',
-} as const;
-
-/**
- * Permission key type - union of all permission values
- */
-export type Permission = (typeof PERMISSIONS)[keyof typeof PERMISSIONS];
-
-/**
- * Special permission that grants all access
- */
-export const WILDCARD_PERMISSION = '*';
+// Single source of truth lives in @jack/shared — imported for local use
+// and re-exported so all existing backend imports continue to work unchanged.
+import { PERMISSIONS, WILDCARD_PERMISSION } from '@jack/shared';
+export { PERMISSIONS, WILDCARD_PERMISSION } from '@jack/shared';
+export type { Permission } from '@jack/shared';
 
 /**
  * Permission definitions with metadata for UI display

@@ -4,10 +4,10 @@
  * Communication channel definitions.
  */
 
-/**
- * Supported messaging channels
- */
-export type ChannelType = 'whatsapp' | 'sms' | 'email' | 'webchat';
+// Single source of truth in @jack/shared — imported for local use and re-exported
+// so existing imports are unchanged.
+import type { ChannelType } from '@jack/shared';
+export type { ChannelType } from '@jack/shared';
 
 /**
  * Content type for messages
