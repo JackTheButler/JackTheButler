@@ -6,6 +6,7 @@
  */
 
 import { loadConfig } from '@/config/index.js';
+import { NotFoundError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { pmsSyncService, getPMSSyncConfig } from './pms-sync.js';
 import { writeActivityLog } from './activity-log.js';
@@ -111,7 +112,7 @@ export class Scheduler {
   async triggerJob(name: string): Promise<void> {
     const job = this.jobs.get(name);
     if (!job) {
-      throw new Error(`Job not found: ${name}`);
+      throw new NotFoundError('Job', name);
     }
 
     if (job.isRunning) {

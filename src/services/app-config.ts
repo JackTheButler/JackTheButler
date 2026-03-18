@@ -8,6 +8,7 @@
  */
 
 import { eq, and, desc } from 'drizzle-orm';
+import { NotFoundError } from '@/errors/index.js';
 import { db, appConfigs, appLogs } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -253,7 +254,7 @@ export class AppConfigService {
   ): Promise<AppConfigRecord> {
     const manifest = getManifest(extensionId);
     if (!manifest) {
-      throw new Error(`Unknown extension: ${extensionId}`);
+      throw new NotFoundError('App', extensionId);
     }
 
     const appId = this.getAppId(manifest);
@@ -635,7 +636,7 @@ export class AppConfigService {
     const manifest = getManifest(extensionId);
 
     if (!manifest) {
-      throw new Error(`Unknown extension: ${extensionId}`);
+      throw new NotFoundError('App', extensionId);
     }
 
     // Ensure registered

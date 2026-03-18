@@ -6,6 +6,7 @@
  * @module extensions/ai/providers/anthropic
  */
 
+import { ValidationError } from '@/errors/index.js';
 import Anthropic from '@anthropic-ai/sdk';
 import type {
   AIProvider,
@@ -49,7 +50,7 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
 
   constructor(config: AnthropicConfig) {
     if (!config.apiKey) {
-      throw new Error('Anthropic provider requires API key');
+      throw new ValidationError('Anthropic provider requires API key');
     }
 
     this.client = new Anthropic({ apiKey: config.apiKey });
@@ -176,7 +177,7 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
    * Configure OpenAI, Ollama, or Local as the embedding provider.
    */
   async embed(_request: EmbeddingRequest): Promise<EmbeddingResponse> {
-    throw new Error(
+    throw new ValidationError(
       'Anthropic does not support embeddings. Configure OpenAI, Ollama, or Local as your embedding provider.'
     );
   }

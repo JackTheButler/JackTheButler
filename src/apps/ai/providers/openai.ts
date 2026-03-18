@@ -6,6 +6,7 @@
  * @module extensions/ai/providers/openai
  */
 
+import { ValidationError } from '@/errors/index.js';
 import OpenAI from 'openai';
 import type {
   AIProvider,
@@ -53,7 +54,7 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
 
   constructor(config: OpenAIConfig) {
     if (!config.apiKey) {
-      throw new Error('OpenAI provider requires API key');
+      throw new ValidationError('OpenAI provider requires API key');
     }
 
     this.client = new OpenAI({

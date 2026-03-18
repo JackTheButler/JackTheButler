@@ -7,6 +7,7 @@
  * @module extensions/channels/email/sendgrid
  */
 
+import { ValidationError } from '@/errors/index.js';
 import sgMail from '@sendgrid/mail';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
 import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
@@ -55,7 +56,7 @@ export class SendGridProvider implements BaseProvider {
 
   constructor(config: SendGridConfig) {
     if (!config.apiKey || !config.fromAddress) {
-      throw new Error('SendGrid provider requires apiKey and fromAddress');
+      throw new ValidationError('SendGrid provider requires apiKey and fromAddress');
     }
 
     this.apiKey = config.apiKey;

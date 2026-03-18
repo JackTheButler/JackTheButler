@@ -7,6 +7,7 @@
  */
 
 import { logger } from '@/utils/logger.js';
+import { ValidationError } from '@/errors/index.js';
 import { now } from '@/utils/time.js';
 
 /**
@@ -64,7 +65,7 @@ export async function scrapeUrl(options: ScrapeOptions): Promise<ScrapeResult> {
     // Validate URL
     const parsedUrl = new URL(url);
     if (!['http:', 'https:'].includes(parsedUrl.protocol)) {
-      throw new Error('Invalid protocol. Only HTTP and HTTPS are supported.');
+      throw new ValidationError('Invalid protocol. Only HTTP and HTTPS are supported.');
     }
 
     // Create abort controller for timeout

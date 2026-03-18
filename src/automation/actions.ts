@@ -16,6 +16,7 @@ import type {
   ExecutionResult,
 } from './types.js';
 import { createLogger } from '@/utils/logger.js';
+import { ValidationError } from '@/errors/index.js';
 import { taskService, type TaskType, type TaskPriority } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
 import { events, EventTypes } from '@/events/index.js';
@@ -86,7 +87,7 @@ export async function executeAction(
         break;
 
       default:
-        throw new Error(`Unknown action type: ${actionType}`);
+        throw new ValidationError(`Unknown action type: ${actionType}`);
     }
 
     const executionTimeMs = Date.now() - startTime;
@@ -156,7 +157,7 @@ async function executeSendMessage(
   } else {
     const template = messageTemplates[config.template];
     if (!template) {
-      throw new Error(`Unknown message template: ${config.template}`);
+      throw new ValidationError(`Unknown message template: ${config.template}`);
     }
     messageContent = template;
   }
@@ -198,11 +199,11 @@ async function executeSendMessage(
       { ruleId: rule.id, channel, guestId: context.guest?.id },
       'No contact info for channel, message cannot be sent'
     );
-    throw new Error(`No contact info available for channel: ${channel}`);
+    throw new ValidationError(`No contact info available for channel: ${channel}`);
   }
 
   if (!context.guest) {
-    throw new Error('Guest context required to send message');
+    throw new ValidationError('Guest context required to send message');
   }
 
   // Find or create a conversation for this guest on this channel
@@ -510,7 +511,7 @@ export async function executeActionByType(
     case 'webhook':
       return executeWebhookDirect(config as WebhookActionConfig, context);
     default:
-      throw new Error(`Unknown action type: ${actionType}`);
+      throw new ValidationError(`Unknown action type: ${actionType}`);
   }
 }
 
@@ -538,7 +539,7 @@ async function executeSendMessageDirect(
   } else {
     const template = messageTemplates[config.template];
     if (!template) {
-      throw new Error(`Unknown message template: ${config.template}`);
+      throw new ValidationError(`Unknown message template: ${config.template}`);
     }
     messageContent = template;
   }
@@ -568,11 +569,11 @@ async function executeSendMessageDirect(
       { ruleId: context.ruleId, channel, guestId: context.guest?.id },
       'No contact info for channel, message cannot be sent'
     );
-    throw new Error(`No contact info available for channel: ${channel}`);
+    throw new ValidationError(`No contact info available for channel: ${channel}`);
   }
 
   if (!context.guest) {
-    throw new Error('Guest context required to send message');
+    throw new ValidationError('Guest context required to send message');
   }
 
   // Find or create a conversation for this guest on this channel

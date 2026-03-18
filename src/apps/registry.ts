@@ -8,6 +8,7 @@
  */
 
 import { createLogger } from '@/utils/logger.js';
+import { NotFoundError, ValidationError } from '@/errors/index.js';
 import type {
   AnyAppManifest,
   AppCategory,
@@ -100,7 +101,7 @@ export class AppRegistry {
   configure(appId: string, config: Record<string, unknown>): void {
     const ext = this.apps.get(appId);
     if (!ext) {
-      throw new Error(`App not found: ${appId}`);
+      throw new NotFoundError('App', appId);
     }
 
     // Validate required config fields
@@ -109,7 +110,7 @@ export class AppRegistry {
       .map((field) => field.key);
 
     if (missingFields.length > 0) {
-      throw new Error(
+      throw new ValidationError(
         `Missing required config fields for ${appId}: ${missingFields.join(', ')}`
       );
     }
@@ -126,11 +127,11 @@ export class AppRegistry {
   async initialize(appId: string): Promise<void> {
     const ext = this.apps.get(appId);
     if (!ext) {
-      throw new Error(`App not found: ${appId}`);
+      throw new NotFoundError('App', appId);
     }
 
     if (!ext.config) {
-      throw new Error(`App not configured: ${appId}`);
+      throw new ValidationError(`App not configured: ${appId}`);
     }
 
     ext.status = 'initializing';
@@ -193,7 +194,7 @@ export class AppRegistry {
   disable(appId: string): void {
     const ext = this.apps.get(appId);
     if (!ext) {
-      throw new Error(`App not found: ${appId}`);
+      throw new NotFoundError('App', appId);
     }
 
     // Remove from provider maps
@@ -214,7 +215,7 @@ export class AppRegistry {
   async reconfigure(appId: string, config: Record<string, unknown>): Promise<void> {
     const ext = this.apps.get(appId);
     if (!ext) {
-      throw new Error(`App not found: ${appId}`);
+      throw new NotFoundError('App', appId);
     }
 
     log.info({ appId }, 'Reconfiguring app with new settings');

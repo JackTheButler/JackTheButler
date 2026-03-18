@@ -16,7 +16,7 @@ import type { ActionType } from './autonomy.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { now } from '@/utils/time.js';
-import { NotFoundError } from '@/errors/index.js';
+import { NotFoundError, ConflictError } from '@/errors/index.js';
 import { events, EventTypes } from '@/events/index.js';
 import { taskService, type TaskType } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
@@ -175,7 +175,7 @@ export class ApprovalQueue {
     const item = await this.getById(id);
 
     if (item.status !== 'pending') {
-      throw new Error(`Cannot approve item with status: ${item.status}`);
+      throw new ConflictError(`Cannot approve item with status: ${item.status}`);
     }
 
 
@@ -211,7 +211,7 @@ export class ApprovalQueue {
     const item = await this.getById(id);
 
     if (item.status !== 'pending') {
-      throw new Error(`Cannot reject item with status: ${item.status}`);
+      throw new ConflictError(`Cannot reject item with status: ${item.status}`);
     }
 
 
@@ -333,7 +333,7 @@ export class ApprovalQueue {
    */
   async executeApprovedAction(item: ApprovalQueueItem): Promise<void> {
     if (item.status !== 'approved') {
-      throw new Error(`Cannot execute action for item with status: ${item.status}`);
+      throw new ConflictError(`Cannot execute action for item with status: ${item.status}`);
     }
 
     const actionData = JSON.parse(item.actionData) as Record<string, unknown>;
@@ -404,7 +404,7 @@ export class ApprovalQueue {
 
         if (!conversation) {
           log.error({ conversationId, approvalId: item.id }, 'Conversation not found for approved response');
-          throw new Error(`Conversation not found: ${conversationId}`);
+          throw new NotFoundError('Conversation', conversationId);
         }
 
         // Send to channel based on type

@@ -10,6 +10,7 @@ import { db } from '@/db/index.js';
 import { guests, type Guest, type NewGuest } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
+import { NotFoundError, ValidationError, AppError } from '@/errors/index.js';
 import { now } from '@/utils/time.js';
 
 const log = createLogger('guest');
@@ -84,7 +85,7 @@ export class GuestService {
   async findOrCreateByPhone(phone: string): Promise<Guest> {
     const normalized = normalizePhone(phone);
     if (!normalized) {
-      throw new Error(`Invalid phone number: ${phone}`);
+      throw new ValidationError(`Invalid phone number: ${phone}`);
     }
 
     // Try to find existing guest
@@ -111,7 +112,7 @@ export class GuestService {
 
     const created = await this.findById(id);
     if (!created) {
-      throw new Error('Failed to create guest');
+      throw new AppError('Failed to create guest', 'INTERNAL_ERROR', 500);
     }
 
     return created;
@@ -120,6 +121,7 @@ export class GuestService {
   /**
    * Create a new guest
    */
+
   async create(data: Omit<NewGuest, 'id'>): Promise<Guest> {
     const id = generateId('guest');
 
@@ -138,7 +140,7 @@ export class GuestService {
 
     const created = await this.findById(id);
     if (!created) {
-      throw new Error('Failed to create guest');
+      throw new AppError('Failed to create guest', 'INTERNAL_ERROR', 500);
     }
 
     log.info({ guestId: id }, 'Guest created');
@@ -151,7 +153,7 @@ export class GuestService {
   async update(id: string, data: Partial<Omit<NewGuest, 'id'>>): Promise<Guest> {
     const existing = await this.findById(id);
     if (!existing) {
-      throw new Error(`Guest not found: ${id}`);
+      throw new NotFoundError('Guest', id);
     }
 
     // Normalize phone if provided
@@ -172,7 +174,7 @@ export class GuestService {
 
     const updated = await this.findById(id);
     if (!updated) {
-      throw new Error('Failed to update guest');
+      throw new AppError('Failed to update guest', 'INTERNAL_ERROR', 500);
     }
 
     log.info({ guestId: id }, 'Guest updated');

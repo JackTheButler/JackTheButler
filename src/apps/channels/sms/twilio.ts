@@ -6,6 +6,7 @@
  * @module extensions/channels/sms/twilio
  */
 
+import { ValidationError } from '@/errors/index.js';
 import twilio from 'twilio';
 import type { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message.js';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
@@ -35,7 +36,7 @@ export class TwilioProvider implements BaseProvider {
 
   constructor(config: TwilioConfig) {
     if (!config.accountSid || !config.authToken || !config.phoneNumber) {
-      throw new Error('Twilio provider requires accountSid, authToken, and phoneNumber');
+      throw new ValidationError('Twilio provider requires accountSid, authToken, and phoneNumber');
     }
 
     this.client = twilio(config.accountSid, config.authToken);

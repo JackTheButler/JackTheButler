@@ -5,6 +5,7 @@
  */
 
 import { Hono } from 'hono';
+import { ValidationError } from '@/errors/index.js';
 import { z } from 'zod';
 import { eq, desc } from 'drizzle-orm';
 import { db } from '@/db/index.js';
@@ -412,26 +413,26 @@ automationRoutes.post('/rules/:ruleId/test', requirePermission(PERMISSIONS.AUTOM
     // Validate trigger config based on type
     if (rule.triggerType === 'time_based') {
       if (!triggerConfig.type) {
-        throw new Error('Time-based trigger missing type');
+        throw new ValidationError('Time-based trigger missing type');
       }
     } else if (rule.triggerType === 'event_based') {
       if (!triggerConfig.eventType) {
-        throw new Error('Event-based trigger missing eventType');
+        throw new ValidationError('Event-based trigger missing eventType');
       }
     }
 
     // Validate action config based on type
     if (rule.actionType === 'send_message') {
       if (!actionConfig.template) {
-        throw new Error('Send message action missing template');
+        throw new ValidationError('Send message action missing template');
       }
       const templates = getAvailableTemplates();
       if (!templates.includes(actionConfig.template as string)) {
-        throw new Error(`Unknown template: ${actionConfig.template}`);
+        throw new ValidationError(`Unknown template: ${actionConfig.template}`);
       }
     } else if (rule.actionType === 'webhook') {
       if (!actionConfig.url) {
-        throw new Error('Webhook action missing URL');
+        throw new ValidationError('Webhook action missing URL');
       }
     }
 

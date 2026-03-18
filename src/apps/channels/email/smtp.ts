@@ -6,6 +6,7 @@
  * @module extensions/channels/email/smtp
  */
 
+import { ValidationError } from '@/errors/index.js';
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
@@ -66,7 +67,7 @@ export class SMTPProvider implements BaseProvider {
 
   constructor(config: SMTPConfig) {
     if (!config.smtpHost || !config.fromAddress) {
-      throw new Error('SMTP provider requires smtpHost and fromAddress');
+      throw new ValidationError('SMTP provider requires smtpHost and fromAddress');
     }
 
     this.transporter = nodemailer.createTransport({

@@ -6,6 +6,7 @@
  * @module extensions/channels/whatsapp/meta
  */
 
+import { ValidationError } from '@/errors/index.js';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
 import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
@@ -82,7 +83,7 @@ export class MetaWhatsAppProvider implements BaseProvider {
 
   constructor(config: MetaWhatsAppConfig) {
     if (!config.accessToken || !config.phoneNumberId) {
-      throw new Error('Meta WhatsApp provider requires accessToken and phoneNumberId');
+      throw new ValidationError('Meta WhatsApp provider requires accessToken and phoneNumberId');
     }
 
     this.accessToken = config.accessToken;

@@ -198,7 +198,7 @@ conversationsRouter.post('/:id/messages', requirePermission(PERMISSIONS.CONVERSA
     );
   } catch (err) {
     // Log error but don't fail the request - message is saved
-    console.error('Failed to send to channel:', err);
+    log.error({ err }, 'Failed to send to channel');
   }
 
   return c.json({ message }, 201);

@@ -7,6 +7,7 @@
  */
 
 import type { AIProvider } from '@/core/interfaces/ai.js';
+import { ValidationError } from '@/errors/index.js';
 import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../types.js';
 
 import {
@@ -91,7 +92,7 @@ export function createAIProvider(
     case 'local':
       return createLocalProvider(config as unknown as LocalConfig);
     default:
-      throw new Error(`Unknown AI provider type: ${type}`);
+      throw new ValidationError(`Unknown AI provider type: ${type}`);
   }
 }
 

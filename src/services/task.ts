@@ -9,7 +9,7 @@ import { db, tasks, staff } from '@/db/index.js';
 import type { Task } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
-import { NotFoundError } from '@/errors/index.js';
+import { NotFoundError, ConflictError } from '@/errors/index.js';
 import { events, EventTypes } from '@/events/index.js';
 import type { TaskStatus, TaskPriority } from '@jack/shared';
 export type { TaskStatus, TaskPriority } from '@jack/shared';
@@ -286,7 +286,7 @@ export class TaskService {
     const task = await this.getById(id);
 
     if (task.status !== 'completed' && task.status !== 'cancelled') {
-      throw new Error('Only completed or cancelled tasks can be reopened');
+      throw new ConflictError('Only completed or cancelled tasks can be reopened');
     }
 
     await db.update(tasks).set({

@@ -7,6 +7,7 @@
  * @module extensions/channels/email/mailgun
  */
 
+import { ValidationError } from '@/errors/index.js';
 import Mailgun from 'mailgun.js';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
 import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
@@ -64,7 +65,7 @@ export class MailgunProvider implements BaseProvider {
 
   constructor(config: MailgunConfig) {
     if (!config.apiKey || !config.domain || !config.fromAddress) {
-      throw new Error('Mailgun provider requires apiKey, domain, and fromAddress');
+      throw new ValidationError('Mailgun provider requires apiKey, domain, and fromAddress');
     }
 
     const mailgun = new Mailgun(FormData);

@@ -7,6 +7,7 @@
 
 import { eq, and, desc, sql } from 'drizzle-orm';
 import { db } from '@/db/index.js';
+import { NotFoundError, AppError } from '@/errors/index.js';
 import { knowledgeBase, knowledgeEmbeddings } from '@/db/schema.js';
 import type { KnowledgeItem, NewKnowledgeItem } from '@/db/schema.js';
 import type { LLMProvider } from '../types.js';
@@ -62,7 +63,7 @@ export class KnowledgeService {
 
     const created = await this.findById(id);
     if (!created) {
-      throw new Error('Failed to create knowledge item');
+      throw new AppError('Failed to create knowledge item', 'INTERNAL_ERROR', 500);
     }
 
     log.info({ id, category: item.category, title: item.title }, 'Knowledge item added');
@@ -99,7 +100,7 @@ export class KnowledgeService {
   async update(id: string, updates: Partial<Omit<NewKnowledgeItem, 'id'>>): Promise<KnowledgeItem> {
     const existing = await this.findById(id);
     if (!existing) {
-      throw new Error(`Knowledge item not found: ${id}`);
+      throw new NotFoundError('KnowledgeItem', id);
     }
 
     await db
@@ -117,7 +118,7 @@ export class KnowledgeService {
 
     const updated = await this.findById(id);
     if (!updated) {
-      throw new Error('Failed to update knowledge item');
+      throw new AppError('Failed to update knowledge item', 'INTERNAL_ERROR', 500);
     }
 
     log.info({ id }, 'Knowledge item updated');

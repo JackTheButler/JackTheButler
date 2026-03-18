@@ -7,6 +7,7 @@
  * @module extensions/channels/email/gmail-smtp
  */
 
+import { ValidationError } from '@/errors/index.js';
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
@@ -65,7 +66,7 @@ export class GmailSMTPProvider implements BaseProvider {
 
   constructor(config: GmailSMTPConfig) {
     if (!config.email || !config.appPassword) {
-      throw new Error('Gmail SMTP provider requires email and appPassword');
+      throw new ValidationError('Gmail SMTP provider requires email and appPassword');
     }
 
     // Normalize app password (remove spaces)

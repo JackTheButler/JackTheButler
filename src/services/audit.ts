@@ -8,6 +8,7 @@ import { randomUUID } from 'node:crypto';
 import { eq, desc, and, gte } from 'drizzle-orm';
 import { db, auditLog, type AuditLogEntry, type NewAuditLogEntry } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { AppError } from '@/errors/index.js';
 
 const log = createLogger('audit');
 
@@ -112,7 +113,7 @@ export class AuditService {
     const result = results[0];
 
     if (!result) {
-      throw new Error('Failed to insert audit log entry');
+      throw new AppError('Failed to insert audit log entry', 'INTERNAL_ERROR', 500);
     }
 
     log.debug(

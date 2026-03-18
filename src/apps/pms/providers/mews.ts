@@ -22,6 +22,7 @@ import type {
 } from '@/core/interfaces/pms.js';
 import type { PMSAppManifest } from '../../types.js';
 import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
+import { ValidationError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { now } from '@/utils/time.js';
 import { createHmac, timingSafeEqual } from 'node:crypto';
@@ -374,7 +375,7 @@ export class MewsPMSAdapter implements PMSAdapter {
 
     const bookable = response.Services.find((s) => s.Type === 'Reservable');
     if (!bookable) {
-      throw new Error('No reservable service found for this Mews enterprise');
+      throw new ValidationError('No reservable service found for this Mews enterprise');
     }
 
     this.serviceId = bookable.Id;
