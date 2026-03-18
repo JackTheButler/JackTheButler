@@ -9,13 +9,11 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
-import { db, settings } from '@/db/index.js';
 import { validateBody } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import { createLogger } from '@/utils/logger.js';
-import { now } from '@/utils/time.js';
+import { settingsService } from '@/services/settings.js';
 
 const log = createLogger('routes:hotel-profile');
 
@@ -83,28 +81,18 @@ hotelProfileRoutes.use('/*', requireAuth);
  * Get current hotel profile
  */
 hotelProfileRoutes.get('/', requirePermission(PERMISSIONS.SETTINGS_VIEW), async (c) => {
-  const row = await db
-    .select()
-    .from(settings)
-    .where(eq(settings.key, SETTINGS_KEY))
-    .get();
+  const profile = await settingsService.get<HotelProfile | null>(SETTINGS_KEY, null);
 
-  if (!row) {
+  if (!profile) {
     return c.json({ profile: DEFAULT_PROFILE, isConfigured: false });
   }
 
-  try {
-    const profile = JSON.parse(row.value) as HotelProfile;
-    // Merge standalone property_language if not set in profile JSON
-    if (!profile.propertyLanguage) {
-      const langRow = db.select().from(settings).where(eq(settings.key, 'property_language')).get();
-      profile.propertyLanguage = langRow?.value ?? 'en';
-    }
-    return c.json({ profile, isConfigured: true });
-  } catch {
-    log.warn('Failed to parse hotel profile, returning defaults');
-    return c.json({ profile: DEFAULT_PROFILE, isConfigured: false });
+  // Merge standalone property_language if not set in profile JSON
+  if (!profile.propertyLanguage) {
+    profile.propertyLanguage = await settingsService.get<string>('property_language', 'en');
   }
+
+  return c.json({ profile, isConfigured: true });
 });
 
 /**
@@ -114,53 +102,9 @@ hotelProfileRoutes.get('/', requirePermission(PERMISSIONS.SETTINGS_VIEW), async 
 hotelProfileRoutes.put('/', requirePermission(PERMISSIONS.SETTINGS_MANAGE), validateBody(hotelProfileSchema), async (c) => {
   const profile = c.get('validatedBody') as HotelProfile;
 
-  // Check if profile exists
-  const existing = await db
-    .select()
-    .from(settings)
-    .where(eq(settings.key, SETTINGS_KEY))
-    .get();
-
-  if (existing) {
-    await db
-      .update(settings)
-      .set({
-        value: JSON.stringify(profile),
-        updatedAt: now(),
-      })
-      .where(eq(settings.key, SETTINGS_KEY))
-      .run();
-  } else {
-    await db
-      .insert(settings)
-      .values({
-        key: SETTINGS_KEY,
-        value: JSON.stringify(profile),
-        updatedAt: now(),
-      })
-      .run();
-  }
-
+  await settingsService.set(SETTINGS_KEY, profile);
   // Dual-write property_language as standalone setting for translation service
-  const langKey = 'property_language';
-  const langRow = await db
-    .select()
-    .from(settings)
-    .where(eq(settings.key, langKey))
-    .get();
-
-  if (langRow) {
-    await db
-      .update(settings)
-      .set({ value: profile.propertyLanguage, updatedAt: now() })
-      .where(eq(settings.key, langKey))
-      .run();
-  } else {
-    await db
-      .insert(settings)
-      .values({ key: langKey, value: profile.propertyLanguage, updatedAt: now() })
-      .run();
-  }
+  await settingsService.set('property_language', profile.propertyLanguage);
 
   log.info({ hotelName: profile.name }, 'Hotel profile updated');
 

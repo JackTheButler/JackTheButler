@@ -7,9 +7,8 @@
  * @module services/translation
  */
 
-import { eq } from 'drizzle-orm';
-import { db, settings } from '@/db/index.js';
 import { getAppRegistry } from '@/apps/index.js';
+import { settingsService } from './settings.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('translation');
@@ -32,8 +31,7 @@ export interface DetectAndTranslateResult {
  * Defaults to 'en' if not configured.
  */
 export async function getPropertyLanguage(): Promise<string> {
-  const row = db.select().from(settings).where(eq(settings.key, 'property_language')).get();
-  return row?.value ?? 'en';
+  return settingsService.get<string>('property_language', 'en');
 }
 
 // ===================

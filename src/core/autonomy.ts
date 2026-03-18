@@ -12,11 +12,8 @@
  * @module core/autonomy
  */
 
-import { eq } from 'drizzle-orm';
-import { db } from '@/db/index.js';
-import { settings } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
-import { now } from '@/utils/time.js';
+import { settingsService } from '@/services/settings.js';
 
 const log = createLogger('core:autonomy');
 
@@ -141,16 +138,9 @@ export class AutonomyEngine {
    */
   async loadSettings(): Promise<void> {
     try {
-      const row = await db
-        .select()
-        .from(settings)
-        .where(eq(settings.key, SETTINGS_KEY))
-        .get();
-
-      if (row) {
-        const parsed = JSON.parse(row.value) as AutonomySettings;
-        // Merge with defaults to ensure all fields exist
-        this.settings = this.mergeWithDefaults(parsed);
+      const stored = await settingsService.get<AutonomySettings | null>(SETTINGS_KEY, null);
+      if (stored) {
+        this.settings = this.mergeWithDefaults(stored);
         log.info('Autonomy settings loaded from database');
       } else {
         log.info('No autonomy settings in database, using defaults');
@@ -166,22 +156,7 @@ export class AutonomyEngine {
    * Save settings to database
    */
   async saveSettings(newSettings: AutonomySettings): Promise<void> {
-    const value = JSON.stringify(newSettings);
-
-    await db
-      .insert(settings)
-      .values({
-        key: SETTINGS_KEY,
-        value,
-      })
-      .onConflictDoUpdate({
-        target: settings.key,
-        set: {
-          value,
-          updatedAt: now(),
-        },
-      });
-
+    await settingsService.set(SETTINGS_KEY, newSettings);
     this.settings = structuredClone(newSettings);
     log.info('Autonomy settings saved to database');
   }

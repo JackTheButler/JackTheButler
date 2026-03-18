@@ -8,7 +8,8 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { db, setupState, settings, knowledgeBase, staff } from '@/db/index.js';
+import { db, setupState, knowledgeBase, staff } from '@/db/index.js';
+import { settingsService } from './settings.js';
 import { createLogger } from '@/utils/logger.js';
 import { appConfigService } from './app-config.js';
 import { getAppRegistry, getManifest } from '@/apps/index.js';
@@ -629,7 +630,7 @@ export class SetupService {
     await db.delete(setupState).where(eq(setupState.id, 'setup')).run();
 
     // Clear hotel profile from settings
-    await db.delete(settings).where(eq(settings.key, HOTEL_PROFILE_KEY)).run();
+    await settingsService.delete(HOTEL_PROFILE_KEY);
 
     // Clear knowledge base
     await db.delete(knowledgeBase).run();
@@ -679,47 +680,15 @@ export class SetupService {
    * Get hotel profile from settings
    */
   private async getHotelProfile(): Promise<HotelProfile> {
-    const row = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, HOTEL_PROFILE_KEY))
-      .get();
-
-    if (!row) {
-      return { ...DEFAULT_HOTEL_PROFILE };
-    }
-
-    try {
-      return { ...DEFAULT_HOTEL_PROFILE, ...JSON.parse(row.value) };
-    } catch {
-      return { ...DEFAULT_HOTEL_PROFILE };
-    }
+    const stored = await settingsService.get<Partial<HotelProfile> | null>(HOTEL_PROFILE_KEY, null);
+    return { ...DEFAULT_HOTEL_PROFILE, ...(stored ?? {}) };
   }
 
   /**
    * Save hotel profile to settings
    */
   private async saveHotelProfile(profile: HotelProfile): Promise<void> {
-
-    const existing = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, HOTEL_PROFILE_KEY))
-      .get();
-
-    if (existing) {
-      await db
-        .update(settings)
-        .set({ value: JSON.stringify(profile), updatedAt: now() })
-        .where(eq(settings.key, HOTEL_PROFILE_KEY))
-        .run();
-    } else {
-      await db
-        .insert(settings)
-        .values({ key: HOTEL_PROFILE_KEY, value: JSON.stringify(profile), updatedAt: now() })
-        .run();
-    }
-
+    await settingsService.set(HOTEL_PROFILE_KEY, profile);
     log.info({ profileName: profile.name }, 'Hotel profile saved');
   }
 

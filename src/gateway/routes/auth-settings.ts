@@ -7,11 +7,9 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
-import { db, settings } from '@/db/index.js';
-import { now } from '@/utils/time.js';
 import { authSettingsService, type AuthSettings } from '@/services/auth-settings.js';
-import type { EmailTemplates } from '@/services/email.js';
+import { settingsService } from '@/services/settings.js';
+import { TEMPLATES_SETTINGS_KEY, type EmailTemplates } from '@/services/email.js';
 import { validateBody } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
@@ -35,8 +33,6 @@ const emailTemplatesSchema = z.object({
   approvalRequest: emailTemplateSchema.optional(),
   approvalResult: emailTemplateSchema.optional(),
 });
-
-const TEMPLATES_SETTINGS_KEY = 'email_templates';
 
 type Variables = {
   validatedBody: unknown;
@@ -89,13 +85,7 @@ authSettingsRoutes.get(
   '/email-templates',
   requirePermission(PERMISSIONS.ADMIN_VIEW),
   async (c) => {
-    const row = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, TEMPLATES_SETTINGS_KEY))
-      .get();
-
-    const templates: Partial<EmailTemplates> = row ? JSON.parse(row.value) : {};
+    const templates = await settingsService.get<Partial<EmailTemplates>>(TEMPLATES_SETTINGS_KEY, {});
     return c.json({ templates });
   }
 );
@@ -111,30 +101,9 @@ authSettingsRoutes.put(
   async (c) => {
     const body = c.get('validatedBody') as z.infer<typeof emailTemplatesSchema>;
 
-    // Load existing templates and merge
-    const row = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, TEMPLATES_SETTINGS_KEY))
-      .get();
-
-    const existing: Partial<EmailTemplates> = row ? JSON.parse(row.value) : {};
+    const existing = await settingsService.get<Partial<EmailTemplates>>(TEMPLATES_SETTINGS_KEY, {});
     const merged = { ...existing, ...body };
-    const value = JSON.stringify(merged);
-
-    if (row) {
-      await db
-        .update(settings)
-        .set({ value, updatedAt: now() })
-        .where(eq(settings.key, TEMPLATES_SETTINGS_KEY))
-        .run();
-    } else {
-      await db.insert(settings).values({
-        key: TEMPLATES_SETTINGS_KEY,
-        value,
-        updatedAt: now(),
-      }).run();
-    }
+    await settingsService.set(TEMPLATES_SETTINGS_KEY, merged);
 
     return c.json({ templates: merged });
   }

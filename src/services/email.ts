@@ -7,8 +7,7 @@
  * @module services/email
  */
 
-import { eq } from 'drizzle-orm';
-import { db, settings } from '@/db/index.js';
+import { settingsService } from './settings.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
@@ -45,7 +44,7 @@ export interface EmailTemplates {
 // Constants
 // ===================
 
-const TEMPLATES_SETTINGS_KEY = 'email_templates';
+export const TEMPLATES_SETTINGS_KEY = 'email_templates';
 
 /** Email app IDs that support sendEmail */
 const EMAIL_APP_IDS = ['email-mailgun', 'email-sendgrid', 'email-smtp', 'email-gmail-smtp'];
@@ -86,22 +85,8 @@ export class EmailService {
    * Get the hotel name from settings for email templates
    */
   private async getHotelName(): Promise<string> {
-    const row = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, 'hotel_profile'))
-      .get();
-
-    if (row) {
-      try {
-        const profile = JSON.parse(row.value);
-        if (profile.name) return profile.name;
-      } catch {
-        // Fall through to default
-      }
-    }
-
-    return 'Hotel';
+    const profile = await settingsService.get<{ name?: string } | null>('hotel_profile', null);
+    return profile?.name ?? 'Hotel';
   }
 
   /**
@@ -125,26 +110,13 @@ export class EmailService {
    * Load email templates from settings, falling back to defaults
    */
   private async getTemplates(): Promise<EmailTemplates> {
-    const row = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, TEMPLATES_SETTINGS_KEY))
-      .get();
-
-    if (!row) return DEFAULT_TEMPLATES;
-
-    try {
-      const custom = JSON.parse(row.value) as Partial<EmailTemplates>;
-      return {
-        passwordReset: { ...DEFAULT_TEMPLATES.passwordReset, ...custom.passwordReset },
-        emailVerification: { ...DEFAULT_TEMPLATES.emailVerification, ...custom.emailVerification },
-        approvalRequest: { ...DEFAULT_TEMPLATES.approvalRequest, ...custom.approvalRequest },
-        approvalResult: { ...DEFAULT_TEMPLATES.approvalResult, ...custom.approvalResult },
-      };
-    } catch {
-      log.warn('Failed to parse email templates, using defaults');
-      return DEFAULT_TEMPLATES;
-    }
+    const custom = await settingsService.get<Partial<EmailTemplates>>(TEMPLATES_SETTINGS_KEY, {});
+    return {
+      passwordReset: { ...DEFAULT_TEMPLATES.passwordReset, ...custom.passwordReset },
+      emailVerification: { ...DEFAULT_TEMPLATES.emailVerification, ...custom.emailVerification },
+      approvalRequest: { ...DEFAULT_TEMPLATES.approvalRequest, ...custom.approvalRequest },
+      approvalResult: { ...DEFAULT_TEMPLATES.approvalResult, ...custom.approvalResult },
+    };
   }
 
   /**

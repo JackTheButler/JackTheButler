@@ -5,9 +5,8 @@
  * and intent classification.
  */
 
-import { eq } from 'drizzle-orm';
 import type { Conversation, Message } from '@/db/schema.js';
-import { db, settings } from '@/db/index.js';
+import { settingsService } from '@/services/settings.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/services/guest-context.js';
 import type { LLMProvider, Response, Responder } from './types.js';
@@ -316,19 +315,7 @@ export class AIResponder implements Responder {
    * Get hotel profile from settings
    */
   private async getHotelProfile(): Promise<HotelProfile | null> {
-    try {
-      const row = await db
-        .select()
-        .from(settings)
-        .where(eq(settings.key, 'hotel_profile'))
-        .get();
-
-      if (!row) return null;
-      return JSON.parse(row.value) as HotelProfile;
-    } catch {
-      log.warn('Failed to load hotel profile');
-      return null;
-    }
+    return settingsService.get<HotelProfile | null>('hotel_profile', null);
   }
 
   /**

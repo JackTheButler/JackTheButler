@@ -8,10 +8,10 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { db, settings, roles } from '@/db/index.js';
+import { db, roles } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { ValidationError } from '@/errors/index.js';
-import { now } from '@/utils/time.js';
+import { settingsService } from './settings.js';
 
 const log = createLogger('auth-settings');
 
@@ -47,21 +47,7 @@ export class AuthSettingsService {
    * When defaultRoleId is null, resolves to the Staff role by name
    */
   async get(): Promise<AuthSettings> {
-    const row = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, SETTINGS_KEY))
-      .get();
-
-    let stored: Partial<AuthSettings> = {};
-    if (row) {
-      try {
-        stored = JSON.parse(row.value) as Partial<AuthSettings>;
-      } catch {
-        log.warn('Failed to parse auth settings, returning defaults');
-      }
-    }
-
+    const stored = await settingsService.get<Partial<AuthSettings>>(SETTINGS_KEY, {});
     const merged: AuthSettings = { ...DEFAULT_AUTH_SETTINGS, ...stored };
 
     // Resolve defaultRoleId to Staff role if null
@@ -114,35 +100,9 @@ export class AuthSettingsService {
     }
 
     // Get current settings and merge
-    const row = await db
-      .select()
-      .from(settings)
-      .where(eq(settings.key, SETTINGS_KEY))
-      .get();
-
-    let current: Partial<AuthSettings> = {};
-    if (row) {
-      try {
-        current = JSON.parse(row.value) as Partial<AuthSettings>;
-      } catch {
-        // Start fresh if corrupt
-      }
-    }
-
+    const current = await settingsService.get<Partial<AuthSettings>>(SETTINGS_KEY, {});
     const merged = { ...current, ...input };
-
-    if (row) {
-      await db
-        .update(settings)
-        .set({ value: JSON.stringify(merged), updatedAt: now() })
-        .where(eq(settings.key, SETTINGS_KEY))
-        .run();
-    } else {
-      await db
-        .insert(settings)
-        .values({ key: SETTINGS_KEY, value: JSON.stringify(merged), updatedAt: now() })
-        .run();
-    }
+    await settingsService.set(SETTINGS_KEY, merged);
 
     log.info({ changes: Object.keys(input) }, 'Auth settings updated');
 
