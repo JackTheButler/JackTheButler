@@ -19,6 +19,7 @@ import type {
 } from '@/core/interfaces/pms.js';
 import type { PMSAppManifest } from '../../types.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('extensions:pms:mock');
 
@@ -157,7 +158,7 @@ export class MockPMSAdapter implements PMSAdapter {
     return {
       type: data.type,
       source: 'mock',
-      timestamp: new Date().toISOString(),
+      timestamp: now(),
       data: eventData,
     };
   }

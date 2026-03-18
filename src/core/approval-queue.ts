@@ -15,6 +15,7 @@ import type { ApprovalQueueItem } from '@/db/schema.js';
 import type { ActionType } from './autonomy.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 import { NotFoundError } from '@/errors/index.js';
 import { events, EventTypes } from '@/events/index.js';
 import { taskService, type TaskType } from '@/services/task.js';
@@ -104,7 +105,6 @@ export class ApprovalQueue {
    */
   async queueForApproval(input: CreateApprovalInput): Promise<ApprovalQueueItem> {
     const id = generateId('approval');
-    const now = new Date().toISOString();
 
     await db.insert(approvalQueue).values({
       id,
@@ -114,7 +114,7 @@ export class ApprovalQueue {
       conversationId: input.conversationId ?? null,
       guestId: input.guestId ?? null,
       status: 'pending',
-      createdAt: now,
+      createdAt: now(),
     });
 
     log.info(
@@ -178,13 +178,12 @@ export class ApprovalQueue {
       throw new Error(`Cannot approve item with status: ${item.status}`);
     }
 
-    const now = new Date().toISOString();
 
     await db
       .update(approvalQueue)
       .set({
         status: 'approved',
-        decidedAt: now,
+        decidedAt: now(),
         decidedBy: staffId,
       })
       .where(eq(approvalQueue.id, id));
@@ -215,13 +214,12 @@ export class ApprovalQueue {
       throw new Error(`Cannot reject item with status: ${item.status}`);
     }
 
-    const now = new Date().toISOString();
 
     await db
       .update(approvalQueue)
       .set({
         status: 'rejected',
-        decidedAt: now,
+        decidedAt: now(),
         decidedBy: staffId,
         rejectionReason: reason,
       })

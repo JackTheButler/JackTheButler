@@ -14,6 +14,7 @@ import { db, reservations, conversations } from '@/db/index.js';
 import type { Guest, Reservation } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
 import { guestService, normalizePhone } from '@/services/guest.js';
+import { now } from '@/utils/time.js';
 import { pmsSyncService } from '@/services/pms-sync.js';
 
 const log = createLogger('core:guest-context');
@@ -144,7 +145,7 @@ export class GuestContextService {
 
     // Update conversation with guest and reservation
     const updates: { guestId?: string; reservationId?: string | null; updatedAt: string } = {
-      updatedAt: new Date().toISOString(),
+      updatedAt: now(),
     };
 
     updates.guestId = guest.id;
@@ -220,7 +221,7 @@ export class GuestContextService {
    * Find active reservation for a guest
    */
   private async findActiveReservation(guestId: string): Promise<Reservation | null> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = now().split('T')[0];
 
     const [reservation] = await db
       .select()

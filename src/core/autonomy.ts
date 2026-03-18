@@ -16,6 +16,7 @@ import { eq } from 'drizzle-orm';
 import { db } from '@/db/index.js';
 import { settings } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('core:autonomy');
 
@@ -177,7 +178,7 @@ export class AutonomyEngine {
         target: settings.key,
         set: {
           value,
-          updatedAt: new Date().toISOString(),
+          updatedAt: now(),
         },
       });
 

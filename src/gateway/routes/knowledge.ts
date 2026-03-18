@@ -17,6 +17,7 @@ import { getAppRegistry } from '@/apps/index.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import { KnowledgeService } from '@/ai/knowledge/index.js';
 import type { LLMProvider } from '@/ai/types.js';
+import { now } from '@/utils/time.js';
 
 /**
  * Generate and store embedding for a knowledge entry
@@ -378,7 +379,6 @@ knowledgeRoutes.post('/', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), valid
   const data = c.get('validatedBody') as z.infer<typeof createEntrySchema>;
 
   const id = generateId('knowledge');
-  const now = new Date().toISOString();
 
   await db
     .insert(knowledgeBase)
@@ -390,8 +390,8 @@ knowledgeRoutes.post('/', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), valid
       keywords: JSON.stringify(data.keywords),
       priority: data.priority,
       status: 'active',
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now(),
+      updatedAt: now(),
     })
     .run();
 
@@ -433,7 +433,6 @@ knowledgeRoutes.put('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), val
     return c.json({ error: 'Entry not found' }, 404);
   }
 
-  const now = new Date().toISOString();
 
   await db
     .update(knowledgeBase)
@@ -443,7 +442,7 @@ knowledgeRoutes.put('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), val
       ...(data.content && { content: data.content }),
       ...(data.keywords && { keywords: JSON.stringify(data.keywords) }),
       ...(data.priority !== undefined && { priority: data.priority }),
-      updatedAt: now,
+      updatedAt: now(),
     })
     .where(eq(knowledgeBase.id, id))
     .run();
@@ -491,7 +490,7 @@ knowledgeRoutes.delete('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), 
   } else {
     await db
       .update(knowledgeBase)
-      .set({ status: 'archived', updatedAt: new Date().toISOString() })
+      .set({ status: 'archived', updatedAt: now() })
       .where(eq(knowledgeBase.id, id))
       .run();
     log.info({ id }, 'Knowledge entry archived');

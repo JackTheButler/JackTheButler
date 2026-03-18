@@ -10,6 +10,7 @@ import { db } from '@/db/index.js';
 import { guests, type Guest, type NewGuest } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('guest');
 
@@ -165,7 +166,7 @@ export class GuestService {
         ...data,
         phone: phone !== undefined ? phone : existing.phone,
         email: email !== undefined ? email : existing.email,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now(),
       })
       .where(eq(guests.id, id));
 

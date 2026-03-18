@@ -13,6 +13,7 @@ import { NotFoundError, ValidationError, ForbiddenError } from '@/errors/index.j
 import { WILDCARD_PERMISSION } from '@/core/permissions/index.js';
 import { authService } from './auth.js';
 import { authSettingsService } from './auth-settings.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('staff');
 
@@ -237,7 +238,6 @@ export class StaffService {
     }
 
     const id = generateId('staff');
-    const now = new Date().toISOString();
     const passwordHash = await authService.hashPassword(input.password);
 
     await db.insert(staff).values({
@@ -249,8 +249,8 @@ export class StaffService {
       permissions: JSON.stringify([]),
       status: 'active',
       passwordHash,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now(),
+      updatedAt: now(),
     });
 
     log.info({ staffId: id, email: input.email }, 'Created staff member');
@@ -290,8 +290,7 @@ export class StaffService {
       }
     }
 
-    const now = new Date().toISOString();
-    const updates: Partial<Staff> = { updatedAt: now };
+    const updates: Partial<Staff> = { updatedAt: now() };
 
     if (input.name !== undefined) {
       updates.name = input.name.trim();
@@ -367,7 +366,7 @@ export class StaffService {
       .set({
         approvalStatus: 'approved',
         ...(shouldActivate && { status: 'active' }),
-        updatedAt: new Date().toISOString(),
+        updatedAt: now(),
       })
       .where(eq(staff.id, id));
 
@@ -395,7 +394,7 @@ export class StaffService {
       .set({
         approvalStatus: 'rejected',
         status: 'inactive',
-        updatedAt: new Date().toISOString(),
+        updatedAt: now(),
       })
       .where(eq(staff.id, id));
 
@@ -471,9 +470,8 @@ export class StaffService {
     }
 
     const passwordHash = await authService.hashPassword(newPassword);
-    const now = new Date().toISOString();
 
-    await db.update(staff).set({ passwordHash, updatedAt: now }).where(eq(staff.id, id));
+    await db.update(staff).set({ passwordHash, updatedAt: now() }).where(eq(staff.id, id));
 
     log.info({ staffId: id }, 'Updated staff password');
   }

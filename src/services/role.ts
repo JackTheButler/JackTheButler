@@ -19,6 +19,7 @@ import {
   type UpdateRoleInput,
   type RoleWithStats,
 } from '@/core/permissions/index.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('role');
 
@@ -129,7 +130,6 @@ export class RoleService {
     }
 
     const id = generateId('role');
-    const now = new Date().toISOString();
 
     await db.insert(roles).values({
       id,
@@ -137,8 +137,8 @@ export class RoleService {
       description: input.description?.trim() || null,
       permissions: JSON.stringify(input.permissions),
       isSystem: false,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now(),
+      updatedAt: now(),
     });
 
     log.info({ roleId: id, name: input.name }, 'Created role');
@@ -176,8 +176,7 @@ export class RoleService {
       }
     }
 
-    const now = new Date().toISOString();
-    const updates: Partial<Role> = { updatedAt: now };
+    const updates: Partial<Role> = { updatedAt: now() };
 
     if (input.name !== undefined) {
       updates.name = input.name.trim();

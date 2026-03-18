@@ -14,6 +14,7 @@ import type { RetryConfig, ActionDefinition, ExecutionContext } from './types.js
 import { DEFAULT_RETRY_CONFIG } from './types.js';
 import { createLogger } from '@/utils/logger.js';
 import { generateId } from '@/utils/id.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('automation:retry');
 
@@ -74,7 +75,7 @@ export async function scheduleRetry(
       .set({
         status: 'failed',
         errorMessage: `Max retries (${retryConfig.maxAttempts}) exceeded. Last error: ${error}`,
-        completedAt: new Date().toISOString(),
+        completedAt: now(),
       })
       .where(eq(automationExecutions.id, executionId));
 
@@ -84,7 +85,7 @@ export async function scheduleRetry(
       .set({
         consecutiveFailures: (rule.consecutiveFailures || 0) + 1,
         lastError: error,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now(),
       })
       .where(eq(automationRules.id, ruleId));
 
@@ -127,7 +128,6 @@ export async function scheduleRetry(
  * Process pending retries - called by scheduler
  */
 export async function processPendingRetries(): Promise<void> {
-  const now = new Date().toISOString();
 
   // Find executions that are pending and due for retry
   const pendingRetries = await db
@@ -137,7 +137,7 @@ export async function processPendingRetries(): Promise<void> {
       and(
         eq(automationExecutions.status, 'pending'),
         isNotNull(automationExecutions.nextRetryAt),
-        lte(automationExecutions.nextRetryAt, now)
+        lte(automationExecutions.nextRetryAt, now())
       )
     )
     .limit(10); // Process in batches
@@ -170,7 +170,7 @@ async function retryExecution(execution: AutomationExecution): Promise<void> {
       .set({
         status: 'failed',
         errorMessage: 'Rule not found',
-        completedAt: new Date().toISOString(),
+        completedAt: now(),
       })
       .where(eq(automationExecutions.id, execution.id));
     return;
@@ -183,7 +183,7 @@ async function retryExecution(execution: AutomationExecution): Promise<void> {
       .set({
         status: 'failed',
         errorMessage: 'Rule disabled',
-        completedAt: new Date().toISOString(),
+        completedAt: now(),
       })
       .where(eq(automationExecutions.id, execution.id));
     return;
@@ -228,7 +228,7 @@ async function retryExecution(execution: AutomationExecution): Promise<void> {
       .set({
         status,
         actionResults: JSON.stringify(results),
-        completedAt: new Date().toISOString(),
+        completedAt: now(),
         executionTimeMs: totalDurationMs,
         errorMessage: null,
       })
@@ -241,10 +241,10 @@ async function retryExecution(execution: AutomationExecution): Promise<void> {
         .update(automationRules)
         .set({
           consecutiveFailures: 0,
-          lastRunAt: new Date().toISOString(),
+          lastRunAt: now(),
           runCount: rule.runCount + 1,
           lastError: null,
-          updatedAt: new Date().toISOString(),
+          updatedAt: now(),
         })
         .where(eq(automationRules.id, rule.id));
 
@@ -288,16 +288,15 @@ export async function createExecution(
   triggerData?: Record<string, unknown>
 ): Promise<string> {
   const id = generateId('execution');
-  const now = new Date().toISOString();
 
   await db.insert(automationExecutions).values({
     id,
     ruleId,
-    triggeredAt: now,
+    triggeredAt: now(),
     status: 'running',
     triggerData: triggerData ? JSON.stringify(triggerData) : null,
     attemptNumber: 1,
-    createdAt: now,
+    createdAt: now(),
   });
 
   return id;
@@ -319,7 +318,7 @@ export async function updateExecutionStatus(
       status,
       actionResults: results ? JSON.stringify(results) : null,
       errorMessage: error || null,
-      completedAt: new Date().toISOString(),
+      completedAt: now(),
       executionTimeMs: durationMs || null,
     })
     .where(eq(automationExecutions.id, executionId));

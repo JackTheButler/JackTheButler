@@ -20,6 +20,7 @@ import { generateQAPairs } from './qa-generator.js';
 import { deduplicateEntries as semanticDedup } from './deduplicator.js';
 import { logger } from '@/utils/logger.js';
 import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
+import { now } from '@/utils/time.js';
 import { generateId } from '@/utils/id.js';
 import { getAppRegistry } from '@/apps/index.js';
 import type { AIProvider } from '@/core/interfaces/ai.js';
@@ -363,7 +364,7 @@ async function importToKnowledgeBase(
               keywords: JSON.stringify(entry.keywords),
               priority: entry.priority,
               sourceUrl: entry.sourceUrl || null,
-              updatedAt: new Date().toISOString(),
+              updatedAt: now(),
             })
             .where(eq(knowledgeBase.id, existing.id))
             .run();
@@ -378,7 +379,6 @@ async function importToKnowledgeBase(
 
       // Insert new entry
       const id = generateId('knowledge');
-      const now = new Date().toISOString();
 
       await db
         .insert(knowledgeBase)
@@ -392,8 +392,8 @@ async function importToKnowledgeBase(
           status: 'active',
           sourceUrl: entry.sourceUrl || null,
           sourceEntryId: id,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: now(),
+          updatedAt: now(),
         })
         .run();
 

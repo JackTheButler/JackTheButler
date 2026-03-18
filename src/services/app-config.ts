@@ -21,6 +21,7 @@ import {
 } from '@/apps/index.js';
 import type { ConnectionTestResult } from '@/apps/types.js';
 import { resetResponder } from '@/ai/index.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('service:app-config');
 
@@ -270,7 +271,6 @@ export class AppConfigService {
       .get();
 
     const encryptedConfig = encryptObject(config);
-    const now = new Date().toISOString();
 
     let record: AppConfigRecord;
 
@@ -281,7 +281,7 @@ export class AppConfigService {
           config: encryptedConfig,
           enabled,
           status: 'configured',
-          updatedAt: now,
+          updatedAt: now(),
         })
         .where(eq(appConfigs.id, existing.id))
         .run();
@@ -295,7 +295,7 @@ export class AppConfigService {
         config: encryptedConfig,
         enabled,
         status: 'configured',
-        updatedAt: now,
+        updatedAt: now(),
       });
     } else {
       const id = generateId('app');
@@ -306,8 +306,8 @@ export class AppConfigService {
         enabled,
         status: 'configured' as const,
         config: encryptedConfig,
-        createdAt: now,
-        updatedAt: now,
+        createdAt: now(),
+        updatedAt: now(),
       };
 
       await db.insert(appConfigs).values(newConfig).run();
@@ -348,7 +348,6 @@ export class AppConfigService {
     }
 
     const appId = this.getAppId(manifest);
-    const now = new Date().toISOString();
     const newStatus: AppStatus = enabled ? 'configured' : 'disabled';
 
     await db
@@ -356,7 +355,7 @@ export class AppConfigService {
       .set({
         enabled,
         status: newStatus,
-        updatedAt: now,
+        updatedAt: now(),
       })
       .where(
         and(
@@ -390,7 +389,7 @@ export class AppConfigService {
       ...configRecord,
       enabled,
       status: newStatus,
-      updatedAt: new Date(now),
+      updatedAt: new Date(now()),
     };
   }
 
@@ -465,16 +464,15 @@ export class AppConfigService {
       return null;
     }
 
-    const now = new Date().toISOString();
     const status: AppStatus = result.success ? 'connected' : 'error';
 
     await db
       .update(appConfigs)
       .set({
         status,
-        lastCheckedAt: now,
+        lastCheckedAt: now(),
         ...(result.success ? {} : { lastError: result.message }),
-        updatedAt: now,
+        updatedAt: now(),
       })
       .where(eq(appConfigs.id, config.id))
       .run();
@@ -496,9 +494,9 @@ export class AppConfigService {
     return this.dbToRecord({
       ...config,
       status,
-      lastCheckedAt: now,
+      lastCheckedAt: now(),
       lastError: result.success ? null : result.message,
-      updatedAt: now,
+      updatedAt: now(),
     });
   }
 
@@ -687,7 +685,6 @@ export class AppConfigService {
       : extensionId;
 
     const id = generateId('appLog');
-    const now = new Date().toISOString();
 
     await db
       .insert(appLogs)
@@ -700,7 +697,7 @@ export class AppConfigService {
         details: details ? JSON.stringify(details) : null,
         errorMessage: errorMessage ?? null,
         latencyMs: latencyMs ?? null,
-        createdAt: now,
+        createdAt: now(),
       })
       .run();
   }

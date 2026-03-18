@@ -13,6 +13,7 @@ import { getAppRegistry } from '@/apps/index.js';
 import { appConfigService } from '@/services/app-config.js';
 import type { NormalizedGuest, NormalizedReservation, PMSEvent, PMSEventType } from '@/core/interfaces/pms.js';
 import { validateBody } from '../../middleware/validator.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('webhook:pms');
 
@@ -192,7 +193,7 @@ pmsWebhooks.post('/events', validateBody(eventWebhookSchema), async (c) => {
   processEventWebhook({
     type: event.type as PMSEventType,
     source: event.source as NormalizedGuest['source'],
-    timestamp: event.timestamp || new Date().toISOString(),
+    timestamp: event.timestamp || now(),
     data: event.data as PMSEvent['data'],
   }).catch((err) => {
     log.error({ err, type: event.type }, 'Error processing event webhook');

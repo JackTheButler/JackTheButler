@@ -20,6 +20,7 @@ import { webchatConnectionManager, getSessionLocale } from '@/apps/channels/webc
 import { t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
 import type { NormalizedReservation } from '@/core/interfaces/pms.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('webchat-action');
 
@@ -429,7 +430,7 @@ export class WebChatActionService {
           direction: 'outbound',
           senderType: 'ai',
           content: result.message,
-          timestamp: new Date().toISOString(),
+          timestamp: now(),
         });
       } catch (error) {
         log.warn({ error, sessionId: session.id }, 'Failed to persist/broadcast action result');
@@ -854,7 +855,7 @@ export class WebChatActionService {
     const checkedIn = reservations.find((r) => r.status === 'checked_in');
     if (checkedIn) return checkedIn;
 
-    const today = new Date().toISOString().split('T')[0]!;
+    const today = now().split('T')[0]!;
 
     // Upcoming (confirmed, arrival in the future)
     const upcoming = reservations

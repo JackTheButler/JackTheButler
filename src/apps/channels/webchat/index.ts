@@ -23,6 +23,7 @@ import { webchatActionService } from '@/services/webchat-action.js';
 import type { WebChatSession } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 import { events, EventTypes } from '@/events/index.js';
 import { resolveLocale, t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
@@ -488,7 +489,7 @@ async function handleGuestMessage(
     direction: 'inbound',
     senderType: 'guest',
     content,
-    timestamp: new Date().toISOString(),
+    timestamp: now(),
   });
 
   // Build inbound message for message processor
@@ -531,7 +532,7 @@ async function handleGuestMessage(
     senderType: 'ai',
     content: response.content,
     conversationId: response.conversationId,
-    timestamp: new Date().toISOString(),
+    timestamp: now(),
     ...(actionMeta ? { action: actionMeta } : {}),
     ...(quickReplies?.length ? { quickReplies } : {}),
   });

@@ -24,6 +24,7 @@ import {
   type WebchatErrorEvent,
 } from '@/types/events.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('activity-log');
 
@@ -51,7 +52,7 @@ export function writeActivityLog(
       errorMessage: errorMessage ?? null,
       latencyMs: latencyMs ?? null,
       details: details ? JSON.stringify(details) : null,
-      createdAt: new Date().toISOString(),
+      createdAt: now(),
     })
     .run();
 }

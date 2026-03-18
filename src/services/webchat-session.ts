@@ -13,6 +13,7 @@ import { db, webchatSessions } from '@/db/index.js';
 import type { WebChatSession } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('webchat-session');
 
@@ -32,15 +33,14 @@ export class WebChatSessionService {
   async create(): Promise<WebChatSession> {
     const id = generateId('session');
     const token = randomBytes(32).toString('hex');
-    const now = new Date().toISOString();
     const expiresAt = new Date(Date.now() + ANONYMOUS_TTL_MS).toISOString();
 
     await db.insert(webchatSessions).values({
       id,
       token,
       expiresAt,
-      lastActivityAt: now,
-      createdAt: now,
+      lastActivityAt: now(),
+      createdAt: now(),
     });
 
     log.info({ sessionId: id }, 'Created webchat session');
@@ -220,11 +220,10 @@ export class WebChatSessionService {
    * Delete expired sessions. Returns the number of rows deleted.
    */
   async cleanupExpired(): Promise<number> {
-    const now = new Date().toISOString();
 
     const result = await db
       .delete(webchatSessions)
-      .where(lt(webchatSessions.expiresAt, now));
+      .where(lt(webchatSessions.expiresAt, now()));
 
     return result.changes;
   }

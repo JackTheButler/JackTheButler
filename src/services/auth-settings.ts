@@ -11,6 +11,7 @@ import { eq } from 'drizzle-orm';
 import { db, settings, roles } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { ValidationError } from '@/errors/index.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('auth-settings');
 
@@ -129,18 +130,17 @@ export class AuthSettingsService {
     }
 
     const merged = { ...current, ...input };
-    const now = new Date().toISOString();
 
     if (row) {
       await db
         .update(settings)
-        .set({ value: JSON.stringify(merged), updatedAt: now })
+        .set({ value: JSON.stringify(merged), updatedAt: now() })
         .where(eq(settings.key, SETTINGS_KEY))
         .run();
     } else {
       await db
         .insert(settings)
-        .values({ key: SETTINGS_KEY, value: JSON.stringify(merged), updatedAt: now })
+        .values({ key: SETTINGS_KEY, value: JSON.stringify(merged), updatedAt: now() })
         .run();
     }
 

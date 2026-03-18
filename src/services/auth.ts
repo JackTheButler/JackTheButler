@@ -13,6 +13,7 @@ import { UnauthorizedError, NotFoundError, ForbiddenError } from '@/errors/index
 import { authSettingsService } from './auth-settings.js';
 import { createLogger } from '@/utils/logger.js';
 import { WILDCARD_PERMISSION } from '@/core/permissions/index.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('auth');
 
@@ -99,7 +100,7 @@ export class AuthService {
     // Update last active time
     await db
       .update(staff)
-      .set({ lastActiveAt: new Date().toISOString() })
+      .set({ lastActiveAt: now() })
       .where(eq(staff.id, user.id));
 
     // Get user permissions from role

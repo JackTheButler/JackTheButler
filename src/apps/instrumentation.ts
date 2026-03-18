@@ -18,6 +18,7 @@
 
 import { db, appLogs } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('instrumentation');
 
@@ -82,7 +83,7 @@ export function writeAppLog(
       details: JSON.stringify(details),
       errorMessage: errorMessage ?? null,
       latencyMs,
-      createdAt: new Date().toISOString(),
+      createdAt: now(),
     })
     .run();
 }

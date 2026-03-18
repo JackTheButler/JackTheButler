@@ -12,6 +12,7 @@ import { db, authTokens } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { ValidationError } from '@/errors/index.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('auth-token');
 
@@ -91,7 +92,7 @@ export class AuthTokenService {
   async markUsed(tokenId: string): Promise<void> {
     await db
       .update(authTokens)
-      .set({ usedAt: new Date().toISOString() })
+      .set({ usedAt: now() })
       .where(eq(authTokens.id, tokenId))
       .run();
   }
@@ -100,10 +101,9 @@ export class AuthTokenService {
    * Delete all expired tokens (cleanup utility)
    */
   async deleteExpiredTokens(): Promise<number> {
-    const now = new Date().toISOString();
     const result = db
       .delete(authTokens)
-      .where(lt(authTokens.expiresAt, now))
+      .where(lt(authTokens.expiresAt, now()))
       .run();
 
     const deleted = result.changes;
@@ -117,10 +117,9 @@ export class AuthTokenService {
    * Invalidate all unused tokens for a staff member of a given type
    */
   async invalidateTokens(staffId: string, type: TokenType): Promise<void> {
-    const now = new Date().toISOString();
     await db
       .update(authTokens)
-      .set({ usedAt: now })
+      .set({ usedAt: now() })
       .where(
         and(
           eq(authTokens.staffId, staffId),

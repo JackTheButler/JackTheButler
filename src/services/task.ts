@@ -13,6 +13,7 @@ import { NotFoundError } from '@/errors/index.js';
 import { events, EventTypes } from '@/events/index.js';
 import type { TaskStatus, TaskPriority } from '@jack/shared';
 export type { TaskStatus, TaskPriority } from '@jack/shared';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('task');
 
@@ -74,7 +75,6 @@ export class TaskService {
    */
   async create(input: CreateTaskInput): Promise<Task> {
     const id = generateId('task');
-    const now = new Date().toISOString();
 
     await db.insert(tasks).values({
       id,
@@ -89,8 +89,8 @@ export class TaskService {
       priority: input.priority ?? 'standard',
       status: 'pending',
       dueAt: input.dueAt ?? null,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now(),
+      updatedAt: now(),
     });
 
     log.info({ taskId: id, type: input.type, department: input.department }, 'Task created');
@@ -200,16 +200,16 @@ export class TaskService {
     await this.getById(id); // Verify exists
 
     const updates: Record<string, unknown> = {
-      updatedAt: new Date().toISOString(),
+      updatedAt: now(),
     };
 
     if (input.status !== undefined) {
       updates.status = input.status;
       if (input.status === 'in_progress' && !updates.startedAt) {
-        updates.startedAt = new Date().toISOString();
+        updates.startedAt = now();
       }
       if (input.status === 'completed') {
-        updates.completedAt = new Date().toISOString();
+        updates.completedAt = now();
       }
     }
 
@@ -293,7 +293,7 @@ export class TaskService {
       status: 'pending',
       assignedTo: null,
       completedAt: null,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now(),
     }).where(eq(tasks.id, id));
 
     log.info({ taskId: id }, 'Task reopened');

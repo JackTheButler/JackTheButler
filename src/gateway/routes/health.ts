@@ -9,6 +9,7 @@ import { isDatabaseHealthy } from '@/db/index.js';
 import { scheduler } from '@/services/scheduler.js';
 import { getMetrics } from '@/monitoring/index.js';
 import { getVersion } from '@/config/version.js';
+import { now } from '@/utils/time.js';
 
 const health = new Hono();
 
@@ -17,7 +18,7 @@ const health = new Hono();
  * Used by Kubernetes/Docker to detect crashed containers.
  */
 health.get('/live', (c) => {
-  return c.json({ status: 'ok', timestamp: new Date().toISOString() });
+  return c.json({ status: 'ok', timestamp: now() });
 });
 
 /**
@@ -34,7 +35,7 @@ health.get('/ready', (c) => {
         checks: {
           database: 'error',
         },
-        timestamp: new Date().toISOString(),
+        timestamp: now(),
       },
       503
     );
@@ -45,7 +46,7 @@ health.get('/ready', (c) => {
     checks: {
       database: 'ok',
     },
-    timestamp: new Date().toISOString(),
+    timestamp: now(),
   });
 });
 
@@ -64,7 +65,7 @@ health.get('/', (c) => {
       database: dbHealthy ? 'ok' : 'error',
     },
     scheduler: schedulerStatus,
-    timestamp: new Date().toISOString(),
+    timestamp: now(),
   });
 });
 
@@ -88,7 +89,7 @@ health.get('/info', (c) => {
       external: Math.round(memUsage.external / 1024 / 1024), // MB
     },
     scheduler: scheduler.getStatus(),
-    timestamp: new Date().toISOString(),
+    timestamp: now(),
   });
 });
 
@@ -101,7 +102,7 @@ health.get('/metrics', (c) => {
 
   return c.json({
     ...allMetrics,
-    timestamp: new Date().toISOString(),
+    timestamp: now(),
   });
 });
 

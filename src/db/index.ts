@@ -19,6 +19,7 @@ import * as schema from './schema.js';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { DEFAULT_ROLES } from '@/core/permissions/defaults.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('db');
 const config = loadConfig();
@@ -95,7 +96,6 @@ function seedDefaultRoles(): void {
       const existing = db.select().from(schema.roles).where(eq(schema.roles.id, role.id)).get();
 
       if (!existing) {
-        const now = new Date().toISOString();
         db.insert(schema.roles)
           .values({
             id: role.id,
@@ -103,8 +103,8 @@ function seedDefaultRoles(): void {
             description: role.description,
             permissions: JSON.stringify(role.permissions),
             isSystem: role.isSystem,
-            createdAt: now,
-            updatedAt: now,
+            createdAt: now(),
+            updatedAt: now(),
           })
           .run();
         log.info({ roleId: role.id, roleName: role.name }, 'Created default role');

@@ -14,6 +14,7 @@ import { appConfigService } from './app-config.js';
 import { getAppRegistry, getManifest } from '@/apps/index.js';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
 import { authService } from './auth.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('service:setup');
 
@@ -137,7 +138,6 @@ export class SetupService {
    * Enables Local AI provider and sets status to in_progress
    */
   async start(): Promise<SetupStateRecord> {
-    const now = new Date().toISOString();
 
     // Check if state exists
     const existing = await this.getStateRecord();
@@ -149,7 +149,7 @@ export class SetupService {
         .set({
           status: 'in_progress',
           currentStep: 'bootstrap',
-          updatedAt: now,
+          updatedAt: now(),
         })
         .where(eq(setupState.id, 'setup'))
         .run();
@@ -163,8 +163,8 @@ export class SetupService {
           currentStep: 'bootstrap',
           completedSteps: '[]',
           context: '{}',
-          createdAt: now,
-          updatedAt: now,
+          createdAt: now(),
+          updatedAt: now(),
         })
         .run();
     }
@@ -199,7 +199,6 @@ export class SetupService {
       completedSteps.push(step);
     }
 
-    const now = new Date().toISOString();
     const newStatus: SetupStatus = nextStep ? 'in_progress' : 'completed';
 
     await db
@@ -208,7 +207,7 @@ export class SetupService {
         status: newStatus,
         currentStep: nextStep,
         completedSteps: JSON.stringify(completedSteps),
-        updatedAt: now,
+        updatedAt: now(),
       })
       .where(eq(setupState.id, 'setup'))
       .run();
@@ -228,13 +227,12 @@ export class SetupService {
       propertyName: name,
     };
 
-    const now = new Date().toISOString();
 
     await db
       .update(setupState)
       .set({
         context: JSON.stringify(context),
-        updatedAt: now,
+        updatedAt: now(),
       })
       .where(eq(setupState.id, 'setup'))
       .run();
@@ -249,7 +247,6 @@ export class SetupService {
     name: string,
     type: PropertyType
   ): Promise<SetupStateRecord> {
-    const now = new Date().toISOString();
 
     // Get existing hotel profile or create default
     const profile = await this.getHotelProfile();
@@ -276,7 +273,7 @@ export class SetupService {
       .update(setupState)
       .set({
         context: JSON.stringify(context),
-        updatedAt: now,
+        updatedAt: now(),
       })
       .where(eq(setupState.id, 'setup'))
       .run();
@@ -294,7 +291,6 @@ export class SetupService {
     provider: AIProviderType,
     apiKey?: string
   ): Promise<{ success: boolean; error?: string; state: SetupStateRecord }> {
-    const now = new Date().toISOString();
 
     // If using cloud provider, validate and save the API key
     if (provider !== 'local' && apiKey) {
@@ -317,7 +313,7 @@ export class SetupService {
       .update(setupState)
       .set({
         context: JSON.stringify(context),
-        updatedAt: now,
+        updatedAt: now(),
       })
       .where(eq(setupState.id, 'setup'))
       .run();
@@ -347,7 +343,6 @@ export class SetupService {
     password: string,
     name: string
   ): Promise<{ success: boolean; error?: string; state: SetupStateRecord }> {
-    const now = new Date().toISOString();
 
     // Check if email is already taken (by someone other than default admin)
     const existingUser = await db
@@ -377,8 +372,8 @@ export class SetupService {
           permissions: JSON.stringify(['*']),
           status: 'active',
           passwordHash,
-          createdAt: now,
-          updatedAt: now,
+          createdAt: now(),
+          updatedAt: now(),
         })
         .run();
 
@@ -389,7 +384,7 @@ export class SetupService {
         .update(staff)
         .set({
           status: 'inactive',
-          updatedAt: now,
+          updatedAt: now(),
         })
         .where(eq(staff.id, 'staff-admin-butler'))
         .run();
@@ -407,7 +402,7 @@ export class SetupService {
         .update(setupState)
         .set({
           context: JSON.stringify(context),
-          updatedAt: now,
+          updatedAt: now(),
         })
         .where(eq(setupState.id, 'setup'))
         .run();
@@ -591,7 +586,6 @@ export class SetupService {
    * Skip setup entirely and mark as completed
    */
   async skip(): Promise<SetupStateRecord> {
-    const now = new Date().toISOString();
 
     // Check if state exists
     const existing = await this.getStateRecord();
@@ -602,7 +596,7 @@ export class SetupService {
         .set({
           status: 'completed',
           currentStep: null,
-          updatedAt: now,
+          updatedAt: now(),
         })
         .where(eq(setupState.id, 'setup'))
         .run();
@@ -615,8 +609,8 @@ export class SetupService {
           currentStep: null,
           completedSteps: '[]',
           context: '{}',
-          createdAt: now,
-          updatedAt: now,
+          createdAt: now(),
+          updatedAt: now(),
         })
         .run();
     }
@@ -706,7 +700,6 @@ export class SetupService {
    * Save hotel profile to settings
    */
   private async saveHotelProfile(profile: HotelProfile): Promise<void> {
-    const now = new Date().toISOString();
 
     const existing = await db
       .select()
@@ -717,13 +710,13 @@ export class SetupService {
     if (existing) {
       await db
         .update(settings)
-        .set({ value: JSON.stringify(profile), updatedAt: now })
+        .set({ value: JSON.stringify(profile), updatedAt: now() })
         .where(eq(settings.key, HOTEL_PROFILE_KEY))
         .run();
     } else {
       await db
         .insert(settings)
-        .values({ key: HOTEL_PROFILE_KEY, value: JSON.stringify(profile), updatedAt: now })
+        .values({ key: HOTEL_PROFILE_KEY, value: JSON.stringify(profile), updatedAt: now() })
         .run();
     }
 

@@ -18,6 +18,7 @@ import type {
   ActionConfig,
 } from './types.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('automation:chain');
 
@@ -49,7 +50,7 @@ export async function executeActionChain(
       const result: ActionResult = {
         actionId: action.id,
         status: 'skipped',
-        executedAt: new Date().toISOString(),
+        executedAt: now(),
         durationMs: 0,
       };
       results.push(result);
@@ -72,7 +73,7 @@ export async function executeActionChain(
         actionId: action.id,
         status: 'success',
         output: output as Record<string, unknown>,
-        executedAt: new Date().toISOString(),
+        executedAt: now(),
         durationMs: Date.now() - actionStartTime,
       };
 
@@ -92,7 +93,7 @@ export async function executeActionChain(
         actionId: action.id,
         status: 'failed',
         error: errorMessage,
-        executedAt: new Date().toISOString(),
+        executedAt: now(),
         durationMs: Date.now() - actionStartTime,
       };
 

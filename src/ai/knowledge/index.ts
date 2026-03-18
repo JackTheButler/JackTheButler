@@ -12,6 +12,7 @@ import type { KnowledgeItem, NewKnowledgeItem } from '@/db/schema.js';
 import type { LLMProvider } from '../types.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('ai:knowledge');
 
@@ -105,7 +106,7 @@ export class KnowledgeService {
       .update(knowledgeBase)
       .set({
         ...updates,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now(),
       })
       .where(eq(knowledgeBase.id, id));
 

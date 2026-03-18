@@ -13,6 +13,7 @@ import { normalizePhone } from '@/services/guest.js';
 import { getAppRegistry } from '@/apps/index.js';
 import type { NormalizedGuest, NormalizedReservation, SyncResult } from '@/core/interfaces/pms.js';
 import type { Guest, Reservation } from '@/db/schema.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('pms-sync');
 
@@ -82,7 +83,6 @@ export class PMSSyncService {
       existingGuest = await this.findGuestByEmail(pmsGuest.email);
     }
 
-    const now = new Date().toISOString();
 
     if (existingGuest) {
       // Update existing guest
@@ -104,7 +104,7 @@ export class PMSSyncService {
             : existingGuest.preferences,
           externalIds: JSON.stringify(externalIds),
           notes: pmsGuest.notes || existingGuest.notes,
-          updatedAt: now,
+          updatedAt: now(),
         })
         .where(eq(guests.id, existingGuest.id));
 
@@ -129,8 +129,8 @@ export class PMSSyncService {
       preferences: pmsGuest.preferences ? JSON.stringify(pmsGuest.preferences) : '[]',
       externalIds: JSON.stringify(externalIds),
       notes: pmsGuest.notes ?? null,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now(),
+      updatedAt: now(),
     });
 
     const [created] = await db.select().from(guests).where(eq(guests.id, id)).limit(1);
@@ -152,7 +152,6 @@ export class PMSSyncService {
       .where(eq(reservations.confirmationNumber, pmsRes.confirmationNumber))
       .limit(1);
 
-    const now = new Date().toISOString();
 
     // Map PMS status to our status
     const status = this.mapReservationStatus(pmsRes.status);
@@ -169,7 +168,7 @@ export class PMSSyncService {
         // Still update syncedAt so freshness checks know we verified with PMS
         await db
           .update(reservations)
-          .set({ syncedAt: now })
+          .set({ syncedAt: now() })
           .where(eq(reservations.id, existingRes.id));
         return 'unchanged';
       }
@@ -189,8 +188,8 @@ export class PMSSyncService {
           specialRequests: pmsRes.specialRequests ? JSON.stringify(pmsRes.specialRequests) : null,
           notes: pmsRes.notes ? JSON.stringify(pmsRes.notes) : null,
           externalId: pmsRes.externalId,
-          syncedAt: now,
-          updatedAt: now,
+          syncedAt: now(),
+          updatedAt: now(),
         })
         .where(eq(reservations.id, existingRes.id));
 
@@ -215,9 +214,9 @@ export class PMSSyncService {
       totalRate: pmsRes.totalRate ?? null,
       specialRequests: pmsRes.specialRequests ? JSON.stringify(pmsRes.specialRequests) : null,
       notes: pmsRes.notes ? JSON.stringify(pmsRes.notes) : null,
-      syncedAt: now,
-      createdAt: now,
-      updatedAt: now,
+      syncedAt: now(),
+      createdAt: now(),
+      updatedAt: now(),
     });
 
     log.info({ reservationId: id, confirmation: pmsRes.confirmationNumber, source: pmsRes.source }, 'Created reservation');
@@ -228,7 +227,7 @@ export class PMSSyncService {
    * Find active/upcoming reservation for a guest
    */
   async findActiveReservation(guestId: string): Promise<Reservation | null> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = now().split('T')[0];
 
     const [reservation] = await db
       .select()

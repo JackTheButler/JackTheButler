@@ -11,6 +11,7 @@ import { eq, desc, sql, and, gte } from 'drizzle-orm';
 import { db, reservations, guests, conversations, tasks, settings } from '@/db/index.js';
 import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
+import { now } from '@/utils/time.js';
 
 // Define custom variables type for Hono context
 type Variables = {
@@ -90,7 +91,7 @@ reservationRoutes.get('/today', requirePermission(PERMISSIONS.RESERVATIONS_VIEW)
  * Get today's arrivals list
  */
 reservationRoutes.get('/arrivals', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
-  const date: string = c.req.query('date') ?? new Date().toISOString().split('T')[0]!;
+  const date: string = c.req.query('date') ?? now().split('T')[0]!;
   const status = c.req.query('status'); // optional filter
 
   const query = db
@@ -133,7 +134,7 @@ reservationRoutes.get('/arrivals', requirePermission(PERMISSIONS.RESERVATIONS_VI
  * Get today's departures list
  */
 reservationRoutes.get('/departures', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
-  const date: string = c.req.query('date') ?? new Date().toISOString().split('T')[0]!;
+  const date: string = c.req.query('date') ?? now().split('T')[0]!;
   const status = c.req.query('status');
 
   const results = await db
@@ -176,7 +177,7 @@ reservationRoutes.get('/departures', requirePermission(PERMISSIONS.RESERVATIONS_
  * Get current in-house guests
  */
 reservationRoutes.get('/in-house', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
-  const today: string = new Date().toISOString().split('T')[0]!;
+  const today: string = now().split('T')[0]!;
 
   const results = await db
     .select({

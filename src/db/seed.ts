@@ -12,6 +12,7 @@ import { eq } from 'drizzle-orm';
 import { db, settings, roles } from './index.js';
 import { DEFAULT_ROLES } from '@/core/permissions/defaults.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('seed');
 
@@ -26,15 +27,14 @@ async function seedRoles(): Promise<number> {
     const existing = await db.select().from(roles).where(eq(roles.id, role.id)).limit(1);
 
     if (existing.length === 0) {
-      const now = new Date().toISOString();
       await db.insert(roles).values({
         id: role.id,
         name: role.name,
         description: role.description,
         permissions: JSON.stringify(role.permissions),
         isSystem: role.isSystem,
-        createdAt: now,
-        updatedAt: now,
+        createdAt: now(),
+        updatedAt: now(),
       });
       seededCount++;
       log.info({ roleId: role.id, roleName: role.name }, 'Created default role');

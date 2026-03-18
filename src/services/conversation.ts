@@ -11,6 +11,7 @@ import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
 import { NotFoundError } from '@/errors/index.js';
+import { now } from '@/utils/time.js';
 import type {
   ChannelType,
   ConversationState,
@@ -61,7 +62,7 @@ export class ConversationService {
       .limit(1);
 
     if (existing) {
-      const updates: Record<string, string> = { updatedAt: new Date().toISOString() };
+      const updates: Record<string, string> = { updatedAt: now() };
 
       // Reactivate if resolved or closed
       if (existing.state === 'resolved' || existing.state === 'closed') {
@@ -89,7 +90,6 @@ export class ConversationService {
 
     // Create new conversation
     const id = generateId('conversation');
-    const now = new Date().toISOString();
 
     await db.insert(conversations).values({
       id,
@@ -98,8 +98,8 @@ export class ConversationService {
       guestId: guestId ?? null,
       state: 'active',
       metadata: '{}',
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now(),
+      updatedAt: now(),
     });
 
     log.info({ conversationId: id, channelType, channelId, guestId }, 'Created new conversation');
@@ -311,13 +311,13 @@ export class ConversationService {
     const conversation = await this.getById(id);
 
     const updates: Record<string, unknown> = {
-      updatedAt: new Date().toISOString(),
+      updatedAt: now(),
     };
 
     if (input.state !== undefined) {
       updates.state = input.state;
       if (input.state === 'resolved') {
-        updates.resolvedAt = new Date().toISOString();
+        updates.resolvedAt = now();
       }
     }
 
@@ -376,7 +376,6 @@ export class ConversationService {
     await this.getById(conversationId);
 
     const id = generateId('message');
-    const now = new Date().toISOString();
 
     await db.insert(messages).values({
       id,
@@ -393,15 +392,15 @@ export class ConversationService {
       detectedLanguage: input.detectedLanguage ?? null,
       translatedContent: input.translatedContent ?? null,
       deliveryStatus: 'sent',
-      createdAt: now,
+      createdAt: now(),
     });
 
     // Update conversation last_message_at
     await db
       .update(conversations)
       .set({
-        lastMessageAt: now,
-        updatedAt: now,
+        lastMessageAt: now(),
+        updatedAt: now(),
       })
       .where(eq(conversations.id, conversationId));
 

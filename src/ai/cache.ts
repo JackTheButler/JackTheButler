@@ -9,6 +9,7 @@ import { createHash, randomUUID } from 'node:crypto';
 import { eq, sql, and, lt, gt } from 'drizzle-orm';
 import { db, responseCache } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('ai:cache');
 
@@ -99,13 +100,12 @@ export class ResponseCacheService {
     }
 
     const hash = this.hashQuery(query);
-    const now = new Date().toISOString();
 
     try {
       const result = await db
         .select()
         .from(responseCache)
-        .where(and(eq(responseCache.queryHash, hash), gt(responseCache.expiresAt, now)))
+        .where(and(eq(responseCache.queryHash, hash), gt(responseCache.expiresAt, now())))
         .limit(1);
 
       const entry = result[0];
@@ -117,7 +117,7 @@ export class ResponseCacheService {
       db.update(responseCache)
         .set({
           hitCount: sql`${responseCache.hitCount} + 1`,
-          lastHitAt: now,
+          lastHitAt: now(),
         })
         .where(eq(responseCache.id, entry.id))
         .run();
@@ -184,10 +184,9 @@ export class ResponseCacheService {
    */
   private async pruneIfNeeded(): Promise<void> {
     try {
-      const now = new Date().toISOString();
 
       // Delete expired entries
-      await db.delete(responseCache).where(lt(responseCache.expiresAt, now));
+      await db.delete(responseCache).where(lt(responseCache.expiresAt, now()));
 
       // Count remaining entries
       const countResult = await db

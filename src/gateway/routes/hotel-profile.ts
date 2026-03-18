@@ -15,6 +15,7 @@ import { validateBody } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('routes:hotel-profile');
 
@@ -112,7 +113,6 @@ hotelProfileRoutes.get('/', requirePermission(PERMISSIONS.SETTINGS_VIEW), async 
  */
 hotelProfileRoutes.put('/', requirePermission(PERMISSIONS.SETTINGS_MANAGE), validateBody(hotelProfileSchema), async (c) => {
   const profile = c.get('validatedBody') as HotelProfile;
-  const now = new Date().toISOString();
 
   // Check if profile exists
   const existing = await db
@@ -126,7 +126,7 @@ hotelProfileRoutes.put('/', requirePermission(PERMISSIONS.SETTINGS_MANAGE), vali
       .update(settings)
       .set({
         value: JSON.stringify(profile),
-        updatedAt: now,
+        updatedAt: now(),
       })
       .where(eq(settings.key, SETTINGS_KEY))
       .run();
@@ -136,7 +136,7 @@ hotelProfileRoutes.put('/', requirePermission(PERMISSIONS.SETTINGS_MANAGE), vali
       .values({
         key: SETTINGS_KEY,
         value: JSON.stringify(profile),
-        updatedAt: now,
+        updatedAt: now(),
       })
       .run();
   }
@@ -152,13 +152,13 @@ hotelProfileRoutes.put('/', requirePermission(PERMISSIONS.SETTINGS_MANAGE), vali
   if (langRow) {
     await db
       .update(settings)
-      .set({ value: profile.propertyLanguage, updatedAt: now })
+      .set({ value: profile.propertyLanguage, updatedAt: now() })
       .where(eq(settings.key, langKey))
       .run();
   } else {
     await db
       .insert(settings)
-      .values({ key: langKey, value: profile.propertyLanguage, updatedAt: now })
+      .values({ key: langKey, value: profile.propertyLanguage, updatedAt: now() })
       .run();
   }
 

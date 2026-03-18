@@ -14,6 +14,7 @@ import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { validateBody, requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { normalizePhone } from '@/services/guest.js';
+import { now } from '@/utils/time.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 
 const log = createLogger('routes:guests');
@@ -303,7 +304,6 @@ guestRoutes.post('/', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBody
   const data = c.get('validatedBody') as z.infer<typeof createGuestSchema>;
 
   const id = generateId('guest');
-  const now = new Date().toISOString();
 
   await db
     .insert(guests)
@@ -322,8 +322,8 @@ guestRoutes.post('/', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBody
       externalIds: '{}',
       stayCount: 0,
       totalRevenue: 0,
-      createdAt: now,
-      updatedAt: now,
+      createdAt: now(),
+      updatedAt: now(),
     })
     .run();
 
@@ -356,7 +356,6 @@ guestRoutes.put('/:id', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBo
     return c.json({ error: 'Guest not found' }, 404);
   }
 
-  const now = new Date().toISOString();
 
   await db
     .update(guests)
@@ -371,7 +370,7 @@ guestRoutes.put('/:id', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBo
       ...(data.preferences && { preferences: JSON.stringify(data.preferences) }),
       ...(data.notes !== undefined && { notes: data.notes }),
       ...(data.tags && { tags: JSON.stringify(data.tags) }),
-      updatedAt: now,
+      updatedAt: now(),
     })
     .where(eq(guests.id, id))
     .run();
@@ -431,7 +430,7 @@ guestRoutes.delete('/:id', requirePermission(PERMISSIONS.GUESTS_MANAGE), async (
         notes: null,
         preferences: '[]',
         tags: '["deleted"]',
-        updatedAt: new Date().toISOString(),
+        updatedAt: now(),
       })
       .where(eq(guests.id, id))
       .run();

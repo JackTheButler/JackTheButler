@@ -7,6 +7,7 @@
  */
 
 import { logger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 /**
  * Scrape options for a single URL
@@ -94,7 +95,7 @@ export async function scrapeUrl(options: ScrapeOptions): Promise<ScrapeResult> {
           title: '',
           content: '',
           html: '',
-          fetchedAt: new Date().toISOString(),
+          fetchedAt: now(),
           status: 'error',
           error: errorMessage,
           statusCode: response.status,
@@ -116,7 +117,7 @@ export async function scrapeUrl(options: ScrapeOptions): Promise<ScrapeResult> {
         title,
         content: '', // Content extraction is done by parser
         html,
-        fetchedAt: new Date().toISOString(),
+        fetchedAt: now(),
         status: 'success',
         statusCode: response.status,
       };
@@ -134,7 +135,7 @@ export async function scrapeUrl(options: ScrapeOptions): Promise<ScrapeResult> {
       title: '',
       content: '',
       html: '',
-      fetchedAt: new Date().toISOString(),
+      fetchedAt: now(),
       status: 'error',
       error: errorMessage,
     };

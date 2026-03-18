@@ -16,6 +16,7 @@ import { getAppRegistry } from '@/apps/index.js';
 import { webchatConnectionManager } from '@/apps/channels/webchat/index.js';
 import { translate, getPropertyLanguage } from '@/services/translation.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 
 const log = createLogger('api:conversations');
 
@@ -244,7 +245,7 @@ async function sendToChannel(
           direction: 'outbound',
           senderType: 'staff',
           content,
-          timestamp: new Date().toISOString(),
+          timestamp: now(),
         });
         log.info({ channelType, channelId }, 'Message sent via WebChat');
       } else {

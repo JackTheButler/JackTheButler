@@ -18,6 +18,7 @@ import { emailService } from '@/services/email.js';
 import { staffService } from '@/services/staff.js';
 import { generateId } from '@/utils/id.js';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { now } from '@/utils/time.js';
 import { ForbiddenError, ValidationError, ConflictError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
 
@@ -254,7 +255,7 @@ auth.post('/reset-password', validateBody(resetPasswordSchema), async (c) => {
   const passwordHash = await authService.hashPassword(password);
   await db
     .update(staff)
-    .set({ passwordHash, updatedAt: new Date().toISOString() })
+    .set({ passwordHash, updatedAt: now() })
     .where(eq(staff.id, staffId))
     .run();
 
@@ -282,10 +283,9 @@ auth.post('/verify-email', validateBody(verifyEmailSchema), async (c) => {
   const { staffId, tokenId } = await authTokenService.validateToken(token, 'email_verification');
 
   // Set emailVerified = true
-  const now = new Date().toISOString();
   await db
     .update(staff)
-    .set({ emailVerified: true, updatedAt: now })
+    .set({ emailVerified: true, updatedAt: now() })
     .where(eq(staff.id, staffId))
     .run();
 
@@ -294,7 +294,7 @@ auth.post('/verify-email', validateBody(verifyEmailSchema), async (c) => {
   if (user && user.approvalStatus === 'approved' && user.status === 'inactive') {
     await db
       .update(staff)
-      .set({ status: 'active', updatedAt: now })
+      .set({ status: 'active', updatedAt: now() })
       .where(eq(staff.id, staffId))
       .run();
   }

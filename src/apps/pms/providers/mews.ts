@@ -23,6 +23,7 @@ import type {
 import type { PMSAppManifest } from '../../types.js';
 import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
+import { now } from '@/utils/time.js';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const log = createLogger('extensions:pms:mews');
@@ -464,7 +465,7 @@ export class MewsPMSAdapter implements PMSAdapter {
       if (query.modifiedSince) {
         body.UpdatedUtc = {
           StartUtc: query.modifiedSince.toISOString(),
-          EndUtc: new Date().toISOString(),
+          EndUtc: now(),
         };
       }
 
@@ -666,7 +667,7 @@ export class MewsPMSAdapter implements PMSAdapter {
       return {
         type: eventType,
         source: 'mews',
-        timestamp: new Date().toISOString(),
+        timestamp: now(),
         data: { reservation },
       };
     }
@@ -700,7 +701,7 @@ export class MewsPMSAdapter implements PMSAdapter {
       return {
         type: 'room.status_changed',
         source: 'mews',
-        timestamp: new Date().toISOString(),
+        timestamp: now(),
         data: eventData,
       };
     }

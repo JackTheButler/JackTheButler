@@ -9,6 +9,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq } from 'drizzle-orm';
 import { db, settings } from '@/db/index.js';
+import { now } from '@/utils/time.js';
 import { authSettingsService, type AuthSettings } from '@/services/auth-settings.js';
 import type { EmailTemplates } from '@/services/email.js';
 import { validateBody } from '../middleware/validator.js';
@@ -124,14 +125,14 @@ authSettingsRoutes.put(
     if (row) {
       await db
         .update(settings)
-        .set({ value, updatedAt: new Date().toISOString() })
+        .set({ value, updatedAt: now() })
         .where(eq(settings.key, TEMPLATES_SETTINGS_KEY))
         .run();
     } else {
       await db.insert(settings).values({
         key: TEMPLATES_SETTINGS_KEY,
         value,
-        updatedAt: new Date().toISOString(),
+        updatedAt: now(),
       }).run();
     }
 

@@ -27,6 +27,7 @@ import { processPendingRetries, createExecution, scheduleRetry, updateExecutionS
 import type { ActionDefinition } from './types.js';
 import { createLogger } from '@/utils/logger.js';
 import { generateId } from '@/utils/id.js';
+import { now } from '@/utils/time.js';
 import { pmsSyncService } from '@/services/pms-sync.js';
 
 const log = createLogger('automation');
@@ -322,7 +323,7 @@ export class AutomationEngine {
     updates: Partial<AutomationRuleDefinition>
   ): Promise<AutomationRule | null> {
     const updateData: Record<string, unknown> = {
-      updatedAt: new Date().toISOString(),
+      updatedAt: now(),
     };
 
     if (updates.name !== undefined) updateData.name = updates.name;
@@ -504,7 +505,7 @@ export class AutomationEngine {
   }
 
   private async hasRunToday(ruleId: string, reservationId: string): Promise<boolean> {
-    const today = new Date().toISOString().split('T')[0];
+    const today = now().split('T')[0];
 
     const existingLog = await db
       .select({ id: automationLogs.id })
@@ -551,9 +552,9 @@ export class AutomationEngine {
 
   private async updateRuleStats(rule: AutomationRule, result: ExecutionResult): Promise<void> {
     const updates: Record<string, unknown> = {
-      lastRunAt: new Date().toISOString(),
+      lastRunAt: now(),
       runCount: (rule.runCount || 0) + 1,
-      updatedAt: new Date().toISOString(),
+      updatedAt: now(),
     };
 
     if (!result.success) {
