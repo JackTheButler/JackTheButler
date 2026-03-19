@@ -21,7 +21,7 @@ import { taskService, type TaskType } from '@/services/task.js';
 import { guestContextService, type GuestContext } from './guest-context.js';
 import { getEscalationManager } from './escalation-engine.js';
 import { getTaskRouter, type GuestContext as TaskRouterContext } from './task-router.js';
-import { getAutonomyEngine, type GuestContext as AutonomyContext } from './autonomy.js';
+import { getAutonomyEngine, mapTaskTypeToActionType, type GuestContext as AutonomyContext } from './autonomy.js';
 import { getApprovalQueue } from './approval-queue.js';
 import { createLogger } from '@/utils/logger.js';
 import { writeActivityLog } from '@/services/activity-log.js';
@@ -484,15 +484,7 @@ export class MessageProcessor {
 
     if (routingDecision.requiresApproval) {
       const approvalQueue = getApprovalQueue();
-      const actionType = routingDecision.taskType === 'housekeeping'
-        ? 'createHousekeepingTask'
-        : routingDecision.taskType === 'maintenance'
-          ? 'createMaintenanceTask'
-          : routingDecision.taskType === 'concierge'
-            ? 'createConciergeTask'
-            : routingDecision.taskType === 'room_service'
-              ? 'createRoomServiceTask'
-              : 'createConciergeTask';
+      const actionType = mapTaskTypeToActionType(routingDecision.taskType ?? '') ?? 'createConciergeTask';
 
       const approvalItem = await approvalQueue.queueForApproval({
         type: 'task',

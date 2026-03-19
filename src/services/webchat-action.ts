@@ -9,18 +9,18 @@
  * @module services/webchat-action
  */
 
-import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { createLogger } from '@/utils/logger.js';
-import { getAppRegistry } from '@/apps/registry.js';
 import { appConfigService } from './app-config.js';
 import { webchatSessionService } from './webchat-session.js';
 import { conversationService } from './conversation.js';
-import { guestService } from './guest.js';
 import { webchatConnectionManager, getSessionLocale } from '@/apps/channels/webchat/index.js';
 import { t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
-import type { NormalizedReservation } from '@/core/interfaces/pms.js';
+import { verifyReservation } from './webchat-verification.js';
 import { now } from '@/utils/time.js';
+
+// Re-export so scheduler.ts import path stays unchanged
+export { cleanupRateLimitMaps } from './webchat-verification.js';
 
 const log = createLogger('webchat-action');
 
@@ -280,15 +280,7 @@ function localizeAction(
 // Service
 // ============================================
 
-const MAX_VERIFICATION_ATTEMPTS = 5;
 const MAX_INPUT_FIELD_LENGTH = 500;
-const MAX_CODE_REQUESTS_PER_HOUR = 3;
-const MAX_CODE_REQUESTS_PER_EMAIL_PER_HOUR = 5;
-
-/** Sliding-window tracker for email verification code requests per session */
-const codeRequestTimestamps = new Map<string, number[]>();
-/** Sliding-window tracker for code requests per email (cross-session) */
-const emailCodeRequestTimestamps = new Map<string, number[]>();
 
 export class WebChatActionService {
   /**
@@ -311,7 +303,6 @@ export class WebChatActionService {
     const enabledStr = appConfig?.config?.enabledActions as string | undefined;
 
     if (!enabledStr?.trim()) {
-      // No filter configured — return all
       return this.getActions(locale);
     }
 
@@ -382,7 +373,7 @@ export class WebChatActionService {
       };
     }
 
-    // 8E: Validate input field lengths
+    // Validate input field lengths
     for (const field of action.fields) {
       const value = input[field.key];
       if (value && value.length > MAX_INPUT_FIELD_LENGTH) {
@@ -397,7 +388,7 @@ export class WebChatActionService {
     let result: ActionResult;
     switch (actionId) {
       case 'verify-reservation':
-        result = await this.handleVerifyReservation(session.id, input, locale);
+        result = await verifyReservation(session.id, input, locale);
         break;
       case 'extend-stay':
         result = await this.handleExtendStay(session.id, input, locale);
@@ -441,225 +432,6 @@ export class WebChatActionService {
   }
 
   // ============================================
-  // Verify Reservation
-  // ============================================
-
-  private async handleVerifyReservation(
-    sessionId: string,
-    input: Record<string, string>,
-    locale: SupportedLocale,
-  ): Promise<ActionResult> {
-    const session = await webchatSessionService.findById(sessionId);
-    if (!session) {
-      return { success: false, message: t(locale, 'messages.sessionNotFound'), error: 'invalid_session' };
-    }
-
-    // Check attempt limit
-    if (session.verificationAttempts >= MAX_VERIFICATION_ATTEMPTS) {
-      return {
-        success: false,
-        message: t(locale, 'messages.tooManyAttempts'),
-        error: 'attempts_exceeded',
-      };
-    }
-
-    const method = input.method;
-
-    if (method === 'booking-name') {
-      return this.verifyByBookingName(sessionId, input, locale);
-    }
-    if (method === 'booking-email') {
-      return this.verifyByBookingEmail(sessionId, input, locale);
-    }
-    if (method === 'email-code') {
-      // Two-step: if code present it's step 2, otherwise step 1
-      if (input.code) {
-        return this.verifyEmailCodeStep2(sessionId, input, locale);
-      }
-      return this.verifyEmailCodeStep1(sessionId, input, locale);
-    }
-
-    return { success: false, message: t(locale, 'messages.invalidMethod'), error: 'invalid_method' };
-  }
-
-  /**
-   * Method A: Booking reference + last name
-   */
-  private async verifyByBookingName(
-    sessionId: string,
-    input: Record<string, string>,
-    locale: SupportedLocale,
-  ): Promise<ActionResult> {
-    const { confirmationNumber, lastName } = input;
-    if (!confirmationNumber || !lastName) {
-      return { success: false, message: t(locale, 'messages.missingBookingRef'), error: 'missing_fields' };
-    }
-
-    const reservation = await this.lookupByConfirmation(confirmationNumber);
-    if (!reservation) {
-      await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: t(locale, 'messages.noReservationFound'), error: 'not_found' };
-    }
-
-    if (reservation.guest.lastName.toLowerCase() !== lastName.toLowerCase()) {
-      await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: t(locale, 'messages.lastNameMismatch'), error: 'mismatch' };
-    }
-
-    return this.completeVerification(sessionId, reservation, locale);
-  }
-
-  /**
-   * Method B: Booking reference + email
-   */
-  private async verifyByBookingEmail(
-    sessionId: string,
-    input: Record<string, string>,
-    locale: SupportedLocale,
-  ): Promise<ActionResult> {
-    const { confirmationNumber, email } = input;
-    if (!confirmationNumber || !email) {
-      return { success: false, message: t(locale, 'messages.missingBookingEmail'), error: 'missing_fields' };
-    }
-
-    const reservation = await this.lookupByConfirmation(confirmationNumber);
-    if (!reservation) {
-      await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: t(locale, 'messages.noReservationFound'), error: 'not_found' };
-    }
-
-    if (!reservation.guest.email || reservation.guest.email.toLowerCase() !== email.toLowerCase()) {
-      await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: t(locale, 'messages.emailMismatch'), error: 'mismatch' };
-    }
-
-    return this.completeVerification(sessionId, reservation, locale);
-  }
-
-  /**
-   * Method C, Step 1: Email → send verification code
-   */
-  private async verifyEmailCodeStep1(
-    sessionId: string,
-    input: Record<string, string>,
-    locale: SupportedLocale,
-  ): Promise<ActionResult> {
-    const { email } = input;
-    if (!email) {
-      return { success: false, message: t(locale, 'messages.missingEmail'), error: 'missing_fields' };
-    }
-
-    // Search PMS for reservations matching this email
-    const pmsAdapter = getAppRegistry().getActivePMSAdapter();
-    if (!pmsAdapter) {
-      return { success: false, message: t(locale, 'messages.verificationUnavailable'), error: 'no_pms' };
-    }
-
-    const reservations = await pmsAdapter.searchReservations({ guestEmail: email.toLowerCase() });
-    if (reservations.length === 0) {
-      await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: t(locale, 'messages.noReservationForEmail'), error: 'not_found' };
-    }
-
-    // 8F: Rate limit code generation — per session and per email
-    const now = Date.now();
-    let codeTs = codeRequestTimestamps.get(sessionId) || [];
-    codeTs = codeTs.filter((ts) => now - ts < 60 * 60 * 1000);
-    if (codeTs.length >= MAX_CODE_REQUESTS_PER_HOUR) {
-      return { success: false, message: t(locale, 'messages.tooManyCodeRequests'), error: 'rate_limited' };
-    }
-
-    const emailKey = email.toLowerCase();
-    let emailTs = emailCodeRequestTimestamps.get(emailKey) || [];
-    emailTs = emailTs.filter((ts) => now - ts < 60 * 60 * 1000);
-    if (emailTs.length >= MAX_CODE_REQUESTS_PER_EMAIL_PER_HOUR) {
-      return { success: false, message: t(locale, 'messages.tooManyCodeRequestsEmail'), error: 'rate_limited' };
-    }
-
-    codeTs.push(now);
-    codeRequestTimestamps.set(sessionId, codeTs);
-    emailTs.push(now);
-    emailCodeRequestTimestamps.set(emailKey, emailTs);
-
-    // Generate 6-digit code
-    const code = String(randomInt(100000, 1000000));
-    const codeHash = createHash('sha256').update(code).digest('hex');
-    const codeExpiresAt = new Date(Date.now() + 10 * 60 * 1000).toISOString(); // 10 minutes
-
-    await webchatSessionService.setVerificationCode(sessionId, codeHash, codeExpiresAt);
-
-    // TODO: Send code via email provider. For now, log it (works with mock PMS in dev).
-    log.info({ sessionId, code, email }, 'Verification code generated (email sending not yet implemented)');
-
-    return {
-      success: true,
-      message: t(locale, 'messages.codeSent'),
-      nextStep: {
-        fields: [
-          {
-            key: 'code',
-            label: t(locale, 'actions.verifyReservation.fields.code.label'),
-            type: 'text',
-            required: true,
-            placeholder: t(locale, 'actions.verifyReservation.fields.code.placeholder'),
-          },
-        ],
-        context: { email, method: 'email-code' },
-      },
-    };
-  }
-
-  /**
-   * Method C, Step 2: Verify the submitted code
-   */
-  private async verifyEmailCodeStep2(
-    sessionId: string,
-    input: Record<string, string>,
-    locale: SupportedLocale,
-  ): Promise<ActionResult> {
-    const { email, code } = input;
-    if (!email || !code) {
-      return { success: false, message: t(locale, 'messages.missingEmailAndCode'), error: 'missing_fields' };
-    }
-
-    const session = await webchatSessionService.findById(sessionId);
-    if (!session || !session.verificationCode || !session.verificationCodeExpiresAt) {
-      return { success: false, message: t(locale, 'messages.noPendingCode'), error: 'no_code' };
-    }
-
-    // Check expiry
-    if (new Date(session.verificationCodeExpiresAt) <= new Date()) {
-      await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: t(locale, 'messages.codeExpired'), error: 'code_expired' };
-    }
-
-    // Constant-time comparison
-    const submittedHash = createHash('sha256').update(code).digest('hex');
-    const storedHash = session.verificationCode;
-    const submittedBuf = Buffer.from(submittedHash, 'hex');
-    const storedBuf = Buffer.from(storedHash, 'hex');
-
-    if (submittedBuf.length !== storedBuf.length || !timingSafeEqual(submittedBuf, storedBuf)) {
-      await webchatSessionService.incrementVerificationAttempts(sessionId);
-      return { success: false, message: t(locale, 'messages.invalidCode'), error: 'code_mismatch' };
-    }
-
-    // Code matches — find the reservation by email
-    const pmsAdapter = getAppRegistry().getActivePMSAdapter();
-    if (!pmsAdapter) {
-      return { success: false, message: t(locale, 'messages.verificationUnavailable'), error: 'no_pms' };
-    }
-
-    const reservations = await pmsAdapter.searchReservations({ guestEmail: email.toLowerCase() });
-    const reservation = this.pickBestReservation(reservations);
-    if (!reservation) {
-      return { success: false, message: t(locale, 'messages.noReservationFoundGeneric'), error: 'not_found' };
-    }
-
-    return this.completeVerification(sessionId, reservation, locale);
-  }
-
-  // ============================================
   // Extend Stay
   // ============================================
 
@@ -678,13 +450,11 @@ export class WebChatActionService {
       return { success: false, message: t(locale, 'messages.noReservationLinked'), error: 'no_reservation' };
     }
 
-    // For Phase 3, we log the request and create a task. Actual PMS modification is a future feature.
     log.info(
       { sessionId, reservationId: session.reservationId, newCheckoutDate, notes },
       'Stay extension requested',
     );
 
-    // Format date for display using session locale
     const localeTag = locale === 'en' ? 'en-US' : locale;
     const formatted = new Date(newCheckoutDate + 'T00:00:00').toLocaleDateString(localeTag, {
       month: 'short', day: 'numeric', year: 'numeric',
@@ -720,7 +490,6 @@ export class WebChatActionService {
       return { success: false, message: t(locale, 'messages.noReservationLinked'), error: 'no_reservation' };
     }
 
-    // Use translated option label if available, otherwise humanize the key
     const serviceLabel = t(locale, `actions.requestService.fields.serviceType.options.${serviceType}`);
     const label = serviceLabel !== `actions.requestService.fields.serviceType.options.${serviceType}`
       ? serviceLabel
@@ -797,7 +566,6 @@ export class WebChatActionService {
       return { success: false, message: t(locale, 'messages.noReservationLinked'), error: 'no_reservation' };
     }
 
-    // Use translated option label if available
     const treatmentLabel = t(locale, `actions.bookSpa.fields.treatment.options.${treatment}`);
     const label = treatmentLabel !== `actions.bookSpa.fields.treatment.options.${treatment}`
       ? treatmentLabel
@@ -828,172 +596,9 @@ export class WebChatActionService {
       data: { treatment, preferredDate, preferredTime, reservationId: session.reservationId },
     };
   }
-
-  // ============================================
-  // Helpers
-  // ============================================
-
-  private async lookupByConfirmation(confirmationNumber: string): Promise<NormalizedReservation | null> {
-    const pmsAdapter = getAppRegistry().getActivePMSAdapter();
-    if (!pmsAdapter) {
-      log.warn('No PMS adapter configured for verification');
-      return null;
-    }
-    return pmsAdapter.getReservationByConfirmation(confirmationNumber);
-  }
-
-  /**
-   * Pick the most relevant reservation from a list:
-   * 1. Currently checked in
-   * 2. Upcoming (earliest future arrival)
-   * 3. Most recent past reservation
-   */
-  private pickBestReservation(reservations: NormalizedReservation[]): NormalizedReservation | null {
-    if (reservations.length === 0) return null;
-
-    // Checked in first
-    const checkedIn = reservations.find((r) => r.status === 'checked_in');
-    if (checkedIn) return checkedIn;
-
-    const today = now().split('T')[0]!;
-
-    // Upcoming (confirmed, arrival in the future)
-    const upcoming = reservations
-      .filter((r) => r.status === 'confirmed' && r.arrivalDate >= today)
-      .sort((a, b) => a.arrivalDate.localeCompare(b.arrivalDate));
-    if (upcoming.length > 0) return upcoming[0]!;
-
-    // Most recent past
-    const past = reservations
-      .filter((r) => r.status === 'checked_out')
-      .sort((a, b) => b.departureDate.localeCompare(a.departureDate));
-    if (past.length > 0) return past[0]!;
-
-    // Fallback: first
-    return reservations[0]!;
-  }
-
-  /**
-   * Complete verification: update session, link guest, broadcast update.
-   */
-  private async completeVerification(
-    sessionId: string,
-    reservation: NormalizedReservation,
-    locale: SupportedLocale = 'en',
-  ): Promise<ActionResult> {
-    // Find or create guest in our DB
-    let guest = reservation.guest.email
-      ? await guestService.findByEmail(reservation.guest.email)
-      : null;
-
-    if (!guest && reservation.guest.phone) {
-      guest = await guestService.findByPhone(reservation.guest.phone);
-    }
-
-    if (!guest) {
-      guest = await guestService.create({
-        firstName: reservation.guest.firstName,
-        lastName: reservation.guest.lastName,
-        email: reservation.guest.email,
-        phone: reservation.guest.phone,
-      });
-    }
-
-    // Update session with verification + stay-aware expiry
-    await webchatSessionService.verify(
-      sessionId,
-      guest.id,
-      reservation.externalId,
-      reservation.arrivalDate,
-      reservation.departureDate,
-    );
-
-    // Restore previous conversation if this guest has one on webchat
-    const session = await webchatSessionService.findById(sessionId);
-    const previousConv = await conversationService.findByGuestAndChannel(guest.id, 'webchat');
-
-    if (previousConv && session?.conversationId && session.conversationId !== previousConv.id) {
-      // Move current session's messages into the previous conversation
-      await conversationService.moveMessages(session.conversationId, previousConv.id);
-
-      // Link session to the previous conversation
-      await webchatSessionService.linkConversation(sessionId, previousConv.id);
-      await conversationService.update(previousConv.id, {
-        guestId: guest.id,
-        metadata: { reservationId: reservation.externalId },
-      });
-
-      // Send merged history (old + current messages, chronological)
-      try {
-        const history = await conversationService.getMessages(previousConv.id, { limit: 50 });
-        webchatConnectionManager.send(sessionId, {
-          type: 'history',
-          messages: history.map((m) => ({
-            direction: m.direction,
-            senderType: m.senderType,
-            content: m.content,
-            timestamp: m.createdAt,
-          })),
-        });
-      } catch (error) {
-        log.warn({ error, sessionId, conversationId: previousConv.id }, 'Failed to send restored history');
-      }
-    } else if (session?.conversationId) {
-      // No previous conversation — just link current one to guest
-      await conversationService.update(session.conversationId, {
-        guestId: guest.id,
-        metadata: { reservationId: reservation.externalId },
-      });
-    }
-
-    // Broadcast session update to all tabs
-    webchatConnectionManager.send(sessionId, {
-      type: 'session_update',
-      verificationStatus: 'verified',
-    });
-
-    log.info(
-      { sessionId, guestId: guest.id, reservationId: reservation.externalId },
-      'Reservation verified',
-    );
-
-    return {
-      success: true,
-      message: t(locale, 'messages.verifiedWelcome', { firstName: reservation.guest.firstName }),
-      data: {
-        guestName: `${reservation.guest.firstName} ${reservation.guest.lastName}`,
-        checkIn: reservation.arrivalDate,
-        checkOut: reservation.departureDate,
-      },
-    };
-  }
 }
 
 /**
  * Singleton instance
  */
 export const webchatActionService = new WebChatActionService();
-
-/**
- * Clean up stale rate-limit entries (entries older than 1 hour).
- * Called periodically by the scheduler.
- */
-export function cleanupRateLimitMaps(): number {
-  const now = Date.now();
-  const hour = 60 * 60 * 1000;
-  let cleaned = 0;
-
-  for (const [key, timestamps] of codeRequestTimestamps) {
-    const fresh = timestamps.filter((t) => now - t < hour);
-    if (fresh.length === 0) { codeRequestTimestamps.delete(key); cleaned++; }
-    else { codeRequestTimestamps.set(key, fresh); }
-  }
-
-  for (const [key, timestamps] of emailCodeRequestTimestamps) {
-    const fresh = timestamps.filter((t) => now - t < hour);
-    if (fresh.length === 0) { emailCodeRequestTimestamps.delete(key); cleaned++; }
-    else { emailCodeRequestTimestamps.set(key, fresh); }
-  }
-
-  return cleaned;
-}
