@@ -19,6 +19,7 @@ import type {
 } from './types.js';
 import type { AIProvider } from '@/core/interfaces/ai.js';
 import type { ChannelAdapter } from '@/core/interfaces/channel.js';
+import type { ChannelType } from '@/types/index.js';
 import type { PMSAdapter } from '@/core/interfaces/pms.js';
 
 const log = createLogger('apps:registry');
@@ -415,6 +416,16 @@ export class AppRegistry {
    */
   getChannelAdapter(appId: string): ChannelAdapter | undefined {
     return this.channelAdapters.get(appId);
+  }
+
+  /**
+   * Get an active channel adapter by channel type (e.g. 'whatsapp', 'sms', 'webchat')
+   */
+  getChannelAdapterByType(channelType: ChannelType): ChannelAdapter | undefined {
+    for (const adapter of this.getActiveChannelAdapters().values()) {
+      if (adapter.channel === channelType) return adapter;
+    }
+    return undefined;
   }
 
   /**

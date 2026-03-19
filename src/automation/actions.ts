@@ -235,13 +235,15 @@ async function executeSendMessage(
   try {
     const { getAppRegistry } = await import('@/apps/index.js');
     const registry = getAppRegistry();
-    const channelAdapter = registry.getChannelAdapter(channel);
+    const channelAdapter = registry.getChannelAdapterByType(channel as import('@/types/index.js').ChannelType);
 
     if (channelAdapter) {
       await channelAdapter.send({
         conversationId: conversation.id,
+        channelId,
         content: messageContent,
         contentType: 'text',
+        metadata: { senderType: 'system' },
       });
 
       log.info(
@@ -605,13 +607,15 @@ async function executeSendMessageDirect(
   try {
     const { getAppRegistry } = await import('@/apps/index.js');
     const registry = getAppRegistry();
-    const channelAdapter = registry.getChannelAdapter(channel);
+    const channelAdapter = registry.getChannelAdapterByType(channel as import('@/types/index.js').ChannelType);
 
     if (channelAdapter) {
       await channelAdapter.send({
         conversationId: conversation.id,
+        channelId,
         content: messageContent,
         contentType: 'text',
+        metadata: { senderType: 'system' },
       });
 
       log.info(

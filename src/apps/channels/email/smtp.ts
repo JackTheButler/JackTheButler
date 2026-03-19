@@ -271,6 +271,8 @@ export const manifest: ChannelAppManifest = {
     templates: true,
   },
   createAdapter: (config) => {
+    // Email is transactional-only, not a guest conversation channel — see mailgun.ts for details.
+    // TODO: Introduce a separate EmailAppManifest type so this cast is not needed.
     const provider = createSMTPProvider(config as unknown as SMTPConfig);
     return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
   },

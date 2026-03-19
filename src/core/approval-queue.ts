@@ -407,36 +407,25 @@ export class ApprovalQueue {
           throw new NotFoundError('Conversation', conversationId);
         }
 
-        // Send to channel based on type
+        // Send to channel via adapter
         const registry = getAppRegistry();
+        const adapter = registry.getChannelAdapterByType(
+          conversation.channelType as import('@/types/index.js').ChannelType
+        );
         let messageSent = false;
 
-        if (conversation.channelType === 'whatsapp') {
-          const ext = registry.get('whatsapp-meta');
-          if (ext?.status === 'active' && ext.instance) {
-            const provider = ext.instance as { sendText: (to: string, text: string) => Promise<unknown> };
-            await provider.sendText(conversation.channelId, content);
-            messageSent = true;
-            log.info({ approvalId: item.id, channelType: 'whatsapp', to: conversation.channelId }, 'Response sent to WhatsApp');
-          } else {
-            log.warn({ approvalId: item.id }, 'WhatsApp extension not active, message saved but not delivered');
-          }
-        } else if (conversation.channelType === 'sms') {
-          const ext = registry.get('twilio-sms');
-          if (ext?.status === 'active' && ext.instance) {
-            const provider = ext.instance as { send: (to: string, body: string) => Promise<unknown> };
-            await provider.send(conversation.channelId, content);
-            messageSent = true;
-            log.info({ approvalId: item.id, channelType: 'sms', to: conversation.channelId }, 'Response sent to SMS');
-          } else {
-            log.warn({ approvalId: item.id }, 'SMS extension not active, message saved but not delivered');
-          }
-        } else if (conversation.channelType === 'webchat') {
-          // Webchat messages are delivered via WebSocket/polling - just save to DB
+        if (adapter) {
+          await adapter.send({
+            conversationId,
+            channelId: conversation.channelId,
+            content,
+            contentType: 'text',
+            metadata: { senderType: 'ai' },
+          });
           messageSent = true;
-          log.info({ approvalId: item.id, channelType: 'webchat' }, 'Response saved for webchat (delivered via WebSocket)');
+          log.info({ approvalId: item.id, channelType: conversation.channelType, to: conversation.channelId }, 'Response sent to channel');
         } else {
-          log.warn({ approvalId: item.id, channelType: conversation.channelType }, 'Unknown channel type, message saved but not delivered');
+          log.warn({ approvalId: item.id, channelType: conversation.channelType }, 'No adapter for channel, message saved but not delivered');
         }
 
         // Save to conversation history

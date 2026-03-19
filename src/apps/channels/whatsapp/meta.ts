@@ -8,6 +8,7 @@
 
 import { ValidationError } from '@/errors/index.js';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import type { OutboundMessage, SendResult } from '@/core/interfaces/channel.js';
 import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
@@ -76,6 +77,7 @@ interface APIError {
  */
 export class MetaWhatsAppProvider implements BaseProvider {
   readonly id = 'meta';
+  readonly channel = 'whatsapp' as const;
   private accessToken: string;
   private phoneNumberId: string;
   private baseUrl: string;
@@ -236,6 +238,14 @@ export class MetaWhatsAppProvider implements BaseProvider {
   }
 
   /**
+   * Send a message via the ChannelAdapter interface
+   */
+  async send(message: OutboundMessage): Promise<SendResult> {
+    await this.sendText(message.channelId, message.content);
+    return { status: 'sent' };
+  }
+
+  /**
    * Get phone number ID
    */
   getPhoneNumberId(): string {
@@ -299,9 +309,5 @@ export const manifest: ChannelAppManifest = {
     media: true,
     templates: true,
   },
-  createAdapter: (config) => {
-    // Note: This creates the provider, adapter wraps it
-    const provider = createMetaWhatsAppProvider(config as unknown as MetaWhatsAppConfig);
-    return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
-  },
+  createAdapter: (config) => createMetaWhatsAppProvider(config as unknown as MetaWhatsAppConfig),
 };

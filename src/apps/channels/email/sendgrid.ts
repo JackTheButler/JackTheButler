@@ -259,6 +259,8 @@ export const sendgridManifest: ChannelAppManifest = {
     templates: false,
   },
   createAdapter: (config) => {
+    // Email is transactional-only, not a guest conversation channel — see mailgun.ts for details.
+    // TODO: Introduce a separate EmailAppManifest type so this cast is not needed.
     const provider = createSendGridProvider(config as unknown as SendGridConfig);
     return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
   },

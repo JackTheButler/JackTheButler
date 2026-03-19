@@ -10,6 +10,7 @@ import { ValidationError } from '@/errors/index.js';
 import twilio from 'twilio';
 import type { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message.js';
 import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import type { OutboundMessage, SendResult } from '@/core/interfaces/channel.js';
 import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
@@ -29,6 +30,7 @@ export interface TwilioConfig {
  */
 export class TwilioProvider implements BaseProvider {
   readonly id = 'twilio';
+  readonly channel = 'sms' as const;
   private client: twilio.Twilio;
   private phoneNumber: string;
   private accountSid: string;
@@ -117,6 +119,14 @@ export class TwilioProvider implements BaseProvider {
   }
 
   /**
+   * Send a message via the ChannelAdapter interface
+   */
+  async send(message: OutboundMessage): Promise<SendResult> {
+    await this.sendMessage(message.channelId, message.content);
+    return { status: 'sent' };
+  }
+
+  /**
    * Get message status
    */
   async getMessageStatus(sid: string): Promise<MessageInstance> {
@@ -179,8 +189,5 @@ export const manifest: ChannelAppManifest = {
     outbound: true,
     media: true,
   },
-  createAdapter: (config) => {
-    const provider = createTwilioProvider(config as unknown as TwilioConfig);
-    return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
-  },
+  createAdapter: (config) => createTwilioProvider(config as unknown as TwilioConfig),
 };

@@ -236,6 +236,8 @@ export const gmailSmtpManifest: ChannelAppManifest = {
     templates: false,
   },
   createAdapter: (config) => {
+    // Email is transactional-only, not a guest conversation channel — see mailgun.ts for details.
+    // TODO: Introduce a separate EmailAppManifest type so this cast is not needed.
     const provider = createGmailSMTPProvider(config as unknown as GmailSMTPConfig);
     return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
   },

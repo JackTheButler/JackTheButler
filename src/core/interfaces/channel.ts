@@ -42,6 +42,8 @@ export interface InboundMessage {
 export interface OutboundMessage {
   /** Target conversation */
   conversationId: string;
+  /** Channel-specific recipient identifier (phone number, session ID, etc.) */
+  channelId: string;
   /** Message content */
   content: string;
   /** Content type */
@@ -69,9 +71,10 @@ export interface ChannelAdapter {
   send(message: OutboundMessage): Promise<SendResult>;
 
   /**
-   * Parse raw incoming data into a structured message
+   * Parse raw incoming data into a structured message.
+   * Optional — webhook handlers may parse manually instead.
    */
-  parseIncoming(raw: unknown): Promise<InboundMessage>;
+  parseIncoming?(raw: unknown): Promise<InboundMessage>;
 
   /**
    * Verify webhook signature (optional)

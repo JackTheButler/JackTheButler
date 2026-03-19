@@ -12,7 +12,6 @@
 
 import { WebSocket } from 'ws';
 import type { ChannelAppManifest } from '../../types.js';
-import type { ChannelAdapter } from '@/core/interfaces/channel.js';
 import type { InboundMessage, OutboundMessage } from '@/core/interfaces/channel.js';
 import type { ContentType, SendResult, ChannelType } from '@/types/index.js';
 import { messageProcessor } from '@/core/message-processor.js';
@@ -160,7 +159,14 @@ const webchatAdapter = {
   id: 'channel-webchat',
   channel: 'webchat' as ChannelType,
 
-  async send(_message: OutboundMessage): Promise<SendResult> {
+  async send(message: OutboundMessage): Promise<SendResult> {
+    webchatConnectionManager.send(message.channelId, {
+      type: 'message',
+      direction: 'outbound',
+      senderType: (message.metadata?.senderType as string) ?? 'ai',
+      content: message.content,
+      timestamp: now(),
+    });
     return { status: 'sent' };
   },
 
@@ -642,5 +648,5 @@ export const manifest: ChannelAppManifest = {
     outbound: true,
     media: false,
   },
-  createAdapter: () => webchatAdapter as unknown as ChannelAdapter,
+  createAdapter: () => webchatAdapter,
 };

@@ -472,9 +472,6 @@ export class SetupService {
     }
 
     log.info({ checkInTime: profile.checkInTime, checkOutTime: profile.checkOutTime }, 'Extracted times from policy entries');
-    // Temporary debug output
-    console.log('[SETUP DEBUG] Policy entries:', policyEntries.map(e => e.content));
-    console.log('[SETUP DEBUG] Extracted times:', { checkInTime: profile.checkInTime, checkOutTime: profile.checkOutTime });
 
     // Extract contact info
     for (const entry of contactEntries) {

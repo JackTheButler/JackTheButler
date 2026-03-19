@@ -13,10 +13,8 @@ import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import type { ContentType, ChannelType } from '@/types/index.js';
 import { getAppRegistry } from '@/apps/index.js';
-import { webchatConnectionManager } from '@/apps/channels/webchat/index.js';
 import { translate, getPropertyLanguage } from '@/services/translation.js';
 import { createLogger } from '@/utils/logger.js';
-import { now } from '@/utils/time.js';
 
 const log = createLogger('api:conversations');
 
@@ -191,11 +189,19 @@ conversationsRouter.post('/:id/messages', requirePermission(PERMISSIONS.CONVERSA
 
   // Send through channel adapter (guest receives translated version)
   try {
-    await sendToChannel(
-      conversation.channelType as ChannelType,
-      conversation.channelId,
-      translatedContent ?? body.content
-    );
+    const registry = getAppRegistry();
+    const adapter = registry.getChannelAdapterByType(conversation.channelType as ChannelType);
+    if (adapter) {
+      await adapter.send({
+        conversationId: id,
+        channelId: conversation.channelId,
+        content: translatedContent ?? body.content,
+        contentType: body.contentType as ContentType,
+        metadata: { senderType: 'staff' },
+      });
+    } else {
+      log.warn({ channelType: conversation.channelType }, 'No adapter for channel, message saved but not delivered');
+    }
   } catch (err) {
     // Log error but don't fail the request - message is saved
     log.error({ err }, 'Failed to send to channel');
@@ -203,60 +209,5 @@ conversationsRouter.post('/:id/messages', requirePermission(PERMISSIONS.CONVERSA
 
   return c.json({ message }, 201);
 });
-
-/**
- * Send a message through the appropriate channel adapter
- */
-async function sendToChannel(
-  channelType: ChannelType,
-  channelId: string,
-  content: string
-): Promise<void> {
-  const registry = getAppRegistry();
-
-  switch (channelType) {
-    case 'whatsapp': {
-      const ext = registry.get('whatsapp-meta');
-      if (ext?.status === 'active' && ext.instance) {
-        const provider = ext.instance as { sendText: (to: string, text: string) => Promise<unknown> };
-        await provider.sendText(channelId, content);
-        log.info({ channelType, channelId }, 'Message sent via WhatsApp');
-      } else {
-        log.warn({ channelType }, 'WhatsApp extension not active');
-      }
-      break;
-    }
-    case 'sms': {
-      const ext = registry.get('sms-twilio');
-      if (ext?.status === 'active' && ext.instance) {
-        const provider = ext.instance as { sendMessage: (to: string, body: string) => Promise<unknown> };
-        await provider.sendMessage(channelId, content);
-        log.info({ channelType, channelId }, 'Message sent via SMS');
-      } else {
-        log.warn({ channelType }, 'SMS extension not active');
-      }
-      break;
-    }
-    case 'webchat': {
-      const ext = registry.get('channel-webchat');
-      if (ext?.status === 'active') {
-        webchatConnectionManager.send(channelId, {
-          type: 'message',
-          direction: 'outbound',
-          senderType: 'staff',
-          content,
-          timestamp: now(),
-        });
-        log.info({ channelType, channelId }, 'Message sent via WebChat');
-      } else {
-        log.warn({ channelType }, 'WebChat extension not active');
-      }
-      break;
-    }
-    default:
-      log.debug({ channelType }, 'No extension available for channel');
-      break;
-  }
-}
 
 export { conversationsRouter };

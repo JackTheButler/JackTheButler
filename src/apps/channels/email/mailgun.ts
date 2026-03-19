@@ -313,6 +313,10 @@ export const mailgunManifest: ChannelAppManifest = {
     templates: false,
   },
   createAdapter: (config) => {
+    // Email is a transactional provider, not a guest conversation channel.
+    // It does not implement ChannelAdapter.send() or .channel — it is never
+    // returned by getChannelAdapterByType() and is not used for message dispatch.
+    // TODO: Introduce a separate EmailAppManifest type so this cast is not needed.
     const provider = createMailgunProvider(config as unknown as MailgunConfig);
     return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
   },

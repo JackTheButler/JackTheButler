@@ -4,9 +4,7 @@
  * Communication channel definitions.
  */
 
-// Single source of truth in @jack/shared — imported for local use and re-exported
-// so existing imports are unchanged.
-import type { ChannelType } from '@jack/shared';
+// Single source of truth in @jack/shared — re-exported so existing imports are unchanged.
 export type { ChannelType } from '@jack/shared';
 
 /**
@@ -32,16 +30,3 @@ export interface ChannelMessagePayload {
   metadata?: Record<string, unknown> | undefined;
 }
 
-/**
- * Channel adapter interface
- *
- * Adapters handle sending and receiving messages for a specific channel.
- */
-export interface ChannelAdapter {
-  readonly channel: ChannelType;
-
-  /**
-   * Send a message to a recipient
-   */
-  send(to: string, message: ChannelMessagePayload): Promise<SendResult>;
-}
