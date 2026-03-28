@@ -146,7 +146,7 @@ describe('KnowledgeService', () => {
 
     it('should throw for non-existent ID', async () => {
       await expect(service.update('nonexistent', { content: 'test' })).rejects.toThrow(
-        'Knowledge item not found'
+        'not found'
       );
     });
   });

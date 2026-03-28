@@ -89,7 +89,7 @@ describe('System Health & Logs API', () => {
     adminToken = tokens.accessToken;
 
     // Seed a couple of known activity_log rows for the logs endpoint tests
-    writeActivityLog('whatsapp', 'message.sent', 'success', 'conv-logs-test', undefined, 100, { test: true });
+    writeActivityLog('whatsapp-meta', 'message.sent', 'success', 'conv-logs-test', undefined, 100, { test: true });
     writeActivityLog('system', 'processor.outcome', 'failed', undefined, 'provider error', undefined, undefined);
   });
 
@@ -175,13 +175,13 @@ describe('System Health & Logs API', () => {
     });
 
     it('filters by source', async () => {
-      const res = await app.request('/api/v1/system/logs?source=whatsapp', {
+      const res = await app.request('/api/v1/system/logs?source=whatsapp-meta', {
         headers: { Authorization: `Bearer ${adminToken}` },
       });
       const data = await res.json() as { logs: { source: string }[] };
 
       for (const log of data.logs) {
-        expect(log.source).toBe('whatsapp');
+        expect(log.source).toBe('whatsapp-meta');
       }
     });
 

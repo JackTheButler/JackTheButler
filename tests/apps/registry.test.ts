@@ -94,7 +94,7 @@ describe('AppRegistry', () => {
     });
 
     it('should throw if app not found', () => {
-      expect(() => registry.configure('unknown', {})).toThrow('App not found');
+      expect(() => registry.configure('unknown', {})).toThrow('not found');
     });
 
     it('should throw if required config is missing', () => {

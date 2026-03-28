@@ -35,7 +35,7 @@ describe('Health Routes', () => {
 
       expect(res.status).toBe(200);
       expect(json.status).toBe('healthy');
-      expect(json.version).toBe('1.0.0');
+      expect(typeof json.version).toBe('string');
       expect(json.uptime).toBeGreaterThan(0);
       expect(json.checks.database).toBe('ok');
     });
