@@ -61,14 +61,19 @@ RUN apt-get update && apt-get install -y python3 make g++ procps && rm -rf /var/
 # Install pnpm for production deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files
-COPY package.json pnpm-lock.yaml* ./
+# Copy package files (workspace config required for @jack/shared resolution)
+COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+COPY packages/shared/package.json ./packages/shared/
 
 # Install production dependencies only and build native modules
 RUN pnpm install --prod --frozen-lockfile && npm rebuild better-sqlite3
 
-# Copy built backend
+# Copy @jack workspace packages from builder (workspace symlinks are not reliable in prod stage)
+COPY --from=builder /app/node_modules/@jack ./node_modules/@jack
+
+# Copy built backend and built shared package
 COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 
 # Copy migrations folder
 COPY --from=builder /app/migrations ./migrations
