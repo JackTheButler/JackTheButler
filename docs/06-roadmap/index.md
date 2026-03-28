@@ -16,6 +16,7 @@ Future features and improvements planned for Jack The Butler.
 | [PMS Sync Freshness](./008-pms-sync-freshness.md) | Released | High | Staleness guards for critical paths reading cached PMS reservation data (Phases 1-3 complete) |
 | [PMS Provider Adapters](./009-pms-providers.md) | Released | High | Production adapters for Mews, Cloudbeds, Oracle OPERA Cloud, Apaleo, and Protel |
 | [Google Gemini AI Provider](./010-gemini-provider.md) | Planned | Medium | Gemini completion and native embeddings via text-embedding-004 |
+| [PMS Adapter: Cloudbeds](./012-pms-cloudbeds.md) | Planned | High | Cloudbeds PMS adapter — Phase 2 of PMS provider rollout with OAuth 2.0 and HTTP webhooks |
 
 ## How to Propose Features
 
