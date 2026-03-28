@@ -17,8 +17,9 @@ RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files (root and dashboard)
+# Copy package files (root, shared, dashboard, webchat)
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+COPY packages/shared/package.json ./packages/shared/
 COPY apps/dashboard/package.json ./apps/dashboard/
 COPY apps/webchat/package.json ./apps/webchat/
 
@@ -27,10 +28,14 @@ RUN pnpm install --frozen-lockfile && npm rebuild better-sqlite3
 
 # Copy source code
 COPY tsconfig.json ./
+COPY packages/shared ./packages/shared
 COPY src ./src
 COPY migrations ./migrations
 COPY apps/dashboard ./apps/dashboard
 COPY apps/webchat ./apps/webchat
+
+# Build shared package first (required by backend and dashboard)
+RUN pnpm --filter @jack/shared build
 
 # Build backend TypeScript
 RUN pnpm build
