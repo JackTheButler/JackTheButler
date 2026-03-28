@@ -11,9 +11,10 @@ import type { PMSAppManifest } from '../types.js';
 // Providers
 export { MockPMSAdapter, createMockPMSAdapter, mockManifest } from './providers/index.js';
 export { MewsPMSAdapter, createMewsPMSAdapter, mewsManifest } from './providers/index.js';
+export { CloudbedsPMSAdapter, createCloudbedsAdapter, cloudbedsManifest } from './providers/index.js';
 
 // Import manifests for registry
-import { mockManifest, mewsManifest } from './providers/index.js';
+import { mockManifest, mewsManifest, cloudbedsManifest } from './providers/index.js';
 
 /**
  * PMS provider types
@@ -26,6 +27,7 @@ export type PMSProviderType = 'mock' | 'mews' | 'cloudbeds' | 'opera' | 'apaleo'
 export const pmsManifests: Record<string, PMSAppManifest> = {
   'pms-mock': mockManifest,
   'pms-mews': mewsManifest,
+  'pms-cloudbeds': cloudbedsManifest,
 };
 
 /**

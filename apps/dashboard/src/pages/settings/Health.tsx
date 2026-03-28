@@ -46,6 +46,7 @@ const SOURCE_LABELS: Record<string, string> = {
   'whatsapp-meta': 'WhatsApp', 'sms-twilio': 'Twilio',
   'email-mailgun': 'Mailgun', 'email-sendgrid': 'SendGrid', 'email-smtp': 'SMTP', 'email-gmail-smtp': 'Gmail SMTP',
   'pms-mews': 'Mews PMS',
+  'pms-cloudbeds': 'Cloudbeds PMS',
 };
 
 function sourceLabel(source: string): string {
@@ -56,7 +57,7 @@ const SOURCE_GROUPS = [
   { label: 'Channels',        items: [{ value: 'whatsapp', label: 'WhatsApp' }, { value: 'sms', label: 'SMS' }, { value: 'email', label: 'Email' }, { value: 'webchat', label: 'WebChat' }, { value: 'system', label: 'System' }] },
   { label: 'AI',              items: [{ value: 'anthropic', label: 'Anthropic' }, { value: 'openai', label: 'OpenAI' }, { value: 'ollama', label: 'Ollama' }, { value: 'local', label: 'Local AI' }] },
   { label: 'Email providers', items: [{ value: 'email-mailgun', label: 'Mailgun' }, { value: 'email-sendgrid', label: 'SendGrid' }, { value: 'email-smtp', label: 'SMTP' }, { value: 'email-gmail-smtp', label: 'Gmail SMTP' }] },
-  { label: 'PMS',             items: [{ value: 'pms-mews', label: 'Mews PMS' }] },
+  { label: 'PMS',             items: [{ value: 'pms-mews', label: 'Mews PMS' }, { value: 'pms-cloudbeds', label: 'Cloudbeds PMS' }] },
 ];
 
 function SourceFilter({ value, onValueChange }: { value: string; onValueChange: (v: string) => void }) {
