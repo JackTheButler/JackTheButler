@@ -41,6 +41,7 @@ export const apps: App[] = [
     slug: 'anthropic',
     category: 'ai-provider',
     summary: 'Advanced AI with nuanced understanding, ideal for complex guest conversations.',
+    logo: '/logos/claude.svg',
     status: 'available',
   },
   {
@@ -49,6 +50,7 @@ export const apps: App[] = [
     slug: 'openai',
     category: 'ai-provider',
     summary: 'Industry-leading AI models for fast, reliable guest responses.',
+    logo: '/logos/openai.svg',
     status: 'available',
   },
   {
@@ -65,6 +67,7 @@ export const apps: App[] = [
     slug: 'ollama',
     category: 'ai-provider',
     summary: 'Run open-source AI models locally for complete data privacy.',
+    logo: '/logos/ollama.svg',
     status: 'available',
   },
   {
@@ -99,6 +102,7 @@ export const apps: App[] = [
     slug: 'whatsapp',
     category: 'messaging',
     summary: 'Connect with guests on the world\'s most popular messaging app.',
+    logo: '/logos/whatsapp.svg',
     status: 'available',
   },
   {
@@ -107,6 +111,7 @@ export const apps: App[] = [
     slug: 'twilio-sms',
     category: 'messaging',
     summary: 'Send and receive SMS messages globally via Twilio.',
+    logo: '/logos/twilio.svg',
     status: 'available',
   },
   {
@@ -165,6 +170,7 @@ export const apps: App[] = [
     slug: 'mews',
     category: 'pms',
     summary: 'Modern cloud PMS with open API for seamless integration.',
+    logo: '/logos/mews.svg',
     status: 'available',
   },
   {
@@ -173,7 +179,8 @@ export const apps: App[] = [
     slug: 'cloudbeds',
     category: 'pms',
     summary: 'All-in-one hospitality platform for independent properties.',
-    status: 'coming-soon',
+    status: 'available',
+    logo: '/logos/cloudbeds.svg',
   },
   {
     id: 'little-hotelier',
