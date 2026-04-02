@@ -17,6 +17,7 @@ Future features and improvements planned for Jack The Butler.
 | [PMS Provider Adapters](./009-pms-providers.md) | Released | High | Production adapters for Mews, Cloudbeds, Oracle OPERA Cloud, Apaleo, and Protel |
 | [Google Gemini AI Provider](./010-gemini-provider.md) | Planned | Medium | Gemini completion and native embeddings via text-embedding-004 |
 | [PMS Adapter: Cloudbeds](./012-pms-cloudbeds.md) | Planned | High | Cloudbeds PMS adapter — Phase 2 of PMS provider rollout with OAuth 2.0 and HTTP webhooks |
+| [Plugin System](./013-plugin-system.md) | Planned | Medium | Decouple integrations from core into independently versioned npm packages loadable via jack.config.ts |
 
 ## How to Propose Features
 
