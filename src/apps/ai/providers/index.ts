@@ -1,31 +1,12 @@
 /**
  * AI Providers
  *
- * Exports all AI provider extensions.
+ * anthropic, openai, and ollama have been extracted to workspace packages
+ * under packages/. This file now only exports the local provider which
+ * stays in src/ due to its heavy @xenova/transformers dependency.
  *
  * @module extensions/ai/providers
  */
-
-export {
-  AnthropicProvider,
-  createAnthropicProvider,
-  manifest as anthropicManifest,
-  type AnthropicConfig,
-} from './anthropic.js';
-
-export {
-  OpenAIProvider,
-  createOpenAIProvider,
-  manifest as openaiManifest,
-  type OpenAIConfig,
-} from './openai.js';
-
-export {
-  OllamaProvider,
-  createOllamaProvider,
-  manifest as ollamaManifest,
-  type OllamaConfig,
-} from './ollama.js';
 
 export {
   LocalAIProvider,

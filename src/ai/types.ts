@@ -4,7 +4,6 @@
  * Re-exports core AI provider interfaces and adds responder types.
  */
 
-// Re-export all AI provider types from core interfaces
 export type {
   MessageRole,
   CompletionMessage,
@@ -15,13 +14,25 @@ export type {
   EmbeddingRequest,
   EmbeddingResponse,
   AIProvider,
-  AIProviderConfig,
-  AIProviderType,
-  // Backward compatibility aliases
-  LLMProvider,
-  ProviderConfig,
-  ProviderType,
-} from '@/core/interfaces/ai.js';
+} from '@jack/shared';
+
+/** Internal server config for AI providers — not part of the plugin contract */
+export interface AIProviderConfig {
+  apiKey?: string | undefined;
+  baseUrl?: string | undefined;
+  model?: string | undefined;
+  embeddingModel?: string | undefined;
+  maxTokens?: number | undefined;
+  temperature?: number | undefined;
+}
+
+/** AI provider types supported by the server */
+export type AIProviderType = 'claude' | 'openai' | 'ollama';
+
+// Backward compatibility aliases
+export type { AIProvider as LLMProvider } from '@jack/shared';
+export type { AIProviderConfig as ProviderConfig };
+export type { AIProviderType as ProviderType };
 
 // ===================
 // Responder Types

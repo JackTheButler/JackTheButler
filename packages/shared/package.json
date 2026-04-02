@@ -12,7 +12,11 @@
   },
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "prepare": "tsc"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

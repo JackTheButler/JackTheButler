@@ -11,7 +11,7 @@ import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { normalizePhone } from '@/services/guest.js';
 import { getAppRegistry } from '@/apps/index.js';
-import type { NormalizedGuest, NormalizedReservation, SyncResult } from '@/core/interfaces/pms.js';
+import type { NormalizedGuest, NormalizedReservation, SyncResult } from '@jack/shared';
 import type { Guest, Reservation } from '@/db/schema.js';
 import { now } from '@/utils/time.js';
 

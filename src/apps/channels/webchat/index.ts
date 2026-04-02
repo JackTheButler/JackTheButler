@@ -11,9 +11,14 @@
  */
 
 import { WebSocket } from 'ws';
-import type { ChannelAppManifest } from '../../types.js';
-import type { InboundMessage, OutboundMessage } from '@/core/interfaces/channel.js';
-import type { ContentType, SendResult, ChannelType } from '@/types/index.js';
+import type {
+  ChannelAppManifest,
+  ChannelType,
+  ContentType,
+  InboundMessage,
+  OutboundMessage,
+  SendResult,
+} from '@jack/shared';
 import { messageProcessor } from '@/core/message-processor.js';
 import { appConfigService } from '@/services/app-config.js';
 import { conversationService } from '@/services/conversation.js';

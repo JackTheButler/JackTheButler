@@ -2,7 +2,10 @@
  * Local AI Provider Tests
  */
 
-import { describe, it, expect, beforeEach, vi } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import type { PluginContext } from '@jack/shared';
+
+const mockContext: PluginContext = { appLog: vi.fn().mockImplementation((_op, _meta, fn) => fn()) };
 
 // Mock embedding output - 384 dimensions for all-MiniLM-L6-v2
 const mockEmbeddingData = new Float32Array(384).fill(0.1);
@@ -31,7 +34,7 @@ import { LocalAIProvider, createLocalProvider, manifest } from '@/apps/ai/provid
 describe('LocalAIProvider', () => {
   describe('constructor', () => {
     it('should create provider with default config', () => {
-      const provider = new LocalAIProvider();
+      const provider = new LocalAIProvider({}, mockContext);
       expect(provider.id).toBe('local');
       expect(provider.name).toBe('local');
     });
@@ -40,7 +43,7 @@ describe('LocalAIProvider', () => {
       const customProvider = new LocalAIProvider({
         embeddingModel: 'custom/embedding-model',
         completionModel: 'custom/completion-model',
-      });
+      }, mockContext);
 
       expect(customProvider.id).toBe('local');
       expect(customProvider.name).toBe('local');
@@ -49,7 +52,7 @@ describe('LocalAIProvider', () => {
 
   describe('embed', () => {
     it('should generate embeddings', async () => {
-      const provider = new LocalAIProvider();
+      const provider = new LocalAIProvider({}, mockContext);
       const result = await provider.embed({ text: 'Hello world' });
 
       expect(result.embedding).toBeDefined();
@@ -59,7 +62,7 @@ describe('LocalAIProvider', () => {
     });
 
     it('should return consistent embedding structure', async () => {
-      const provider = new LocalAIProvider();
+      const provider = new LocalAIProvider({}, mockContext);
       const result1 = await provider.embed({ text: 'First text' });
       const result2 = await provider.embed({ text: 'Second text' });
 
@@ -69,7 +72,7 @@ describe('LocalAIProvider', () => {
 
   describe('complete', () => {
     it('should generate completion', async () => {
-      const provider = new LocalAIProvider();
+      const provider = new LocalAIProvider({}, mockContext);
       const result = await provider.complete({
         messages: [
           { role: 'system', content: 'You are a helpful assistant.' },
@@ -84,7 +87,7 @@ describe('LocalAIProvider', () => {
     });
 
     it('should handle messages with different roles', async () => {
-      const provider = new LocalAIProvider();
+      const provider = new LocalAIProvider({}, mockContext);
       const result = await provider.complete({
         messages: [
           { role: 'system', content: 'Be brief.' },
@@ -100,7 +103,7 @@ describe('LocalAIProvider', () => {
 
   describe('testConnection', () => {
     it('should test connection successfully', async () => {
-      const provider = new LocalAIProvider();
+      const provider = new LocalAIProvider({}, mockContext);
       const result = await provider.testConnection();
 
       expect(result.success).toBe(true);
@@ -114,14 +117,14 @@ describe('LocalAIProvider', () => {
 
 describe('createLocalProvider', () => {
   it('should create a LocalAIProvider instance', () => {
-    const provider = createLocalProvider();
+    const provider = createLocalProvider({}, mockContext);
     expect(provider).toBeInstanceOf(LocalAIProvider);
   });
 
   it('should pass config to provider', () => {
     const provider = createLocalProvider({
       embeddingModel: 'custom/model',
-    });
+    }, mockContext);
     expect(provider).toBeInstanceOf(LocalAIProvider);
   });
 });
@@ -158,7 +161,7 @@ describe('Local AI Manifest', () => {
   });
 
   it('should create provider via factory', () => {
-    const provider = manifest.createProvider({});
+    const provider = manifest.createProvider({}, mockContext);
     expect(provider).toBeInstanceOf(LocalAIProvider);
   });
 });

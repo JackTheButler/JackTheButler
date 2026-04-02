@@ -58,15 +58,15 @@ describe('AppLoader', () => {
   });
 
   describe('discoverApps', () => {
-    it('should discover and register all manifests', () => {
-      const manifests = loader.discoverApps();
+    it('should discover and register all manifests', async () => {
+      const manifests = await loader.discoverApps();
 
       expect(manifests.length).toBeGreaterThan(0);
       expect(registry.getAll().length).toBeGreaterThan(0);
     });
 
-    it('should filter by category', () => {
-      const manifests = loader.discoverApps(['ai']);
+    it('should filter by category', async () => {
+      const manifests = await loader.discoverApps(['ai']);
 
       expect(manifests.every((m) => m.category === 'ai')).toBe(true);
     });

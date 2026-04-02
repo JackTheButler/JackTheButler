@@ -14,11 +14,6 @@
  */
 
 // ============================================
-// Interfaces (contracts for extensions)
-// ============================================
-export * from './interfaces/index.js';
-
-// ============================================
 // Message Processing
 // ============================================
 export { MessageProcessor, messageProcessor, getProcessor } from './message-processor.js';

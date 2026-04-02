@@ -5,12 +5,12 @@
  * Uses simple setInterval for lightweight scheduling.
  */
 
-import { loadConfig } from '@/config/index.js';
 import { NotFoundError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { pmsSyncService, getPMSSyncConfig } from './pms-sync.js';
 import { writeActivityLog } from './activity-log.js';
 import { sqlite } from '@/db/index.js';
+import { getAppRegistry } from '@/apps/registry.js';
 
 const log = createLogger('scheduler');
 
@@ -34,10 +34,8 @@ export class Scheduler {
    * Start all scheduled jobs
    */
   start(): void {
-    const config = loadConfig();
-
-    // PMS Sync job — interval from PMS app config, or code default (15 min)
-    if (config.pms.provider !== 'mock' || config.env === 'development') {
+    // PMS Sync job — only schedule if a PMS app is active in the registry
+    if (getAppRegistry().getActivePMSApp()) {
       const { syncIntervalMs } = getPMSSyncConfig();
       this.scheduleJob('pms-sync', syncIntervalMs, () => this.runPMSSync());
     }

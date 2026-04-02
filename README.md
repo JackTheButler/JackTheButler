@@ -36,10 +36,11 @@ The AI chatbot handles routine guest requests autonomously while intelligently r
 
 - **Hotel chatbot** - Automated guest messaging 24/7
 - **Multi-channel inbox** - WhatsApp, SMS, Email, Web Chat in one dashboard
-- **AI-powered responses** - Claude, GPT, or local models (no API costs)
+- **AI-powered responses** - Claude, OpenAI, Ollama, or local models (no API costs)
 - **Knowledge base** - Semantic search over your hotel information
 - **Smart escalation** - Routes complex requests to staff automatically
 - **Self-hosted** - Your data stays on your server, GDPR compliant
+- **Extensible** - Add custom AI providers, channels, and PMS integrations via plugins
 - **Free forever** - No per-message fees, no per-room pricing
 - **Easy setup** - Deploy in 5 minutes, single SQLite database
 
@@ -175,6 +176,46 @@ pnpm dev
 | `pnpm typecheck` | TypeScript type checking |
 | `pnpm lint` | Run linter |
 
+### Building Plugins
+
+Jack supports community plugins for new AI providers, communication channels, and PMS integrations — without modifying core.
+
+Each plugin is a standalone npm package that exports a `manifest` object. Jack's loader imports it at startup and registers it in the app registry. Plugins are named `{category}-{provider}` and published under the `@jack-plugins/` npm scope.
+
+**1. Copy the starter for your category:**
+```bash
+cp packages/plugin-starter/src/pms-example.ts packages/pms-yourpms/src/index.ts
+# or ai-example.ts / channel-example.ts
+```
+
+**2. Add to root `package.json` and install:**
+```json
+"@jack-plugins/pms-yourpms": "workspace:*"
+```
+```bash
+pnpm install   # links the workspace package — auto-discovered on next restart
+```
+
+**3. Build and verify:**
+```bash
+pnpm --filter @jack-plugins/pms-yourpms build   # compile your plugin
+pnpm typecheck                                   # full repo type check
+pnpm test                                        # run tests
+```
+
+**4. Publish or contribute:**
+```bash
+# Publish to npm as a community plugin
+npm publish --access public
+
+# Or open a PR to include it as a built-in
+git checkout -b plugin/pms-yourpms
+git push origin plugin/pms-yourpms
+gh pr create
+```
+
+See the **[Plugin Authoring Guide](docs/05-operations/plugin-authoring.md)** for full instructions.
+
 ### API & WebSocket Access
 
 | Interface | URL | Description |
@@ -234,6 +275,7 @@ See the [docs](docs/) folder for full documentation:
 - [Architecture](docs/03-architecture/)
 - [API Specs](docs/04-specs/)
 - [Operations](docs/05-operations/)
+- [Plugin Authoring](docs/05-operations/plugin-authoring.md) - Build custom AI providers, channels, and PMS integrations
 - [User Guide](docs/user-guide/) - For hotel staff
 
 ---
@@ -299,6 +341,7 @@ By submitting a PR, you agree to the terms in [CLA.md](CLA.md).
 | **Data ownership** | 100% yours | Vendor servers |
 | **WhatsApp support** | ✅ | ✅ |
 | **Local AI option** | ✅ | ❌ |
+| **Plugin ecosystem** | ✅ | ❌ |
 
 ---
 

@@ -3,7 +3,6 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import type { PMSConfig } from '@/core/interfaces/pms.js';
 import type { PluginContext } from '@/apps/types.js';
 
 const mockContext: PluginContext = {
@@ -16,8 +15,9 @@ vi.stubGlobal('fetch', mockFetch);
 
 // Import after mocking
 const { MewsPMSAdapter, createMewsPMSAdapter, manifest } = await import(
-  '@/apps/pms/providers/mews.js'
+  '@jack-plugins/pms-mews'
 );
+type MewsConfig = import('@jack-plugins/pms-mews').MewsConfig;
 
 // ==================
 // Test Helpers
@@ -25,9 +25,9 @@ const { MewsPMSAdapter, createMewsPMSAdapter, manifest } = await import(
 
 /**
  * Create a config matching the flat shape the registry actually passes.
- * Keys correspond to configSchema entries, NOT PMSConfig field names.
+ * Keys correspond to configSchema entries.
  */
-function createFlatConfig(overrides: Record<string, unknown> = {}): PMSConfig {
+function createFlatConfig(overrides: Partial<MewsConfig> = {}): MewsConfig {
   return {
     clientToken: 'client-token-123',
     accessToken: 'access-token-456',
@@ -35,7 +35,7 @@ function createFlatConfig(overrides: Record<string, unknown> = {}): PMSConfig {
     propertyId: 'enterprise-001',
     webhookSecret: 'test-secret',
     ...overrides,
-  } as unknown as PMSConfig;
+  };
 }
 
 function mockApiResponse(data: unknown, status = 200) {
@@ -141,30 +141,6 @@ describe('MewsPMSAdapter', () => {
       expect(body.AccessToken).toBe('access-token-456');
     });
 
-    it('should fall back to PMSConfig fields when flat keys are absent', async () => {
-      // Simulate old-style PMSConfig (e.g. from tests)
-      const legacyConfig: PMSConfig = {
-        provider: 'mews',
-        apiUrl: 'https://api.mews-demo.com/api/connector/v1',
-        clientId: 'legacy-client',
-        apiKey: 'legacy-access',
-        propertyId: 'enterprise-002',
-      };
-
-      const legacyAdapter = new MewsPMSAdapter(legacyConfig, mockContext);
-
-      setupFetchMock({
-        'configuration/get': { Enterprise: { Id: 'enterprise-002', Name: 'Legacy Hotel' } },
-        'services/getAll': { Services: [MOCK_SERVICE] },
-      });
-
-      await legacyAdapter.testConnection();
-
-      const call = mockFetch.mock.calls[0]!;
-      const body = JSON.parse((call[1] as { body: string }).body);
-      expect(body.ClientToken).toBe('legacy-client');
-      expect(body.AccessToken).toBe('legacy-access');
-    });
   });
 
   describe('testConnection', () => {
@@ -292,12 +268,13 @@ describe('MewsPMSAdapter', () => {
 
       expect(results).toHaveLength(1);
 
-      // Verify UpdatedUtc and Limitation were set in the request
+      // Verify TimeFilter, StartUtc, and Limitation were set in the request
       const reservationCall = mockFetch.mock.calls.find((c: unknown[]) =>
         (c[0] as string).includes('reservations/getAll')
       );
       const body = JSON.parse((reservationCall![1] as { body: string }).body);
-      expect(body.UpdatedUtc.StartUtc).toBe(since.toISOString());
+      expect(body.TimeFilter).toBe('Updated');
+      expect(body.StartUtc).toBe(since.toISOString().replace(/\.\d{3}Z$/, 'Z'));
       expect(body.Limitation).toBeDefined();
       expect(body.Limitation.Count).toBe(100);
     });
@@ -318,7 +295,8 @@ describe('MewsPMSAdapter', () => {
       const body = JSON.parse((reservationCall![1] as { body: string }).body);
 
       // The StartUtc should be clamped to ~3 months ago, not 2020
-      const startUtc = new Date(body.UpdatedUtc.StartUtc);
+      expect(body.TimeFilter).toBe('Updated');
+      const startUtc = new Date(body.StartUtc);
       const threeMonthsAgo = new Date(Date.now() - 90 * 24 * 60 * 60 * 1000);
       // Allow 1 second tolerance
       expect(Math.abs(startUtc.getTime() - threeMonthsAgo.getTime())).toBeLessThan(1000);
@@ -339,9 +317,9 @@ describe('MewsPMSAdapter', () => {
       );
       const body = JSON.parse((reservationCall![1] as { body: string }).body);
 
-      // Should have a StartUtc default window
+      // Should have a default 1-year arrival window
+      expect(body.TimeFilter).toBe('Start');
       expect(body.StartUtc).toBeDefined();
-      expect(body.StartUtc.StartUtc).toBeDefined();
     });
 
     it('should convert date-only strings to full datetime', async () => {
@@ -356,8 +334,9 @@ describe('MewsPMSAdapter', () => {
         (c[0] as string).includes('reservations/getAll')
       );
       const body = JSON.parse((reservationCall![1] as { body: string }).body);
-      expect(body.StartUtc.StartUtc).toBe('2026-02-15T00:00:00Z');
-      expect(body.StartUtc.EndUtc).toBe('2026-02-20T00:00:00Z');
+      expect(body.TimeFilter).toBe('Start');
+      expect(body.StartUtc).toBe('2026-02-15T00:00:00Z');
+      expect(body.EndUtc).toBe('2026-02-20T00:00:00Z');
     });
 
     it('should search customers first when filtering by email', async () => {
@@ -423,8 +402,9 @@ describe('MewsPMSAdapter', () => {
         (c[0] as string).includes('reservations/getAll')
       );
       const body = JSON.parse((reservationCall![1] as { body: string }).body);
-      expect(body.EndUtc.StartUtc).toBe('2026-02-20T00:00:00Z');
-      expect(body.EndUtc.EndUtc).toBe('2026-02-25T00:00:00Z');
+      expect(body.TimeFilter).toBe('End');
+      expect(body.StartUtc).toBe('2026-02-20T00:00:00Z');
+      expect(body.EndUtc).toBe('2026-02-25T00:00:00Z');
     });
 
     it('should map modifiedSince to Mews UpdatedUtc', async () => {
@@ -440,8 +420,9 @@ describe('MewsPMSAdapter', () => {
         (c[0] as string).includes('reservations/getAll')
       );
       const body = JSON.parse((reservationCall![1] as { body: string }).body);
-      expect(body.UpdatedUtc.StartUtc).toBe(since.toISOString());
-      expect(body.UpdatedUtc.EndUtc).toBeDefined();
+      expect(body.TimeFilter).toBe('Updated');
+      expect(body.StartUtc).toBe(since.toISOString().replace(/\.\d{3}Z$/, 'Z'));
+      expect(body.EndUtc).toBeDefined();
     });
 
     it('should skip default 1-year window when departure or modifiedSince filter is present', async () => {
@@ -456,9 +437,9 @@ describe('MewsPMSAdapter', () => {
         (c[0] as string).includes('reservations/getAll')
       );
       const body = JSON.parse((reservationCall![1] as { body: string }).body);
-      // Should NOT have a default StartUtc window since departure filter is present
-      expect(body.StartUtc).toBeUndefined();
-      expect(body.EndUtc).toBeDefined();
+      // TimeFilter should be 'End' (departure range), not 'Start' (arrival window)
+      expect(body.TimeFilter).toBe('End');
+      expect(body.StartUtc).toBe('2026-02-20T00:00:00Z');
     });
 
     it('should pass CustomerIds server-side when filtering by email', async () => {
@@ -573,6 +554,7 @@ describe('MewsPMSAdapter', () => {
       };
 
       setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
         'resources/getAll': { Resources: [MOCK_RESOURCE, spaResource] },
         'resourceCategories/getAll': {
           ResourceCategories: [MOCK_RESOURCE_CATEGORY, spaCategory],
@@ -601,6 +583,7 @@ describe('MewsPMSAdapter', () => {
   describe('getRoomStatus', () => {
     it('should find room by number', async () => {
       setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
         'resources/getAll': { Resources: [MOCK_RESOURCE] },
         'resourceCategories/getAll': { ResourceCategories: [MOCK_RESOURCE_CATEGORY] },
       });
@@ -612,6 +595,7 @@ describe('MewsPMSAdapter', () => {
 
     it('should return null for unknown room', async () => {
       setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
         'resources/getAll': { Resources: [MOCK_RESOURCE] },
         'resourceCategories/getAll': { ResourceCategories: [MOCK_RESOURCE_CATEGORY] },
       });
@@ -649,6 +633,7 @@ describe('MewsPMSAdapter', () => {
 
     it('should fetch room data for resource events', async () => {
       setupFetchMock({
+        'services/getAll': { Services: [MOCK_SERVICE] },
         'resources/getAll': { Resources: [MOCK_RESOURCE] },
         'resourceCategories/getAll': { ResourceCategories: [MOCK_RESOURCE_CATEGORY] },
       });

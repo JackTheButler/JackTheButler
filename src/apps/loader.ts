@@ -7,10 +7,13 @@
  * @module apps/loader
  */
 
+import { readdir } from 'node:fs/promises';
+import { resolve } from 'node:path';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry, type AppRegistry } from './registry.js';
-import { getAllManifests } from './index.js';
 import type { AnyAppManifest, AppCategory } from './types.js';
+import { manifest as localManifest } from './ai/providers/local.js';
+import { manifest as webchatManifest } from './channels/webchat/index.js';
 
 const log = createLogger('apps:loader');
 
@@ -70,21 +73,48 @@ export class AppLoader {
   }
 
   /**
-   * Discover and register all available app manifests
+   * Discover and register all available app manifests.
+   *
+   * Auto-discovers every package under node_modules/@jack-plugins/ —
+   * no manual listing required. Installing a package (workspace:* or from npm)
+   * is sufficient for it to appear here.
    */
-  discoverApps(categories?: AppCategory[]): AnyAppManifest[] {
-    const manifests = getAllManifests();
+  async discoverApps(categories?: AppCategory[]): Promise<AnyAppManifest[]> {
+    const manifests: AnyAppManifest[] = [];
+
+    // Scan node_modules/@jack-plugins/ — works for both workspace packages and npm installs
+    const pluginsDir = resolve(process.cwd(), 'node_modules/@jack-plugins');
+    try {
+      const entries = await readdir(pluginsDir, { withFileTypes: true });
+      for (const entry of entries) {
+        if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+        const pluginPath = `@jack-plugins/${entry.name}`;
+        try {
+          const plugin = await import(pluginPath) as { manifest?: AnyAppManifest };
+          if (plugin.manifest) {
+            manifests.push(plugin.manifest);
+          } else {
+            log.warn({ pluginPath }, 'Plugin has no manifest export — skipping');
+          }
+        } catch (err) {
+          log.warn({ pluginPath, err }, 'Failed to load plugin — skipping');
+        }
+      }
+    } catch (err) {
+      log.warn({ err }, 'Could not read @jack-plugins directory — no plugins loaded');
+    }
+
+    log.info({ count: manifests.length }, 'Plugins discovered from @jack-plugins');
+
+    // Register built-ins that live in src/ and cannot be npm packages
+    manifests.push(localManifest, webchatManifest);
+
     const filtered = categories
       ? manifests.filter((m) => categories.includes(m.category))
       : manifests;
 
     this.registry.registerAll(filtered);
-
-    log.info(
-      { count: filtered.length, categories },
-      'Apps discovered and registered'
-    );
-
+    log.info({ count: filtered.length, categories }, 'Apps discovered and registered');
     return filtered;
   }
 
@@ -99,7 +129,7 @@ export class AppLoader {
 
     // Auto-discover if requested
     if (options.autoDiscover) {
-      this.discoverApps(options.categories);
+      await this.discoverApps(options.categories);
     }
 
     // Sort by priority if specified
@@ -181,13 +211,8 @@ export class AppLoader {
    * - TWILIO_* for Twilio SMS
    * - WHATSAPP_* for WhatsApp
    */
-  loadFromEnvironment(options: LoaderOptions = {}): LoadConfig[] {
+  loadFromEnvironment(_options: LoaderOptions = {}): LoadConfig[] {
     const configs: LoadConfig[] = [];
-
-    // Auto-discover if requested
-    if (options.autoDiscover) {
-      this.discoverApps(options.categories);
-    }
 
     // Check for legacy environment patterns
     const env = process.env;
@@ -298,8 +323,9 @@ export class AppLoader {
    * Auto-load apps from environment
    */
   async autoLoad(options: LoaderOptions = {}): Promise<LoadResult[]> {
-    const configs = this.loadFromEnvironment({ autoDiscover: true, ...options });
-    return this.loadFromConfig(configs, options);
+    await this.discoverApps(options.categories);
+    const configs = this.loadFromEnvironment(options);
+    return this.loadFromConfig(configs);
   }
 
   /**

@@ -34,15 +34,30 @@ jack/
 │   │   ├── escalation-engine.ts
 │   │   └── interfaces/   # Abstract interfaces for apps
 │   ├── apps/             # Adapters - external integrations (v1.1.0+)
-│   │   ├── ai/           # AI providers (anthropic, openai, ollama)
-│   │   ├── channels/     # Communication (whatsapp, sms, email)
-│   │   └── pms/          # Property management systems
+│   │   ├── ai/           # Built-in AI providers (local/Transformers.js only)
+│   │   ├── channels/     # Built-in channels (webchat only)
+│   │   └── pms/          # PMS registry (providers live in packages/)
 │   ├── gateway/          # Central WebSocket/HTTP server
 │   ├── services/         # State management services
 │   ├── db/               # Database schema, migrations, repositories
 │   ├── config/           # Configuration loading
 │   ├── utils/            # Shared utilities
 │   └── types/            # TypeScript type definitions
+├── packages/             # Plugin packages (each is a standalone npm package)
+│   ├── shared/           # @jack/shared — public types for plugin authors
+│   ├── plugin-starter/   # Copy-paste starter examples (pms/ai/channel)
+│   ├── ai-anthropic/     # @jack-plugins/ai-anthropic
+│   ├── ai-openai/        # @jack-plugins/ai-openai
+│   ├── ai-ollama/        # @jack-plugins/ai-ollama
+│   ├── channel-whatsapp/ # @jack-plugins/channel-whatsapp
+│   ├── channel-twilio/   # @jack-plugins/channel-twilio (SMS)
+│   ├── channel-smtp/     # @jack-plugins/channel-smtp
+│   ├── channel-mailgun/  # @jack-plugins/channel-mailgun
+│   ├── channel-sendgrid/ # @jack-plugins/channel-sendgrid
+│   ├── channel-gmail/    # @jack-plugins/channel-gmail
+│   ├── pms-mock/         # @jack-plugins/pms-mock
+│   ├── pms-mews/         # @jack-plugins/pms-mews
+│   └── pms-cloudbeds/    # @jack-plugins/pms-cloudbeds
 ├── apps/
 │   ├── dashboard/        # Staff web dashboard (React)
 │   │   └── src/
@@ -169,6 +184,7 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 - [API Specs](docs/04-specs/api/)
 - [Local Development](docs/05-operations/local-development.md)
 - [Deployment](docs/05-operations/deployment.md)
+- [Plugin Authoring](docs/05-operations/plugin-authoring.md)
 
 ## Where to Find Things
 
@@ -192,7 +208,7 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 
 ### Adding New Features
 - **New API endpoint**: Add route file in `src/gateway/routes/`, register in `src/gateway/routes/api.ts`
-- **New app/adapter**: Create manifest in `src/apps/{category}/`, follows `AppManifest` pattern
+- **New plugin (AI/channel/PMS)**: Copy from `packages/plugin-starter/src/{category}-example.ts`, create a new `packages/{category}-{provider}/` workspace package, add to root `package.json` as `workspace:*`, run `pnpm install` — auto-discovered on next restart. See [Plugin Authoring Guide](docs/05-operations/plugin-authoring.md)
 - **New service**: Add to `src/services/`, use singleton pattern with `getXxxService()`
 - **New database table**: Add to `src/db/schema.ts`, run `pnpm db:generate && pnpm db:migrate`
 
@@ -211,10 +227,11 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 |-------------|---------------------------|
 | New API route | `src/gateway/routes/tasks.ts` |
 | New service | `src/services/task.ts` |
-| New AI app | `src/apps/ai/providers/anthropic.ts` (see also [AI spec](docs/04-specs/ai/index.md)) |
-| New channel app | `src/apps/channels/sms/twilio.ts` |
-| New PMS app | `src/apps/pms/providers/mock.ts` (must include `stalenessThreshold` and `syncInterval` in `configSchema` — see [PMS spec](docs/04-specs/pms/index.md)) |
-| Outbound API call in any adapter | **Must use `createAppLogger(manifest.category, manifest.id)`** from `src/apps/instrumentation.ts` — never call external SDKs or fetch directly. The exact arguments `(manifest.category, manifest.id)` are required so the System Health dashboard can locate logs without any extra config. |
+| New AI app | `packages/plugin-starter/src/ai-example.ts` → copy to `packages/ai-{provider}/src/index.ts` (see also [AI spec](docs/04-specs/ai/index.md)) |
+| New channel app | `packages/plugin-starter/src/channel-example.ts` → copy to `packages/channel-{provider}/src/index.ts` |
+| New PMS app | `packages/plugin-starter/src/pms-example.ts` → copy to `packages/pms-{provider}/src/index.ts` (must include `stalenessThreshold` and `syncInterval` in `configSchema` — see [PMS spec](docs/04-specs/pms/index.md)) |
+| Outbound API call in a **plugin package** | Use `this.appLog` injected via `PluginContext` — wrap every external call with `this.appLog('operation', metadata, fn)`. Never import `createAppLogger` in a plugin. |
+| Outbound API call in a **src/ adapter** (local, webchat) | **Must use `createAppLogger(manifest.category, manifest.id)`** from `src/apps/instrumentation.ts`. The exact arguments `(manifest.category, manifest.id)` are required so the System Health dashboard can locate logs without any extra config. |
 | New tool app | `src/apps/tools/site-scraper/index.ts` |
 | App manifest types | `src/apps/types.ts` |
 | Core interface | `src/core/interfaces/channel.ts` |
@@ -238,7 +255,10 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 5. **Small commits** - One logical change per commit
 6. **Use .js extensions** - All local imports must use `.js` (ESM requirement)
 7. **Update docs if patterns changed** - If you change a pattern, update CLAUDE.md to match
-8. **Wrap all outbound calls** - Every adapter class must declare `readonly appLog = createAppLogger(manifest.category, manifest.id)` from `src/apps/instrumentation.ts` and wrap all outbound calls with it. This is enforced by TypeScript — `BaseProvider` requires `appLog`, so missing it causes a compile error (`pnpm typecheck`). The arguments **must** be `manifest.category` and `manifest.id` exactly — the System Health endpoint derives app identity from these values automatically.
+8. **Wrap all outbound calls** — Every adapter must wrap all external API calls with `this.appLog()`. How `appLog` is obtained differs by location:
+   - **Plugin packages** (`packages/`): receive `appLog` via `PluginContext` injected by the registry. Store it as `this.appLog = context.appLog` in the constructor. Never call `createAppLogger` in a plugin.
+   - **src/ adapters** (local AI, webchat): declare `readonly appLog = createAppLogger(manifest.category, manifest.id)` from `src/apps/instrumentation.ts`. Arguments **must** be `manifest.category` and `manifest.id` exactly.
+   Both are enforced by TypeScript — `BaseProvider` requires `appLog`, so missing it causes a compile error (`pnpm typecheck`).
 
 ## After Writing Code — Verification Checklist
 

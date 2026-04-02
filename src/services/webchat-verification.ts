@@ -19,7 +19,7 @@ import { guestService } from './guest.js';
 import { webchatConnectionManager } from '@/apps/channels/webchat/index.js';
 import { t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
-import type { NormalizedReservation } from '@/core/interfaces/pms.js';
+import type { NormalizedReservation } from '@jack/shared';
 import type { ActionResult } from './webchat-action.js';
 import { now } from '@/utils/time.js';
 

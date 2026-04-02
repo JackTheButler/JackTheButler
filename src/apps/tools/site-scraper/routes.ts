@@ -23,7 +23,7 @@ import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { now } from '@/utils/time.js';
 import { generateId } from '@/utils/id.js';
 import { getAppRegistry } from '@/apps/index.js';
-import type { AIProvider } from '@/core/interfaces/ai.js';
+import type { AIProvider } from '@jack/shared';
 
 // Define custom variables type for Hono context
 type Variables = {

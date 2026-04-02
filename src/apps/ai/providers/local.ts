@@ -9,15 +9,19 @@
 
 import type {
   AIProvider,
+  AIAppManifest,
+  AppLogger,
+  BaseProvider,
   CompletionRequest,
   CompletionResponse,
+  ConnectionTestResult,
   EmbeddingRequest,
   EmbeddingResponse,
-} from '@/core/interfaces/ai.js';
-import type { AIAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
+  PluginContext,
+} from '@jack/shared';
+import { withLogContext } from '@jack/shared';
 import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
-import { withLogContext, createAppLogger } from '@/apps/instrumentation.js';
 
 const log = createLogger('extensions:ai:local');
 
@@ -101,7 +105,7 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
   private loadingPipelines = new Set<string>();
   private isLoadingEmbedding = false;
 
-  constructor(config: LocalConfig = {}, context: PluginContext = { appLog: createAppLogger('ai', 'local') }) {
+  constructor(config: LocalConfig = {}, context: PluginContext) {
     this.appLog = context.appLog;
     this.embeddingModel = config.embeddingModel || EMBEDDING_MODEL;
     this.completionModel = config.completionModel || COMPLETION_MODEL;
@@ -428,7 +432,7 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 /**
  * Create a local provider instance
  */
-export function createLocalProvider(config: LocalConfig = {}, context: PluginContext = { appLog: createAppLogger('ai', 'local') }): LocalAIProvider {
+export function createLocalProvider(config: LocalConfig = {}, context: PluginContext): LocalAIProvider {
   return new LocalAIProvider(config, context);
 }
 

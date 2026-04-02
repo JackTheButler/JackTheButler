@@ -594,9 +594,9 @@ export class AppConfigService {
   async loadEnabledApps(): Promise<void> {
     const registry = getAppRegistry();
 
-    // First, register all manifests
-    const manifests = getAllManifests();
-    registry.registerAll(manifests);
+    // Discover and register all manifests from jack.config.ts (includes PMS/AI/channel plugins)
+    const { getAppLoader } = await import('@/apps/loader.js');
+    await getAppLoader().discoverApps();
 
     // Load enabled configs from database
     const configs = await db
