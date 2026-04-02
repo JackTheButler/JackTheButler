@@ -4,6 +4,11 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import type { PMSConfig } from '@/core/interfaces/pms.js';
+import type { PluginContext } from '@/apps/types.js';
+
+const mockContext: PluginContext = {
+  appLog: vi.fn().mockImplementation((_e: string, _d: unknown, fn: () => Promise<unknown>) => fn()),
+};
 
 // Mock fetch globally
 const mockFetch = vi.fn();
@@ -117,7 +122,7 @@ describe('MewsPMSAdapter', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    adapter = new MewsPMSAdapter(createFlatConfig());
+    adapter = new MewsPMSAdapter(createFlatConfig(), mockContext);
   });
 
   describe('constructor (config mapping)', () => {
@@ -146,7 +151,7 @@ describe('MewsPMSAdapter', () => {
         propertyId: 'enterprise-002',
       };
 
-      const legacyAdapter = new MewsPMSAdapter(legacyConfig);
+      const legacyAdapter = new MewsPMSAdapter(legacyConfig, mockContext);
 
       setupFetchMock({
         'configuration/get': { Enterprise: { Id: 'enterprise-002', Name: 'Legacy Hotel' } },
@@ -699,7 +704,7 @@ describe('MewsPMSAdapter', () => {
     });
 
     it('should pass when no webhook secret is configured', () => {
-      const noSecretAdapter = new MewsPMSAdapter(createFlatConfig({ webhookSecret: undefined }));
+      const noSecretAdapter = new MewsPMSAdapter(createFlatConfig({ webhookSecret: undefined }), mockContext);
       const result = noSecretAdapter.verifyWebhookSignature('anything', 'anything');
       expect(result).toBe(true);
     });
@@ -820,7 +825,7 @@ describe('Status Mapping', () => {
 
   beforeEach(() => {
     vi.clearAllMocks();
-    adapter = new MewsPMSAdapter(createFlatConfig());
+    adapter = new MewsPMSAdapter(createFlatConfig(), mockContext);
   });
 
   it('should map all Mews reservation states correctly', async () => {
@@ -881,7 +886,7 @@ describe('Mews Manifest', () => {
 
   it('should create adapter instance via factory', () => {
     const config = createFlatConfig();
-    const instance = createMewsPMSAdapter(config);
+    const instance = createMewsPMSAdapter(config, mockContext);
     expect(instance).toBeInstanceOf(MewsPMSAdapter);
     expect(instance.provider).toBe('mews');
   });

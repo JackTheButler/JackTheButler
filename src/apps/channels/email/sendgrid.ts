@@ -9,8 +9,8 @@
 
 import { ValidationError } from '@/errors/index.js';
 import sgMail from '@sendgrid/mail';
-import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
-import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
+import type { ChannelAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
+import { withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:channels:email:sendgrid');
@@ -52,9 +52,10 @@ export class SendGridProvider implements BaseProvider {
   private fromAddress: string;
   private fromName: string;
   private apiKey: string;
-  readonly appLog = createAppLogger('channel', 'email-sendgrid');
+  readonly appLog: AppLogger;
 
-  constructor(config: SendGridConfig) {
+  constructor(config: SendGridConfig, context: PluginContext) {
+    this.appLog = context.appLog;
     if (!config.apiKey || !config.fromAddress) {
       throw new ValidationError('SendGrid provider requires apiKey and fromAddress');
     }
@@ -212,8 +213,8 @@ export class SendGridProvider implements BaseProvider {
 /**
  * Create a SendGrid provider instance
  */
-export function createSendGridProvider(config: SendGridConfig): SendGridProvider {
-  return new SendGridProvider(config);
+export function createSendGridProvider(config: SendGridConfig, context: PluginContext): SendGridProvider {
+  return new SendGridProvider(config, context);
 }
 
 /**
@@ -258,10 +259,10 @@ export const sendgridManifest: ChannelAppManifest = {
     outbound: true,
     templates: false,
   },
-  createAdapter: (config) => {
+  createAdapter: (config, context) => {
     // Email is transactional-only, not a guest conversation channel — see mailgun.ts for details.
     // TODO: Introduce a separate EmailAppManifest type so this cast is not needed.
-    const provider = createSendGridProvider(config as unknown as SendGridConfig);
+    const provider = createSendGridProvider(config as unknown as SendGridConfig, context);
     return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
   },
 };

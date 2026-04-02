@@ -648,5 +648,5 @@ export const manifest: ChannelAppManifest = {
     outbound: true,
     media: false,
   },
-  createAdapter: () => webchatAdapter,
+  createAdapter: (_config, _context) => webchatAdapter,
 };

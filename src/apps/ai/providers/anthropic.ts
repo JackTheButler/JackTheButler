@@ -15,8 +15,8 @@ import type {
   EmbeddingRequest,
   EmbeddingResponse,
 } from '@/core/interfaces/ai.js';
-import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
-import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
+import type { AIAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
+import { withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:ai:anthropic');
@@ -46,9 +46,10 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
   private model: string;
   private utilityModel: string;
   private maxTokens: number;
-  readonly appLog = createAppLogger('ai', 'anthropic');
+  readonly appLog: AppLogger;
 
-  constructor(config: AnthropicConfig) {
+  constructor(config: AnthropicConfig, context: PluginContext) {
+    this.appLog = context.appLog;
     if (!config.apiKey) {
       throw new ValidationError('Anthropic provider requires API key');
     }
@@ -186,8 +187,8 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
 /**
  * Create an Anthropic provider instance
  */
-export function createAnthropicProvider(config: AnthropicConfig): AnthropicProvider {
-  return new AnthropicProvider(config);
+export function createAnthropicProvider(config: AnthropicConfig, context: PluginContext): AnthropicProvider {
+  return new AnthropicProvider(config, context);
 }
 
 /**
@@ -249,5 +250,5 @@ export const manifest: AIAppManifest = {
     embedding: false, // Fallback only
     streaming: true,
   },
-  createProvider: (config) => createAnthropicProvider(config as unknown as AnthropicConfig),
+  createProvider: (config, context) => createAnthropicProvider(config as unknown as AnthropicConfig, context),
 };

@@ -114,7 +114,10 @@ describe('AppRegistry', () => {
       const ext = registry.get('test-ai');
       expect(ext?.status).toBe('active');
       expect(ext?.instance).toBe(mockAIProvider);
-      expect(mockAIManifest.createProvider).toHaveBeenCalledWith({ apiKey: 'test-key' });
+      expect(mockAIManifest.createProvider).toHaveBeenCalledWith(
+        { apiKey: 'test-key' },
+        expect.objectContaining({ appLog: expect.any(Function) })
+      );
     });
 
     it('should throw if app not configured', async () => {

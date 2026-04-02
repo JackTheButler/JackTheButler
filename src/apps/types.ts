@@ -10,6 +10,9 @@
 import type { AIProvider } from '@/core/interfaces/ai.js';
 import type { ChannelAdapter } from '@/core/interfaces/channel.js';
 import type { PMSAdapter } from '@/core/interfaces/pms.js';
+import type { AppLogger, PluginContext } from '@jack/shared';
+
+export type { AppLogger, PluginContext } from '@jack/shared';
 
 /**
  * App categories
@@ -68,7 +71,7 @@ export interface AppManifest {
 export interface AIAppManifest extends AppManifest {
   category: 'ai';
   /** Create an AI provider instance */
-  createProvider: (config: Record<string, unknown>) => AIProvider;
+  createProvider: (config: Record<string, unknown>, context: PluginContext) => AIProvider;
   /** Supported capabilities */
   capabilities: {
     completion: boolean;
@@ -83,7 +86,7 @@ export interface AIAppManifest extends AppManifest {
 export interface ChannelAppManifest extends AppManifest {
   category: 'channel';
   /** Create a channel adapter instance */
-  createAdapter: (config: Record<string, unknown>) => ChannelAdapter;
+  createAdapter: (config: Record<string, unknown>, context: PluginContext) => ChannelAdapter;
   /** Get webhook routes for this channel */
   getWebhookRoutes?: () => unknown; // Hono routes
   /** Channel features */
@@ -101,7 +104,7 @@ export interface ChannelAppManifest extends AppManifest {
 export interface PMSAppManifest extends AppManifest {
   category: 'pms';
   /** Create a PMS adapter instance */
-  createAdapter: (config: Record<string, unknown>) => PMSAdapter;
+  createAdapter: (config: Record<string, unknown>, context: PluginContext) => PMSAdapter;
   /** Supported PMS features */
   features: {
     reservations: boolean;
@@ -159,16 +162,6 @@ export interface ConnectionTestResult {
   details?: Record<string, unknown>;
   latencyMs?: number;
 }
-
-/**
- * Instrumentation logger returned by createAppLogger().
- * Defined here so BaseProvider can require it without a circular import.
- */
-export type AppLogger = <T>(
-  eventType: string,
-  details: Record<string, unknown>,
-  fn: () => Promise<T>
-) => Promise<T>;
 
 /**
  * Base provider interface with connection testing and observability.

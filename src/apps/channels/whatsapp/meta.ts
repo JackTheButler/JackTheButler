@@ -7,9 +7,9 @@
  */
 
 import { ValidationError } from '@/errors/index.js';
-import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import type { ChannelAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
 import type { OutboundMessage, SendResult } from '@/core/interfaces/channel.js';
-import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
+import { withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:channels:whatsapp:meta');
@@ -81,9 +81,10 @@ export class MetaWhatsAppProvider implements BaseProvider {
   private accessToken: string;
   private phoneNumberId: string;
   private baseUrl: string;
-  readonly appLog = createAppLogger('channel', 'whatsapp-meta');
+  readonly appLog: AppLogger;
 
-  constructor(config: MetaWhatsAppConfig) {
+  constructor(config: MetaWhatsAppConfig, context: PluginContext) {
+    this.appLog = context.appLog;
     if (!config.accessToken || !config.phoneNumberId) {
       throw new ValidationError('Meta WhatsApp provider requires accessToken and phoneNumberId');
     }
@@ -256,8 +257,8 @@ export class MetaWhatsAppProvider implements BaseProvider {
 /**
  * Create a Meta WhatsApp provider instance
  */
-export function createMetaWhatsAppProvider(config: MetaWhatsAppConfig): MetaWhatsAppProvider {
-  return new MetaWhatsAppProvider(config);
+export function createMetaWhatsAppProvider(config: MetaWhatsAppConfig, context: PluginContext): MetaWhatsAppProvider {
+  return new MetaWhatsAppProvider(config, context);
 }
 
 /**
@@ -309,5 +310,5 @@ export const manifest: ChannelAppManifest = {
     media: true,
     templates: true,
   },
-  createAdapter: (config) => createMetaWhatsAppProvider(config as unknown as MetaWhatsAppConfig),
+  createAdapter: (config, context) => createMetaWhatsAppProvider(config as unknown as MetaWhatsAppConfig, context),
 };

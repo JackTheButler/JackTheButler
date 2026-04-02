@@ -34,8 +34,8 @@ import type {
   PMSEventType,
   PMSConfig,
 } from '@/core/interfaces/pms.js';
-import type { PMSAppManifest } from '../../types.js';
-import { createAppLogger, AppLogError } from '@/apps/instrumentation.js';
+import type { PMSAppManifest, AppLogger, PluginContext } from '../../types.js';
+import { AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 import { now } from '@/utils/time.js';
 
@@ -182,131 +182,6 @@ interface CloudbedsListResponse<T> {
 }
 
 // ==================
-// CloudbedsClient — HTTP helper
-// ==================
-
-class CloudbedsClient {
-  readonly appLog = createAppLogger('pms', 'pms-cloudbeds');
-
-  constructor(
-    private readonly baseUrl: string,
-    private readonly apiKey: string
-  ) {}
-
-  async get<T>(
-    endpoint: string,
-    params: Record<string, string | number | boolean | undefined> = {}
-  ): Promise<T> {
-    return this.appLog('api_request', { endpoint }, async () => {
-      const url = new URL(`${this.baseUrl}/${endpoint}`);
-
-      for (const [key, value] of Object.entries(params)) {
-        if (value !== undefined) {
-          url.searchParams.set(key, String(value));
-        }
-      }
-
-      let lastError: Error | undefined;
-
-      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
-        log.debug({ endpoint, attempt }, 'Cloudbeds API request');
-
-        const response = await fetch(url.toString(), {
-          method: 'GET',
-          headers: { 'x-api-key': this.apiKey },
-        });
-
-        if (response.status === 429) {
-          const retryAfter = response.headers.get('Retry-After');
-          const waitMs = retryAfter
-            ? parseInt(retryAfter, 10) * 1000
-            : Math.pow(2, attempt + 1) * 1000;
-          log.warn({ endpoint, retryAfter: waitMs }, 'Cloudbeds rate limited, retrying');
-          await new Promise((resolve) => setTimeout(resolve, waitMs));
-          lastError = new Error(`Rate limited (429) on ${endpoint}`);
-          continue;
-        }
-
-        if (!response.ok) {
-          const text = await response.text();
-          let responseBody: unknown = text;
-          try {
-            responseBody = JSON.parse(text);
-          } catch {
-            /* keep as string */
-          }
-          throw new AppLogError(
-            `Cloudbeds API error ${response.status} on ${endpoint}: ${text}`,
-            { httpStatus: response.status, responseBody }
-          );
-        }
-
-        return (await response.json()) as T;
-      }
-
-      throw lastError ?? new Error(`Cloudbeds API request failed after ${MAX_RETRIES} retries`);
-    });
-  }
-
-  async postForm<T>(
-    endpoint: string,
-    body: Record<string, string>
-  ): Promise<T> {
-    return this.appLog('api_request', { endpoint }, async () => {
-      const url = `${this.baseUrl}/${endpoint}`;
-      const params = new URLSearchParams(body);
-
-      const response = await fetch(url, {
-        method: 'POST',
-        headers: {
-          'x-api-key': this.apiKey,
-          'Content-Type': 'application/x-www-form-urlencoded',
-        },
-        body: params.toString(),
-      });
-
-      if (!response.ok) {
-        const text = await response.text();
-        throw new AppLogError(
-          `Cloudbeds API error ${response.status} on ${endpoint}: ${text}`,
-          { httpStatus: response.status }
-        );
-      }
-
-      return (await response.json()) as T;
-    });
-  }
-
-  async fetchPaginated<TItem>(
-    endpoint: string,
-    params: Record<string, string | number | boolean | undefined>,
-    pageSize: number = DEFAULT_PAGE_SIZE
-  ): Promise<TItem[]> {
-    const results: TItem[] = [];
-    let pageNumber = 1;
-
-    do {
-      const response = await this.get<CloudbedsListResponse<TItem>>(endpoint, {
-        ...params,
-        pageNumber,
-        pageSize,
-      });
-
-      if (!response.success || !Array.isArray(response.data)) break;
-
-      results.push(...response.data);
-
-      // Stop when this page has fewer items than the page size
-      if (response.data.length < pageSize) break;
-
-      pageNumber++;
-    } while (true);
-
-    return results;
-  }
-}
-
-// ==================
 // Status Mapping
 // ==================
 
@@ -449,21 +324,20 @@ function mapCloudbedsEventToType(event: string): PMSEventType | null {
 
 export class CloudbedsPMSAdapter implements PMSAdapter {
   readonly provider = 'cloudbeds' as const;
-  readonly appLog = createAppLogger('pms', 'pms-cloudbeds');
+  readonly appLog: AppLogger;
 
-  private readonly client: CloudbedsClient;
+  private readonly baseUrl: string;
+  private readonly apiKey: string;
   private readonly propertyId: string;
   private readonly webhookUrl?: string;
 
-  constructor(config: PMSConfig) {
+  constructor(config: PMSConfig, context: PluginContext) {
+    this.appLog = context.appLog;
     const flat = config as unknown as Record<string, unknown>;
-    const apiKey = (flat.apiKey as string) || config.apiKey || '';
-    const baseUrl = (flat.apiUrl as string) || config.apiUrl || CLOUDBEDS_API_URL;
-
+    this.apiKey = (flat.apiKey as string) || config.apiKey || '';
+    this.baseUrl = (flat.apiUrl as string) || config.apiUrl || CLOUDBEDS_API_URL;
     this.propertyId = (flat.propertyId as string) || config.propertyId || '';
     if (flat.webhookUrl) this.webhookUrl = flat.webhookUrl as string;
-
-    this.client = new CloudbedsClient(baseUrl, apiKey);
 
     log.info({ propertyId: this.propertyId }, 'Cloudbeds PMS adapter initialized');
   }
@@ -475,7 +349,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
   async testConnection(): Promise<boolean> {
     try {
       // Verify credentials by fetching one reservation; empty result is fine
-      const response = await this.client.get<CloudbedsListResponse<CloudbedsReservation>>(
+      const response = await this.get<CloudbedsListResponse<CloudbedsReservation>>(
         'getReservations',
         { propertyID: this.propertyId, pageSize: 1 }
       );
@@ -507,7 +381,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
 
   async getReservation(externalId: string): Promise<NormalizedReservation | null> {
     try {
-      const response = await this.client.get<CloudbedsResponse<CloudbedsReservation>>(
+      const response = await this.get<CloudbedsResponse<CloudbedsReservation>>(
         'getReservation',
         {
           propertyID: this.propertyId,
@@ -563,7 +437,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
         params.guestID = guestId;
       }
 
-      const reservations = await this.client.fetchPaginated<CloudbedsReservation>(
+      const reservations = await this.fetchPaginated<CloudbedsReservation>(
         'getReservations',
         params
       );
@@ -589,7 +463,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
         includeGuestsDetails: true,
       };
 
-      const reservations = await this.client.fetchPaginated<CloudbedsReservation>(
+      const reservations = await this.fetchPaginated<CloudbedsReservation>(
         'getReservations',
         params
       );
@@ -609,7 +483,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
 
   async getGuest(externalId: string): Promise<NormalizedGuest | null> {
     try {
-      const response = await this.client.get<CloudbedsResponse<CloudbedsGuestDetail>>(
+      const response = await this.get<CloudbedsResponse<CloudbedsGuestDetail>>(
         'getGuest',
         { propertyID: this.propertyId, guestID: externalId }
       );
@@ -626,7 +500,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
 
   async getGuestByPhone(phone: string): Promise<NormalizedGuest | null> {
     try {
-      const items = await this.client.fetchPaginated<CloudbedsGuestListItem>(
+      const items = await this.fetchPaginated<CloudbedsGuestListItem>(
         'getGuestList',
         { propertyIDs: this.propertyId, guestPhone: phone, includeGuestInfo: true },
         1
@@ -644,7 +518,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
 
   async getGuestByEmail(email: string): Promise<NormalizedGuest | null> {
     try {
-      const items = await this.client.fetchPaginated<CloudbedsGuestListItem>(
+      const items = await this.fetchPaginated<CloudbedsGuestListItem>(
         'getGuestList',
         { propertyIDs: this.propertyId, guestEmail: email, includeGuestInfo: true },
         1
@@ -667,7 +541,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
       const parts = query.trim().split(/\s+/);
       const lastName = parts[parts.length - 1]!;
 
-      const items = await this.client.fetchPaginated<CloudbedsGuestListItem>(
+      const items = await this.fetchPaginated<CloudbedsGuestListItem>(
         'getGuestList',
         { propertyIDs: this.propertyId, guestLastName: lastName, includeGuestInfo: true }
       );
@@ -685,7 +559,6 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
 
   async getRoomStatus(roomNumber: string): Promise<NormalizedRoom | null> {
     try {
-      // No single-room lookup endpoint; fetch all and filter client-side
       const rooms = await this.fetchAllRooms();
       return rooms.find((r) => r.number === roomNumber) ?? null;
     } catch (err) {
@@ -784,6 +657,120 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
   }
 
   // ==================
+  // HTTP
+  // ==================
+
+  private async get<T>(
+    endpoint: string,
+    params: Record<string, string | number | boolean | undefined> = {}
+  ): Promise<T> {
+    return this.appLog('api_request', { endpoint }, async () => {
+      const url = new URL(`${this.baseUrl}/${endpoint}`);
+
+      for (const [key, value] of Object.entries(params)) {
+        if (value !== undefined) {
+          url.searchParams.set(key, String(value));
+        }
+      }
+
+      let lastError: Error | undefined;
+
+      for (let attempt = 0; attempt < MAX_RETRIES; attempt++) {
+        log.debug({ endpoint, attempt }, 'Cloudbeds API request');
+
+        const response = await fetch(url.toString(), {
+          method: 'GET',
+          headers: { 'x-api-key': this.apiKey },
+        });
+
+        if (response.status === 429) {
+          const retryAfter = response.headers.get('Retry-After');
+          const waitMs = retryAfter
+            ? parseInt(retryAfter, 10) * 1000
+            : Math.pow(2, attempt + 1) * 1000;
+          log.warn({ endpoint, retryAfter: waitMs }, 'Cloudbeds rate limited, retrying');
+          await new Promise((resolve) => setTimeout(resolve, waitMs));
+          lastError = new Error(`Rate limited (429) on ${endpoint}`);
+          continue;
+        }
+
+        if (!response.ok) {
+          const text = await response.text();
+          let responseBody: unknown = text;
+          try {
+            responseBody = JSON.parse(text);
+          } catch {
+            /* keep as string */
+          }
+          throw new AppLogError(
+            `Cloudbeds API error ${response.status} on ${endpoint}: ${text}`,
+            { httpStatus: response.status, responseBody }
+          );
+        }
+
+        return (await response.json()) as T;
+      }
+
+      throw lastError ?? new Error(`Cloudbeds API request failed after ${MAX_RETRIES} retries`);
+    });
+  }
+
+  private async postForm<T>(
+    endpoint: string,
+    body: Record<string, string>
+  ): Promise<T> {
+    return this.appLog('api_request', { endpoint }, async () => {
+      const url = `${this.baseUrl}/${endpoint}`;
+      const params = new URLSearchParams(body);
+
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: {
+          'x-api-key': this.apiKey,
+          'Content-Type': 'application/x-www-form-urlencoded',
+        },
+        body: params.toString(),
+      });
+
+      if (!response.ok) {
+        const text = await response.text();
+        throw new AppLogError(
+          `Cloudbeds API error ${response.status} on ${endpoint}: ${text}`,
+          { httpStatus: response.status }
+        );
+      }
+
+      return (await response.json()) as T;
+    });
+  }
+
+  private async fetchPaginated<TItem>(
+    endpoint: string,
+    params: Record<string, string | number | boolean | undefined>,
+    pageSize: number = DEFAULT_PAGE_SIZE
+  ): Promise<TItem[]> {
+    const results: TItem[] = [];
+    let pageNumber = 1;
+
+    do {
+      const response = await this.get<CloudbedsListResponse<TItem>>(endpoint, {
+        ...params,
+        pageNumber,
+        pageSize,
+      });
+
+      if (!response.success || !Array.isArray(response.data)) break;
+
+      results.push(...response.data);
+
+      if (results.length >= response.total) break;
+      pageNumber++;
+    } while (true);
+
+    return results;
+  }
+
+  // ==================
   // Internal Helpers
   // ==================
 
@@ -823,7 +810,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
 
   private async fetchAllRooms(): Promise<NormalizedRoom[]> {
     // getRooms response nests rooms under per-property objects
-    const data = await this.client.fetchPaginated<CloudbedsRoomsData>(
+    const data = await this.fetchPaginated<CloudbedsRoomsData>(
       'getRooms',
       { propertyIDs: this.propertyId },
       ROOMS_PAGE_SIZE
@@ -836,7 +823,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
 
   private async resolveGuestIdByPhone(phone: string): Promise<string | null> {
     try {
-      const items = await this.client.fetchPaginated<CloudbedsGuestListItem>(
+      const items = await this.fetchPaginated<CloudbedsGuestListItem>(
         'getGuestList',
         { propertyIDs: this.propertyId, guestPhone: phone },
         1
@@ -849,7 +836,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
 
   private async resolveGuestIdByEmail(email: string): Promise<string | null> {
     try {
-      const items = await this.client.fetchPaginated<CloudbedsGuestListItem>(
+      const items = await this.fetchPaginated<CloudbedsGuestListItem>(
         'getGuestList',
         { propertyIDs: this.propertyId, guestEmail: email },
         1
@@ -863,7 +850,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
   private async subscribeWebhooks(webhookUrl: string): Promise<void> {
     try {
       // Fetch existing subscriptions for this endpoint to avoid duplicates
-      const existing = await this.client.get<CloudbedsListResponse<CloudbedsWebhookSubscription>>(
+      const existing = await this.get<CloudbedsListResponse<CloudbedsWebhookSubscription>>(
         'getWebhooks',
         { propertyID: this.propertyId }
       );
@@ -881,7 +868,7 @@ export class CloudbedsPMSAdapter implements PMSAdapter {
           continue;
         }
 
-        await this.client.postForm<{ success: boolean; data: { subscriptionID: string } }>(
+        await this.postForm<{ success: boolean; data: { subscriptionID: string } }>(
           'postWebhook',
           { propertyID: this.propertyId, object, action, endpointUrl: webhookUrl }
         );
@@ -920,8 +907,8 @@ function mapJackStatusToCloudbeds(status: ReservationStatus): string {
 // Factory & Manifest
 // ==================
 
-export function createCloudbedsAdapter(config: PMSConfig): CloudbedsPMSAdapter {
-  return new CloudbedsPMSAdapter(config);
+export function createCloudbedsAdapter(config: PMSConfig, context: PluginContext): CloudbedsPMSAdapter {
+  return new CloudbedsPMSAdapter(config, context);
 }
 
 export const manifest: PMSAppManifest = {
@@ -988,5 +975,5 @@ export const manifest: PMSAppManifest = {
     rooms: true,
     webhooks: true,
   },
-  createAdapter: (config) => createCloudbedsAdapter(config as unknown as PMSConfig),
+  createAdapter: (config, context) => createCloudbedsAdapter(config as unknown as PMSConfig, context),
 };

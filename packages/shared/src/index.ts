@@ -6,3 +6,5 @@ export type { ChannelType } from './channel.js';
 
 export type { TaskStatus, TaskPriority } from './task.js';
 export type { ReservationStatus } from './reservation.js';
+
+export type { AppLogger, PluginContext, JackConfig } from './apps.js';

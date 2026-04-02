@@ -9,6 +9,7 @@
 
 import { createLogger } from '@/utils/logger.js';
 import { NotFoundError, ValidationError } from '@/errors/index.js';
+import { createAppLogger } from './instrumentation.js';
 import type {
   AnyAppManifest,
   AppCategory,
@@ -16,6 +17,7 @@ import type {
   ChannelAppManifest,
   PMSAppManifest,
   ConnectionTestResult,
+  PluginContext,
 } from './types.js';
 import type { AIProvider } from '@/core/interfaces/ai.js';
 import type { ChannelAdapter } from '@/core/interfaces/channel.js';
@@ -144,21 +146,24 @@ export class AppRegistry {
       switch (category) {
         case 'ai': {
           const aiManifest = manifest as AIAppManifest;
-          const provider = aiManifest.createProvider(ext.config);
+          const context: PluginContext = { appLog: createAppLogger(manifest.category, manifest.id) };
+          const provider = aiManifest.createProvider(ext.config, context);
           this.aiProviders.set(appId, provider);
           ext.instance = provider;
           break;
         }
         case 'channel': {
           const channelManifest = manifest as ChannelAppManifest;
-          const adapter = channelManifest.createAdapter(ext.config);
+          const context: PluginContext = { appLog: createAppLogger(manifest.category, manifest.id) };
+          const adapter = channelManifest.createAdapter(ext.config, context);
           this.channelAdapters.set(appId, adapter);
           ext.instance = adapter;
           break;
         }
         case 'pms': {
           const pmsManifest = manifest as PMSAppManifest;
-          const adapter = pmsManifest.createAdapter(ext.config);
+          const context: PluginContext = { appLog: createAppLogger(manifest.category, manifest.id) };
+          const adapter = pmsManifest.createAdapter(ext.config, context);
           this.pmsAdapters.set(appId, adapter);
           ext.instance = adapter;
           break;

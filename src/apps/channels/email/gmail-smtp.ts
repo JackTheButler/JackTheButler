@@ -11,9 +11,9 @@ import { ValidationError } from '@/errors/index.js';
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
-import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import type { ChannelAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
 import { createLogger } from '@/utils/logger.js';
-import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
+import { withLogContext } from '@/apps/instrumentation.js';
 
 const log = createLogger('extensions:channels:email:gmail-smtp');
 
@@ -59,12 +59,13 @@ export interface GmailSendResult {
  */
 export class GmailSMTPProvider implements BaseProvider {
   readonly id = 'gmail-smtp';
-  readonly appLog = createAppLogger('channel', 'email-gmail-smtp');
+  readonly appLog: AppLogger;
   private transporter: Transporter<SMTPTransport.SentMessageInfo>;
   private email: string;
   private fromName: string;
 
-  constructor(config: GmailSMTPConfig) {
+  constructor(config: GmailSMTPConfig, context: PluginContext) {
+    this.appLog = context.appLog;
     if (!config.email || !config.appPassword) {
       throw new ValidationError('Gmail SMTP provider requires email and appPassword');
     }
@@ -189,8 +190,8 @@ export class GmailSMTPProvider implements BaseProvider {
 /**
  * Create a Gmail SMTP provider instance
  */
-export function createGmailSMTPProvider(config: GmailSMTPConfig): GmailSMTPProvider {
-  return new GmailSMTPProvider(config);
+export function createGmailSMTPProvider(config: GmailSMTPConfig, context: PluginContext): GmailSMTPProvider {
+  return new GmailSMTPProvider(config, context);
 }
 
 /**
@@ -235,10 +236,10 @@ export const gmailSmtpManifest: ChannelAppManifest = {
     outbound: true,
     templates: false,
   },
-  createAdapter: (config) => {
+  createAdapter: (config, context) => {
     // Email is transactional-only, not a guest conversation channel — see mailgun.ts for details.
     // TODO: Introduce a separate EmailAppManifest type so this cast is not needed.
-    const provider = createGmailSMTPProvider(config as unknown as GmailSMTPConfig);
+    const provider = createGmailSMTPProvider(config as unknown as GmailSMTPConfig, context);
     return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
   },
 };

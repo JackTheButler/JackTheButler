@@ -9,8 +9,8 @@
 
 import { ValidationError } from '@/errors/index.js';
 import Mailgun from 'mailgun.js';
-import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
-import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
+import type { ChannelAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
+import { withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 import * as crypto from 'crypto';
 
@@ -61,9 +61,10 @@ export class MailgunProvider implements BaseProvider {
   private fromAddress: string;
   private fromName: string;
   private webhookSigningKey: string | undefined;
-  readonly appLog = createAppLogger('channel', 'email-mailgun');
+  readonly appLog: AppLogger;
 
-  constructor(config: MailgunConfig) {
+  constructor(config: MailgunConfig, context: PluginContext) {
+    this.appLog = context.appLog;
     if (!config.apiKey || !config.domain || !config.fromAddress) {
       throw new ValidationError('Mailgun provider requires apiKey, domain, and fromAddress');
     }
@@ -239,8 +240,8 @@ export class MailgunProvider implements BaseProvider {
 /**
  * Create a Mailgun provider instance
  */
-export function createMailgunProvider(config: MailgunConfig): MailgunProvider {
-  return new MailgunProvider(config);
+export function createMailgunProvider(config: MailgunConfig, context: PluginContext): MailgunProvider {
+  return new MailgunProvider(config, context);
 }
 
 /**
@@ -312,12 +313,12 @@ export const mailgunManifest: ChannelAppManifest = {
     outbound: true,
     templates: false,
   },
-  createAdapter: (config) => {
+  createAdapter: (config, context) => {
     // Email is a transactional provider, not a guest conversation channel.
     // It does not implement ChannelAdapter.send() or .channel — it is never
     // returned by getChannelAdapterByType() and is not used for message dispatch.
     // TODO: Introduce a separate EmailAppManifest type so this cast is not needed.
-    const provider = createMailgunProvider(config as unknown as MailgunConfig);
+    const provider = createMailgunProvider(config as unknown as MailgunConfig, context);
     return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
   },
 };

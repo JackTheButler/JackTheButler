@@ -9,9 +9,9 @@
 import { ValidationError } from '@/errors/index.js';
 import twilio from 'twilio';
 import type { MessageInstance } from 'twilio/lib/rest/api/v2010/account/message.js';
-import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import type { ChannelAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
 import type { OutboundMessage, SendResult } from '@/core/interfaces/channel.js';
-import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
+import { withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:channels:sms:twilio');
@@ -34,9 +34,10 @@ export class TwilioProvider implements BaseProvider {
   private client: twilio.Twilio;
   private phoneNumber: string;
   private accountSid: string;
-  readonly appLog = createAppLogger('channel', 'sms-twilio');
+  readonly appLog: AppLogger;
 
-  constructor(config: TwilioConfig) {
+  constructor(config: TwilioConfig, context: PluginContext) {
+    this.appLog = context.appLog;
     if (!config.accountSid || !config.authToken || !config.phoneNumber) {
       throw new ValidationError('Twilio provider requires accountSid, authToken, and phoneNumber');
     }
@@ -144,8 +145,8 @@ export class TwilioProvider implements BaseProvider {
 /**
  * Create a Twilio provider instance
  */
-export function createTwilioProvider(config: TwilioConfig): TwilioProvider {
-  return new TwilioProvider(config);
+export function createTwilioProvider(config: TwilioConfig, context: PluginContext): TwilioProvider {
+  return new TwilioProvider(config, context);
 }
 
 /**
@@ -189,5 +190,5 @@ export const manifest: ChannelAppManifest = {
     outbound: true,
     media: true,
   },
-  createAdapter: (config) => createTwilioProvider(config as unknown as TwilioConfig),
+  createAdapter: (config, context) => createTwilioProvider(config as unknown as TwilioConfig, context),
 };

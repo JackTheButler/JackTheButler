@@ -15,8 +15,8 @@ import type {
   EmbeddingRequest,
   EmbeddingResponse,
 } from '@/core/interfaces/ai.js';
-import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
-import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
+import type { AIAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
+import { withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:ai:openai');
@@ -50,9 +50,10 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
   private utilityModel: string;
   private embeddingModel: string;
   private maxTokens: number;
-  readonly appLog = createAppLogger('ai', 'openai');
+  readonly appLog: AppLogger;
 
-  constructor(config: OpenAIConfig) {
+  constructor(config: OpenAIConfig, context: PluginContext) {
+    this.appLog = context.appLog;
     if (!config.apiKey) {
       throw new ValidationError('OpenAI provider requires API key');
     }
@@ -202,8 +203,8 @@ export class OpenAIProvider implements AIProvider, BaseProvider {
 /**
  * Create an OpenAI provider instance
  */
-export function createOpenAIProvider(config: OpenAIConfig): OpenAIProvider {
-  return new OpenAIProvider(config);
+export function createOpenAIProvider(config: OpenAIConfig, context: PluginContext): OpenAIProvider {
+  return new OpenAIProvider(config, context);
 }
 
 /**
@@ -286,5 +287,5 @@ export const manifest: AIAppManifest = {
     embedding: true,
     streaming: true,
   },
-  createProvider: (config) => createOpenAIProvider(config as unknown as OpenAIConfig),
+  createProvider: (config, context) => createOpenAIProvider(config as unknown as OpenAIConfig, context),
 };

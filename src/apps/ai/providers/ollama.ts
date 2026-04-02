@@ -13,8 +13,8 @@ import type {
   EmbeddingRequest,
   EmbeddingResponse,
 } from '@/core/interfaces/ai.js';
-import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
-import { createAppLogger, withLogContext, AppLogError } from '@/apps/instrumentation.js';
+import type { AIAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
+import { withLogContext, AppLogError } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:ai:ollama');
@@ -64,9 +64,10 @@ export class OllamaProvider implements AIProvider, BaseProvider {
   private model: string;
   private utilityModel: string;
   private embeddingModel: string;
-  readonly appLog = createAppLogger('ai', 'ollama');
+  readonly appLog: AppLogger;
 
-  constructor(config: OllamaConfig = {}) {
+  constructor(config: OllamaConfig = {}, context: PluginContext) {
+    this.appLog = context.appLog;
     this.baseUrl = config.baseUrl || DEFAULT_BASE_URL;
     this.model = config.model || DEFAULT_MODEL;
     this.utilityModel = config.utilityModel || this.model;
@@ -209,8 +210,8 @@ export class OllamaProvider implements AIProvider, BaseProvider {
 /**
  * Create an Ollama provider instance
  */
-export function createOllamaProvider(config: OllamaConfig = {}): OllamaProvider {
-  return new OllamaProvider(config);
+export function createOllamaProvider(config: OllamaConfig = {}, context: PluginContext): OllamaProvider {
+  return new OllamaProvider(config, context);
 }
 
 /**
@@ -266,5 +267,5 @@ export const manifest: AIAppManifest = {
     embedding: true,
     streaming: true,
   },
-  createProvider: (config) => createOllamaProvider(config as OllamaConfig),
+  createProvider: (config, context) => createOllamaProvider(config as OllamaConfig, context),
 };

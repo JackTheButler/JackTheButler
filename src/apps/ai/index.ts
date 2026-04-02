@@ -8,7 +8,8 @@
 
 import type { AIProvider } from '@/core/interfaces/ai.js';
 import { ValidationError } from '@/errors/index.js';
-import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../types.js';
+import type { AIAppManifest, BaseProvider, ConnectionTestResult, PluginContext } from '../types.js';
+import { createAppLogger } from '../instrumentation.js';
 
 import {
   createAnthropicProvider,
@@ -80,17 +81,18 @@ export function getAIManifest(type: AIProviderType): AIAppManifest | undefined {
  */
 export function createAIProvider(
   type: AIProviderType,
-  config: Record<string, unknown>
+  config: Record<string, unknown>,
+  context: PluginContext = { appLog: createAppLogger('ai', type) }
 ): CombinedAIProvider {
   switch (type) {
     case 'anthropic':
-      return createAnthropicProvider(config as unknown as AnthropicConfig);
+      return createAnthropicProvider(config as unknown as AnthropicConfig, context);
     case 'openai':
-      return createOpenAIProvider(config as unknown as OpenAIConfig);
+      return createOpenAIProvider(config as unknown as OpenAIConfig, context);
     case 'ollama':
-      return createOllamaProvider(config as unknown as OllamaConfig);
+      return createOllamaProvider(config as unknown as OllamaConfig, context);
     case 'local':
-      return createLocalProvider(config as unknown as LocalConfig);
+      return createLocalProvider(config as unknown as LocalConfig, context);
     default:
       throw new ValidationError(`Unknown AI provider type: ${type}`);
   }

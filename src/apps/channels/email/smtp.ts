@@ -10,8 +10,8 @@ import { ValidationError } from '@/errors/index.js';
 import nodemailer from 'nodemailer';
 import type { Transporter } from 'nodemailer';
 import type SMTPTransport from 'nodemailer/lib/smtp-transport/index.js';
-import type { ChannelAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
-import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
+import type { ChannelAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
+import { withLogContext } from '@/apps/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('extensions:channels:email:smtp');
@@ -63,9 +63,10 @@ export class SMTPProvider implements BaseProvider {
   private fromAddress: string;
   private fromName: string;
   private smtpHost: string;
-  readonly appLog = createAppLogger('channel', 'email-smtp');
+  readonly appLog: AppLogger;
 
-  constructor(config: SMTPConfig) {
+  constructor(config: SMTPConfig, context: PluginContext) {
+    this.appLog = context.appLog;
     if (!config.smtpHost || !config.fromAddress) {
       throw new ValidationError('SMTP provider requires smtpHost and fromAddress');
     }
@@ -194,8 +195,8 @@ export class SMTPProvider implements BaseProvider {
 /**
  * Create an SMTP provider instance
  */
-export function createSMTPProvider(config: SMTPConfig): SMTPProvider {
-  return new SMTPProvider(config);
+export function createSMTPProvider(config: SMTPConfig, context: PluginContext): SMTPProvider {
+  return new SMTPProvider(config, context);
 }
 
 /**
@@ -270,10 +271,10 @@ export const manifest: ChannelAppManifest = {
     outbound: true,
     templates: true,
   },
-  createAdapter: (config) => {
+  createAdapter: (config, context) => {
     // Email is transactional-only, not a guest conversation channel — see mailgun.ts for details.
     // TODO: Introduce a separate EmailAppManifest type so this cast is not needed.
-    const provider = createSMTPProvider(config as unknown as SMTPConfig);
+    const provider = createSMTPProvider(config as unknown as SMTPConfig, context);
     return provider as unknown as import('@/core/interfaces/channel.js').ChannelAdapter;
   },
 };

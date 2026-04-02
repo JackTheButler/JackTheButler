@@ -782,11 +782,11 @@ describe('WebChatActionService', () => {
 
     it('picks earliest upcoming confirmed when none checked in', async () => {
       const email = uid('pick-upcoming') + '@test.com';
-      const soon = makeReservation({ externalId: 'soon', status: 'confirmed', arrivalDate: '2026-04-01', departureDate: '2026-04-05', guest: { externalId: 'gu', source: 'mock', firstName: 'Up', lastName: 'Guest', email } });
-      const later = makeReservation({ externalId: 'later', status: 'confirmed', arrivalDate: '2026-06-01', departureDate: '2026-06-05', guest: { externalId: 'gu', source: 'mock', firstName: 'Up', lastName: 'Guest', email } });
+      const soon = makeReservation({ externalId: 'soon', status: 'confirmed', arrivalDate: '2026-05-01', departureDate: '2026-05-05', guest: { externalId: 'gu', source: 'mock', firstName: 'Up', lastName: 'Guest', email } });
+      const later = makeReservation({ externalId: 'later', status: 'confirmed', arrivalDate: '2026-07-01', departureDate: '2026-07-05', guest: { externalId: 'gu', source: 'mock', firstName: 'Up', lastName: 'Guest', email } });
       const result = await runWithReservations([later, soon]);
       expect(result.success).toBe(true);
-      expect(result.data?.checkIn).toBe('2026-04-01');
+      expect(result.data?.checkIn).toBe('2026-05-01');
     });
   });
 

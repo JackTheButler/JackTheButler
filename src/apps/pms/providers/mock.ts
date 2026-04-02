@@ -384,5 +384,5 @@ export const manifest: PMSAppManifest = {
     rooms: true,
     webhooks: true,
   },
-  createAdapter: (config) => createMockPMSAdapter(config as unknown as PMSConfig),
+  createAdapter: (config, _context) => createMockPMSAdapter(config as unknown as PMSConfig),
 };

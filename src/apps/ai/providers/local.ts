@@ -14,10 +14,10 @@ import type {
   EmbeddingRequest,
   EmbeddingResponse,
 } from '@/core/interfaces/ai.js';
-import type { AIAppManifest, BaseProvider, ConnectionTestResult } from '../../types.js';
+import type { AIAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext } from '../../types.js';
 import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
-import { createAppLogger, withLogContext } from '@/apps/instrumentation.js';
+import { withLogContext, createAppLogger } from '@/apps/instrumentation.js';
 
 const log = createLogger('extensions:ai:local');
 
@@ -91,7 +91,7 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
   readonly id = 'local';
   readonly name = 'local';
 
-  readonly appLog = createAppLogger('ai', 'local');
+  readonly appLog: AppLogger;
 
   private embeddingModel: string;
   private completionModel: string;
@@ -101,7 +101,8 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
   private loadingPipelines = new Set<string>();
   private isLoadingEmbedding = false;
 
-  constructor(config: LocalConfig = {}) {
+  constructor(config: LocalConfig = {}, context: PluginContext = { appLog: createAppLogger('ai', 'local') }) {
+    this.appLog = context.appLog;
     this.embeddingModel = config.embeddingModel || EMBEDDING_MODEL;
     this.completionModel = config.completionModel || COMPLETION_MODEL;
     this.utilityModel = config.utilityModel || this.completionModel;
@@ -427,8 +428,8 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 /**
  * Create a local provider instance
  */
-export function createLocalProvider(config: LocalConfig = {}): LocalAIProvider {
-  return new LocalAIProvider(config);
+export function createLocalProvider(config: LocalConfig = {}, context: PluginContext = { appLog: createAppLogger('ai', 'local') }): LocalAIProvider {
+  return new LocalAIProvider(config, context);
 }
 
 /**
@@ -487,5 +488,5 @@ export const manifest: AIAppManifest = {
     embedding: true,
     streaming: false,
   },
-  createProvider: (config) => createLocalProvider(config as unknown as LocalConfig),
+  createProvider: (config, context) => createLocalProvider(config as unknown as LocalConfig, context),
 };
