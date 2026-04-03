@@ -12,6 +12,7 @@ import { setupRoutes } from './routes/setup.js';
 import { apiRoutes } from './routes/api.js';
 import { webhookRoutes } from './routes/webhooks/index.js';
 import { errorHandler, requestLogger, securityHeaders, apiRateLimit, webhookLogger } from './middleware/index.js';
+import { isProd } from '@/config/index.js';
 
 /**
  * Create and configure the Hono app
@@ -86,14 +87,16 @@ export function createApp() {
   // API routes
   app.route('/api/v1', apiRoutes);
 
-  // Serve dashboard static files (production)
-  app.use(
-    '/assets/*',
-    serveStatic({
-      root: './dashboard',
-      rewriteRequestPath: (path) => path,
-    })
-  );
+  // Serve dashboard static files (production only — ./dashboard is not present in dev)
+  if (isProd()) {
+    app.use(
+      '/assets/*',
+      serveStatic({
+        root: './dashboard',
+        rewriteRequestPath: (path) => path,
+      })
+    );
+  }
 
   // Serve dashboard index.html for all non-API routes (SPA client-side routing)
   app.get('*', async (c) => {

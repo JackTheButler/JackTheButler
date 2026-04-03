@@ -43,9 +43,7 @@ export class AutomationEngine {
   private retryInterval: NodeJS.Timeout | null = null;
   private lastPreTriggerSync: Date | null = null;
 
-  constructor() {
-    log.info('Automation engine initialized');
-  }
+  constructor() {}
 
   /**
    * Evaluate an event against all enabled rules
@@ -256,7 +254,7 @@ export class AutomationEngine {
       }
     }, 30000);
 
-    log.info({ intervalMs, retryIntervalMs: 30000 }, 'Automation scheduler started with retry processing');
+    log.info({ intervalSec: intervalMs / 1000, retryIntervalSec: 30 }, 'Automation engine started');
   }
 
   /**

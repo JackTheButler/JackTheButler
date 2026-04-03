@@ -72,8 +72,6 @@ export class MailgunProvider implements BaseProvider, ChannelAdapter {
     this.fromAddress = config.fromAddress;
     this.fromName = config.fromName ?? 'Hotel Concierge';
     this.webhookSigningKey = config.webhookSigningKey;
-
-    console.info(`Mailgun provider initialized: fromAddress=${this.fromAddress} domain=${this.domain}`);
   }
 
   async testConnection(): Promise<ConnectionTestResult> {
@@ -93,7 +91,6 @@ export class MailgunProvider implements BaseProvider, ChannelAdapter {
     } catch (error) {
       const latencyMs = Date.now() - startTime;
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Mailgun connection test failed', error);
       return {
         success: false,
         message: `Connection failed: ${message}`,
@@ -129,14 +126,12 @@ export class MailgunProvider implements BaseProvider, ChannelAdapter {
         status: result.status?.toString() || 'queued',
       };
     } catch (error) {
-      console.error(`Failed to send email via Mailgun to ${options.to}`, error);
       throw error;
     }
   }
 
   verifyWebhook(timestamp: string, token: string, signature: string): boolean {
     if (!this.webhookSigningKey) {
-      console.warn('Webhook signature verification skipped - no signing key configured');
       return true;
     }
     const encodedToken = crypto

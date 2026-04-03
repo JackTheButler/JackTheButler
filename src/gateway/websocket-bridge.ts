@@ -21,7 +21,6 @@ const log = createLogger('websocket-bridge');
  * Setup event listeners that bridge domain events to WebSocket broadcasts
  */
 export function setupWebSocketBridge() {
-  log.info('Setting up WebSocket event bridge');
 
   // ─────────────────────────────────────────────────────────────
   // Task Events

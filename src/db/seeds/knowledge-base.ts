@@ -797,7 +797,3 @@ export const demoKnowledgeBase: NewKnowledgeItem[] = [
   },
 ];
 
-// Verify we have 100 entries
-if (demoKnowledgeBase.length !== 100) {
-  console.warn(`Warning: Expected 100 knowledge base entries, got ${demoKnowledgeBase.length}`);
-}

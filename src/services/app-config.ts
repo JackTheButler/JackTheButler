@@ -605,6 +605,8 @@ export class AppConfigService {
       .where(eq(appConfigs.enabled, true))
       .all();
 
+    const activated: Record<string, string[]> = {};
+
     for (const config of configs) {
       const extensionId = config.providerId;
       const manifest = getManifest(extensionId);
@@ -617,12 +619,15 @@ export class AppConfigService {
       try {
         const decryptedConfig = this.dbToRecord(config).config;
         await registry.activate(extensionId, decryptedConfig);
-        log.info({ extensionId }, 'App loaded from database');
+        (activated[manifest.category] ??= []).push(extensionId);
       } catch (error) {
         const message = error instanceof Error ? error.message : String(error);
         log.error({ extensionId, error: message }, 'Failed to load app');
       }
     }
+
+    const total = Object.values(activated).reduce((n, ids) => n + ids.length, 0);
+    log.info({ count: total, ...activated }, 'Apps activated');
   }
 
   /**

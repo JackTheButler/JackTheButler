@@ -104,7 +104,7 @@ export class AppLoader {
       log.warn({ err }, 'Could not read @jack-plugins directory — no plugins loaded');
     }
 
-    log.info({ count: manifests.length }, 'Plugins discovered from @jack-plugins');
+    const pluginCount = manifests.length;
 
     // Register built-ins that live in src/ and cannot be npm packages
     manifests.push(localManifest, webchatManifest);
@@ -114,7 +114,10 @@ export class AppLoader {
       : manifests;
 
     this.registry.registerAll(filtered);
-    log.info({ count: filtered.length, categories }, 'Apps discovered and registered');
+    log.info(
+      { count: filtered.length, plugins: pluginCount, builtins: filtered.length - pluginCount },
+      'Apps discovered and registered'
+    );
     return filtered;
   }
 

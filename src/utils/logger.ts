@@ -13,6 +13,9 @@ import { loadConfig, isDev } from '@/config/index.js';
 
 const config = loadConfig();
 
+const APP_VERSION =
+  process.env.APP_VERSION ?? process.env.npm_package_version ?? 'unknown';
+
 /**
  * Transport configuration for development (pretty printing)
  */
@@ -21,9 +24,12 @@ const devTransport = {
   options: {
     colorize: true,
     translateTime: 'SYS:standard',
-    ignore: 'pid,hostname',
+    ignore: 'pid,hostname,app,version',
   },
 };
+
+const baseFields = { app: 'jack', version: APP_VERSION };
+const formatters = { level: (label: string) => ({ level: label }) };
 
 /**
  * Main application logger
@@ -33,23 +39,13 @@ export const logger: Logger = pino(
     ? {
         level: config.log.level,
         transport: devTransport,
-        base: {
-          app: 'jack',
-          version: '0.7.0',
-        },
-        formatters: {
-          level: (label) => ({ level: label }),
-        },
+        base: baseFields,
+        formatters,
       }
     : {
         level: config.log.level,
-        base: {
-          app: 'jack',
-          version: '0.7.0',
-        },
-        formatters: {
-          level: (label) => ({ level: label }),
-        },
+        base: baseFields,
+        formatters,
       }
 );
 

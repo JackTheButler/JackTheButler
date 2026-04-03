@@ -18,40 +18,40 @@ import { subscribeAutomationToEvents } from '@/automation/event-subscriber.js';
 import { subscribeActivityLogToEvents } from '@/services/activity-log.js';
 
 const APP_NAME = 'Jack The Butler';
-const VERSION = '1.0.0';
+const VERSION = process.env.APP_VERSION ?? process.env.npm_package_version ?? 'unknown';
+
+const startupLog = logger.child({ component: 'startup' });
 
 async function main(): Promise<void> {
   const config = loadConfig();
 
-  // Banner
-  logger.info(`
-    ╔═══════════════════════════════════════╗
-    ║                                       ║
-    ║       🎩 ${APP_NAME}              ║
-    ║          v${VERSION}                     ║
-    ║                                       ║
-    ║   AI-Powered Hospitality Assistant    ║
-    ║                                       ║
-    ╚═══════════════════════════════════════╝
-  `);
+  // Banner — written directly to stdout so it never enters the structured log pipeline
+  process.stdout.write(`
+    ╔════════════════════════════════════════╗
+    ║                                        ║
+    ║    🎩 ${APP_NAME}                  ║
+    ║       ${VERSION.padEnd(33)}║
+    ║                                        ║
+    ║    AI-Powered Hospitality Assistant    ║
+    ║                                        ║
+    ╚════════════════════════════════════════╝\n\n`);
 
-  logger.info({ env: getEnv(), port: config.port }, 'Starting Jack The Butler');
+  startupLog.info({ env: getEnv(), port: config.port }, 'Starting Jack The Butler');
 
   // Verify database is healthy
   if (!isDatabaseHealthy()) {
-    logger.fatal('Database health check failed');
+    startupLog.fatal('Database health check failed');
     process.exit(1);
   }
-  logger.info('Database health check passed');
+  startupLog.info('Database health check passed');
 
   // Load enabled extensions from database
   try {
     await appConfigService.loadEnabledApps();
     // Reset responder cache so it picks up the newly loaded AI provider
     resetResponder();
-    logger.info('Apps loaded from database');
   } catch (error) {
-    logger.error({ error }, 'Failed to load apps from database');
+    startupLog.error({ error }, 'Failed to load apps from database');
   }
 
   // Auto-activate webchat (built-in, no external dependencies)
@@ -67,10 +67,10 @@ async function main(): Promise<void> {
       } else if (existing.enabled) {
         await registry.activate('channel-webchat', existing.config);
       }
-      logger.info('WebChat channel auto-activated');
+      startupLog.info('WebChat channel auto-activated');
     }
   } catch (error) {
-    logger.error({ error }, 'Failed to auto-activate WebChat channel');
+    startupLog.error({ error }, 'Failed to auto-activate WebChat channel');
   }
 
   // Create HTTP server
@@ -109,9 +109,11 @@ async function main(): Promise<void> {
         const responseBody = await response.arrayBuffer();
         res.end(Buffer.from(responseBody));
       } catch (error) {
-        logger.error({ error }, 'Request handling error');
+        startupLog.error({ error }, 'Request handling error');
         res.statusCode = 500;
-        res.end(JSON.stringify({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } }));
+        res.end(
+          JSON.stringify({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } })
+        );
       }
     });
   });
@@ -124,21 +126,17 @@ async function main(): Promise<void> {
 
   // Start listening
   server.listen(config.port, () => {
-    logger.info({ port: config.port }, 'HTTP server listening');
-    logger.info({ path: '/ws' }, 'WebSocket server ready');
+    startupLog.info({ port: config.port }, 'HTTP server listening');
 
     // Start background scheduler (PMS sync)
     scheduler.start();
-    logger.info('Background scheduler started');
 
     // Start automation engine
     const automationEngine = getAutomationEngine();
     automationEngine.startScheduler(60000); // Check time-based rules every 60 seconds
-    logger.info('Automation engine started');
 
     // Subscribe automation engine to system events
     subscribeAutomationToEvents();
-    logger.info('Automation event subscribers registered');
 
     // Subscribe activity log to system events (Layer 1)
     subscribeActivityLogToEvents();
@@ -146,30 +144,30 @@ async function main(): Promise<void> {
     // Note: Email is now handled via extensions (Mailgun, SendGrid, Gmail SMTP)
     // Inbound email uses webhooks instead of IMAP polling
 
-    logger.info('Ready! (Phase 20 - Smart Automation)');
+    startupLog.info('Ready!');
   });
 
   // Graceful shutdown
   const shutdown = () => {
-    logger.info('Shutting down...');
+    startupLog.info('Shutting down...');
 
     // Stop automation engine
     getAutomationEngine().stopScheduler();
-    logger.info('Automation engine stopped');
+    startupLog.info('Automation engine stopped');
 
     // Stop scheduler
     scheduler.stop();
-    logger.info('Scheduler stopped');
+    startupLog.info('Scheduler stopped');
 
     server.close(() => {
-      logger.info('HTTP server closed');
+      startupLog.info('HTTP server closed');
       closeDatabase();
       process.exit(0);
     });
 
     // Force exit after 10 seconds
     setTimeout(() => {
-      logger.warn('Forcing shutdown after timeout');
+      startupLog.warn('Forcing shutdown after timeout');
       process.exit(1);
     }, 10000);
   };
@@ -179,6 +177,6 @@ async function main(): Promise<void> {
 }
 
 main().catch((error) => {
-  logger.fatal({ error }, 'Fatal error');
+  startupLog.fatal({ error }, 'Fatal error');
   process.exit(1);
 });

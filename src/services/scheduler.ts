@@ -72,7 +72,10 @@ export class Scheduler {
       return { sessionsDeleted, rateLimitCleaned };
     });
 
-    log.info({ jobs: Array.from(this.jobs.keys()) }, 'Scheduler started');
+    const jobSummary = Object.fromEntries(
+      Array.from(this.jobs.entries()).map(([name, job]) => [name, job.intervalMs / 1000])
+    );
+    log.info({ jobs: jobSummary }, 'Scheduler started');
   }
 
   /**
@@ -195,8 +198,6 @@ export class Scheduler {
     job.timer = setInterval(wrappedHandler, intervalMs);
     this.jobs.set(name, job);
 
-    log.info({ name, intervalMs, intervalSec: intervalMs / 1000 }, 'Scheduled job registered');
-
     // Run immediately on first start
     wrappedHandler().catch(() => {
       // Error already logged in wrapper
@@ -207,22 +208,12 @@ export class Scheduler {
    * Run PMS sync
    */
   private async runPMSSync(): Promise<Record<string, unknown>> {
-    log.info('Running PMS sync job');
+    log.debug('Running PMS sync job');
 
     const since = this.lastSyncTime;
     const result = await pmsSyncService.syncReservations(since ?? undefined);
 
     this.lastSyncTime = new Date();
-
-    log.info(
-      {
-        created: result.created,
-        updated: result.updated,
-        unchanged: result.unchanged,
-        errors: result.errors,
-      },
-      'PMS sync job completed'
-    );
 
     if (result.errors > 0) {
       log.warn({ errorCount: result.errors, errors: result.errorDetails }, 'PMS sync had errors');

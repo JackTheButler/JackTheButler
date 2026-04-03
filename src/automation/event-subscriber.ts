@@ -22,7 +22,7 @@ import {
 import { getAutomationEngine } from './index.js';
 import { logger } from '@/utils/logger.js';
 
-const log = logger.child({ module: 'automation:events' });
+const log = logger.child({ component: 'automation:events' });
 
 /**
  * Subscribe the automation engine to system events

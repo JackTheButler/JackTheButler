@@ -38,7 +38,7 @@ export class PMSSyncService {
     }
 
     const sinceDt = since || new Date(Date.now() - 24 * 60 * 60 * 1000); // Default: last 24 hours
-    log.info({ since: sinceDt.toISOString(), provider: adapter.provider }, 'Starting PMS sync');
+    log.debug({ since: sinceDt.toISOString(), provider: adapter.provider }, 'Starting PMS sync');
 
     try {
       const pmsReservations = await adapter.getModifiedReservations(sinceDt);
@@ -64,7 +64,10 @@ export class PMSSyncService {
       throw err;
     }
 
-    log.info(result, 'PMS sync complete');
+    log.info(
+      { created: result.created, updated: result.updated, unchanged: result.unchanged, errors: result.errors },
+      'PMS sync complete'
+    );
     return result;
   }
 

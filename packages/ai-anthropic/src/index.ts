@@ -58,8 +58,6 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
     this.model = config.model || DEFAULT_MODEL;
     this.utilityModel = config.utilityModel || this.model;
     this.maxTokens = config.maxTokens || 1024;
-
-    console.info(`Anthropic provider initialized: model=${this.model} utilityModel=${this.utilityModel}`);
   }
 
   /**
@@ -95,7 +93,6 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
     } catch (error) {
       const latencyMs = Date.now() - startTime;
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Anthropic connection test failed', error);
 
       return {
         success: false,

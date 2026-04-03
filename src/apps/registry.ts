@@ -81,7 +81,7 @@ export class AppRegistry {
       status: 'registered',
     });
 
-    log.info(
+    log.debug(
       { id: manifest.id, name: manifest.name, category: manifest.category },
       'App registered'
     );
@@ -118,8 +118,6 @@ export class AppRegistry {
 
     ext.config = config;
     ext.status = 'configured';
-
-    log.info({ appId }, 'App configured');
   }
 
   /**
@@ -175,7 +173,7 @@ export class AppRegistry {
       }
 
       ext.status = 'active';
-      log.info({ appId, category }, 'App initialized');
+      log.debug({ appId, category }, 'App initialized');
     } catch (error) {
       ext.status = 'error';
       ext.lastError = error instanceof Error ? error.message : String(error);
