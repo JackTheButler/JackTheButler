@@ -17,9 +17,9 @@ const DURATION = '20s';
 const CONTAINER = 260;
 
 const ICONS = [
-  { src: '/icons/whatsapp.svg', label: 'WhatsApp', angle: 0 },
-  { src: '/icons/email.svg', label: 'Email', angle: 120 },
-  { src: '/icons/smartphone.svg', label: 'SMS', angle: 240 },
+  { src: '/icons/whatsapp.svg', label: 'WhatsApp', angle: 0,   bgClass: 'jack-icon-bg-wa' },
+  { src: '/icons/email.svg',    label: 'Email',    angle: 120, bgClass: 'jack-icon-bg-em' },
+  { src: '/icons/smartphone.svg', label: 'SMS',    angle: 240, bgClass: 'jack-icon-bg-sms' },
 ];
 
 const RINGS = [220, 160, 100];
@@ -38,7 +38,7 @@ const WORDS = [
 const PILL_HEIGHT = 36;
 const ICON_AREA = 38; // overlay idle width
 const PILL_PAD_L = 41; // left padding (space for icon)
-const PILL_PAD_R = 12; // right padding
+const PILL_PAD_R = 20; // right padding
 
 const IDLE_MS = 2500;
 const COVER_MS = 550;
@@ -127,6 +127,31 @@ export function DemoOrbit() {
           from { transform: rotate(0deg); }
           to   { transform: rotate(360deg); }
         }
+        @keyframes jack-pill-gradient {
+          0%   { background-position: 0% 50%; }
+          50%  { background-position: 100% 50%; }
+          100% { background-position: 0% 50%; }
+        }
+        .jack-pill-bg {
+          background: linear-gradient(270deg, #dbeafe, #ede9fe, #cffafe, #d1fae5, #dbeafe);
+          background-size: 300% 300%;
+          animation: jack-pill-gradient 4s ease infinite;
+        }
+        .jack-icon-bg-wa {
+          background: linear-gradient(270deg, #d1fae5, #a7f3d0, #bbf7d0, #d1fae5);
+          background-size: 300% 300%;
+          animation: jack-pill-gradient 4s ease infinite;
+        }
+        .jack-icon-bg-em {
+          background: linear-gradient(270deg, #dbeafe, #bfdbfe, #c7d2fe, #dbeafe);
+          background-size: 300% 300%;
+          animation: jack-pill-gradient 4s ease infinite 1.3s;
+        }
+        .jack-icon-bg-sms {
+          background: linear-gradient(270deg, #ede9fe, #ddd6fe, #fce7f3, #ede9fe);
+          background-size: 300% 300%;
+          animation: jack-pill-gradient 4s ease infinite 2.6s;
+        }
       `}</style>
 
       <div className="relative flex-shrink-0" style={{ width: CONTAINER, height: CONTAINER }}>
@@ -159,7 +184,7 @@ export function DemoOrbit() {
             animationIterationCount: 'infinite',
           }}
         >
-          {ICONS.map(({ src, label, angle }) => {
+          {ICONS.map(({ src, label, angle, bgClass }) => {
             const rad = (angle * Math.PI) / 180;
             const x = Math.round(ORBIT_RADIUS * Math.sin(rad));
             const y = Math.round(-ORBIT_RADIUS * Math.cos(rad));
@@ -178,7 +203,7 @@ export function DemoOrbit() {
                 }}
               >
                 <div
-                  className="w-full h-full rounded-full border border-primary-foreground/20 bg-white flex items-center justify-center shadow-sm"
+                  className={`${bgClass} w-full h-full rounded-full border border-primary-foreground/20 flex items-center justify-center shadow-sm`}
                   style={{
                     animationName: 'jack-counter',
                     animationDuration: DURATION,
@@ -195,8 +220,8 @@ export function DemoOrbit() {
 
         {/* Centre pill — explicit pixel width, animates on word change */}
         <div
-          className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10
-                     bg-white border border-primary-foreground/20 rounded-full shadow-sm overflow-hidden"
+          className="jack-pill-bg absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 z-10
+                     border border-primary-foreground/20 rounded-full shadow-sm overflow-hidden"
           style={{
             width: pillWidth,
             height: PILL_HEIGHT,
@@ -212,8 +237,9 @@ export function DemoOrbit() {
 
           {/* White overlay — sweeps right to cover, left to reveal */}
           <div
-            className="absolute left-0 top-0 bottom-0 bg-white flex items-center justify-end"
-            style={{ width: overlayWidth, transition: overlayTransition, paddingRight: 4 }}
+            className="absolute left-0 top-0 bottom-0 flex items-center justify-end"
+            style={{ width: overlayWidth, transition: overlayTransition, paddingRight: 4,
+                     backdropFilter: 'blur(6px)', borderRadius: 9999 }}
           >
             <img
               key={spinKey}
