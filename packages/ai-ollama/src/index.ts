@@ -74,7 +74,6 @@ export class OllamaProvider implements AIProvider, BaseProvider {
     this.utilityModel = config.utilityModel || this.model;
     this.embeddingModel = config.embeddingModel || DEFAULT_EMBEDDING_MODEL;
 
-    console.info(`Ollama provider initialized: baseUrl=${this.baseUrl} model=${this.model} utilityModel=${this.utilityModel} embeddingModel=${this.embeddingModel}`);
   }
 
   /**
@@ -94,8 +93,8 @@ export class OllamaProvider implements AIProvider, BaseProvider {
       });
       const latencyMs = Date.now() - startTime;
 
-      const modelNames = data.models.map((m) => m.name);
-      const hasModel = modelNames.some((name) => name.includes(this.model));
+      const modelNames = data.models.map((m: { name: string }) => m.name);
+      const hasModel = modelNames.some((name: string) => name.includes(this.model));
 
       return {
         success: true,
@@ -113,8 +112,6 @@ export class OllamaProvider implements AIProvider, BaseProvider {
     } catch (error) {
       const latencyMs = Date.now() - startTime;
       const message = error instanceof Error ? error.message : 'Unknown error';
-      console.error('Ollama connection test failed', error);
-
       return {
         success: false,
         message: `Connection failed: ${message}`,
@@ -139,7 +136,7 @@ export class OllamaProvider implements AIProvider, BaseProvider {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           model,
-          messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
+          messages: request.messages.map(({ role, content }) => ({ role, content })),
           stream: false,
           options: {
             num_predict: request.maxTokens || 1024,
@@ -251,7 +248,7 @@ export const manifest: AIAppManifest = {
     embedding: true,
     streaming: true,
   },
-  createProvider: (config, context) => createOllamaProvider(config as OllamaConfig, context),
+  createProvider: (config: Record<string, unknown>, context: PluginContext) => createOllamaProvider(config as OllamaConfig, context),
 };
 
 export default { manifest };
