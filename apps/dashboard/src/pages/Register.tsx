@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -9,6 +9,8 @@ import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAppConfig } from '@/contexts/AppConfigContext';
+import { DemoOrbit } from '@/components/ui/DemoOrbit';
 
 interface RegisterResult {
   success: boolean;
@@ -27,27 +29,12 @@ export function RegisterPage() {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [result, setResult] = useState<RegisterResult | null>(null);
-  const [checkingStatus, setCheckingStatus] = useState(true);
-  const [registrationEnabled, setRegistrationEnabled] = useState(false);
-
   const isRTL = i18n.language === 'ar';
   const { resolvedTheme } = useTheme();
   const isDark = resolvedTheme === 'dark';
-
-  // Check if registration is enabled on mount
-  useEffect(() => {
-    const checkStatus = async () => {
-      try {
-        const res = await fetch('/api/v1/auth/registration-status');
-        const data = await res.json();
-        setRegistrationEnabled(data.registrationEnabled === true);
-      } catch {
-        // Default to disabled if endpoint unavailable
-      }
-      setCheckingStatus(false);
-    };
-    checkStatus();
-  }, []);
+  const { config, loading: checkingStatus } = useAppConfig();
+  const registrationEnabled = config?.registrationEnabled ?? false;
+  const demoMode = config?.demoMode ?? false;
 
   const getSuccessMessage = (res: RegisterResult): string => {
     if (res.requiresVerification && res.requiresApproval) {
@@ -98,7 +85,35 @@ export function RegisterPage() {
 
   return (
     <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="bg-card rounded-lg shadow-md w-full max-w-sm overflow-hidden relative">
+      <div className={`bg-card rounded-lg shadow-md w-full overflow-hidden relative ${demoMode ? 'max-w-4xl flex flex-col-reverse md:flex-row' : 'max-w-sm'}`}>
+
+        {/* Demo left panel — orbital animation + value props */}
+        {demoMode && (
+          <div className="bg-primary md:w-3/5 flex flex-col items-center justify-center gap-6 p-8 border-t md:border-t-0 md:border-r border-border">
+            <DemoOrbit />
+            <h2 className="text-lg font-semibold text-primary-foreground text-center">{t('auth.demoTagline')}</h2>
+            <div className="w-full border border-primary-foreground/20 rounded-lg overflow-hidden">
+              <div className="grid grid-cols-2 divide-x divide-primary-foreground/20">
+                <div className="p-4 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-primary-foreground">{t('auth.demoStat1Value')}</span>
+                  <span className="text-xs text-primary-foreground/60">{t('auth.demoStat1Desc')}</span>
+                  <span className="text-xs font-semibold text-primary-foreground mt-2">{t('auth.demoStat1Label')}</span>
+                </div>
+                <div className="p-4 flex flex-col gap-1">
+                  <span className="text-2xl font-bold text-primary-foreground">{t('auth.demoStat2Value')}</span>
+                  <span className="text-xs text-primary-foreground/60">{t('auth.demoStat2Desc')}</span>
+                  <span className="text-xs font-semibold text-primary-foreground mt-2">{t('auth.demoStat2Label')}</span>
+                </div>
+              </div>
+              <div className="border-t border-primary-foreground/20 p-4">
+                <p className="text-xs text-primary-foreground/90 italic">{t('auth.demoQuote')}</p>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Form panel */}
+        <div className={`relative ${demoMode ? 'md:w-2/5' : ''}`}>
         <div className="absolute top-2 left-2">
           <Tooltip content={isDark ? t('common.switchToLight') : t('common.switchToDark')} side="right">
             <span>
@@ -109,8 +124,7 @@ export function RegisterPage() {
 
         <div className="p-6 pt-12">
           <div className="flex justify-center mb-6">
-            <img src="/jack-the-butler-inverted.png" alt={t('app.name')} className="w-16 h-16 object-contain dark:hidden" />
-            <img src="/jack-the-butler.png" alt={t('app.name')} className="w-16 h-16 object-contain hidden dark:block" />
+            <img src="/favicon.svg" alt={t('app.name')} className="w-16 h-16 object-contain dark:invert" />
           </div>
 
           {checkingStatus ? (
@@ -198,6 +212,7 @@ export function RegisterPage() {
             </>
           )}
         </div>
+        </div>{/* end form panel */}
       </div>
 
       <div className="mt-4 flex items-center gap-2 text-sm">

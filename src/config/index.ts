@@ -15,6 +15,9 @@ const configSchema = z.object({
   env: z.enum(['development', 'test', 'production']).default('development'),
   port: z.coerce.number().int().min(1).max(65535).default(3000),
 
+  // Demo mode (set DEMO_MODE=true for hosted demo deployments)
+  demoMode: z.string().optional().transform(v => v === 'true'),
+
   // Database
   database: z.object({
     path: z.string().default('./data/jack.db'),
@@ -67,6 +70,7 @@ export function loadConfig(): Config {
   const rawConfig = {
     env: process.env.NODE_ENV,
     port: process.env.PORT,
+    demoMode: process.env.DEMO_MODE,
     database: {
       path: process.env.DATABASE_PATH,
     },
@@ -118,4 +122,11 @@ export function isProd(): boolean {
  */
 export function isTest(): boolean {
   return getEnv() === 'test';
+}
+
+/**
+ * Check if running in demo mode
+ */
+export function isDemo(): boolean {
+  return loadConfig().demoMode;
 }

@@ -24,8 +24,12 @@ import { seedRoutes } from './seed.js';
 import { rolesRouter, permissionsRouter } from './roles.js';
 import { staffRouter } from './staff.js';
 import { webchatRouter } from './webchat.js';
+import { configRoutes } from './config.js';
 
 const api = new Hono();
+
+// Public configuration routes (no auth required)
+api.route('/config', configRoutes);
 
 // Authentication routes
 api.route('/auth', authRoutes);

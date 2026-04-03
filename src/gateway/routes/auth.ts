@@ -93,15 +93,6 @@ auth.post('/login', validateBody(loginSchema), async (c) => {
 });
 
 /**
- * GET /auth/registration-status
- * Check if registration is enabled (public, no auth required)
- */
-auth.get('/registration-status', async (c) => {
-  const authSettings = await authSettingsService.get();
-  return c.json({ registrationEnabled: authSettings.registrationEnabled });
-});
-
-/**
  * POST /auth/refresh
  * Get new access token using refresh token
  */

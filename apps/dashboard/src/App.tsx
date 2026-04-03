@@ -1,5 +1,6 @@
 import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
 import { ThemeProvider } from '@/contexts/ThemeContext';
+import { AppConfigProvider } from '@/contexts/AppConfigContext';
 import { LoginPage } from '@/pages/Login';
 import { ForgotPasswordPage } from '@/pages/ForgotPassword';
 import { ResetPasswordPage } from '@/pages/ResetPassword';
@@ -28,6 +29,7 @@ import { ReservationsPage, ReservationDetailPage } from '@/pages/reservations';
 
 export function App() {
   return (
+    <AppConfigProvider>
     <ThemeProvider>
       <BrowserRouter>
         <Routes>
@@ -63,5 +65,6 @@ export function App() {
         </Routes>
       </BrowserRouter>
     </ThemeProvider>
+    </AppConfigProvider>
   );
 }

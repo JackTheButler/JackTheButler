@@ -10,6 +10,7 @@ import { setLanguage, SUPPORTED_LANGUAGES } from '@/lib/i18n';
 import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
+import { useAppConfig } from '@/contexts/AppConfigContext';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -21,8 +22,9 @@ export function LoginPage() {
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
   const [checkingSetup, setCheckingSetup] = useState(true);
-  const [registrationEnabled, setRegistrationEnabled] = useState(false);
   const [needsVerification, setNeedsVerification] = useState(false);
+  const { config } = useAppConfig();
+  const registrationEnabled = config?.registrationEnabled ?? false;
   const [resending, setResending] = useState(false);
   const [resent, setResent] = useState(false);
 
@@ -40,14 +42,6 @@ export function LoginPage() {
         }
       } catch {
         // On error, proceed to login (setup endpoint might not exist in older versions)
-      }
-
-      try {
-        const res = await fetch('/api/v1/auth/registration-status');
-        const data = await res.json();
-        setRegistrationEnabled(data.registrationEnabled === true);
-      } catch {
-        // Default to hidden if endpoint unavailable
       }
 
       setCheckingSetup(false);
