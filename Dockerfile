@@ -66,7 +66,8 @@ COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
 COPY packages/shared/package.json ./packages/shared/
 
 # Install production dependencies only and build native modules
-RUN pnpm install --prod --frozen-lockfile && npm rebuild better-sqlite3
+# --ignore-scripts prevents @jack/shared's prepare script from running tsc (devDep not available)
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts && npm rebuild better-sqlite3
 
 # Copy @jack workspace packages from builder (workspace symlinks are not reliable in prod stage)
 COPY --from=builder /app/node_modules/@jack ./node_modules/@jack
