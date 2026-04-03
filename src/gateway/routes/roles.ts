@@ -16,6 +16,7 @@ import {
   getAllPermissions,
   WILDCARD_PERMISSION,
 } from '@/core/permissions/index.js';
+import { getAuditService } from '@/services/audit.js';
 
 const createBodySchema = z.object({
   name: z.string().min(1).max(100),
@@ -73,6 +74,10 @@ rolesRouter.post(
       permissions: body.permissions,
       ...(body.description !== undefined && { description: body.description }),
     });
+
+    const actorId = c.get('userId') as string;
+    getAuditService().log({ actorType: 'user', actorId, action: 'create', resourceType: 'role', resourceId: role.id, details: { name: body.name, permissions: body.permissions }, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
     return c.json({ role }, 201);
   }
 );
@@ -96,6 +101,10 @@ rolesRouter.patch(
     if (body.permissions !== undefined) updateInput.permissions = body.permissions;
 
     const role = await roleService.updateRole(id, updateInput);
+
+    const actorId = c.get('userId') as string;
+    getAuditService().log({ actorType: 'user', actorId, action: 'update', resourceType: 'role', resourceId: id, details: updateInput, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
     return c.json({ role });
   }
 );
@@ -107,6 +116,10 @@ rolesRouter.patch(
 rolesRouter.delete('/:id', requirePermission(PERMISSIONS.ADMIN_MANAGE), async (c) => {
   const id = c.req.param('id');
   await roleService.deleteRole(id);
+
+  const actorId = c.get('userId') as string;
+  getAuditService().log({ actorType: 'user', actorId, action: 'delete', resourceType: 'role', resourceId: id, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
   return c.json({ success: true });
 });
 

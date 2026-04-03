@@ -9,7 +9,7 @@
  */
 
 import type { MiddlewareHandler } from 'hono';
-import { writeAppLog } from '@/apps/instrumentation.js';
+import { writeAppLog } from '@/monitoring/instrumentation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('gateway:webhook-logger');

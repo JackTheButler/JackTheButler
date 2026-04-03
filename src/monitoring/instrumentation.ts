@@ -13,7 +13,7 @@
  *   withLogContext(result, extra) — tag a success result with extra details to store
  *   AppLogError(message, details) — throw with structured details to store on failure
  *
- * @module apps/instrumentation
+ * @module monitoring/instrumentation
  */
 
 import { db, appLogs } from '@/db/index.js';

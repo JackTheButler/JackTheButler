@@ -231,7 +231,7 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 | New channel app | `packages/plugin-starter/src/channel-example.ts` → copy to `packages/channel-{provider}/src/index.ts` |
 | New PMS app | `packages/plugin-starter/src/pms-example.ts` → copy to `packages/pms-{provider}/src/index.ts` (must include `stalenessThreshold` and `syncInterval` in `configSchema` — see [PMS spec](docs/04-specs/pms/index.md)) |
 | Outbound API call in a **plugin package** | Use `this.appLog` injected via `PluginContext` — wrap every external call with `this.appLog('operation', metadata, fn)`. Never import `createAppLogger` in a plugin. |
-| Outbound API call in a **src/ adapter** (local, webchat) | **Must use `createAppLogger(manifest.category, manifest.id)`** from `src/apps/instrumentation.ts`. The exact arguments `(manifest.category, manifest.id)` are required so the System Health dashboard can locate logs without any extra config. |
+| Outbound API call in a **src/ adapter** (local, webchat) | **Must use `createAppLogger(manifest.category, manifest.id)`** from `src/monitoring/instrumentation.ts`. The exact arguments `(manifest.category, manifest.id)` are required so the System Health dashboard can locate logs without any extra config. |
 | New tool app | `src/apps/tools/site-scraper/index.ts` |
 | App manifest types | `src/apps/types.ts` |
 | Core interface | `src/core/interfaces/channel.ts` |
@@ -257,7 +257,7 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 7. **Update docs if patterns changed** - If you change a pattern, update CLAUDE.md to match
 8. **Wrap all outbound calls** — Every adapter must wrap all external API calls with `this.appLog()`. How `appLog` is obtained differs by location:
    - **Plugin packages** (`packages/`): receive `appLog` via `PluginContext` injected by the registry. Store it as `this.appLog = context.appLog` in the constructor. Never call `createAppLogger` in a plugin.
-   - **src/ adapters** (local AI, webchat): declare `readonly appLog = createAppLogger(manifest.category, manifest.id)` from `src/apps/instrumentation.ts`. Arguments **must** be `manifest.category` and `manifest.id` exactly.
+   - **src/ adapters** (local AI, webchat): declare `readonly appLog = createAppLogger(manifest.category, manifest.id)` from `src/monitoring/instrumentation.ts`. Arguments **must** be `manifest.category` and `manifest.id` exactly.
    Both are enforced by TypeScript — `BaseProvider` requires `appLog`, so missing it causes a compile error (`pnpm typecheck`).
 
 ## After Writing Code — Verification Checklist

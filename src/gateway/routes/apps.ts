@@ -15,13 +15,18 @@ import { createLogger } from '@/utils/logger.js';
 import { maskConfig } from '@/utils/crypto.js';
 import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
+import { logConfigChange, getAuditService } from '@/services/audit.js';
 
 const log = createLogger('api:apps');
+
+type Variables = {
+  userId: string;
+};
 
 /**
  * App routes
  */
-export const appRoutes = new Hono();
+export const appRoutes = new Hono<{ Variables: Variables }>();
 
 // Apply auth to all routes
 appRoutes.use('/*', requireAuth);
@@ -212,6 +217,10 @@ appRoutes.put('/:appId', requirePermission(PERMISSIONS.SETTINGS_MANAGE), async (
 
   log.info({ appId, enabled: result.enabled }, 'App config updated');
 
+  const userId = c.get('userId') as string;
+  const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined;
+  logConfigChange(userId, 'app', appId, { enabled: result.enabled, hasConfig: !!config }, { ip, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
   return c.json({
     success: true,
     config: {
@@ -241,6 +250,9 @@ appRoutes.delete('/:appId', requirePermission(PERMISSIONS.SETTINGS_MANAGE), asyn
   }
 
   log.info({ appId }, 'App config deleted');
+
+  const userId = c.get('userId') as string;
+  getAuditService().log({ actorType: 'user', actorId: userId, action: 'delete', resourceType: 'app', resourceId: appId, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
 
   return c.json({ success: true });
 });
@@ -273,6 +285,9 @@ appRoutes.post('/:appId/test', requirePermission(PERMISSIONS.SETTINGS_MANAGE), a
     'Connection test completed'
   );
 
+  const userId = c.get('userId') as string;
+  getAuditService().log({ actorType: 'user', actorId: userId, action: 'app_test', resourceType: 'app', resourceId: appId, details: { success: result.success, latencyMs: result.latencyMs }, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
   return c.json({
     success: result.success,
     message: result.message,
@@ -302,6 +317,9 @@ appRoutes.post('/:appId/toggle', requirePermission(PERMISSIONS.SETTINGS_MANAGE),
   }
 
   log.info({ appId, enabled }, 'App toggled');
+
+  const userId = c.get('userId') as string;
+  getAuditService().log({ actorType: 'user', actorId: userId, action: 'app_toggle', resourceType: 'app', resourceId: appId, details: { enabled }, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
 
   return c.json({
     success: true,

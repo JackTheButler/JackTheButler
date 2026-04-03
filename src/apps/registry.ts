@@ -9,7 +9,7 @@
 
 import { createLogger } from '@/utils/logger.js';
 import { NotFoundError, ValidationError } from '@/errors/index.js';
-import { createAppLogger } from './instrumentation.js';
+import { createAppLogger } from '@/monitoring/instrumentation.js';
 import type {
   AnyAppManifest,
   AppCategory,

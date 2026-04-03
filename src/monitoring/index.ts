@@ -5,10 +5,8 @@
  */
 
 export {
-  Counter,
-  Gauge,
-  Histogram,
-  metrics,
-  getMetrics,
-  resetMetrics,
-} from './metrics.js';
+  writeAppLog,
+  createAppLogger,
+  withLogContext,
+  AppLogError,
+} from './instrumentation.js';

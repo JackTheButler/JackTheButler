@@ -281,7 +281,7 @@ interface AppHealthItem {
 
 // No APP_LOG_IDENTITY map needed — app_logs.app_id = manifest.category,
 // app_logs.provider_id = manifest.id. This is enforced by the createAppLogger()
-// convention in src/apps/instrumentation.ts. New adapters get health cards
+// convention in src/monitoring/instrumentation.ts. New adapters get health cards
 // automatically as long as they call createAppLogger(manifest.category, manifest.id).
 
 /**

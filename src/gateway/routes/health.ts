@@ -7,7 +7,6 @@
 import { Hono } from 'hono';
 import { isDatabaseHealthy } from '@/db/index.js';
 import { scheduler } from '@/services/scheduler.js';
-import { getMetrics } from '@/monitoring/index.js';
 import { getVersion } from '@/config/version.js';
 import { now } from '@/utils/time.js';
 
@@ -89,19 +88,6 @@ health.get('/info', (c) => {
       external: Math.round(memUsage.external / 1024 / 1024), // MB
     },
     scheduler: scheduler.getStatus(),
-    timestamp: now(),
-  });
-});
-
-/**
- * Metrics endpoint
- * Returns application metrics (counters, histograms, gauges)
- */
-health.get('/metrics', (c) => {
-  const allMetrics = getMetrics();
-
-  return c.json({
-    ...allMetrics,
     timestamp: now(),
   });
 });

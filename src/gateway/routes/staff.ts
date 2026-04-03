@@ -12,6 +12,7 @@ import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import { createLogger } from '@/utils/logger.js';
+import { getAuditService } from '@/services/audit.js';
 
 const log = createLogger('routes:staff');
 
@@ -124,6 +125,9 @@ staffRouter.post(
       ...(body.phone !== undefined && { phone: body.phone }),
     });
 
+    const actorId = c.get('userId') as string;
+    getAuditService().log({ actorType: 'user', actorId, action: 'create', resourceType: 'staff', resourceId: member.id, details: { email: body.email, roleId: body.roleId }, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
     return c.json({ staff: member }, 201);
   }
 );
@@ -149,6 +153,9 @@ staffRouter.patch(
     if (body.status !== undefined) updateInput.status = body.status;
 
     const member = await staffService.update(id, updateInput, currentUserId);
+
+    getAuditService().log({ actorType: 'user', actorId: currentUserId, action: 'update', resourceType: 'staff', resourceId: id, details: updateInput, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
     return c.json({ staff: member });
   }
 );
@@ -166,6 +173,10 @@ staffRouter.patch(
     const body = c.get('validatedBody') as z.infer<typeof updatePasswordSchema>;
 
     await staffService.updatePassword(id, body.password);
+
+    const actorId = c.get('userId') as string;
+    getAuditService().log({ actorType: 'user', actorId, action: 'password_change', resourceType: 'staff', resourceId: id, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
     return c.json({ success: true });
   }
 );
@@ -179,6 +190,9 @@ staffRouter.delete('/:id', requirePermission(PERMISSIONS.ADMIN_MANAGE), async (c
   const currentUserId = c.get('userId');
 
   await staffService.delete(id, currentUserId);
+
+  getAuditService().log({ actorType: 'user', actorId: currentUserId, action: 'delete', resourceType: 'staff', resourceId: id, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
   return c.json({ success: true });
 });
 
@@ -191,6 +205,9 @@ staffRouter.post('/:id/deactivate', requirePermission(PERMISSIONS.ADMIN_MANAGE),
   const currentUserId = c.get('userId');
 
   const member = await staffService.deactivate(id, currentUserId);
+
+  getAuditService().log({ actorType: 'user', actorId: currentUserId, action: 'update', resourceType: 'staff', resourceId: id, details: { status: 'inactive' }, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
   return c.json({ staff: member });
 });
 
@@ -202,6 +219,10 @@ staffRouter.post('/:id/activate', requirePermission(PERMISSIONS.ADMIN_MANAGE), a
   const id = c.req.param('id');
 
   const member = await staffService.activate(id);
+
+  const actorId = c.get('userId') as string;
+  getAuditService().log({ actorType: 'user', actorId, action: 'update', resourceType: 'staff', resourceId: id, details: { status: 'active' }, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
   return c.json({ staff: member });
 });
 
@@ -220,6 +241,9 @@ staffRouter.post('/:id/approve', requirePermission(PERMISSIONS.ADMIN_MANAGE), as
     log.warn({ staffId: id, error: err }, 'Failed to send approval email');
   }
 
+  const actorId = c.get('userId') as string;
+  getAuditService().log({ actorType: 'user', actorId, action: 'update', resourceType: 'staff', resourceId: id, details: { approvalStatus: 'approved' }, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
+
   return c.json({ staff: member });
 });
 
@@ -237,6 +261,9 @@ staffRouter.post('/:id/reject', requirePermission(PERMISSIONS.ADMIN_MANAGE), asy
   } catch (err) {
     log.warn({ staffId: id, error: err }, 'Failed to send rejection email');
   }
+
+  const actorId = c.get('userId') as string;
+  getAuditService().log({ actorType: 'user', actorId, action: 'update', resourceType: 'staff', resourceId: id, details: { approvalStatus: 'rejected' }, ipAddress: c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
 
   return c.json({ staff: member });
 });

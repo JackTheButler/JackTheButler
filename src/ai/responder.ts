@@ -16,7 +16,6 @@ import { ConversationService } from '@/services/conversation.js';
 import { createLogger } from '@/utils/logger.js';
 import { getResponseCache, type ResponseCacheService } from './cache.js';
 import { translate, getPropertyLanguage } from '@/services/translation.js';
-import { metrics } from '@/monitoring/index.js';
 
 /**
  * Hotel profile from settings
@@ -150,9 +149,6 @@ export class AIResponder implements Responder {
       const cached = await this.cache.get(message.content);
       if (cached) {
         const duration = Date.now() - startTime;
-        metrics.aiCacheHits.inc();
-        metrics.aiResponseTime.observe(duration);
-
         log.info(
           {
             conversationId: conversation.id,
@@ -226,7 +222,6 @@ export class AIResponder implements Responder {
     const messages = this.buildPromptMessages(promptMessage, classification, knowledgeContext, history, guestContext, hotelProfile, channelActions, propertyLanguage);
 
     // 6. Generate response
-    metrics.aiRequests.inc();
     const response = await this.provider.complete({
       messages,
       maxTokens: 500,
@@ -253,8 +248,6 @@ export class AIResponder implements Responder {
       quickReplies = qrMatch[1]!.split('|').map((s) => s.trim()).filter(Boolean);
       content = content.replace(QUICK_REPLY_RE, '').trimEnd();
     }
-
-    metrics.aiResponseTime.observe(duration);
 
     log.info(
       {

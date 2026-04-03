@@ -57,6 +57,7 @@ export type ResourceType =
   | 'message'
   | 'task'
   | 'app'
+  | 'role'
   | 'automation'
   | 'knowledge'
   | 'system';
