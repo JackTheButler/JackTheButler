@@ -153,7 +153,7 @@ export function RegisterPage() {
             </div>
           ) : (
             <>
-              <h2 className="text-lg font-semibold text-foreground text-center">{t('auth.registerTitle')}</h2>
+              <h2 className="text-lg font-semibold text-foreground text-center">{t(demoMode ? 'auth.registerTitleDemo' : 'auth.registerTitle')}</h2>
               <p className="text-sm text-muted-foreground text-center mt-1 mb-6">{t('auth.registerDesc')}</p>
 
               <form onSubmit={handleSubmit} className="space-y-4">

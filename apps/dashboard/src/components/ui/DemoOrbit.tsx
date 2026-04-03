@@ -17,9 +17,9 @@ const DURATION = '20s';
 const CONTAINER = 260;
 
 const ICONS = [
-  { src: '/icons/whatsapp.svg', label: 'WhatsApp', angle: 0,   bgClass: 'jack-icon-bg-wa' },
-  { src: '/icons/email.svg',    label: 'Email',    angle: 120, bgClass: 'jack-icon-bg-em' },
-  { src: '/icons/smartphone.svg', label: 'SMS',    angle: 240, bgClass: 'jack-icon-bg-sms' },
+  { src: '/icons/whatsapp.svg', label: 'WhatsApp', angle: 0, bgClass: 'jack-icon-bg-wa' },
+  { src: '/icons/email.svg', label: 'Email', angle: 120, bgClass: 'jack-icon-bg-em' },
+  { src: '/icons/smartphone.svg', label: 'SMS', angle: 240, bgClass: 'jack-icon-bg-sms' },
 ];
 
 const RINGS = [220, 160, 100];
@@ -27,11 +27,11 @@ const RINGS = [220, 160, 100];
 // Words to cycle — edit order here
 const WORDS = [
   'JACK IS ON 24x7',
-  'MESSAGING GUEST',
+  'MESSAGING GUESTS',
   'EARNING REVIEWS',
-  'EXTENDING STAY',
+  'EXTENDING STAYS',
   'KEYLESS ACCESS',
-  'BILLING GUEST',
+  'BILLING GUESTS',
   'SYNCING TO PMS',
 ];
 
@@ -238,8 +238,13 @@ export function DemoOrbit() {
           {/* White overlay — sweeps right to cover, left to reveal */}
           <div
             className="absolute left-0 top-0 bottom-0 flex items-center justify-end"
-            style={{ width: overlayWidth, transition: overlayTransition, paddingRight: 4,
-                     backdropFilter: 'blur(6px)', borderRadius: 9999 }}
+            style={{
+              width: overlayWidth,
+              transition: overlayTransition,
+              paddingRight: 4,
+              backdropFilter: 'blur(6px)',
+              borderRadius: 9999,
+            }}
           >
             <img
               key={spinKey}
