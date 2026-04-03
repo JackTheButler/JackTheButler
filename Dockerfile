@@ -17,25 +17,28 @@ RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt
 # Install pnpm
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files (root, shared, dashboard, webchat)
+# Copy workspace manifests for dependency install
+# packages/ is copied whole so new plugins don't require Dockerfile changes
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
-COPY packages/shared/package.json ./packages/shared/
+COPY packages ./packages
 COPY apps/dashboard/package.json ./apps/dashboard/
 COPY apps/webchat/package.json ./apps/webchat/
 
 # Install all dependencies
 RUN pnpm install --frozen-lockfile && npm rebuild better-sqlite3
 
-# Copy source code
+# Copy remaining source (packages/ already copied above)
 COPY tsconfig.json ./
-COPY packages/shared ./packages/shared
 COPY src ./src
 COPY migrations ./migrations
 COPY apps/dashboard ./apps/dashboard
 COPY apps/webchat ./apps/webchat
 
-# Build shared package first (required by backend and dashboard)
+# Build shared package first (required by backend, plugins, and dashboard)
 RUN pnpm --filter @jack/shared build
+
+# Build all plugin packages
+RUN pnpm --filter '@jack-plugins/*' build
 
 # Build backend TypeScript
 RUN pnpm build
@@ -61,20 +64,21 @@ RUN apt-get update && apt-get install -y python3 make g++ procps && rm -rf /var/
 # Install pnpm for production deps
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package files (workspace config required for @jack/shared resolution)
+# Copy workspace manifests — packages/ from builder includes package.json + built dist/
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
-COPY packages/shared/package.json ./packages/shared/
+COPY --from=builder /app/packages ./packages
+COPY apps/dashboard/package.json ./apps/dashboard/
+COPY apps/webchat/package.json ./apps/webchat/
 
 # Install production dependencies only and build native modules
-# --ignore-scripts prevents @jack/shared's prepare script from running tsc (devDep not available)
+# --ignore-scripts prevents prepare scripts from running tsc (devDeps not available in prod)
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts && npm rebuild better-sqlite3
 
 # Copy @jack workspace packages from builder (workspace symlinks are not reliable in prod stage)
 COPY --from=builder /app/node_modules/@jack ./node_modules/@jack
 
-# Copy built backend and built shared package
+# Copy built backend
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/packages/shared/dist ./packages/shared/dist
 
 # Copy migrations folder
 COPY --from=builder /app/migrations ./migrations
