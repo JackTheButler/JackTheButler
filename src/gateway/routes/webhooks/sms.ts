@@ -199,7 +199,7 @@ async function processIncomingSmsAsync(body: TwilioWebhookBody): Promise<void> {
   }
 
   // Process through message processor
-  const { messageProcessor } = await import('@/core/message-processor.js');
+  const { processMessage } = await import('@/core/pipeline/index.js');
   const { generateId } = await import('@/utils/id.js');
 
   const inbound = {
@@ -212,7 +212,7 @@ async function processIncomingSmsAsync(body: TwilioWebhookBody): Promise<void> {
   };
 
   try {
-    const response = await messageProcessor.process(inbound);
+    const response = await processMessage(inbound);
     await provider.sendMessage(body.From, response.content);
     log.info({ messageSid: body.MessageSid }, 'SMS processed successfully');
   } catch (error) {

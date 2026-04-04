@@ -16,7 +16,7 @@
 // ============================================
 // Message Processing
 // ============================================
-export { MessageProcessor, messageProcessor, getProcessor } from './message-processor.js';
+export { processMessage } from './pipeline/index.js';
 
 // ============================================
 // Escalation Engine

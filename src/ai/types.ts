@@ -41,6 +41,7 @@ export type { AIProviderType as ProviderType };
 import type { Conversation } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/services/guest-context.js';
+import type { KnowledgeSearchResult } from './knowledge/index.js';
 
 /**
  * Response from the responder
@@ -58,14 +59,17 @@ export interface Response {
  */
 export interface Responder {
   /**
-   * Generate a response for a message
+   * Generate a response for a message.
    * @param conversation - The conversation context
    * @param message - The inbound message to respond to
    * @param guestContext - Optional guest context with profile and reservation info
+   * @param knowledgeResults - Pre-computed knowledge search results from the pipeline.
+   *   When provided, the responder uses them directly and skips its internal knowledge search.
    */
   generate(
     conversation: Conversation,
     message: InboundMessage,
-    guestContext?: GuestContext
+    guestContext?: GuestContext,
+    knowledgeResults?: KnowledgeSearchResult[]
   ): Promise<Response>;
 }

@@ -269,7 +269,7 @@ async function handleIncomingMessage(
     }
 
     // Process through message processor
-    const { messageProcessor } = await import('@/core/message-processor.js');
+    const { processMessage } = await import('@/core/pipeline/index.js');
     const { generateId } = await import('@/utils/id.js');
 
     const inbound = {
@@ -282,7 +282,7 @@ async function handleIncomingMessage(
     };
 
     try {
-      const response = await messageProcessor.process(inbound);
+      const response = await processMessage(inbound);
       await provider.sendText(phoneNumber, response.content);
     } catch (error) {
       log.error({ err: error, messageId: message.id }, 'Failed to process message');

@@ -1,7 +1,7 @@
 # Message Pipeline Refactor
 
-> Phase: Planned
-> Status: Not Started
+> Phase: Complete
+> Status: Done
 > Priority: High
 > Depends On: None
 
@@ -21,12 +21,9 @@ This is an architectural refactor. It does not change what the system does — i
 
 ## Key Features
 
-### Developer-Facing
-
 1. **`MessageContext` type** — a single typed interface that documents everything the pipeline knows at each stage
 2. **Stage functions** — each processing step is a named, exported function that can be unit tested in isolation by injecting a partial context
-3. **Pipeline runner** — a simple executor that runs stages in order, with error handling and timing per stage
-4. **Short-circuit support** — a stage can set `ctx.done = true` to stop the pipeline early (e.g. approval required)
+3. **`runPipeline()`** — a simple loop in `context.ts` that runs stages in order and short-circuits on `ctx.done`
 
 ---
 
@@ -38,15 +35,14 @@ This is an architectural refactor. It does not change what the system does — i
 src/
   core/
     pipeline/
-      context.ts        # MessageContext interface + factory (internal only)
-      runner.ts         # Pipeline executor
+      context.ts        # MessageContext interface + createContext() + runPipeline()
       stages/
         identify-guest.ts
         resolve-conversation.ts
         load-guest-context.ts
         detect-language.ts
         save-inbound-message.ts
-        generate-response.ts      # Stage 2: black box call to responder
+        generate-response.ts      # Stage 2: black box call to defaultResponder
         compute-embedding.ts      # Stage 3: extracted from responder internals
         search-knowledge.ts       # Stage 3: extracted from responder internals
         route-task.ts
@@ -54,7 +50,7 @@ src/
         check-autonomy.ts
         translate-response.ts
         save-outbound-message.ts
-    message-processor.ts  # Existing file — outer try/catch/finally stays here
+      index.ts          # Orchestrator — stage order + try/catch/finally (replaces message-processor.ts)
 ```
 
 > **Note:** `MessageContext` is an internal kernel type. It does not belong in `@jack/shared` — that package is for plugin authors (AI, channel, PMS adapters) who never interact with the pipeline directly.
@@ -64,27 +60,26 @@ src/
 ```
 InboundMessage
       ↓
-createContext(inbound)       → MessageContext (initial state)
+createContext(inbound)       → MessageContext { inbound, startTime }
       ↓
-pipeline runner
+runPipeline(ctx, stages)
   [identifyGuest]            → ctx.guest
   [resolveConversation]      → ctx.conversation, ctx.propertyLanguage
   [loadGuestContext]         → ctx.guestContext
   [detectLanguage]           → ctx.detectedLanguage, ctx.translatedContent
   [saveInboundMessage]       → ctx.savedInboundId  (side effect)
-  [computeEmbedding]         → ctx.queryEmbedding   ← computed ONCE
-  [searchKnowledge]          → ctx.knowledgeResults  (reads ctx.queryEmbedding)
-  [generateResponse]         → ctx.response          (reads ctx.knowledgeResults)
+  [computeEmbedding]         → ctx.queryEmbedding   ← computed ONCE (Stage 3)
+  [searchKnowledge]          → ctx.knowledgeResults  (Stage 3)
+  [generateResponse]         → ctx.aiResponse
   [routeTask]                → ctx.taskCreated       (side effect)
   [checkEscalation]          → ctx.escalated         (side effect)
-  [checkAutonomy]            → ctx.done = true + ctx.pendingResponse if approval needed
+  [checkAutonomy]            → ctx.done = true + ctx.outbound if approval needed
   [translateResponse]        → ctx.translatedResponse
-  [saveOutboundMessage]      → ctx.savedOutboundId   (side effect)
+  [saveOutboundMessage]      → ctx.outbound, ctx.savedOutboundId
       ↓
-buildOutboundMessage(ctx)    → OutboundMessage
+return ctx.outbound
 
 Error handling + activity logging stay in MessageProcessor.process() try/catch/finally
-(not in the runner — the runner stays minimal)
 ```
 
 ---
@@ -93,7 +88,7 @@ Error handling + activity logging stay in MessageProcessor.process() try/catch/f
 
 ### MessageContext
 
-The central type. Created at the start of `process()` and passed to every stage. Stages read from it and write to it. Nothing is passed as a function parameter except `ctx`.
+The central type. Created at the start of `process()` and passed through every stage. Stages read from it and write to it.
 
 ```typescript
 export interface MessageContext {
@@ -101,15 +96,13 @@ export interface MessageContext {
   inbound: InboundMessage;
   startTime: number;
 
-  // ── Guest identification ─────────────────────────────────
+  // ── Guest ────────────────────────────────────────────────
   guest?: Guest;
+  guestContext?: GuestContext;
 
   // ── Conversation ─────────────────────────────────────────
   conversation?: Conversation;
   propertyLanguage?: string;
-
-  // ── Guest context (profile + reservation) ────────────────
-  guestContext?: GuestContext;
 
   // ── Language ─────────────────────────────────────────────
   detectedLanguage?: string;
@@ -119,23 +112,23 @@ export interface MessageContext {
   savedInboundId?: string;
   savedOutboundId?: string;
 
-  // ── Embedding (computed once, shared by all consumers) ────
-  queryEmbedding?: number[];    // added in Stage 3
-
-  // ── Knowledge ────────────────────────────────────────────
-  knowledgeResults?: KnowledgeSearchResult[];  // added in Stage 3
+  // ── Embedding + Knowledge (Stage 3) ──────────────────────
+  queryEmbedding?: number[];
+  knowledgeResults?: KnowledgeSearchResult[];
 
   // ── AI response ──────────────────────────────────────────
-  response?: AIResponse;
+  aiResponse?: AIResponse;
+  translatedResponse?: string;
 
-  // ── Post-processing ──────────────────────────────────────
+  // ── Post-processing flags ─────────────────────────────────
   escalated?: boolean;
   taskCreated?: boolean;
-  translatedResponse?: string;  // response translated to guest language
 
   // ── Pipeline control ─────────────────────────────────────
-  done?: boolean;               // set to true to stop pipeline early
-  pendingResponse?: OutboundMessage;  // set by checkAutonomy when approval required
+  done?: boolean;           // set to true to stop pipeline early
+
+  // ── Final output ─────────────────────────────────────────
+  outbound?: OutboundMessage;   // set by saveOutboundMessage or checkAutonomy
 
   // ── Outcome (for activity logging in finally block) ───────
   outcome?: 'success' | 'failed';
@@ -145,11 +138,21 @@ export interface MessageContext {
 export function createContext(inbound: InboundMessage): MessageContext {
   return { inbound, startTime: Date.now() };
 }
+
+export async function runPipeline(
+  ctx: MessageContext,
+  stages: Array<(ctx: MessageContext) => Promise<void>>
+): Promise<void> {
+  for (const stage of stages) {
+    if (ctx.done) break;
+    await stage(ctx);
+  }
+}
 ```
 
 ### Stage Functions
 
-Each stage is a named async function with the signature `(ctx: MessageContext) => Promise<void>`. It reads what it needs from `ctx` and writes its outputs back to `ctx`.
+Each stage is a named async function: `(ctx: MessageContext) => Promise<void>`. It reads what it needs from `ctx` and writes its result back.
 
 ```typescript
 // Example: detect-language.ts
@@ -164,41 +167,26 @@ export async function detectLanguage(ctx: MessageContext): Promise<void> {
   }
 }
 
-// Example: check-autonomy.ts (Stage 2)
+// Example: check-autonomy.ts
 export async function checkAutonomy(ctx: MessageContext): Promise<void> {
-  if (!ctx.response) return;
-  const result = await handleAutonomyCheck(ctx.response, ctx.conversation!, ctx.guestContext, ctx.detectedLanguage, ctx.propertyLanguage!);
+  if (!ctx.aiResponse) return;
+  const result = await evaluateAutonomy(ctx.aiResponse, ctx.conversation!, ctx.guestContext, ctx.detectedLanguage, ctx.propertyLanguage!);
   if (result) {
-    ctx.pendingResponse = result.pendingResponse;
-    ctx.done = true;  // stop pipeline — no translation or outbound save needed
+    ctx.outbound = result.pendingOutbound;
+    ctx.done = true;  // stop pipeline — skip translation and outbound save
   }
-}
-```
-
-### Pipeline Runner
-
-A minimal executor that runs stages in sequence and re-throws on failure. Error handling and activity logging stay in `MessageProcessor.process()`.
-
-```typescript
-// runner.ts
-export async function runPipeline(
-  ctx: MessageContext,
-  stages: Array<(ctx: MessageContext) => Promise<void>>
-): Promise<MessageContext> {
-  for (const stage of stages) {
-    if (ctx.done) break;
-    await stage(ctx);  // let errors propagate — caught by MessageProcessor
-  }
-  return ctx;
 }
 ```
 
 ### Replacing message-processor.ts
 
-The existing `process()` method becomes a thin wrapper. The try/catch/finally for error events and activity logging stays in the wrapper — it is not a pipeline stage.
+`src/core/message-processor.ts` is deleted. Its responsibility moves to `src/core/pipeline/index.ts` as a plain exported function — no class, no singleton. The outer try/catch/finally for error events and activity logging lives here, not inside the pipeline runner.
+
+Callers update from `messageProcessor.process(inbound)` → `processMessage(inbound)`.
 
 ```typescript
-async process(inbound: InboundMessage): Promise<OutboundMessage> {
+// src/core/pipeline/index.ts
+export async function processMessage(inbound: InboundMessage): Promise<OutboundMessage> {
   const ctx = createContext(inbound);
   try {
     await runPipeline(ctx, [
@@ -208,7 +196,7 @@ async process(inbound: InboundMessage): Promise<OutboundMessage> {
       detectLanguage,
       saveInboundMessage,
       // Stage 3 inserts computeEmbedding + searchKnowledge here
-      generateResponse,   // Stage 2: black box; Stage 3: reads ctx.knowledgeResults
+      generateResponse,
       routeTask,
       checkEscalation,
       checkAutonomy,
@@ -216,8 +204,7 @@ async process(inbound: InboundMessage): Promise<OutboundMessage> {
       saveOutboundMessage,
     ]);
     ctx.outcome = 'success';
-    ctx.outcomeDetails = { ... };
-    return ctx.pendingResponse ?? buildOutboundMessage(ctx);
+    return ctx.outbound!;
   } catch (err) {
     ctx.outcome = 'failed';
     events.emit({ type: EventTypes.MESSAGE_FAILED, ... });
@@ -246,47 +233,47 @@ No database changes. This is a pure code refactor — same inputs, same outputs,
 
 ## Implementation Stages
 
-### Stage 1 — Define `MessageContext` and pipeline runner
+### Stage 1 — Define `MessageContext` and `runPipeline` ✓
 
 **Goal:** The context type and runner exist and are tested. No existing code is changed.
 
-Create `src/core/pipeline/context.ts` with the `MessageContext` interface and `createContext()`. Create `src/core/pipeline/runner.ts` with `runPipeline()`. Write unit tests for the runner: correct order, short-circuit on `ctx.done`, error propagation.
+Create `src/core/pipeline/context.ts` with `MessageContext`, `createContext()`, and `runPipeline()`. Write unit tests: stages run in order, short-circuit on `ctx.done`, errors propagate.
 
-**Testable:** Runner unit tests pass. No existing code is changed.
+**Testable:** Unit tests pass. No existing code is changed.
 
 ---
 
-### Stage 2 — Extract stages from `message-processor.ts`
+### Stage 2 — Extract stages from `message-processor.ts` ✓
 
 **Goal:** Each logical block in `process()` and the three private methods becomes a named stage function. `message-processor.ts` calls `runPipeline()` with identical behaviour.
 
-Extract the 11 stages that exist today in `message-processor.ts`. The `generateResponse` stage calls `defaultResponder.generate()` (the module-level singleton from `src/ai/index.ts`) — the responder internals are not touched in this stage. For unit testing individual stages, tests pre-populate `ctx.response` directly and skip the `generateResponse` stage entirely, which is cleaner than constructor injection. Add `ctx.pendingResponse` to `MessageContext` so `checkAutonomy` can set it before `ctx.done = true`. Keep the try/catch/finally for error events and activity logging in `MessageProcessor.process()` — not in the runner.
+Delete `src/core/message-processor.ts` and create `src/core/pipeline/index.ts` in its place — a plain `processMessage()` function with no class or singleton. Extract the 11 logical blocks into named stage files under `stages/`. The `generateResponse` stage calls `defaultResponder` (the module-level singleton from `src/ai/index.ts`) as a black box — the responder internals are not touched. The try/catch/finally for error events and activity logging lives in `pipeline/index.ts`, not in the runner. Update `src/core/index.ts` and the 3 callers (webchat, SMS webhook, WhatsApp webhook) to import `processMessage` from the new location.
 
-**Testable:** Full test suite passes. Send a real message end-to-end — same response, same DB state, same events emitted.
-
----
-
-### Stage 3 — Extract `responder.generate()` internal stages
-
-**Goal:** The internal steps of `responder.generate()` (embedding + knowledge search + LLM call) become pipeline stages, making `ctx.queryEmbedding` and `ctx.knowledgeResults` explicit pipeline outputs.
-
-This stage requires two prerequisite changes before extracting stages:
-1. **Expose `KnowledgeService.searchByEmbedding()`** — today `knowledge.search()` computes the embedding internally. A new `searchByEmbedding(embedding: number[], opts)` method is needed so the pipeline can pass a pre-computed embedding.
-2. **Update the `Responder` interface** — `generateResponse` stage will pass `ctx.knowledgeResults` into the responder instead of letting it re-fetch. The `Responder.generate()` signature changes to accept pre-computed knowledge results, or the `AIResponder` is restructured into sub-functions callable directly from stages.
-
-Once those are in place, insert `computeEmbedding` and `searchKnowledge` stages before `generateResponse`, and update `generateResponse` to read from `ctx`.
-
-**Testable:** Inject a `MessageContext` with a pre-set `queryEmbedding` — assert `searchKnowledge` skips the embed call. Integration test confirms exactly one embed call per message.
+**Testable:** Full test suite passes. End-to-end message produces same response, same DB state, same events.
 
 ---
 
-### Stage 4 — Per-stage observability
+### Stage 3 — Extract `responder.generate()` internal stages ✓
 
-**Goal:** Each stage's execution time and output keys are logged at debug level.
+**Goal:** Embedding and knowledge search become explicit pipeline stages, making `ctx.queryEmbedding` and `ctx.knowledgeResults` visible outputs.
 
-Extend the runner to log `{ stage, durationMs }` after each stage. No new infrastructure — uses the existing logger.
+Two prerequisite changes required:
+1. **Expose `KnowledgeService.searchByEmbedding()`** — today `knowledge.search()` computes the embedding internally. A new method accepting a pre-computed embedding is needed.
+2. **Update the `Responder` interface** — `generateResponse` stage passes `ctx.knowledgeResults` in instead of letting the responder re-fetch. The signature changes or `AIResponder` is restructured into sub-functions callable directly from stages.
 
-**Testable:** Enable debug logging, send a message, assert log output contains a timed entry for each stage in order.
+Once in place, insert `computeEmbedding` and `searchKnowledge` before `generateResponse`, and update `generateResponse` to read from `ctx`.
+
+**Testable:** Pre-set `ctx.queryEmbedding` — assert `searchKnowledge` skips the embed call. Integration test confirms exactly one embed call per message.
+
+---
+
+### Stage 4 — Per-stage observability ✓
+
+**Goal:** Each stage's execution time is logged at debug level.
+
+Extend `runPipeline()` to log `{ stage, durationMs }` after each stage using the existing logger.
+
+**Testable:** Enable debug logging, send a message, assert log contains a timed entry for each stage in order.
 
 ---
 

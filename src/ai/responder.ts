@@ -10,7 +10,8 @@ import { settingsService } from '@/services/settings.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/services/guest-context.js';
 import type { LLMProvider, Response, Responder } from './types.js';
-import { KnowledgeService, type KnowledgeSearchResult } from './knowledge/index.js';
+import { KnowledgeService } from './knowledge/index.js';
+import type { KnowledgeSearchResult } from './knowledge/index.js';
 import { IntentClassifier, type ClassificationResult } from './intent/index.js';
 import { ConversationService } from '@/services/conversation.js';
 import { createLogger } from '@/utils/logger.js';
@@ -130,7 +131,7 @@ export class AIResponder implements Responder {
   /**
    * Generate a response for a message
    */
-  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext): Promise<Response> {
+  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext, knowledgeResults?: KnowledgeSearchResult[]): Promise<Response> {
     const startTime = Date.now();
 
     log.debug(
@@ -199,14 +200,19 @@ export class AIResponder implements Responder {
       }
     }
 
-    let knowledgeContext: Awaited<ReturnType<typeof this.knowledge.search>> = [];
-    try {
-      knowledgeContext = await this.knowledge.search(searchQuery, {
-        limit: this.maxKnowledgeResults,
-        minSimilarity: this.minKnowledgeSimilarity,
-      });
-    } catch (error) {
-      log.warn({ err: error }, 'Knowledge base search skipped — embedding provider unavailable');
+    // Use pre-computed results from pipeline if available, otherwise search internally
+    let knowledgeContext: KnowledgeSearchResult[] = [];
+    if (knowledgeResults !== undefined) {
+      knowledgeContext = knowledgeResults;
+    } else {
+      try {
+        knowledgeContext = await this.knowledge.search(searchQuery, {
+          limit: this.maxKnowledgeResults,
+          minSimilarity: this.minKnowledgeSimilarity,
+        });
+      } catch (error) {
+        log.warn({ err: error }, 'Knowledge base search skipped — embedding provider unavailable');
+      }
     }
 
     // 3. Get conversation history

@@ -19,7 +19,7 @@ import type {
   OutboundMessage,
   SendResult,
 } from '@jack/shared';
-import { messageProcessor } from '@/core/message-processor.js';
+import { processMessage } from '@/core/pipeline/index.js';
 import { appConfigService } from '@/services/app-config.js';
 import { conversationService } from '@/services/conversation.js';
 import { webchatSessionService } from '@/services/webchat-session.js';
@@ -517,7 +517,7 @@ async function handleGuestMessage(
   };
 
   // Process through the core message pipeline
-  const response = await messageProcessor.process(inbound);
+  const response = await processMessage(inbound);
 
   // Link conversation to session (idempotent — cheap UPDATE on every message)
   await webchatSessionService.linkConversation(sessionId, response.conversationId);

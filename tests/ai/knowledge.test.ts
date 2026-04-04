@@ -255,6 +255,54 @@ describe('KnowledgeService', () => {
     });
   });
 
+  describe('searchByEmbedding', () => {
+    it('should return results using a pre-computed embedding', async () => {
+      await service.add({
+        category: 'faq',
+        title: `${testPrefix} Checkout Time`,
+        content: 'Checkout time is 11am.',
+      });
+
+      // Get the embedding that was stored for this item
+      const embedCall = (provider.embed as ReturnType<typeof vi.fn>).mock.calls[0];
+      const storedEmbedding = ((await provider.embed(embedCall[0])) as { embedding: number[] }).embedding;
+
+      const results = await service.searchByEmbedding(storedEmbedding, { minSimilarity: 0 });
+
+      expect(results.length).toBeGreaterThan(0);
+      expect(results[0].similarity).toBeDefined();
+    });
+
+    it('should not call the embedding provider', async () => {
+      await service.add({
+        category: 'faq',
+        title: `${testPrefix} Embed Skip Test`,
+        content: 'Some content.',
+      });
+
+      const callsBefore = (provider.embed as ReturnType<typeof vi.fn>).mock.calls.length;
+      const embedding = new Array(1536).fill(0.1);
+
+      await service.searchByEmbedding(embedding, { minSimilarity: 0 });
+
+      const callsAfter = (provider.embed as ReturnType<typeof vi.fn>).mock.calls.length;
+      expect(callsAfter).toBe(callsBefore); // no new embed calls
+    });
+
+    it('should respect limit option', async () => {
+      for (let i = 0; i < 4; i++) {
+        await service.add({
+          category: 'faq',
+          title: `${testPrefix} ByEmbed Limit ${i}`,
+          content: `Content ${i}`,
+        });
+      }
+      const embedding = new Array(1536).fill(0.1);
+      const results = await service.searchByEmbedding(embedding, { limit: 2, minSimilarity: 0 });
+      expect(results.length).toBeLessThanOrEqual(2);
+    });
+  });
+
   describe('getStats', () => {
     it('should return statistics', async () => {
       await service.add({

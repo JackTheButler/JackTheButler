@@ -37,13 +37,20 @@ export interface SearchOptions {
  * Knowledge service for managing and searching hotel information
  */
 export class KnowledgeService {
-  private embeddingProvider: LLMProvider;
+  private embeddingProvider: LLMProvider | undefined;
   private embeddingModel: string;
 
-  constructor(embeddingProvider: LLMProvider) {
+  constructor(embeddingProvider?: LLMProvider) {
     this.embeddingProvider = embeddingProvider;
-    this.embeddingModel = embeddingProvider.name;
-    log.info({ provider: this.embeddingModel }, 'Knowledge service initialized');
+    this.embeddingModel = embeddingProvider?.name ?? 'none';
+    if (embeddingProvider) {
+      log.info({ provider: this.embeddingModel }, 'Knowledge service initialized');
+    }
+  }
+
+  private requireProvider(): LLMProvider {
+    if (!this.embeddingProvider) throw new AppError('KnowledgeService: embedding provider required for this operation', 'PROVIDER_REQUIRED');
+    return this.embeddingProvider;
   }
 
   /**
@@ -154,66 +161,58 @@ export class KnowledgeService {
   }
 
   /**
-   * Search knowledge base using vector similarity
+   * Search knowledge base using vector similarity.
+   * Computes the embedding from the query text then delegates to searchByEmbedding.
    */
   async search(query: string, options: SearchOptions = {}): Promise<KnowledgeSearchResult[]> {
+    log.debug({ query, limit: options.limit }, 'Searching knowledge base');
+    const queryEmbedding = await this.requireProvider().embed({ text: query });
+    return this.searchByEmbedding(queryEmbedding.embedding, options);
+  }
+
+  /**
+   * Search knowledge base using a pre-computed embedding.
+   * Does not call the embedding provider — accepts the vector directly.
+   * Used by the pipeline when ctx.queryEmbedding has already been computed upstream.
+   */
+  async searchByEmbedding(embedding: number[], options: SearchOptions = {}): Promise<KnowledgeSearchResult[]> {
     const { limit = 5, category, minSimilarity = 0.5 } = options;
 
-    log.debug({ query, limit, category }, 'Searching knowledge base');
-
-    // Generate query embedding
-    const queryEmbedding = await this.embeddingProvider.embed({ text: query });
-
-    // Get all embeddings and compute similarity
-    const embeddings = await db.select().from(knowledgeEmbeddings);
-
-    // Compute cosine similarity for each embedding
+    // Get all stored embeddings and compute cosine similarity
+    const storedEmbeddings = await db.select().from(knowledgeEmbeddings);
     const similarities: { id: string; similarity: number }[] = [];
 
-    for (const row of embeddings) {
-      const storedEmbedding = JSON.parse(row.embedding) as number[];
-      const similarity = this.cosineSimilarity(queryEmbedding.embedding, storedEmbedding);
-
+    for (const row of storedEmbeddings) {
+      const stored = JSON.parse(row.embedding) as number[];
+      const similarity = this.cosineSimilarity(embedding, stored);
       if (similarity >= minSimilarity) {
         similarities.push({ id: row.id, similarity });
       }
     }
 
-    // Sort by similarity (highest first)
     similarities.sort((a, b) => b.similarity - a.similarity);
-
-    // Get top results
     const topIds = similarities.slice(0, limit).map((s) => s.id);
 
-    if (topIds.length === 0) {
-      return [];
-    }
+    if (topIds.length === 0) return [];
 
-    // Fetch knowledge items
     const items = await db
       .select()
       .from(knowledgeBase)
       .where(
         and(
-          sql`${knowledgeBase.id} IN (${sql.join(
-            topIds.map((id) => sql`${id}`),
-            sql`, `
-          )})`,
+          sql`${knowledgeBase.id} IN (${sql.join(topIds.map((id) => sql`${id}`), sql`, `)})`,
           eq(knowledgeBase.status, 'active'),
           category ? eq(knowledgeBase.category, category) : sql`1=1`
         )
       );
 
-    // Combine with similarity scores
     const results: KnowledgeSearchResult[] = items.map((item) => ({
       ...item,
       similarity: similarities.find((s) => s.id === item.id)?.similarity ?? 0,
     }));
 
-    // Sort by similarity again (in case DB didn't preserve order)
     results.sort((a, b) => b.similarity - a.similarity);
-
-    log.debug({ query, resultCount: results.length }, 'Knowledge search complete');
+    log.debug({ resultCount: results.length }, 'Knowledge search by embedding complete');
     return results;
   }
 
@@ -221,7 +220,7 @@ export class KnowledgeService {
    * Generate and store embedding for a knowledge item
    */
   private async generateEmbedding(id: string, content: string): Promise<void> {
-    const response = await this.embeddingProvider.embed({ text: content });
+    const response = await this.requireProvider().embed({ text: content });
 
     // Delete existing embedding if any
     await db.delete(knowledgeEmbeddings).where(eq(knowledgeEmbeddings.id, id));

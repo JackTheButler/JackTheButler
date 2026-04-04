@@ -1,144 +1,128 @@
 /**
- * Message Processor Tests
+ * Message Pipeline Integration Tests
  */
 
-import { describe, it, expect, beforeEach } from 'vitest';
-import { MessageProcessor } from '@/core/message-processor.js';
-import { EchoResponder } from '@/ai/index.js';
-import { ConversationService } from '@/services/conversation.js';
-import { GuestService } from '@/services/guest.js';
+import { describe, it, expect } from 'vitest';
+import { processMessage } from '@/core/pipeline/index.js';
 import { db, conversations, messages } from '@/db/index.js';
-import { eq, like } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import type { InboundMessage } from '@/types/index.js';
 
-describe('MessageProcessor', () => {
-  let processor: MessageProcessor;
-  let conversationService: ConversationService;
-  let guestService: GuestService;
+describe('processMessage', () => {
   const testPrefix = `proc-${Date.now()}`;
 
-  beforeEach(async () => {
-    conversationService = new ConversationService();
-    guestService = new GuestService();
-    processor = new MessageProcessor(conversationService, guestService, new EchoResponder());
+  it('should create a conversation and return echo response', async () => {
+    const inbound: InboundMessage = {
+      id: `${testPrefix}-msg-001`,
+      channel: 'webchat',
+      channelId: `${testPrefix}-session-123`,
+      content: 'Hello, I need help',
+      contentType: 'text',
+      timestamp: new Date(),
+    };
+
+    const response = await processMessage(inbound);
+
+    expect(response.content).toBe('Echo: Hello, I need help');
+    expect(response.contentType).toBe('text');
+    expect(response.conversationId).toBeDefined();
+
+    // Cleanup
+    await db.delete(messages).where(eq(messages.conversationId, response.conversationId));
+    await db.delete(conversations).where(eq(conversations.id, response.conversationId));
   });
 
-  describe('process', () => {
-    it('should create a conversation and return echo response', async () => {
-      const inbound: InboundMessage = {
-        id: `${testPrefix}-msg-001`,
-        channel: 'webchat',
-        channelId: `${testPrefix}-session-123`,
-        content: 'Hello, I need help',
-        contentType: 'text',
-        timestamp: new Date(),
-      };
+  it('should store inbound and outbound messages', async () => {
+    const inbound: InboundMessage = {
+      id: `${testPrefix}-msg-002`,
+      channel: 'webchat',
+      channelId: `${testPrefix}-session-456`,
+      content: 'Test message',
+      contentType: 'text',
+      timestamp: new Date(),
+    };
 
-      const response = await processor.process(inbound);
+    const response = await processMessage(inbound);
 
-      expect(response.content).toBe('Echo: Hello, I need help');
-      expect(response.contentType).toBe('text');
-      expect(response.conversationId).toBeDefined();
+    const savedMessages = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, response.conversationId));
 
-      // Cleanup
-      await db.delete(messages).where(eq(messages.conversationId, response.conversationId));
-      await db.delete(conversations).where(eq(conversations.id, response.conversationId));
-    });
+    expect(savedMessages).toHaveLength(2);
 
-    it('should store inbound and outbound messages', async () => {
-      const inbound: InboundMessage = {
-        id: `${testPrefix}-msg-002`,
-        channel: 'webchat',
-        channelId: `${testPrefix}-session-456`,
-        content: 'Test message',
-        contentType: 'text',
-        timestamp: new Date(),
-      };
+    const inboundMsg = savedMessages.find((m) => m.direction === 'inbound');
+    const outboundMsg = savedMessages.find((m) => m.direction === 'outbound');
 
-      const response = await processor.process(inbound);
+    expect(inboundMsg?.content).toBe('Test message');
+    expect(inboundMsg?.senderType).toBe('guest');
+    expect(outboundMsg?.content).toBe('Echo: Test message');
+    expect(outboundMsg?.senderType).toBe('ai');
 
-      // Check messages were saved
-      const savedMessages = await db
-        .select()
-        .from(messages)
-        .where(eq(messages.conversationId, response.conversationId));
+    // Cleanup
+    await db.delete(messages).where(eq(messages.conversationId, response.conversationId));
+    await db.delete(conversations).where(eq(conversations.id, response.conversationId));
+  });
 
-      expect(savedMessages).toHaveLength(2);
+  it('should reuse existing active conversation', async () => {
+    const sessionId = `${testPrefix}-session-789`;
 
-      const inboundMsg = savedMessages.find((m) => m.direction === 'inbound');
-      const outboundMsg = savedMessages.find((m) => m.direction === 'outbound');
+    const inbound1: InboundMessage = {
+      id: `${testPrefix}-msg-003`,
+      channel: 'webchat',
+      channelId: sessionId,
+      content: 'First message',
+      contentType: 'text',
+      timestamp: new Date(),
+    };
 
-      expect(inboundMsg?.content).toBe('Test message');
-      expect(inboundMsg?.senderType).toBe('guest');
-      expect(outboundMsg?.content).toBe('Echo: Test message');
-      expect(outboundMsg?.senderType).toBe('ai');
+    const inbound2: InboundMessage = {
+      id: `${testPrefix}-msg-004`,
+      channel: 'webchat',
+      channelId: sessionId,
+      content: 'Second message',
+      contentType: 'text',
+      timestamp: new Date(),
+    };
 
-      // Cleanup
-      await db.delete(messages).where(eq(messages.conversationId, response.conversationId));
-      await db.delete(conversations).where(eq(conversations.id, response.conversationId));
-    });
+    const response1 = await processMessage(inbound1);
+    const response2 = await processMessage(inbound2);
 
-    it('should reuse existing active conversation', async () => {
-      const sessionId = `${testPrefix}-session-789`;
+    expect(response1.conversationId).toBe(response2.conversationId);
 
-      const inbound1: InboundMessage = {
-        id: `${testPrefix}-msg-003`,
-        channel: 'webchat',
-        channelId: sessionId,
-        content: 'First message',
-        contentType: 'text',
-        timestamp: new Date(),
-      };
+    const savedMessages = await db
+      .select()
+      .from(messages)
+      .where(eq(messages.conversationId, response1.conversationId));
 
-      const inbound2: InboundMessage = {
-        id: `${testPrefix}-msg-004`,
-        channel: 'webchat',
-        channelId: sessionId,
-        content: 'Second message',
-        contentType: 'text',
-        timestamp: new Date(),
-      };
+    expect(savedMessages).toHaveLength(4);
 
-      const response1 = await processor.process(inbound1);
-      const response2 = await processor.process(inbound2);
+    // Cleanup
+    await db.delete(messages).where(eq(messages.conversationId, response1.conversationId));
+    await db.delete(conversations).where(eq(conversations.id, response1.conversationId));
+  });
 
-      expect(response1.conversationId).toBe(response2.conversationId);
+  it('should update conversation lastMessageAt', async () => {
+    const inbound: InboundMessage = {
+      id: `${testPrefix}-msg-005`,
+      channel: 'webchat',
+      channelId: `${testPrefix}-session-abc`,
+      content: 'Check timestamp',
+      contentType: 'text',
+      timestamp: new Date(),
+    };
 
-      // Should have 4 messages (2 inbound, 2 outbound)
-      const savedMessages = await db
-        .select()
-        .from(messages)
-        .where(eq(messages.conversationId, response1.conversationId));
+    const response = await processMessage(inbound);
 
-      expect(savedMessages).toHaveLength(4);
+    const [conv] = await db
+      .select()
+      .from(conversations)
+      .where(eq(conversations.id, response.conversationId));
 
-      // Cleanup
-      await db.delete(messages).where(eq(messages.conversationId, response1.conversationId));
-      await db.delete(conversations).where(eq(conversations.id, response1.conversationId));
-    });
+    expect(conv.lastMessageAt).toBeDefined();
 
-    it('should update conversation lastMessageAt', async () => {
-      const inbound: InboundMessage = {
-        id: `${testPrefix}-msg-005`,
-        channel: 'webchat',
-        channelId: `${testPrefix}-session-abc`,
-        content: 'Check timestamp',
-        contentType: 'text',
-        timestamp: new Date(),
-      };
-
-      const response = await processor.process(inbound);
-
-      const [conv] = await db
-        .select()
-        .from(conversations)
-        .where(eq(conversations.id, response.conversationId));
-
-      expect(conv.lastMessageAt).toBeDefined();
-
-      // Cleanup
-      await db.delete(messages).where(eq(messages.conversationId, response.conversationId));
-      await db.delete(conversations).where(eq(conversations.id, response.conversationId));
-    });
+    // Cleanup
+    await db.delete(messages).where(eq(messages.conversationId, response.conversationId));
+    await db.delete(conversations).where(eq(conversations.id, response.conversationId));
   });
 });
