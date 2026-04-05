@@ -11,6 +11,7 @@ import { ThemeToggle } from '@/components/ui/theme-toggle';
 import { Tooltip } from '@/components/ui/tooltip';
 import { useTheme } from '@/contexts/ThemeContext';
 import { useAppConfig } from '@/contexts/AppConfigContext';
+import { DemoOrbit } from '@/components/ui/DemoOrbit';
 
 export function LoginPage() {
   const navigate = useNavigate();
@@ -102,19 +103,46 @@ export function LoginPage() {
 
   return (
     <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
-      <div className="bg-card rounded-lg shadow-md w-full max-w-sm md:max-w-2xl md:flex overflow-hidden relative">
+      <div className="bg-card rounded-lg shadow-md w-full max-w-4xl flex flex-col-reverse md:flex-row overflow-hidden relative">
         {/* Branding section - Top on mobile, Left on desktop */}
-        <div className="flex flex-col items-center justify-center p-6 md:p-8 bg-primary md:w-1/2">
-          <img src="/jack-the-butler-inverted.png" alt={t('app.name')} className="w-40 h-40 md:w-48 md:h-48 object-contain dark:hidden" />
-          <img src="/jack-the-butler.png" alt={t('app.name')} className="w-40 h-40 md:w-48 md:h-48 object-contain hidden dark:block" />
-          <h1 className="text-xl md:text-2xl font-semibold text-primary-foreground mt-3 md:mt-4 text-center">{t('app.name')}</h1>
-          <p className="text-primary-foreground text-xs mb-2 text-center"><span className="text-red-500 font-bold">/</span><span className="text-primary-foreground font-bold">JACK</span><span className="text-red-500 font-bold">/</span> <span className="text-primary-foreground font-bold">J</span>oint <span className="text-primary-foreground font-bold">A</span>I <span className="text-primary-foreground font-bold">C</span>ontrol <span className="text-primary-foreground font-bold">K</span>ernel</p>
-          <p className="text-primary-foreground/60 text-sm md:text-base mt-1 text-center">{t('app.tagline')}</p>
+        <div className="bg-primary md:w-3/5 flex flex-col items-center justify-center gap-6 p-8 border-t md:border-t-0 md:border-r border-border">
+          <DemoOrbit />
+          <h2 className="text-lg font-semibold text-primary-foreground text-center">{t('auth.demoTagline')}</h2>
+          <div className="w-full border border-primary-foreground/20 rounded-lg overflow-hidden">
+            <div className="grid grid-cols-2 divide-x divide-primary-foreground/20">
+              <div className="p-4 flex flex-col gap-1">
+                <span className="text-2xl font-bold text-primary-foreground">{t('auth.demoStat1Value')}</span>
+                <span className="text-xs text-primary-foreground/60">{t('auth.demoStat1Desc')}</span>
+                <span className="text-xs font-semibold text-primary-foreground mt-2">{t('auth.demoStat1Label')}</span>
+              </div>
+              <div className="p-4 flex flex-col gap-1">
+                <span className="text-2xl font-bold text-primary-foreground">{t('auth.demoStat2Value')}</span>
+                <span className="text-xs text-primary-foreground/60">{t('auth.demoStat2Desc')}</span>
+                <span className="text-xs font-semibold text-primary-foreground mt-2">{t('auth.demoStat2Label')}</span>
+              </div>
+            </div>
+            <div className="border-t border-primary-foreground/20 p-4">
+              <p className="text-xs text-primary-foreground/90 italic">{t('auth.demoQuote')}</p>
+            </div>
+          </div>
         </div>
 
         {/* Login form - Bottom on mobile, Right on desktop */}
-        <div className="p-6 md:w-1/2">
+        <div className="relative md:w-2/5">
+          <div className="absolute top-2 left-2">
+            <Tooltip content={isDark ? t('common.switchToLight') : t('common.switchToDark')} side="right">
+              <span>
+                <ThemeToggle />
+              </span>
+            </Tooltip>
+          </div>
 
+          <div className="p-6 pt-12">
+          <div className="flex justify-center mb-6">
+            <img src="/favicon.svg" alt={t('app.name')} className="w-16 h-16 object-contain dark:invert" />
+          </div>
+          <h2 className="text-lg font-semibold text-foreground text-center">{t('auth.loginTitle')}</h2>
+          <p className="text-sm text-muted-foreground text-center mt-1 mb-6">{t('auth.loginDesc')}</p>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
               <Alert variant="destructive">
@@ -185,14 +213,8 @@ export function LoginPage() {
               </Link>
             </div>
           )}
-        </div>
-        <div className="absolute top-2 left-2 text-primary-foreground [&_button]:hover:bg-primary-foreground/20">
-          <Tooltip content={isDark ? t('common.switchToLight') : t('common.switchToDark')} side="right">
-            <span>
-              <ThemeToggle />
-            </span>
-          </Tooltip>
-        </div>
+          </div>{/* end inner p-6 */}
+        </div>{/* end form panel */}
       </div>
 
       <div className="mt-4 flex items-center gap-2 text-sm">

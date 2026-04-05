@@ -10,6 +10,7 @@
 [![Deploy on Railway](https://img.shields.io/badge/Deploy-Railway-blueviolet)](https://railway.com/deploy/jack-the-butler)
 
 **Website**: [https://jackthebutler.com](https://jackthebutler.com)
+**Demo**: [https://demo.jackthebutler.com/register](https://demo.jackthebutler.com/register)
 
 ---
 
