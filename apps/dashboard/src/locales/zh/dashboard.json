@@ -59,6 +59,22 @@
       "nextStepLabel": "下一步：",
       "nextStepText": "重新索引知识库以启用 AI 搜索。",
       "reindexAction": "重新索引知识库"
+    },
+    "analytics": {
+      "totalMessages": "总消息数",
+      "autonomyRate": "AI自主处理率",
+      "avgResponseTime": "平均响应时间",
+      "activeGuests": "活跃宾客",
+      "newGuests": "新宾客",
+      "failedToLoad": "加载分析数据失败，请刷新。",
+      "presets": {
+        "today": "今天",
+        "yesterday": "昨天",
+        "3d": "3天",
+        "7d": "7天",
+        "14d": "14天",
+        "30d": "30天"
+      }
     }
   }
 }

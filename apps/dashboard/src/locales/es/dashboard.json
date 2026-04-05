@@ -59,6 +59,22 @@
       "nextStepLabel": "Siguiente paso:",
       "nextStepText": "Reindexa la base de conocimiento para habilitar la búsqueda con IA.",
       "reindexAction": "Reindexar Base de Conocimiento"
+    },
+    "analytics": {
+      "totalMessages": "Mensajes totales",
+      "autonomyRate": "Tasa de autonomía IA",
+      "avgResponseTime": "Tiempo de respuesta promedio",
+      "activeGuests": "Huéspedes activos",
+      "newGuests": "Nuevos huéspedes",
+      "failedToLoad": "Error al cargar los datos analíticos. Por favor, actualiza.",
+      "presets": {
+        "today": "Hoy",
+        "yesterday": "Ayer",
+        "3d": "3 días",
+        "7d": "7 días",
+        "14d": "14 días",
+        "30d": "30 días"
+      }
     }
   }
 }

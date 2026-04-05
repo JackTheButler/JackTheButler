@@ -20,6 +20,7 @@ import { guestRoutes } from './guests.js';
 import { reservationRoutes } from './reservations.js';
 import { siteScraperRoutes } from '@/apps/tools/site-scraper/routes.js';
 import { systemRoutes } from './system.js';
+import { analyticsRouter } from './analytics.js';
 import { seedRoutes } from './seed.js';
 import { rolesRouter, permissionsRouter } from './roles.js';
 import { staffRouter } from './staff.js';
@@ -75,6 +76,9 @@ api.route('/tools/site-scraper', siteScraperRoutes);
 
 // System status routes
 api.route('/system', systemRoutes);
+
+// Analytics routes
+api.route('/analytics', analyticsRouter);
 
 // Seed/demo data routes
 api.route('/seed', seedRoutes);

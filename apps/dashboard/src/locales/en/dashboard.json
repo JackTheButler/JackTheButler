@@ -59,6 +59,22 @@
       "nextStepText": "Reindex the knowledge base to enable AI search.",
       "reindexAction": "Reindex Knowledge Base",
       "error": "Failed to load sample data. Please try again."
+    },
+    "analytics": {
+      "totalMessages": "Total Messages",
+      "autonomyRate": "AI Autonomy Rate",
+      "avgResponseTime": "Avg Response Time",
+      "activeGuests": "Active Guests",
+      "newGuests": "New Guests",
+      "failedToLoad": "Failed to load analytics data. Please refresh.",
+      "presets": {
+        "today": "Today",
+        "yesterday": "Yesterday",
+        "3d": "3 days",
+        "7d": "7 days",
+        "14d": "14 days",
+        "30d": "30 days"
+      }
     }
   }
 }

@@ -1,6 +1,7 @@
 import { Bot, MessageSquare, Cpu, Plug, Book } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
-import { PageContainer, PageHeader, StatsBar, ActionItems, DemoDataCard } from '@/components';
+import { PageContainer, PageHeader, StatsColumn, ActionItems, DemoDataCard } from '@/components';
+import { AnalyticsCards } from '@/components/home/AnalyticsCards';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 
@@ -51,8 +52,8 @@ export function HomePage() {
       <PageHeader />
 
       <div className="space-y-6">
-        {/* System Status */}
-        {!isLoading && <StatsBar items={[...stats]} />}
+        {/* Analytics Sparklines */}
+        <AnalyticsCards />
 
         {/* Cards Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -61,9 +62,10 @@ export function HomePage() {
             <ActionItems disabled={!canManageSettings} />
           </div>
 
-          {/* Demo Data - 1/3 */}
-          <div>
+          {/* Right column: Demo Data + System Status */}
+          <div className="flex flex-col gap-6">
             <DemoDataCard disabled={!canManageSettings} />
+            {!isLoading && <StatsColumn items={[...stats]} />}
           </div>
         </div>
       </div>

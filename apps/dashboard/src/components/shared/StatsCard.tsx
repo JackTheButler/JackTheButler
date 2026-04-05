@@ -47,6 +47,24 @@ export function StatsBar({ items }: StatsBarProps) {
   );
 }
 
+export function StatsColumn({ items }: StatsBarProps) {
+  return (
+    <Card>
+      <div className="flex flex-col divide-y">
+        {items.map((item, index) => (
+          <div key={index} className="flex items-center gap-3 px-4 py-2.5">
+            <div className={cn('p-1.5 rounded-md', variants[item.variant ?? 'default'])}>
+              <item.icon className="w-3.5 h-3.5" />
+            </div>
+            <p className="text-xs text-muted-foreground flex-1">{item.label}</p>
+            <p className="text-sm font-semibold">{item.value}</p>
+          </div>
+        ))}
+      </div>
+    </Card>
+  );
+}
+
 // Keep old exports for backwards compatibility during migration
 export { StatItem as StatsCard };
 

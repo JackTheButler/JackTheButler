@@ -59,6 +59,22 @@
       "nextStepLabel": "अगला कदम:",
       "nextStepText": "AI खोज सक्षम करने के लिए ज्ञान आधार को पुनः अनुक्रमित करें।",
       "reindexAction": "ज्ञान आधार पुनः अनुक्रमित करें"
+    },
+    "analytics": {
+      "totalMessages": "कुल संदेश",
+      "autonomyRate": "AI स्वायत्तता दर",
+      "avgResponseTime": "औसत प्रतिक्रिया समय",
+      "activeGuests": "सक्रिय अतिथि",
+      "newGuests": "नए अतिथि",
+      "failedToLoad": "विश्लेषण डेटा लोड करने में विफल। कृपया रीफ्रेश करें।",
+      "presets": {
+        "today": "आज",
+        "yesterday": "कल",
+        "3d": "3 दिन",
+        "7d": "7 दिन",
+        "14d": "14 दिन",
+        "30d": "30 दिन"
+      }
     }
   }
 }

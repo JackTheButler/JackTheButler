@@ -359,7 +359,7 @@ export function Layout() {
   };
 
   return (
-    <div className="h-screen bg-background flex overflow-hidden relative">
+    <div className="h-screen bg-background aurora-layout flex overflow-hidden relative">
       {/* Mobile backdrop */}
       {mobileMenuOpen && (
         <div
@@ -371,7 +371,7 @@ export function Layout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'bg-card border-e flex flex-col h-screen flex-shrink-0 transition-all duration-200',
+          'glass-noise relative overflow-hidden border-e border-gray-400/20 bg-white/60 backdrop-blur-lg dark:bg-black/30 flex flex-col h-screen flex-shrink-0 transition-all duration-200',
           // Mobile: fixed overlay
           'fixed sm:relative z-50 sm:z-auto',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0',
@@ -380,7 +380,7 @@ export function Layout() {
         )}
       >
         {/* Logo */}
-        <div className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b">
+        <div className="h-14 flex-shrink-0 flex items-center justify-between px-4 border-b border-gray-400/20">
           {!effectiveCollapsed ? (
             <div className="flex items-center gap-2">
               <img src="/logo.svg" alt={t('layout.butler')} className="w-6 h-6 dark:invert" />
@@ -396,7 +396,7 @@ export function Layout() {
           {/* Sliding indicator */}
           <div
             className={cn(
-              'absolute bg-primary rounded-lg pointer-events-none',
+              'absolute bg-primary rounded-md pointer-events-none',
               transitionsEnabled && 'transition-all duration-200'
             )}
             style={{
@@ -420,7 +420,7 @@ export function Layout() {
                     {!effectiveCollapsed ? (
                       section.disabled ? (
                         <span
-                          className="flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg cursor-not-allowed opacity-50"
+                          className="flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-md cursor-not-allowed opacity-50"
                           style={{ width: 'calc(100% - 16px)' }}
                         >
                           <span className="text-muted-foreground">{section.icon}</span>
@@ -429,7 +429,7 @@ export function Layout() {
                       ) : (
                         <button
                           onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
-                          className={`flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-lg transition-colors ${
+                          className={`flex items-center gap-3 w-full mx-2 px-3 py-2 rounded-md transition-colors ${
                             hasActiveItem && !isExpanded
                               ? 'bg-muted text-foreground'
                               : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -444,14 +444,14 @@ export function Layout() {
                       <Tooltip content={section.title} side="right">
                         {section.disabled ? (
                           <span
-                            className="flex items-center justify-center mx-auto p-2 w-fit rounded-lg cursor-not-allowed opacity-50"
+                            className="flex items-center justify-center mx-auto p-2 w-fit rounded-md cursor-not-allowed opacity-50"
                           >
                             <span className="text-muted-foreground">{section.icon}</span>
                           </span>
                         ) : (
                           <button
                             onClick={() => section.id && toggleSection(section.id, section.items[0]?.path)}
-                            className={`flex items-center justify-center mx-auto p-2 w-fit rounded-lg transition-colors ${
+                            className={`flex items-center justify-center mx-auto p-2 w-fit rounded-md transition-colors ${
                               hasActiveItem && !isExpanded
                                 ? 'bg-muted text-foreground'
                                 : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -473,7 +473,7 @@ export function Layout() {
                         </span>
                       </div>
                     )}
-                    {effectiveCollapsed && <div className="mx-3 mb-2 border-t border-border" />}
+                    {effectiveCollapsed && <div className="mx-3 mb-2 border-t border-gray-400/20" />}
                   </>
                 ) : null}
 
@@ -510,7 +510,7 @@ export function Layout() {
                             <Tooltip content={effectiveCollapsed ? item.label : null} side="right">
                               {item.disabled ? (
                                 <span
-                                  className={`flex items-center gap-3 rounded-lg relative z-10 cursor-not-allowed opacity-50 ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !effectiveCollapsed ? 'ms-5' : ''}`}
+                                  className={`flex items-center gap-3 rounded-md relative z-10 cursor-not-allowed opacity-50 ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'mx-2 px-3 py-2'} ${section.collapsible && !effectiveCollapsed ? 'ms-5' : ''}`}
                                 >
                                   {(!section.collapsible || effectiveCollapsed) && (
                                     <span className="text-muted-foreground">
@@ -525,7 +525,7 @@ export function Layout() {
                                 <Link
                                   to={item.path}
                                   data-nav-active={active || undefined}
-                                  className={`flex items-center gap-3 rounded-lg transition-colors relative z-10 ${
+                                  className={`flex items-center gap-3 rounded-md transition-colors relative z-10 ${
                                     active
                                       ? 'text-primary-foreground'
                                       : 'text-muted-foreground hover:bg-muted hover:text-foreground'
@@ -564,7 +564,7 @@ export function Layout() {
                     })()}
                     {/* Divider after submenu in collapsed mode */}
                     {section.collapsible && effectiveCollapsed && (
-                      <li className="pt-1 mt-1 border-t border-border mx-4" />
+                      <li className="pt-1 mt-1 border-t border-gray-400/20 mx-4" />
                     )}
                   </ul>
                 </div>
@@ -575,13 +575,13 @@ export function Layout() {
 
         {/* User section */}
         <div className="flex-shrink-0" ref={userMenuRef}>
-          <div className={`overflow-hidden transition-all duration-200 space-y-1 py-1 ${userMenuOpen ? 'max-h-64 border-t shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]' : 'max-h-0'}`}>
+          <div className={`overflow-hidden transition-all duration-200 space-y-1 py-1 ${userMenuOpen ? 'max-h-64 border-t border-gray-400/20 shadow-[0_-4px_6px_-1px_rgba(0,0,0,0.1)]' : 'max-h-0'}`}>
             <DropdownMenu className={effectiveCollapsed ? 'flex justify-center' : 'block w-full'}>
               <Tooltip content={effectiveCollapsed ? t('common.language') : undefined} side="right">
                 <span className={effectiveCollapsed ? 'flex justify-center' : 'block'}>
                   <DropdownMenuTrigger asChild>
                     <button
-                      className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                      className={`flex items-center gap-3 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
                     >
                       <Globe size={20} />
                       {!effectiveCollapsed && <span className="text-sm font-medium">{currentLanguage.label}</span>}
@@ -604,7 +604,7 @@ export function Layout() {
             <Tooltip content={effectiveCollapsed ? (isDark ? t('common.switchToLight') : t('common.switchToDark')) : undefined} side="right">
               <div
                 onClick={toggleTheme}
-                className={`flex items-center gap-3 rounded-lg cursor-pointer transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                className={`flex items-center gap-3 rounded-md cursor-pointer transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
               >
                 <span ref={themeToggleRef}>
                   <ThemeToggle size="sm" iconOnly />
@@ -618,7 +618,7 @@ export function Layout() {
                   setUserMenuOpen(false);
                   navigate('/settings');
                 }}
-                className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                className={`flex items-center gap-3 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
               >
                 <Settings size={20} />
                 {!effectiveCollapsed && <span className="text-sm font-medium">{t('common.settings')}</span>}
@@ -630,7 +630,7 @@ export function Layout() {
                   setUserMenuOpen(false);
                   handleLogout();
                 }}
-                className={`flex items-center gap-3 rounded-lg transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
+                className={`flex items-center gap-3 rounded-md transition-colors text-muted-foreground hover:bg-muted hover:text-foreground ${effectiveCollapsed ? 'justify-center p-2 w-fit mx-auto' : 'w-[calc(100%-1rem)] mx-2 px-3 py-2'}`}
               >
                 <Power size={20} />
                 {!effectiveCollapsed && <span className="text-sm font-medium">{t('common.logout')}</span>}
@@ -640,7 +640,7 @@ export function Layout() {
           <Tooltip content={effectiveCollapsed ? user?.name : undefined} side="right">
             <button
               onClick={() => setUserMenuOpen(!userMenuOpen)}
-              className={`flex items-center gap-2 w-full p-3 border-t text-muted-foreground hover:bg-muted transition-colors ${effectiveCollapsed ? 'justify-center' : ''}`}
+              className={`flex items-center gap-2 w-full p-3 border-t border-gray-400/20 text-muted-foreground hover:bg-muted transition-colors ${effectiveCollapsed ? 'justify-center' : ''}`}
             >
               <div className="w-8 h-8 rounded-full bg-muted flex items-center justify-center flex-shrink-0">
                 <User size={14} className="text-muted-foreground" />
@@ -716,7 +716,7 @@ function HeaderBar({
   };
 
   return (
-    <header className="bg-card border-b h-14 flex-shrink-0 flex items-center justify-between px-2 sm:px-6">
+    <header className="glass-noise relative border-b border-gray-400/20 bg-white/60 backdrop-blur-lg dark:bg-black/30 h-14 flex-shrink-0 flex items-center justify-between px-2 sm:px-6 overflow-hidden">
       <div className="flex items-center gap-3">
         {/* Mobile menu toggle */}
         <button

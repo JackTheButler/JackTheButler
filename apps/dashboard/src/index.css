@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 220 14% 96%;
     --foreground: 222.2 84% 4.9%;
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
@@ -35,7 +35,7 @@
     --border: 214.3 31.8% 91.4%;
     --input: 214.3 31.8% 91.4%;
     --ring: 0 0% 0%;
-    --radius: 0.5rem;
+    --radius: 1rem;
   }
 
   .dark {
@@ -86,6 +86,41 @@
       Roboto,
       sans-serif;
   }
+}
+
+/* Glass noise texture */
+.glass-noise::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* Aurora background */
+.aurora-layout {
+  background-image:
+    radial-gradient(ellipse 80% 40% at 60% 20%, hsla(210, 85%, 65%, 0.65) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 70% at 25% 55%, hsla(245, 75%, 70%, 0.6) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 35% at 80% 75%, hsla(188, 80%, 62%, 0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 60% at 55% 50%, hsla(220, 70%, 72%, 0.4) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 50% at 15% 25%, hsla(260, 70%, 75%, 0.45) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 30% at 70% 40%, hsla(195, 75%, 68%, 0.35) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 55% at 40% 80%, hsla(230, 65%, 70%, 0.4) 0%, transparent 60%);
+}
+
+.dark .aurora-layout {
+  background-image:
+    radial-gradient(ellipse 80% 40% at 60% 20%, hsla(210, 70%, 35%, 0.6) 0%, transparent 70%),
+    radial-gradient(ellipse 40% 70% at 25% 55%, hsla(245, 65%, 38%, 0.55) 0%, transparent 65%),
+    radial-gradient(ellipse 70% 35% at 80% 75%, hsla(188, 70%, 30%, 0.5) 0%, transparent 65%),
+    radial-gradient(ellipse 50% 60% at 55% 50%, hsla(220, 60%, 38%, 0.35) 0%, transparent 60%),
+    radial-gradient(ellipse 35% 50% at 15% 25%, hsla(260, 60%, 40%, 0.4) 0%, transparent 55%),
+    radial-gradient(ellipse 60% 30% at 70% 40%, hsla(195, 65%, 32%, 0.3) 0%, transparent 55%),
+    radial-gradient(ellipse 45% 55% at 40% 80%, hsla(230, 55%, 35%, 0.35) 0%, transparent 60%);
 }
 
 /* Status indicator animations */
