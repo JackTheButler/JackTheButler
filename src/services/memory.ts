@@ -48,7 +48,7 @@ export class MemoryService {
    * Insert one or more memory facts for a guest.
    *
    * When a provider is available:
-   *  - Embeds each incoming fact and searches for near-matches (cosine > 0.85)
+   *  - Embeds each incoming fact and searches for near-matches (cosine > 0.75)
    *  - Classifies near-matches as CONFIRMS, CONTRADICTS, or DIFFERENT
    *  - CONFIRMS  → bumps last_reinforced_at, increases confidence by 0.1
    *  - CONTRADICTS → replaces content and resets confidence
@@ -280,7 +280,7 @@ export class MemoryService {
   private findNearMatch(
     guestId: string,
     embeddingBuf: Buffer,
-    threshold = 0.85,
+    threshold = 0.75,
   ): { id: string; content: string; confidence: number; similarity: number } | null {
     const row = sqlite
       .prepare(
