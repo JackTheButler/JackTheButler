@@ -9,6 +9,7 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, desc, sql } from 'drizzle-orm';
+import type { MemoryFact } from '@/services/memory.js';
 import { db, guests, reservations, conversations } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -16,6 +17,7 @@ import { validateBody, requireAuth, requirePermission } from '@/gateway/middlewa
 import { normalizePhone } from '@/services/guest.js';
 import { now } from '@/utils/time.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
+import { memoryService } from '@/services/memory.js';
 
 const log = createLogger('routes:guests');
 
@@ -294,6 +296,120 @@ guestRoutes.get('/:id/conversations', requirePermission(PERMISSIONS.GUESTS_VIEW)
     limit,
     offset,
   });
+});
+
+/**
+ * GET /api/v1/guests/:id/memories
+ * Get memories Jack has learned about a guest
+ */
+guestRoutes.get('/:id/memories', requirePermission(PERMISSIONS.GUESTS_VIEW), async (c) => {
+  const id = c.req.param('id');
+
+  const guest = await db.select().from(guests).where(eq(guests.id, id)).get();
+  if (!guest) {
+    return c.json({ error: 'Guest not found' }, 404);
+  }
+
+  const rows = await memoryService.listForGuest(id);
+
+  // Strip binary embedding blobs — not useful to the UI and wasteful on the wire
+  const memories = rows.map(({ embedding: _embedding, ...m }) => m);
+
+  return c.json({ memories });
+});
+
+const MEMORY_CATEGORIES = ['preference', 'complaint', 'habit', 'personal', 'request'] as const;
+
+const createMemorySchema = z.object({
+  category: z.enum(MEMORY_CATEGORIES),
+  content: z.string().min(1).max(1000),
+});
+
+const updateMemorySchema = z
+  .object({
+    category: z.enum(MEMORY_CATEGORIES).optional(),
+    content: z.string().min(1).max(1000).optional(),
+  })
+  .refine((data) => data.category !== undefined || data.content !== undefined, {
+    message: 'At least one field (category or content) must be provided',
+  });
+
+/**
+ * POST /api/v1/guests/:id/memories
+ * Add a manual memory for a guest
+ */
+guestRoutes.post('/:id/memories', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBody(createMemorySchema), async (c) => {
+  const id = c.req.param('id');
+  const data = c.get('validatedBody') as z.infer<typeof createMemorySchema>;
+
+  const guest = await db.select().from(guests).where(eq(guests.id, id)).get();
+  if (!guest) return c.json({ error: 'Guest not found' }, 404);
+
+  const fact: MemoryFact = { category: data.category, content: data.content, confidence: 1.0 };
+  const [memory] = await memoryService.insert(id, null, [fact], 'manual');
+
+  log.info({ guestId: id, memoryId: memory!.id }, 'Manual memory created');
+
+  const { embedding: _embedding, ...row } = memory!;
+  return c.json(row, 201);
+});
+
+/**
+ * PATCH /api/v1/guests/:id/memories/:memoryId
+ * Update a memory entry
+ */
+guestRoutes.patch('/:id/memories/:memoryId', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBody(updateMemorySchema), async (c) => {
+  const guestId = c.req.param('id');
+  const memoryId = c.req.param('memoryId');
+  const data = c.get('validatedBody') as z.infer<typeof updateMemorySchema>;
+
+  const guest = await db.select().from(guests).where(eq(guests.id, guestId)).get();
+  if (!guest) return c.json({ error: 'Guest not found' }, 404);
+
+  let existing;
+  try {
+    existing = await memoryService.getById(memoryId);
+  } catch {
+    return c.json({ error: 'Memory not found' }, 404);
+  }
+
+  // Cross-guest safety: ensure memory belongs to this guest
+  if (existing.guestId !== guestId) {
+    return c.json({ error: 'Memory not found' }, 404);
+  }
+
+  const patch = {
+    ...(data.category !== undefined && { category: data.category }),
+    ...(data.content !== undefined && { content: data.content }),
+  };
+  const updated = await memoryService.update(memoryId, patch);
+
+  const { embedding: _embedding, ...row } = updated;
+  return c.json(row);
+});
+
+/**
+ * DELETE /api/v1/guests/:id/memories/:memoryId
+ * Delete a memory entry
+ */
+guestRoutes.delete('/:id/memories/:memoryId', requirePermission(PERMISSIONS.GUESTS_MANAGE), async (c) => {
+  const guestId = c.req.param('id');
+  const memoryId = c.req.param('memoryId');
+
+  let existing;
+  try {
+    existing = await memoryService.getById(memoryId);
+  } catch {
+    return c.json({ error: 'Memory not found' }, 404);
+  }
+
+  // Cross-guest safety: ensure memory belongs to this guest
+  if (existing.guestId !== guestId) {
+    return c.json({ error: 'Memory not found' }, 404);
+  }
+
+  await memoryService.delete(memoryId);
+  return c.json({ success: true });
 });
 
 /**

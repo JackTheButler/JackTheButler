@@ -14,7 +14,7 @@
  */
 
 import { sql } from 'drizzle-orm';
-import { sqliteTable, text, integer, real, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, real, blob, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 
 // ===================
 // Settings
@@ -80,6 +80,47 @@ export const guests = sqliteTable(
     uniqueIndex('idx_guests_email').on(table.email),
     uniqueIndex('idx_guests_phone').on(table.phone),
     index('idx_guests_name').on(table.lastName, table.firstName),
+  ]
+);
+
+// ===================
+// Guest Memories
+// ===================
+
+/**
+ * Persistent facts learned about guests across conversations.
+ * Embeddings stored as binary float32 for sqlite-vec similarity search.
+ */
+export const guestMemories = sqliteTable(
+  'guest_memories',
+  {
+    id: text('id').primaryKey(),
+    guestId: text('guest_id')
+      .notNull()
+      .references(() => guests.id, { onDelete: 'cascade' }),
+    conversationId: text('conversation_id').references(() => conversations.id, { onDelete: 'set null' }),
+    category: text('category', {
+      enum: ['preference', 'complaint', 'habit', 'personal', 'request'],
+    }).notNull(),
+    content: text('content').notNull(),
+    source: text('source', {
+      enum: ['ai_extracted', 'manual', 'pms'],
+    })
+      .notNull()
+      .default('ai_extracted'),
+    confidence: real('confidence').notNull().default(1.0),
+    // Binary float32 vector for sqlite-vec similarity search
+    embedding: blob('embedding'),
+    createdAt: text('created_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+    lastReinforcedAt: text('last_reinforced_at')
+      .notNull()
+      .default(sql`(datetime('now'))`),
+  },
+  (table) => [
+    index('idx_guest_memories_guest').on(table.guestId),
+    index('idx_guest_memories_category').on(table.guestId, table.category),
   ]
 );
 
@@ -455,8 +496,8 @@ export const knowledgeEmbeddings = sqliteTable('knowledge_embeddings', {
   id: text('id')
     .primaryKey()
     .references(() => knowledgeBase.id, { onDelete: 'cascade' }),
-  // Store embedding as JSON array (sqlite-vec will handle the vector operations)
-  embedding: text('embedding').notNull(),
+  // Binary float32 vector for sqlite-vec similarity search
+  embedding: blob('embedding').notNull(),
   model: text('model').notNull(),
   dimensions: integer('dimensions').notNull(),
   createdAt: text('created_at')
@@ -497,6 +538,9 @@ export type NewKnowledgeItem = typeof knowledgeBase.$inferInsert;
 
 export type KnowledgeEmbedding = typeof knowledgeEmbeddings.$inferSelect;
 export type NewKnowledgeEmbedding = typeof knowledgeEmbeddings.$inferInsert;
+
+export type GuestMemory = typeof guestMemories.$inferSelect;
+export type NewGuestMemory = typeof guestMemories.$inferInsert;
 
 // ===================
 // Automation Rules

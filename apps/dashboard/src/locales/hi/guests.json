@@ -48,7 +48,22 @@
     "confirmation": "पुष्टि #",
     "channel": "चैनल",
     "lastMessage": "अंतिम संदेश",
-    "view": "देखें"
+    "view": "देखें",
+    "whatJackKnows": "Jack की यादें",
+    "addMemory": "याद जोड़ें",
+    "noMemories": "अभी तक कोई यादें दर्ज नहीं",
+    "memoryContentPlaceholder": "जैसे: पंख रहित तकिए पसंद करते हैं",
+    "saveMemory": "सहेजें",
+    "failedToSaveMemory": "याद सहेजने में विफल",
+    "failedToDeleteMemory": "याद हटाने में विफल",
+    "deleteMemoryTitle": "याद हटाएं",
+    "deleteMemoryDescription": "क्या आप वाकई इस याद को हटाना चाहते हैं? Jack इस अतिथि को जवाब देते समय इसे अब उपयोग नहीं करेगा।",
+    "deleteMemoryConfirm": "हटाएं",
+    "categoryPreference": "प्राथमिकता",
+    "categoryComplaint": "शिकायत",
+    "categoryHabit": "आदत",
+    "categoryPersonal": "व्यक्तिगत",
+    "categoryRequest": "अनुरोध"
   },
   "guestForm": {
     "addNewGuest": "नया अतिथि जोड़ें",

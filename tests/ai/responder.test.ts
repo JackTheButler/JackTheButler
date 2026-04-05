@@ -20,7 +20,7 @@ vi.mock('@/services/conversation.js', () => ({
 
 import { AIResponder } from '@/ai/responder.js';
 import type { LLMProvider } from '@/ai/types.js';
-import type { Conversation } from '@/db/schema.js';
+import type { Conversation, GuestMemory } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { KnowledgeSearchResult } from '@/ai/knowledge/index.js';
 
@@ -112,6 +112,72 @@ describe('AIResponder', () => {
       const knowledgeContext = result.metadata?.knowledgeContext as Array<{ id: string }> | undefined;
       expect(knowledgeContext).toBeDefined();
       expect(knowledgeContext?.[0]?.id).toBe('kb-001');
+    });
+  });
+
+  describe('generate (with guest memories)', () => {
+    const mockMemories: GuestMemory[] = [
+      {
+        id: 'mem-001',
+        guestId: 'gst-001',
+        conversationId: 'conv-001',
+        category: 'preference',
+        content: 'Prefers feather-free pillows',
+        source: 'ai_extracted',
+        confidence: 0.95,
+        embedding: null,
+        createdAt: new Date().toISOString(),
+        lastReinforcedAt: new Date().toISOString(),
+      },
+      {
+        id: 'mem-002',
+        guestId: 'gst-001',
+        conversationId: 'conv-001',
+        category: 'habit',
+        content: 'Always requests a late checkout',
+        source: 'ai_extracted',
+        confidence: 0.9,
+        embedding: null,
+        createdAt: new Date().toISOString(),
+        lastReinforcedAt: new Date().toISOString(),
+      },
+    ];
+
+    it('includes memory block in system prompt when memories are provided', async () => {
+      await responder.generate(testConversation, testInbound, undefined, [], mockMemories);
+
+      // Find the generation call by looking for the one whose system message contains
+      // the butler prompt marker — robust regardless of how many complete() calls are made.
+      const calls = vi.mocked(provider.complete).mock.calls;
+      const generationCall = calls
+        .map((c) => c[0].messages[0]!)
+        .find((m) => m.role === 'system' && m.content.includes('You are Jack'));
+      expect(generationCall).toBeDefined();
+      expect(generationCall!.content).toContain('What Jack Knows About This Guest');
+      expect(generationCall!.content).toContain('preference: Prefers feather-free pillows');
+      expect(generationCall!.content).toContain('habit: Always requests a late checkout');
+    });
+
+    it('omits memory block when memories is empty', async () => {
+      await responder.generate(testConversation, testInbound, undefined, [], []);
+
+      const calls = vi.mocked(provider.complete).mock.calls;
+      const generationCall = calls
+        .map((c) => c[0].messages[0]!)
+        .find((m) => m.role === 'system' && m.content.includes('You are Jack'));
+      expect(generationCall).toBeDefined();
+      expect(generationCall!.content).not.toContain('What Jack Knows About This Guest');
+    });
+
+    it('omits memory block when memories is undefined (anonymous guest / first-time guest)', async () => {
+      await responder.generate(testConversation, testInbound, undefined, [], undefined);
+
+      const calls = vi.mocked(provider.complete).mock.calls;
+      const generationCall = calls
+        .map((c) => c[0].messages[0]!)
+        .find((m) => m.role === 'system' && m.content.includes('You are Jack'));
+      expect(generationCall).toBeDefined();
+      expect(generationCall!.content).not.toContain('What Jack Knows About This Guest');
     });
   });
 });

@@ -4,7 +4,7 @@
  * Simple responder for testing that echoes back the received message.
  */
 
-import type { Conversation } from '@/db/schema.js';
+import type { Conversation, GuestMemory } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/services/guest-context.js';
 import type { Response, Responder } from './types.js';
@@ -19,7 +19,8 @@ export class EchoResponder implements Responder {
     _conversation: Conversation,
     message: InboundMessage,
     guestContext?: GuestContext,
-    _knowledgeResults?: KnowledgeSearchResult[]
+    _knowledgeResults?: KnowledgeSearchResult[],
+    _memories?: GuestMemory[]
   ): Promise<Response> {
     // Include guest name in echo if available
     const greeting = guestContext?.guest ? `Hello ${guestContext.guest.firstName}! ` : '';

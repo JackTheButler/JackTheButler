@@ -8,7 +8,7 @@
  * @module core/pipeline/context
  */
 
-import type { Guest, Conversation } from '@/db/schema.js';
+import type { Guest, Conversation, GuestMemory } from '@/db/schema.js';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/core/guest-context.js';
 import type { Response as AIResponse } from '@/ai/types.js';
@@ -44,9 +44,10 @@ export interface MessageContext {
   savedInboundId?: string;
   savedOutboundId?: string;
 
-  // ── Embedding + Knowledge (populated in Stage 3) ──────────
+  // ── Embedding + Knowledge + Memory ────────────────────────
   queryEmbedding?: number[];
   knowledgeResults?: KnowledgeSearchResult[];
+  memories?: GuestMemory[];
 
   // ── AI response ───────────────────────────────────────────
   aiResponse?: AIResponse;

@@ -319,6 +319,9 @@ export class ConversationService {
       if (input.state === 'resolved') {
         updates.resolvedAt = now();
       }
+      if (input.state === 'closed') {
+        updates.resolvedAt = updates.resolvedAt ?? now();
+      }
     }
 
     if (input.assignedTo !== undefined) {
@@ -364,6 +367,18 @@ export class ConversationService {
       changes: eventChanges,
       timestamp: new Date(),
     });
+
+    // Only emit CONVERSATION_CLOSED when actually transitioning into closed
+    // — not when update() is called on an already-closed conversation
+    if (input.state === 'closed' && conversation.state !== 'closed') {
+      events.emit({
+        type: EventTypes.CONVERSATION_CLOSED,
+        conversationId: id,
+        guestId: conversation.guestId,
+        reason: input._closeReason ?? 'timeout',
+        timestamp: new Date(),
+      });
+    }
 
     return this.getById(id);
   }

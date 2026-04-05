@@ -48,7 +48,22 @@
     "confirmation": "Подтверждение №",
     "channel": "Канал",
     "lastMessage": "Последнее сообщение",
-    "view": "Смотреть"
+    "view": "Смотреть",
+    "whatJackKnows": "Память Джека",
+    "addMemory": "Добавить",
+    "noMemories": "Воспоминания ещё не записаны",
+    "memoryContentPlaceholder": "Например: предпочитает подушки без пуха",
+    "saveMemory": "Сохранить",
+    "failedToSaveMemory": "Ошибка сохранения",
+    "failedToDeleteMemory": "Ошибка удаления",
+    "deleteMemoryTitle": "Удалить запись",
+    "deleteMemoryDescription": "Вы уверены, что хотите удалить эту запись? Джек больше не будет её использовать при ответах этому гостю.",
+    "deleteMemoryConfirm": "Удалить",
+    "categoryPreference": "Предпочтение",
+    "categoryComplaint": "Жалоба",
+    "categoryHabit": "Привычка",
+    "categoryPersonal": "Личное",
+    "categoryRequest": "Запрос"
   },
   "guestForm": {
     "addNewGuest": "Добавить нового гостя",

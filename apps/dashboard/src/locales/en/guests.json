@@ -48,7 +48,22 @@
     "confirmation": "Confirmation #",
     "channel": "Channel",
     "lastMessage": "Last Message",
-    "view": "View"
+    "view": "View",
+    "whatJackKnows": "Jack's Memory",
+    "addMemory": "Add Memory",
+    "noMemories": "No memories recorded yet",
+    "memoryContentPlaceholder": "e.g. Prefers feather-free pillows",
+    "saveMemory": "Save",
+    "failedToSaveMemory": "Failed to save memory",
+    "failedToDeleteMemory": "Failed to delete memory",
+    "deleteMemoryTitle": "Delete memory",
+    "deleteMemoryDescription": "Are you sure you want to delete this memory? Jack will no longer use it when responding to this guest.",
+    "deleteMemoryConfirm": "Delete",
+    "categoryPreference": "Preference",
+    "categoryComplaint": "Complaint",
+    "categoryHabit": "Habit",
+    "categoryPersonal": "Personal",
+    "categoryRequest": "Request"
   },
   "guestForm": {
     "addNewGuest": "Add New Guest",

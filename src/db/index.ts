@@ -13,6 +13,7 @@ import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Database, { type Database as DatabaseType } from 'better-sqlite3';
 import { drizzle } from 'drizzle-orm/better-sqlite3';
+import * as sqliteVec from 'sqlite-vec';
 import { eq } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from './schema.js';
@@ -53,6 +54,9 @@ function createSqliteConnection(dbPath: string): Database.Database {
  * Raw SQLite connection (for direct queries if needed)
  */
 export const sqlite: DatabaseType = createSqliteConnection(config.database.path);
+
+// Load sqlite-vec extension for vector similarity search
+sqliteVec.load(sqlite);
 
 /**
  * Drizzle ORM instance with schema

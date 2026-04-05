@@ -6,7 +6,7 @@
  */
 
 import { eq, and, desc, sql } from 'drizzle-orm';
-import { db } from '@/db/index.js';
+import { db, sqlite } from '@/db/index.js';
 import { NotFoundError, AppError } from '@/errors/index.js';
 import { knowledgeBase, knowledgeEmbeddings } from '@/db/schema.js';
 import type { KnowledgeItem, NewKnowledgeItem } from '@/db/schema.js';
@@ -178,22 +178,22 @@ export class KnowledgeService {
   async searchByEmbedding(embedding: number[], options: SearchOptions = {}): Promise<KnowledgeSearchResult[]> {
     const { limit = 5, category, minSimilarity = 0.5 } = options;
 
-    // Get all stored embeddings and compute cosine similarity
-    const storedEmbeddings = await db.select().from(knowledgeEmbeddings);
-    const similarities: { id: string; similarity: number }[] = [];
+    // Use sqlite-vec for cosine similarity ranking — runs in C, no JS loop
+    const queryBuf = Buffer.from(new Float32Array(embedding).buffer);
+    const ranked = sqlite
+      .prepare(
+        `SELECT ke.id, (1.0 - vec_distance_cosine(ke.embedding, vec_f32(?))) AS similarity
+         FROM knowledge_embeddings ke
+         ORDER BY similarity DESC
+         LIMIT ?`
+      )
+      .all(queryBuf, limit * 3) as Array<{ id: string; similarity: number }>;
 
-    for (const row of storedEmbeddings) {
-      const stored = JSON.parse(row.embedding) as number[];
-      const similarity = this.cosineSimilarity(embedding, stored);
-      if (similarity >= minSimilarity) {
-        similarities.push({ id: row.id, similarity });
-      }
-    }
+    const qualified = ranked.filter((r) => r.similarity >= minSimilarity).slice(0, limit);
+    if (qualified.length === 0) return [];
 
-    similarities.sort((a, b) => b.similarity - a.similarity);
-    const topIds = similarities.slice(0, limit).map((s) => s.id);
-
-    if (topIds.length === 0) return [];
+    const topIds = qualified.map((r) => r.id);
+    const similarityMap = new Map(qualified.map((r) => [r.id, r.similarity]));
 
     const items = await db
       .select()
@@ -208,7 +208,7 @@ export class KnowledgeService {
 
     const results: KnowledgeSearchResult[] = items.map((item) => ({
       ...item,
-      similarity: similarities.find((s) => s.id === item.id)?.similarity ?? 0,
+      similarity: similarityMap.get(item.id) ?? 0,
     }));
 
     results.sort((a, b) => b.similarity - a.similarity);
@@ -225,40 +225,13 @@ export class KnowledgeService {
     // Delete existing embedding if any
     await db.delete(knowledgeEmbeddings).where(eq(knowledgeEmbeddings.id, id));
 
-    // Store new embedding
+    // Store new embedding as binary float32 for sqlite-vec
     await db.insert(knowledgeEmbeddings).values({
       id,
-      embedding: JSON.stringify(response.embedding),
+      embedding: Buffer.from(new Float32Array(response.embedding).buffer),
       model: this.embeddingModel,
       dimensions: response.embedding.length,
     });
-  }
-
-  /**
-   * Compute cosine similarity between two vectors
-   */
-  private cosineSimilarity(a: number[], b: number[]): number {
-    if (a.length !== b.length) {
-      // Fallback: return 0 for mismatched dimensions
-      return 0;
-    }
-
-    let dotProduct = 0;
-    let normA = 0;
-    let normB = 0;
-
-    for (let i = 0; i < a.length; i++) {
-      const aVal = a[i] ?? 0;
-      const bVal = b[i] ?? 0;
-      dotProduct += aVal * bVal;
-      normA += aVal * aVal;
-      normB += bVal * bVal;
-    }
-
-    const magnitude = Math.sqrt(normA) * Math.sqrt(normB);
-    if (magnitude === 0) return 0;
-
-    return dotProduct / magnitude;
   }
 
   /**

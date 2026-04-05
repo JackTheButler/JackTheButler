@@ -7,6 +7,13 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs } from '@/components/ui/tabs';
@@ -32,18 +39,75 @@ import {
   MessageSquare,
   Hotel,
   User,
+  Brain,
+  Plus,
+  Trash2,
+  X,
+  Heart,
+  Repeat,
+  Star,
 } from 'lucide-react';
+import type { LucideIcon } from 'lucide-react';
 import { api } from '@/lib/api';
+import { ConfirmDialog } from '@/components/ui/confirm-dialog';
 import { formatDate, formatCurrency } from '@/lib/formatters';
 import {
   reservationStatusVariants,
   conversationStateVariants,
 } from '@/lib/config';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
-import type { GuestWithCounts, ReservationSummary, Conversation } from '@/types/api';
+import type { GuestWithCounts, ReservationSummary, Conversation, GuestMemory } from '@/types/api';
 
 const VIP_OPTIONS = ['none', 'silver', 'gold', 'platinum', 'diamond'];
 const LOYALTY_OPTIONS = ['none', 'member', 'silver', 'gold', 'platinum'];
+
+const MEMORY_CATEGORIES = ['preference', 'complaint', 'habit', 'personal', 'request'] as const;
+
+interface MemoryCategoryConfig {
+  icon: LucideIcon;
+  borderColor: string;
+  bgColor: string;
+  iconColor: string;
+  labelColor: string;
+}
+
+const memoryCategoryConfig: Record<GuestMemory['category'], MemoryCategoryConfig> = {
+  preference: {
+    icon: Heart,
+    borderColor: 'border-l-blue-500',
+    bgColor: 'bg-blue-50 dark:bg-blue-950/20',
+    iconColor: 'text-blue-500',
+    labelColor: 'text-blue-700 dark:text-blue-400',
+  },
+  habit: {
+    icon: Repeat,
+    borderColor: 'border-l-purple-500',
+    bgColor: 'bg-purple-50 dark:bg-purple-950/20',
+    iconColor: 'text-purple-500',
+    labelColor: 'text-purple-700 dark:text-purple-400',
+  },
+  complaint: {
+    icon: AlertCircle,
+    borderColor: 'border-l-red-500',
+    bgColor: 'bg-red-50 dark:bg-red-950/20',
+    iconColor: 'text-red-500',
+    labelColor: 'text-red-700 dark:text-red-400',
+  },
+  personal: {
+    icon: User,
+    borderColor: 'border-l-green-500',
+    bgColor: 'bg-green-50 dark:bg-green-950/20',
+    iconColor: 'text-green-500',
+    labelColor: 'text-green-700 dark:text-green-400',
+  },
+  request: {
+    icon: Star,
+    borderColor: 'border-l-amber-500',
+    bgColor: 'bg-amber-50 dark:bg-amber-950/20',
+    iconColor: 'text-amber-500',
+    labelColor: 'text-amber-700 dark:text-amber-400',
+  },
+};
 
 export function GuestProfilePage() {
   const { t } = useTranslation();
@@ -54,11 +118,28 @@ export function GuestProfilePage() {
   const [guest, setGuest] = useState<GuestWithCounts | null>(null);
   const [reservations, setReservations] = useState<ReservationSummary[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
+  const [memories, setMemories] = useState<GuestMemory[]>([]);
+  const [addingMemory, setAddingMemory] = useState(false);
+  const [newMemory, setNewMemory] = useState({ category: 'preference' as GuestMemory['category'], content: '' });
+  const [editingMemoryId, setEditingMemoryId] = useState<string | null>(null);
+  const [editMemory, setEditMemory] = useState({ category: 'preference' as GuestMemory['category'], content: '' });
+  const [memoryError, setMemoryError] = useState<string | null>(null);
+  const [memoryToDelete, setMemoryToDelete] = useState<GuestMemory | null>(null);
+  const [deletingMemory, setDeletingMemory] = useState(false);
+  const [savingMemory, setSavingMemory] = useState(false);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<'overview' | 'reservations' | 'conversations'>('overview');
+
+  const memoryCategoryLabels: Record<GuestMemory['category'], string> = {
+    preference: t('guestProfile.categoryPreference'),
+    complaint: t('guestProfile.categoryComplaint'),
+    habit: t('guestProfile.categoryHabit'),
+    personal: t('guestProfile.categoryPersonal'),
+    request: t('guestProfile.categoryRequest'),
+  };
 
   // Edit form state
   const [formData, setFormData] = useState({
@@ -120,10 +201,72 @@ export function GuestProfilePage() {
     }
   };
 
+  const fetchMemories = async () => {
+    if (!id) return;
+    try {
+      const data = await api.get<{ memories: GuestMemory[] }>(`/guests/${id}/memories`);
+      setMemories(data.memories);
+    } catch (err) {
+      // Non-critical
+    }
+  };
+
+  const handleAddMemory = async () => {
+    if (!id || !newMemory.content.trim()) return;
+    setMemoryError(null);
+    setSavingMemory(true);
+    try {
+      await api.post(`/guests/${id}/memories`, newMemory);
+      await fetchMemories();
+      setAddingMemory(false);
+      setNewMemory({ category: 'preference', content: '' });
+    } catch (err) {
+      setMemoryError(err instanceof Error ? err.message : t('guestProfile.failedToSaveMemory'));
+    } finally {
+      setSavingMemory(false);
+    }
+  };
+
+  const handleEditMemory = async (memoryId: string) => {
+    if (!id || !editMemory.content.trim()) return;
+    setMemoryError(null);
+    setSavingMemory(true);
+    try {
+      await api.patch(`/guests/${id}/memories/${memoryId}`, editMemory);
+      await fetchMemories();
+      setEditingMemoryId(null);
+    } catch (err) {
+      setMemoryError(err instanceof Error ? err.message : t('guestProfile.failedToSaveMemory'));
+    } finally {
+      setSavingMemory(false);
+    }
+  };
+
+  const handleDeleteMemory = (memory: GuestMemory) => {
+    setMemoryToDelete(memory);
+  };
+
+  const confirmDeleteMemory = async () => {
+    if (!id || !memoryToDelete) return;
+    setDeletingMemory(true);
+    setMemoryError(null);
+    try {
+      await api.delete(`/guests/${id}/memories/${memoryToDelete.id}`);
+      await fetchMemories();
+      setMemoryToDelete(null);
+    } catch (err) {
+      setMemoryError(err instanceof Error ? err.message : t('guestProfile.failedToDeleteMemory'));
+      setMemoryToDelete(null);
+    } finally {
+      setDeletingMemory(false);
+    }
+  };
+
   useEffect(() => {
     fetchGuest();
     fetchReservations();
     fetchConversations();
+    fetchMemories();
   }, [id]);
 
   const handleSave = async () => {
@@ -456,6 +599,184 @@ export function GuestProfilePage() {
               </CardContent>
             </Card>
           )}
+
+          {/* What Jack Knows */}
+          {(memories.length > 0 || canManageGuests) && (
+            <Card className="lg:col-span-3">
+              <CardHeader className="flex flex-row items-center justify-between">
+                <CardTitle className="text-base flex items-center gap-2">
+                  <Brain className="w-4 h-4" />
+                  {t('guestProfile.whatJackKnows')}
+                  {memories.length > 0 && (
+                    <span className="text-xs font-normal text-muted-foreground">({memories.length})</span>
+                  )}
+                </CardTitle>
+                {canManageGuests && !addingMemory && (
+                  <Button variant="outline" size="sm" onClick={() => { setAddingMemory(true); setEditingMemoryId(null); }}>
+                    <Plus className="w-3 h-3 me-1" />
+                    {t('guestProfile.addMemory')}
+                  </Button>
+                )}
+              </CardHeader>
+              <CardContent>
+                {memoryError && (
+                  <Alert variant="destructive" className="mb-4" onDismiss={() => setMemoryError(null)}>
+                    <AlertDescription>{memoryError}</AlertDescription>
+                  </Alert>
+                )}
+
+                {/* Empty state */}
+                {memories.length === 0 && !addingMemory && (
+                  <p className="text-sm text-muted-foreground/70">{t('guestProfile.noMemories')}</p>
+                )}
+
+                {/* Memory cards grid */}
+                {(addingMemory || memories.length > 0) && (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {/* Add new memory card */}
+                    {addingMemory && (
+                      <div className={`rounded-lg border border-l-4 p-3 ${memoryCategoryConfig[newMemory.category].borderColor} ${memoryCategoryConfig[newMemory.category].bgColor}`}>
+                        <div className="flex flex-col gap-2">
+                          <Select
+                            value={newMemory.category}
+                            onValueChange={(value) => setNewMemory({ ...newMemory, category: value as GuestMemory['category'] })}
+                          >
+                            <SelectTrigger className="h-8 text-xs w-full">
+                              <SelectValue />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {MEMORY_CATEGORIES.map((cat) => (
+                                <SelectItem key={cat} value={cat} className="text-xs">{memoryCategoryLabels[cat]}</SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                          <Textarea
+                            value={newMemory.content}
+                            onChange={(e) => setNewMemory({ ...newMemory, content: e.target.value })}
+                            placeholder={t('guestProfile.memoryContentPlaceholder')}
+                            className="min-h-[80px] text-sm resize-none"
+                            onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleAddMemory(); if (e.key === 'Escape') { setAddingMemory(false); setNewMemory({ category: 'preference', content: '' }); } }}
+                            autoFocus
+                          />
+                          <div className="flex gap-2">
+                            <Button size="sm" className="flex-1 h-7 text-xs" onClick={handleAddMemory} disabled={!newMemory.content.trim() || savingMemory}>
+                              {savingMemory ? <Spinner size="sm" /> : t('guestProfile.saveMemory')}
+                            </Button>
+                            <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => { setAddingMemory(false); setNewMemory({ category: 'preference', content: '' }); }}>
+                              <X className="w-3 h-3" />
+                            </Button>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                    {memories.map((memory) => {
+                      const config = memoryCategoryConfig[memory.category];
+                      const CategoryIcon = config.icon;
+                      const isEditing = editingMemoryId === memory.id;
+
+                      const editConfig = isEditing ? memoryCategoryConfig[editMemory.category] : config;
+
+                      return (
+                        <div
+                          key={memory.id}
+                          className={`group relative rounded-lg border border-l-4 p-3 transition-shadow hover:shadow-sm ${editConfig.borderColor} ${editConfig.bgColor}`}
+                        >
+                          {isEditing ? (
+                            /* Inline edit mode */
+                            <div className="flex flex-col gap-2">
+                              <Select
+                                value={editMemory.category}
+                                onValueChange={(value) => setEditMemory({ ...editMemory, category: value as GuestMemory['category'] })}
+                              >
+                                <SelectTrigger className="h-8 text-xs w-full">
+                                  <SelectValue />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {MEMORY_CATEGORIES.map((cat) => (
+                                    <SelectItem key={cat} value={cat} className="text-xs">{memoryCategoryLabels[cat]}</SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                              <Textarea
+                                value={editMemory.content}
+                                onChange={(e) => setEditMemory({ ...editMemory, content: e.target.value })}
+                                className="w-full min-h-[80px] text-sm resize-none"
+                                onKeyDown={(e) => { if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') handleEditMemory(memory.id); if (e.key === 'Escape') setEditingMemoryId(null); }}
+                                autoFocus
+                              />
+                              <div className="flex gap-2">
+                                <Button size="sm" className="flex-1 h-7 text-xs" onClick={() => handleEditMemory(memory.id)} disabled={!editMemory.content.trim() || savingMemory}>
+                                  {savingMemory ? <Spinner size="sm" /> : t('guestProfile.saveMemory')}
+                                </Button>
+                                <Button variant="ghost" size="sm" className="h-7 w-7 p-0" onClick={() => setEditingMemoryId(null)}>
+                                  <X className="w-3 h-3" />
+                                </Button>
+                              </div>
+                            </div>
+                          ) : (
+                            /* Display mode */
+                            <>
+                              {/* Card header: icon + category label + actions */}
+                              <div className="flex items-center justify-between mb-2">
+                                <div className={`flex items-center gap-1.5 text-xs font-medium ${config.labelColor}`}>
+                                  <CategoryIcon className={`w-3.5 h-3.5 ${config.iconColor}`} />
+                                  {memoryCategoryLabels[memory.category]}
+                                </div>
+                                {canManageGuests && (
+                                  <div className="flex gap-1 opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-opacity">
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0"
+                                      onClick={() => { setEditingMemoryId(memory.id); setEditMemory({ category: memory.category, content: memory.content }); setAddingMemory(false); setNewMemory({ category: 'preference', content: '' }); }}
+                                    >
+                                      <Pencil className="w-3 h-3" />
+                                    </Button>
+                                    <Button
+                                      variant="ghost"
+                                      size="sm"
+                                      className="h-6 w-6 p-0 text-destructive hover:text-destructive"
+                                      onClick={() => handleDeleteMemory(memory)}
+                                    >
+                                      <Trash2 className="w-3 h-3" />
+                                    </Button>
+                                  </div>
+                                )}
+                              </div>
+
+                              {/* Memory content */}
+                              <p className="text-sm text-foreground leading-snug mb-3">
+                                {memory.content}
+                              </p>
+
+                              {/* Card footer: source + date */}
+                              <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
+                                <span className="font-medium">
+                                  {memory.source === 'ai_extracted' && memory.conversationId ? (
+                                    <Link to={`/inbox/${memory.conversationId}`} className="hover:underline">
+                                      AI
+                                    </Link>
+                                  ) : memory.source === 'ai_extracted' ? (
+                                    'AI'
+                                  ) : memory.source === 'manual' ? (
+                                    'Staff'
+                                  ) : (
+                                    'PMS'
+                                  )}
+                                </span>
+                                <span>·</span>
+                                <span>{formatDate(memory.lastReinforcedAt)}</span>
+                              </div>
+                            </>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                )}
+              </CardContent>
+            </Card>
+          )}
         </div>
       )}
 
@@ -554,6 +875,16 @@ export function GuestProfilePage() {
           </CardContent>
         </Card>
       )}
+      <ConfirmDialog
+        open={!!memoryToDelete}
+        onOpenChange={(open) => { if (!open) setMemoryToDelete(null); }}
+        title={t('guestProfile.deleteMemoryTitle')}
+        description={t('guestProfile.deleteMemoryDescription')}
+        confirmLabel={t('guestProfile.deleteMemoryConfirm')}
+        variant="destructive"
+        onConfirm={confirmDeleteMemory}
+        loading={deletingMemory}
+      />
     </PageContainer>
   );
 }

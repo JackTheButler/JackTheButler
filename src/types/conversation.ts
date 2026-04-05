@@ -51,4 +51,6 @@ export interface UpdateConversationInput {
   currentIntent?: string | undefined;
   metadata?: Record<string, unknown> | undefined;
   guestLanguage?: string | undefined;
+  /** Only used when state === 'closed' to populate the CONVERSATION_CLOSED event reason */
+  _closeReason?: 'timeout' | 'staff_resolved' | 'guest_satisfied' | undefined;
 }

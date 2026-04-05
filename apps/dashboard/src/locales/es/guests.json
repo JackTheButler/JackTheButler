@@ -48,7 +48,22 @@
     "confirmation": "Confirmación #",
     "channel": "Canal",
     "lastMessage": "Último Mensaje",
-    "view": "Ver"
+    "view": "Ver",
+    "whatJackKnows": "Memoria de Jack",
+    "addMemory": "Agregar Memoria",
+    "noMemories": "Aún no se han registrado memorias",
+    "memoryContentPlaceholder": "ej. Prefiere almohadas sin plumas",
+    "saveMemory": "Guardar",
+    "failedToSaveMemory": "Error al guardar la memoria",
+    "failedToDeleteMemory": "Error al eliminar la memoria",
+    "deleteMemoryTitle": "Eliminar memoria",
+    "deleteMemoryDescription": "¿Estás seguro de que deseas eliminar esta memoria? Jack ya no la usará al responder a este huésped.",
+    "deleteMemoryConfirm": "Eliminar",
+    "categoryPreference": "Preferencia",
+    "categoryComplaint": "Queja",
+    "categoryHabit": "Hábito",
+    "categoryPersonal": "Personal",
+    "categoryRequest": "Solicitud"
   },
   "guestForm": {
     "addNewGuest": "Agregar Nuevo Huésped",

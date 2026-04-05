@@ -23,6 +23,7 @@ export const EventTypes = {
   CONVERSATION_UPDATED: 'conversation.updated',
   CONVERSATION_ESCALATED: 'conversation.escalated',
   CONVERSATION_RESOLVED: 'conversation.resolved',
+  CONVERSATION_CLOSED: 'conversation.closed',
 
   // Task events
   TASK_CREATED: 'task.created',
@@ -134,6 +135,16 @@ export interface ConversationEscalatedEvent extends BaseEvent {
   conversationId: string;
   reasons: string[];
   priority: 'urgent' | 'high' | 'standard';
+}
+
+/**
+ * Conversation closed event
+ */
+export interface ConversationClosedEvent extends BaseEvent {
+  type: typeof EventTypes.CONVERSATION_CLOSED;
+  conversationId: string;
+  guestId: string | null;
+  reason: 'timeout' | 'staff_resolved' | 'guest_satisfied';
 }
 
 /**
@@ -325,6 +336,7 @@ export type AppEvent =
   | ConversationCreatedEvent
   | ConversationUpdatedEvent
   | ConversationEscalatedEvent
+  | ConversationClosedEvent
   | TaskCreatedEvent
   | TaskAssignedEvent
   | TaskCompletedEvent

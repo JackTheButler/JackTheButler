@@ -48,7 +48,22 @@
     "confirmation": "确认号 #",
     "channel": "渠道",
     "lastMessage": "最近消息",
-    "view": "查看"
+    "view": "查看",
+    "whatJackKnows": "Jack的记忆",
+    "addMemory": "添加记忆",
+    "noMemories": "尚未记录任何记忆",
+    "memoryContentPlaceholder": "例：偏好无羽毛枕头",
+    "saveMemory": "保存",
+    "failedToSaveMemory": "保存记忆失败",
+    "failedToDeleteMemory": "删除记忆失败",
+    "deleteMemoryTitle": "删除记忆",
+    "deleteMemoryDescription": "确定要删除此记忆吗？Jack在回复此客人时将不再使用它。",
+    "deleteMemoryConfirm": "删除",
+    "categoryPreference": "偏好",
+    "categoryComplaint": "投诉",
+    "categoryHabit": "习惯",
+    "categoryPersonal": "个人",
+    "categoryRequest": "请求"
   },
   "guestForm": {
     "addNewGuest": "添加新客人",

@@ -5,7 +5,7 @@
  * and intent classification.
  */
 
-import type { Conversation, Message } from '@/db/schema.js';
+import type { Conversation, Message, GuestMemory } from '@/db/schema.js';
 import { settingsService } from '@/services/settings.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/services/guest-context.js';
@@ -131,7 +131,7 @@ export class AIResponder implements Responder {
   /**
    * Generate a response for a message
    */
-  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext, knowledgeResults?: KnowledgeSearchResult[]): Promise<Response> {
+  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext, knowledgeResults?: KnowledgeSearchResult[], memories?: GuestMemory[]): Promise<Response> {
     const startTime = Date.now();
 
     log.debug(
@@ -140,6 +140,7 @@ export class AIResponder implements Responder {
         message: message.content.substring(0, 50),
         hasGuestContext: !!guestContext?.guest,
         hasReservation: !!guestContext?.reservation,
+        hasMemories: !!memories?.length,
       },
       'Generating AI response'
     );
@@ -225,7 +226,7 @@ export class AIResponder implements Responder {
     // Use translated content for the prompt so the entire context is in the property language
     const promptMessage = (message.metadata?.translatedContent as string) ?? message.content;
     const channelActions = message.metadata?.channelActions as ChannelActionsMetadata | undefined;
-    const messages = this.buildPromptMessages(promptMessage, classification, knowledgeContext, history, guestContext, hotelProfile, channelActions, propertyLanguage);
+    const messages = this.buildPromptMessages(promptMessage, classification, knowledgeContext, history, guestContext, hotelProfile, channelActions, propertyLanguage, memories);
 
     // 6. Generate response
     const response = await this.provider.complete({
@@ -261,6 +262,7 @@ export class AIResponder implements Responder {
         intent: classification.intent,
         confidence: classification.confidence,
         knowledgeHits: knowledgeContext.length,
+        memoriesCount: memories?.length ?? 0,
         guestName: guestContext?.guest?.fullName,
         roomNumber: guestContext?.reservation?.roomNumber,
         suggestedAction,
@@ -329,6 +331,7 @@ export class AIResponder implements Responder {
     hotelProfile?: HotelProfile | null,
     channelActions?: ChannelActionsMetadata,
     propertyLanguage?: string,
+    memories?: GuestMemory[],
   ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
 
@@ -392,6 +395,14 @@ export class AIResponder implements Responder {
         for (const pref of guestContext.guest.preferences) {
           systemContent += `\n  - ${pref.category}: ${pref.value}`;
         }
+      }
+    }
+
+    // Add guest memories if available
+    if (memories && memories.length > 0) {
+      systemContent += '\n\n## What Jack Knows About This Guest:';
+      for (const memory of memories) {
+        systemContent += `\n- ${memory.category}: ${memory.content}`;
       }
     }
 

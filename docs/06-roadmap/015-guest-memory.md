@@ -1,7 +1,7 @@
 # Guest Memory
 
-> Phase: Planned
-> Status: Not Started
+> Phase: Complete
+> Status: Shipped
 > Priority: High
 > Depends On: [Multilingual Translation](./007-multilingual-translation.md), [Message Pipeline Refactor](./014-message-pipeline.md)
 
@@ -28,9 +28,9 @@ Guest Memory gives Jack the ability to remember facts learned from past conversa
 
 ### Staff-Facing (Dashboard)
 
-1. **Guest Memory card** — A dedicated card on the guest profile page showing all known facts with category, source, and confidence
-2. **Manual corrections** — Staff can add, edit, or delete individual memory entries
-3. **Memory audit trail** — Each memory shows which conversation it was learned from and when it was last reinforced
+1. **Jack's Memory card** — A dedicated card on the guest profile page showing all known facts with category, source, and last reinforced date. Cards are colour-coded by category (preference, complaint, habit, personal, request) using distinct icons and tinted backgrounds.
+2. **Manual corrections** — Staff can add, edit, or delete individual memory entries inline
+3. **Memory audit trail** — Each memory shows its source and last reinforced date. AI-extracted memories link directly to the originating conversation
 
 ---
 
@@ -41,14 +41,18 @@ Guest Memory gives Jack the ability to remember facts learned from past conversa
 ```
 src/
   core/
-    memory-extractor.ts   # AI-powered extraction after conversation closes
-    guest-context.ts      # Extended to load + inject memories (existing file)
+    memory-extractor.ts        # AI-powered extraction after conversation closes
+    memory-event-subscriber.ts # Subscribes to CONVERSATION_CLOSED, wires extraction
+    guest-context.ts           # Extended to load + inject memories (existing file)
+    pipeline/stages/
+      recall-memories.ts       # Pipeline stage: recalls top-K memories into ctx
   services/
-    memory.ts             # CRUD + semantic recall against guest_memories table
+    memory.ts                  # CRUD + semantic recall against guest_memories table
+    scheduler.ts               # Idle timeout job (closes quiet conversations)
   db/
-    schema.ts             # New guest_memories table + embedding column
+    schema.ts                  # guest_memories table + embedding column
   ai/
-    responder.ts          # Injection point in buildPromptMessages() (existing file)
+    responder.ts               # Injection point in buildPromptMessages() (existing file)
 ```
 
 ### How it connects
@@ -56,38 +60,39 @@ src/
 ```
 EXTRACT FLOW (async, after conversation closes)
 ────────────────────────────────────────────────
-conversation-fsm.ts
-  → state transition: active/escalated → resolved/closed
+conversation FSM / scheduler
+  → state transition: active/waiting → closed/resolved
   → fires: CONVERSATION_CLOSED event
         ↓
-MemoryExtractor.run(conversationId)
-  → fetch all messages for this conversation
-  → send to AI: extract discrete guest facts
+memory-event-subscriber.ts
+  → MemoryExtractor.extract(messages[])
   → returns: MemoryFact[]
         ↓
-MemoryService.upsert(guestId, facts[])
-  → new fact → insert with embedding
-  → existing fact → bump last_reinforced_at, average confidence
-  → contradicted fact → update content, reset confidence
+MemoryService.insert(guestId, facts[])
+  → new fact     → insert with embedding
+  → near-match   → AI classifies: CONFIRMS / CONTRADICTS / DIFFERENT
+  → CONFIRMS     → bump last_reinforced_at, increase confidence by 0.1
+  → CONTRADICTS  → replace content, reset confidence
+  → DIFFERENT    → insert as new row
         ↓
 guest_memories table
 
 
 RECALL FLOW (before each AI response)
 ────────────────────────────────────────────────
-message-processor.ts
-  → guest identified
-  → guest context loaded (guest-context.ts buildContext())
+message-processor.ts pipeline
+  → computeEmbedding stage runs first (one embed call for the whole pipeline)
         ↓
-MemoryService.recall(guestId, currentMessage)
-  → embed current message (sqlite-vec)
-  → cosine similarity search against guest_memories
-  → return top 5 by relevance
+recallMemories stage
+  → MemoryService.recall(guestId, ctx.queryEmbedding)
+  → cosine similarity search via sqlite-vec (falls back to recency if no embedding)
+  → return top 5 by relevance → stored in ctx.memories
         ↓
-GuestContext.memories[]  (new field)
+generateResponse stage
+  → passes ctx.memories into defaultResponder.generate()
         ↓
 responder.ts buildPromptMessages()
-  → inject as "What Jack knows about this guest"
+  → inject as "## What Jack Knows About This Guest:"
   → injected after guest profile, before reservation context
 ```
 
@@ -111,18 +116,23 @@ interface MemoryFact {
 
 Transient facts (e.g. "guest asked for a taxi at 9am today") are intentionally excluded — the extraction prompt instructs the AI to only extract facts likely to be relevant on future stays.
 
+The extractor always operates on `translatedContent` when available so extraction runs on English regardless of the guest's language.
+
 ### Semantic Recall
 
-Memories are not loaded as a full dump into the AI prompt. Instead, the current guest message is embedded and compared against all memories for that guest using cosine similarity (sqlite-vec). Only the top 5 most contextually relevant memories are retrieved and injected.
+Memories are not loaded as a full dump into the AI prompt. Instead, the current guest message's embedding (already computed by the `computeEmbedding` pipeline stage) is compared against all memories for that guest using cosine similarity (sqlite-vec). Only the top 5 most contextually relevant memories are retrieved and injected.
 
-This keeps the prompt lean regardless of how many stays or conversations a guest has had.
+When no embedding is available (embedding provider unavailable), recall falls back to the 5 most recently reinforced memories. This keeps the feature working in degraded mode.
+
+This keeps the prompt lean regardless of how many stays or conversations a guest has had. Because `ctx.queryEmbedding` is reused, the embedding API is called exactly once per message regardless of how many pipeline stages use it.
 
 ### Reinforcement and Contradiction
 
 When a new fact is extracted that closely matches an existing memory (cosine similarity > 0.85):
 
-- **Same meaning** → `last_reinforced_at` is updated, confidence is averaged upward
-- **Contradicting meaning** → content is replaced, confidence is reset to the new value, the old conversation reference is preserved in `source_conversation_id`
+- **Same meaning** → `last_reinforced_at` is updated, confidence is incremented: `min(1.0, old + 0.1)`
+- **Contradicting meaning** → content is replaced, confidence is reset to the new value
+- **Different topic** → inserted as a new row despite high similarity
 
 This prevents memory bloat and keeps facts current — if a guest's room preference changes, Jack updates rather than accumulates.
 
@@ -133,7 +143,7 @@ Recalled memories are injected into the system prompt in `buildPromptMessages()`
 ```
 [Hotel context]
 [Guest profile: name, loyalty tier, VIP status]
-→ [Guest memory: top 5 relevant facts]        ← NEW
+→ [Guest memory: top 5 relevant facts]        ← injected here
 [Active reservation: room, dates, status]
 [Knowledge base context]
 [Conversation history]
@@ -147,6 +157,7 @@ The block is omitted entirely if no memories exist for the guest, so first-time 
 
 - Memories are scoped to `guest_id` — no cross-guest data is ever loaded
 - The recall query always includes a `WHERE guest_id = ?` filter before semantic ranking
+- All PATCH and DELETE memory API routes verify `memory.guestId === guestId` before acting — prevents cross-guest memory access via URL manipulation
 - Staff with `viewer` role can read memories; `manager` or above can edit or delete
 - Memory content is stored as plain text — no PII encryption at rest beyond what applies to the guests table generally
 - Extraction runs with a restricted AI prompt that explicitly instructs the model not to store payment data, passport numbers, or health information
@@ -155,9 +166,9 @@ The block is omitted entirely if no memories exist for the guest, so first-time 
 
 ## Admin Experience
 
-- **Configuration** — No per-hotel configuration required; memory is on by default when the feature ships
+- **Configuration** — No per-hotel configuration required; memory is on by default
 - **Opt-out** — A future settings toggle (`enableGuestMemory: boolean`) can disable extraction globally; existing memories are retained but not added to
-- **Reset** — Staff can clear all memories for a single guest from the guest profile page
+- **Reset** — A future action to clear all memories for a single guest from the guest profile page (not yet in v1)
 
 ---
 
@@ -168,6 +179,8 @@ The block is omitted entirely if no memories exist for the guest, so first-time 
 - **Memory confidence UI** — Displaying confidence scores to staff is deferred; v1 shows content and category only
 - **Preference inference from PMS** — Mining PMS booking history (room type selections, past special requests) as a memory source is deferred to a later phase
 - **Temporal preferences** — Time-based rules ("quiet room on weeknights, sea view on weekends") are out of scope for v1
+- **Conversation link in card** — AI-extracted memories link directly to the originating conversation (`/inbox/:conversationId`) when a conversation ID is present
+- **Per-channel idle timeout** — The scheduler uses a single fixed 4-hour idle timeout for all channels. The planned per-channel configuration (4h WhatsApp/SMS, 24h email) is deferred
 
 ---
 
@@ -207,202 +220,140 @@ None. The `guests.preferences` field (current plain-text JSON array) is not remo
 
 ---
 
+## API Endpoints
+
+| Method | Path | Permission | Description |
+|--------|------|------------|-------------|
+| `GET` | `/api/v1/guests/:id/memories` | `GUESTS_VIEW` | List all memories for a guest (embedding stripped from response) |
+| `POST` | `/api/v1/guests/:id/memories` | `GUESTS_MANAGE` | Add a manual memory (`source: 'manual'`, `confidence: 1.0`) |
+| `PATCH` | `/api/v1/guests/:id/memories/:memoryId` | `GUESTS_MANAGE` | Update category and/or content; clears embedding when content changes |
+| `DELETE` | `/api/v1/guests/:id/memories/:memoryId` | `GUESTS_MANAGE` | Delete a memory; verifies ownership before deleting |
+
+---
+
 ## Implementation Phases
 
 Each stage ends with something runnable and verifiable — either a passing test suite, a working API call, or a visible UI change. No stage depends on the next being built.
 
 ---
 
-### Stage 0 — Conversation idle timeout (prerequisite)
+### Stage 0 — Conversation idle timeout (prerequisite) ✅
 
-**Goal:** Conversations that go quiet are automatically closed after a configurable inactivity period, without requiring staff action.
+**Goal:** Conversations that go quiet are automatically closed after a configurable inactivity period.
 
-This is a prerequisite because memory extraction (Stage 4) subscribes to end-of-conversation events. Today there are two conversation end states and one event:
+Implemented in `src/services/scheduler.ts`. The scheduler runs every 30 minutes and closes conversations where `state IN ('active', 'waiting')` and `last_message_at < now - 4h`. On close, it emits `CONVERSATION_CLOSED` with `reason: 'timeout'`.
 
-| Path | FSM state | Event today |
+`CONVERSATION_CLOSED` is also emitted by `src/services/conversation.ts` on staff resolve (with `reason: 'staff_resolved'`), so the memory extractor subscribes to a single event for both paths.
+
+Note: The current implementation uses a single 4-hour threshold for all channels. Per-channel timeouts (planned: 4h WhatsApp/SMS, 24h email) are deferred.
+
+---
+
+### Stage 1 — Database schema ✅
+
+`guest_memories` table and indexes added to `src/db/schema.ts`. Migration runs cleanly on fresh and existing databases.
+
+---
+
+### Stage 2 — MemoryService CRUD ✅
+
+`src/services/memory.ts` implements:
+- `insert(guestId, conversationId, facts[], source)` — handles upsert logic internally (dedup/reinforce/insert)
+- `listForGuest(guestId)` — all memories, recency-ordered
+- `recall(guestId, queryEmbedding?, topK)` — semantic or recency fallback
+- `getById(id)` — throws `NotFoundError` if missing
+- `update(id, patch)` — updates category and/or content; clears embedding when content changes
+- `delete(id)` — throws `NotFoundError` if missing
+
+The singleton `memoryService` (no provider) handles read-only and delete operations. For writes with deduplication, instantiate with `new MemoryService(provider)`.
+
+---
+
+### Stage 3 — Memory extraction ✅
+
+`src/core/memory-extractor.ts` — `MemoryExtractor.extract(messages[], conversationId?)` sends the transcript to the AI (`modelTier: 'utility'`, `temperature: 0.1`) and returns validated `MemoryFact[]`. Never throws — returns `[]` on any failure.
+
+Uses `translatedContent` when available so extraction always runs on English source.
+
+---
+
+### Stage 4 — Wire extraction to conversation close event ✅
+
+`src/core/memory-event-subscriber.ts` subscribes to `CONVERSATION_CLOSED`. On event, it fetches all messages for the conversation, runs `MemoryExtractor.extract()`, then calls `MemoryService.insert()`. Runs async — does not block message processing.
+
+---
+
+### Stage 5 — Embeddings on write ✅
+
+`MemoryService.insert()` calls the active embedding provider and stores the float32 vector as a sqlite-vec blob in the `embedding` column. Falls back to plain insert (no dedup check) if the provider is unavailable.
+
+---
+
+### Stage 6 — Deduplication and reinforcement ✅
+
+Inside `MemoryService.insert()`, for each incoming fact:
+
+1. Embed the fact and run cosine similarity against all existing memories for that guest
+2. If similarity > 0.85, classify with a lightweight AI call: `CONFIRMS`, `CONTRADICTS`, or `DIFFERENT`
+3. Act on classification:
+
+| Similarity | Classification | Action |
 |---|---|---|
-| Staff clicks resolve | `resolved` | `CONVERSATION_RESOLVED` ✅ exists |
-| Idle timeout | `closed` | `CONVERSATION_CLOSED` ❌ does not exist |
+| > 0.85 | `CONFIRMS` | Bump `last_reinforced_at`. Confidence: `min(1.0, old + 0.1)`. No new row. |
+| > 0.85 | `CONTRADICTS` | Replace `content`. Reset `confidence` to incoming value. Bump `last_reinforced_at`. No new row. |
+| > 0.85 | `DIFFERENT` | Insert as new row. |
+| ≤ 0.85 | — | Insert as new row. |
 
-In practice, most WhatsApp and SMS conversations end silently — the guest gets their answer and stops replying. Staff rarely click resolve for every thread. Without an automatic timeout, `CONVERSATION_RESOLVED` fires infrequently and memory extraction barely runs.
-
-**What to build:**
-
-1. **Add `CONVERSATION_CLOSED` to `src/types/events.ts`**
-
-```typescript
-// In EventTypes const:
-CONVERSATION_CLOSED: 'conversation.closed',
-
-// New event interface:
-export interface ConversationClosedEvent extends BaseEvent {
-  type: typeof EventTypes.CONVERSATION_CLOSED;
-  conversationId: string;
-  guestId: string;
-  reason: 'timeout' | 'staff_resolved' | 'guest_satisfied';
-}
-
-// Add to AppEvent union:
-| ConversationClosedEvent
-```
-
-2. **Add idle timeout job to `src/services/scheduler.ts`**
-   - Runs every 30 minutes
-   - Queries conversations where `state IN ('active', 'waiting')` and `last_message_at < now - idleTimeoutHours`
-   - Fires the `timeout` FSM transition on each matched conversation → state becomes `closed`
-   - Emits `CONVERSATION_CLOSED` with `reason: 'timeout'`
-   - `idleTimeoutHours` is configurable per channel type (default: 4h for WhatsApp/SMS, 24h for email)
-
-3. **Emit `CONVERSATION_CLOSED` on staff resolve too**
-   - Where `CONVERSATION_RESOLVED` is currently emitted, also emit `CONVERSATION_CLOSED` with `reason: 'staff_resolved'`
-   - This means Stage 4 (memory extractor) subscribes to only `CONVERSATION_CLOSED` for both paths — one listener, consistent behaviour
-
-The event flow after this stage:
-
-```
-Staff resolves  → CONVERSATION_RESOLVED (existing, unchanged)
-                → CONVERSATION_CLOSED { reason: 'staff_resolved' }  ← new
-
-Idle timeout    → scheduler fires FSM timeout transition
-                → CONVERSATION_CLOSED { reason: 'timeout' }          ← new
-```
-
-Memory extraction in Stage 4 subscribes only to `CONVERSATION_CLOSED` — it handles both paths without caring about the reason.
-
-**Testable:** Set `idleTimeoutHours` to 1 minute in a test environment. Send a message and wait. Trigger the scheduler job manually via the existing `triggerJob()` API. Assert the conversation state is `closed` and `CONVERSATION_CLOSED` was emitted with `reason: 'timeout'`. Assert a conversation with a message sent 30 seconds ago is untouched.
+Defaults to `DIFFERENT` on any classification error — insertion is always safe.
 
 ---
 
-### Stage 1 — Database schema
-
-**Goal:** The `guest_memories` table exists and migrations run cleanly.
-Add the table and indexes to `schema.ts`, generate and run the migration.
-**Testable:** Migration runs without error on a fresh and existing database. Table is visible in Drizzle Studio.
-
----
-
-### Stage 2 — MemoryService CRUD (no AI, no embeddings)
-
-**Goal:** Memories can be created, read, and deleted via a service layer.
-Build `src/services/memory.ts` with `insert()`, `listForGuest()`, and `delete()`. No embeddings yet — `embedding` column stays null.
-**Testable:** Unit tests cover insert, list, and delete. A memory row appears in the database after `insert()` is called.
-
----
-
-### Stage 3 — Memory extraction (AI, no wiring)
-
-**Goal:** Given a conversation transcript, the AI returns a structured list of guest facts.
-Build `src/core/memory-extractor.ts` with a single `extract(messages[])` method. Calls the AI provider with a structured extraction prompt. Returns `MemoryFact[]`. No event wiring, no database writes yet.
-**Testable:** Unit test feeds in a sample transcript and asserts that the returned facts are typed, non-empty, and plausible. Can be run manually against a seeded conversation.
-
----
-
-### Stage 4 — Wire extraction to conversation close event
-
-**Goal:** Memories are automatically extracted and stored when a conversation resolves or closes.
-Subscribe to the `CONVERSATION_CLOSED` / `CONVERSATION_RESOLVED` event in the conversation FSM. Call `MemoryExtractor.extract()` then `MemoryService.insert()` for each returned fact. Runs async — does not block message processing.
-**Testable:** Close a real conversation in the dashboard or via API. Query `guest_memories` — rows for that guest appear with correct `conversation_id`, `category`, and `content`.
-
----
-
-### Stage 5 — Embeddings on write
-
-**Goal:** Every memory row has a vector embedding stored alongside its content.
-Extend `MemoryService.insert()` to call the active embeddings provider and store the result in the `embedding` column (sqlite-vec blob). Embeddings are generated at write time, not retroactively.
-**Testable:** After Stage 4 closes a conversation, query `guest_memories` — `embedding` column is non-null. Assert blob length matches the model's expected dimensions.
-
----
-
-### Stage 6 — Deduplication and reinforcement
-
-**Goal:** Duplicate and contradicting facts are merged at write time, so the memory store stays clean from the first conversation.
-
-This moves earlier than recall or injection because duplicates accumulate from Stage 4 onwards. Waiting until after injection (old Stage 8) means dirty data builds up across real conversations before deduplication ever runs.
-
-**Why cosine similarity alone is not enough**
-
-Similarity tells you two facts are about the same topic — not whether they agree or disagree. For example:
-- `"Prefers a quiet room"` vs `"Prefers a room near the elevator"` — high similarity, but contradicting
-- `"Prefers a quiet room"` vs `"Always requests a quiet room away from the lift"` — high similarity, same meaning
-
-A similarity score alone cannot distinguish these. A second lightweight AI classification call is required after a near-match is detected.
-
-**The three-step process inside `MemoryService.insert()`:**
-
-1. **Embed the incoming fact** and run cosine similarity against all existing memories for the same guest
-2. **If similarity > 0.85** (near-match found), send both facts to the AI with a single classification prompt:
-   > *"Do these two statements confirm the same thing, contradict each other, or are they about different things? Reply with one word: CONFIRMS, CONTRADICTS, or DIFFERENT."*
-3. **Act on the classification:**
-
-| Similarity | AI classification | Action |
-|---|---|---|
-| > 0.85 | `CONFIRMS` | Bump `last_reinforced_at`. Increase confidence: `new = min(1.0, old + 0.1)`. No new row. |
-| > 0.85 | `CONTRADICTS` | Replace `content` with the newer fact. Reset `confidence` to the incoming value. Bump `last_reinforced_at`. No new row. |
-| > 0.85 | `DIFFERENT` | Treat as unrelated — insert as a new row despite high similarity. |
-| ≤ 0.85 | — (not called) | Insert as a new row. |
-
-Requires embeddings from Stage 5. Falls back to plain insert (no dedup check) if the embedding provider is unavailable, so extraction still works degraded.
-
-**Testable:**
-- Insert `"Prefers quiet rooms"` twice → assert one row, `last_reinforced_at` updated, confidence increased
-- Insert `"Prefers quiet rooms"` then `"Prefers rooms near the elevator"` → assert one row, content updated to the newer fact
-- Insert `"Prefers quiet rooms"` then `"Allergic to feather pillows"` → assert two rows (genuinely different topics)
-- Disable embedding provider, insert two facts → assert both insert without error (graceful degradation)
-
----
-
-### Stage 7 — Semantic recall
-
-**Goal:** Given a guest, return the most relevant memories for the current message.
-
-Build `MemoryService.recall(guestId, queryEmbedding: number[], topK = 5)`. Receives `ctx.queryEmbedding` directly — the embedding already computed by the `computeEmbedding` pipeline stage upstream. Runs cosine similarity against that guest's memories using sqlite-vec, returns top K results. Falls back to recency order if no embedding is provided.
-
-Because this phase depends on the [Message Pipeline Refactor](./014-message-pipeline.md), `ctx.queryEmbedding` is already in the context by the time the `recallMemories` stage runs. No second embed call, no cache, no coordination — the pipeline makes it free.
+### Stage 7 — Semantic recall ✅
 
 ```typescript
 // src/core/pipeline/stages/recall-memories.ts
 export async function recallMemories(ctx: MessageContext): Promise<void> {
-  if (!ctx.guestContext?.guest?.id || !ctx.queryEmbedding) return;
+  const guestId = ctx.guestContext?.guest?.id;
+  if (!guestId) return;
 
-  ctx.memories = await memoryService.recall(
-    ctx.guestContext.guest.id,
-    ctx.queryEmbedding,   // already computed upstream — no API call
-  );
+  ctx.memories = await memoryService.recall(guestId, ctx.queryEmbedding);
 }
 ```
 
-**Testable:** Unit test inserts three memories with varying relevance, calls `recall()` with a pre-computed embedding, asserts the most relevant memory ranks first. Integration test sends a message end-to-end and asserts `embeddingProvider.embed` was called exactly once despite both knowledge search and memory recall running.
+`ctx.queryEmbedding` is reused from the `computeEmbedding` stage — no second embed call. Falls back to recency order when embedding is absent. The embedding provider is called exactly once per message across the entire pipeline.
 
 ---
 
-### Stage 8 — Inject memories into AI prompt
+### Stage 8 — Inject memories into AI prompt ✅
 
-**Goal:** Returning guests receive responses that reference their past preferences.
+`ctx.memories` is typed as `GuestMemory[]` on `MessageContext`. The `generateResponse` stage passes it as a 5th parameter to `defaultResponder.generate()`. In `buildPromptMessages()`, memories are injected after the guest profile block:
 
-Add `memories?: MemoryFact[]` to `MessageContext`. The `recallMemories` stage (Stage 7) populates it. In the `generateResponse` pipeline stage, pass `ctx.memories` into `buildPromptMessages()` and inject the memories block after the guest profile section. Block is omitted entirely if `ctx.memories` is empty or undefined — first-time guests are unaffected.
+```
+## What Jack Knows About This Guest:
+- preference: Prefers a quiet room away from the elevator
+- habit: Always orders green tea on arrival
+```
 
-**Testable:** Send a message from a guest who has memories stored. Inspect the AI response — it should reference the known preference naturally. Assert `ctx.memories` is populated after the `recallMemories` stage. Verify the system prompt in debug logs contains the memory block.
-
----
-
-### Stage 9 — Staff read-only memory view (dashboard)
-
-**Goal:** Staff can see all memories for a guest on the guest profile page.
-Add a "What Jack Knows" card to the guest detail page in the dashboard. Fetches from `GET /api/v1/guests/:id/memories`. Shows category badge, content, source, and last reinforced date. Read-only.
-**Testable:** Open any guest with stored memories in the dashboard — the card appears with correct data. Open a guest with no memories — the card is hidden or shows an empty state.
+Block is omitted entirely when `ctx.memories` is empty or undefined.
 
 ---
 
-### Stage 10 — Staff memory management (dashboard)
+### Stage 9 — Staff read-only memory view ✅
 
-**Goal:** Staff can add, edit, and delete individual memory entries.
-Extend the memory card with add, edit, and delete actions. Calls `POST`, `PATCH`, and `DELETE` on `/api/v1/guests/:id/memories/:memoryId`. Newly added memories have `source: 'manual'` and no embedding until next recall cycle.
-**Testable:** Staff adds a manual memory — it appears in the card and in the database. Staff deletes a memory — it no longer appears in the card or in AI prompts.
+`GET /api/v1/guests/:id/memories` returns all memories for a guest (binary `embedding` field stripped). The guest profile page shows a "Jack's Memory" card with colour-coded category cards in a responsive 3-column grid. Each card shows icon, category label, content, source (AI/Staff/PMS), and last reinforced date. AI-extracted memories link directly to the originating conversation. Hidden for guests with no memories and no manage permission.
+
+---
+
+### Stage 10 — Staff memory management ✅
+
+Staff can add, edit, and delete memory entries from the guest profile. The add form appears as the first card in the grid, dynamically colour-coded by selected category. Edit mode is inline within the card. All destructive deletes require a confirmation dialog. Keyboard shortcuts: `Ctrl+Enter` / `Cmd+Enter` to save, `Escape` to cancel.
+
+API calls: `POST /api/v1/guests/:id/memories`, `PATCH /api/v1/guests/:id/memories/:memoryId`, `DELETE /api/v1/guests/:id/memories/:memoryId`.
 
 ---
 
 ## Related Documents
 
 - [Message Pipeline Refactor](./014-message-pipeline.md) — Required dependency; `ctx.queryEmbedding` from the pipeline eliminates the need for any embedding cache or coordination in this feature
-- [Multilingual Translation](./007-multilingual-translation.md) — Extraction must handle translated conversation content; the extractor should operate on original-language content where available
+- [Multilingual Translation](./007-multilingual-translation.md) — Extraction operates on `translatedContent` where available so the AI always reads English source
 - [PMS Sync Freshness](./008-pms-sync-freshness.md) — A future phase will mine PMS booking history as a memory source

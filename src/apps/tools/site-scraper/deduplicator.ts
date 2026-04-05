@@ -103,7 +103,7 @@ async function semanticDedup(
 
   const existingEmbeddings = existingRows.map((r) => ({
     id: r.id,
-    embedding: JSON.parse(r.embedding) as number[],
+    embedding: Array.from(new Float32Array((r.embedding as Buffer).buffer)),
   }));
 
   // Compare new-vs-new

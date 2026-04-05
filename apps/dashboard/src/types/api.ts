@@ -47,6 +47,20 @@ export interface GuestSummary {
   loyaltyTier: string | null;
 }
 
+// --- Guest Memory ---
+
+export interface GuestMemory {
+  id: string;
+  guestId: string;
+  conversationId: string | null;
+  category: 'preference' | 'complaint' | 'habit' | 'personal' | 'request';
+  content: string;
+  source: 'ai_extracted' | 'manual' | 'pms';
+  confidence: number;
+  createdAt: string;
+  lastReinforcedAt: string;
+}
+
 // --- Reservation ---
 
 export interface Reservation {

@@ -10,9 +10,10 @@
  * @module ai
  */
 
-import type { Conversation } from '@/db/schema.js';
+import type { Conversation, GuestMemory } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/services/guest-context.js';
+import type { KnowledgeSearchResult } from './knowledge/index.js';
 import type { Response, Responder } from './types.js';
 import { createLogger } from '@/utils/logger.js';
 
@@ -140,10 +141,12 @@ export function getResponder(): Responder {
     async generate(
       conversation: Conversation,
       message: InboundMessage,
-      guestContext?: GuestContext
+      guestContext?: GuestContext,
+      knowledgeResults?: KnowledgeSearchResult[],
+      memories?: GuestMemory[]
     ): Promise<Response> {
       const responder = await getResponderAsync();
-      return responder.generate(conversation, message, guestContext);
+      return responder.generate(conversation, message, guestContext, knowledgeResults, memories);
     },
   };
 }
@@ -164,8 +167,10 @@ export const defaultResponder: Responder = {
   generate(
     conversation: Conversation,
     message: InboundMessage,
-    guestContext?: GuestContext
+    guestContext?: GuestContext,
+    knowledgeResults?: KnowledgeSearchResult[],
+    memories?: GuestMemory[]
   ): Promise<Response> {
-    return getResponder().generate(conversation, message, guestContext);
+    return getResponder().generate(conversation, message, guestContext, knowledgeResults, memories);
   },
 };

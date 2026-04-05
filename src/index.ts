@@ -16,6 +16,7 @@ import { resetResponder } from '@/ai/index.js';
 import { getAutomationEngine } from '@/automation/index.js';
 import { subscribeAutomationToEvents } from '@/automation/event-subscriber.js';
 import { subscribeActivityLogToEvents } from '@/services/activity-log.js';
+import { subscribeMemoryExtractionToEvents } from '@/core/memory-event-subscriber.js';
 
 const APP_NAME = 'Jack The Butler';
 const VERSION = process.env.APP_VERSION ?? process.env.npm_package_version ?? 'unknown';
@@ -140,6 +141,9 @@ async function main(): Promise<void> {
 
     // Subscribe activity log to system events (Layer 1)
     subscribeActivityLogToEvents();
+
+    // Subscribe memory extraction to conversation close events
+    subscribeMemoryExtractionToEvents();
 
     // Note: Email is now handled via extensions (Mailgun, SendGrid, Gmail SMTP)
     // Inbound email uses webhooks instead of IMAP polling

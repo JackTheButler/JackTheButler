@@ -6,6 +6,6 @@ const log = createLogger('core:pipeline');
 
 export async function generateResponse(ctx: MessageContext): Promise<void> {
   if (!ctx.conversation) return;
-  ctx.aiResponse = await defaultResponder.generate(ctx.conversation, ctx.inbound, ctx.guestContext, ctx.knowledgeResults);
+  ctx.aiResponse = await defaultResponder.generate(ctx.conversation, ctx.inbound, ctx.guestContext, ctx.knowledgeResults, ctx.memories);
   log.debug({ conversationId: ctx.conversation.id, intent: ctx.aiResponse.intent }, 'Response generated');
 }

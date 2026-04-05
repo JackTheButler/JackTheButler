@@ -48,7 +48,22 @@
     "confirmation": "رقم التأكيد",
     "channel": "القناة",
     "lastMessage": "آخر رسالة",
-    "view": "عرض"
+    "view": "عرض",
+    "whatJackKnows": "ذاكرة جاك",
+    "addMemory": "إضافة ذاكرة",
+    "noMemories": "لم يتم تسجيل أي ذكريات بعد",
+    "memoryContentPlaceholder": "مثال: يفضل وسائد خالية من الريش",
+    "saveMemory": "حفظ",
+    "failedToSaveMemory": "فشل حفظ الذاكرة",
+    "failedToDeleteMemory": "فشل حذف الذاكرة",
+    "deleteMemoryTitle": "حذف الذاكرة",
+    "deleteMemoryDescription": "هل أنت متأكد أنك تريد حذف هذه الذاكرة؟ لن يستخدمها جاك بعد الآن عند الرد على هذا الضيف.",
+    "deleteMemoryConfirm": "حذف",
+    "categoryPreference": "تفضيل",
+    "categoryComplaint": "شكوى",
+    "categoryHabit": "عادة",
+    "categoryPersonal": "شخصي",
+    "categoryRequest": "طلب"
   },
   "guestForm": {
     "addNewGuest": "إضافة ضيف جديد",

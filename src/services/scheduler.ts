@@ -11,6 +11,7 @@ import { pmsSyncService, getPMSSyncConfig } from './pms-sync.js';
 import { writeActivityLog } from './activity-log.js';
 import { sqlite } from '@/db/index.js';
 import { getAppRegistry } from '@/apps/registry.js';
+import { conversationService } from './conversation.js';
 
 const log = createLogger('scheduler');
 
@@ -55,6 +56,10 @@ export class Scheduler {
       }
       return { activityLogDeleted, appLogsDeleted, cutoffDate: cutoff.toISOString().split('T')[0] };
     });
+
+    // Conversation idle timeout (every 30 minutes)
+    // Closes conversations that have had no activity for 4 hours
+    this.scheduleJob('conversation-idle-timeout', 30 * 60 * 1000, () => this.runConversationIdleTimeout());
 
     // WebChat session cleanup (every hour)
     this.scheduleJob('webchat-session-cleanup', 60 * 60 * 1000, async () => {
@@ -131,6 +136,8 @@ export class Scheduler {
       const cutoffISO = cutoff.toISOString();
       sqlite.prepare('DELETE FROM activity_log WHERE created_at < ?').run(cutoffISO);
       sqlite.prepare('DELETE FROM app_logs WHERE created_at < ?').run(cutoffISO);
+    } else if (name === 'conversation-idle-timeout') {
+      await this.runConversationIdleTimeout();
     } else if (name === 'webchat-session-cleanup') {
       const { webchatSessionService } = await import('./webchat-session.js');
       const count = await webchatSessionService.cleanupExpired();
@@ -202,6 +209,38 @@ export class Scheduler {
     wrappedHandler().catch(() => {
       // Error already logged in wrapper
     });
+  }
+
+  /**
+   * Close conversations that have been idle beyond the timeout threshold.
+   * Default: 4 hours since last message.
+   */
+  private async runConversationIdleTimeout(idleTimeoutMs = 4 * 60 * 60 * 1000): Promise<Record<string, unknown>> {
+    const cutoff = new Date(Date.now() - idleTimeoutMs).toISOString();
+
+    const idleRows = sqlite
+      .prepare(
+        `SELECT id, guest_id FROM conversations
+         WHERE state IN ('active', 'waiting', 'escalated', 'resolved')
+           AND (last_message_at < ? OR (last_message_at IS NULL AND updated_at < ?))`
+      )
+      .all(cutoff, cutoff) as Array<{ id: string; guest_id: string | null }>;
+
+    let closed = 0;
+    for (const row of idleRows) {
+      try {
+        await conversationService.update(row.id, { state: 'closed', _closeReason: 'timeout' });
+        closed++;
+      } catch (err) {
+        log.error({ err, conversationId: row.id }, 'Failed to close idle conversation');
+      }
+    }
+
+    if (closed > 0) {
+      log.info({ closed, cutoff }, 'Closed idle conversations');
+    }
+
+    return { closed, cutoff };
   }
 
   /**

@@ -17,6 +17,7 @@ import { detectLanguage } from './stages/detect-language.js';
 import { saveInboundMessage } from './stages/save-inbound-message.js';
 import { computeEmbedding } from './stages/compute-embedding.js';
 import { searchKnowledge } from './stages/search-knowledge.js';
+import { recallMemories } from './stages/recall-memories.js';
 import { generateResponse } from './stages/generate-response.js';
 import { routeTask } from './stages/route-task.js';
 import { checkEscalation } from './stages/check-escalation.js';
@@ -38,6 +39,7 @@ const STAGES = [
   saveInboundMessage,
   computeEmbedding,
   searchKnowledge,
+  recallMemories,
   generateResponse,
   routeTask,
   checkEscalation,
