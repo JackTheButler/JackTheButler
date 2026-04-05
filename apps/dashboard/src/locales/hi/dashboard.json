@@ -75,6 +75,15 @@
         "14d": "14 दिन",
         "30d": "30 दिन"
       }
-    }
+    },
+    "systemStatus": {
+      "title": "सिस्टम स्थिति",
+      "operational": "सभी सिस्टम चालू हैं",
+      "warning": "ध्यान देने की जरूरत है",
+      "error": "समस्याएं मिलीं"
+    },
+    "memories": "यादें",
+    "memoriesReembed": "अभी ठीक करें",
+    "memoriesReembedHint": "{{count}} यादों में एम्बेडिंग नहीं है।"
   }
 }

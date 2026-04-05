@@ -75,6 +75,15 @@
         "14d": "14 días",
         "30d": "30 días"
       }
-    }
+    },
+    "systemStatus": {
+      "title": "Estado del Sistema",
+      "operational": "Todos los sistemas operativos",
+      "warning": "Necesita atención",
+      "error": "Problemas detectados"
+    },
+    "memories": "Memorias",
+    "memoriesReembed": "Corregir ahora",
+    "memoriesReembedHint": "{{count}} memorias sin embeddings."
   }
 }

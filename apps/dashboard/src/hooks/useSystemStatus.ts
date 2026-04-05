@@ -47,6 +47,10 @@ export interface SystemStatus {
     withoutEmbeddings: number;
     needsReindex: boolean;
   };
+  memories: {
+    total: number;
+    withEmbeddings: number;
+  };
 }
 
 /**
@@ -72,6 +76,7 @@ export function useSystemStatus() {
     providers: query.data?.providers ?? null,
     apps: query.data?.apps ?? null,
     knowledgeBase: query.data?.knowledgeBase ?? null,
+    memories: query.data?.memories ?? null,
     version: query.data?.version ?? null,
   };
 }

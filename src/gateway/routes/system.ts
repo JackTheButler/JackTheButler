@@ -12,8 +12,8 @@ import { PERMISSIONS } from '@/core/permissions/index.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { getVersion } from '@/config/version.js';
 import type { AIAppManifest } from '@/apps/types.js';
-import { db, sqlite, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
-import { count, isNull, eq } from 'drizzle-orm';
+import { db, sqlite, knowledgeBase, knowledgeEmbeddings, guestMemories } from '@/db/index.js';
+import { count, isNull, isNotNull, eq } from 'drizzle-orm';
 
 /**
  * System issue severity levels
@@ -64,6 +64,10 @@ interface SystemStatus {
     total: number;
     withoutEmbeddings: number;
     needsReindex: boolean;
+  };
+  memories: {
+    total: number;
+    withEmbeddings: number;
   };
 }
 
@@ -202,6 +206,10 @@ systemRoutes.get('/status', async (c) => {
     }
   }
 
+  // Count guest memories
+  const [memoriesTotal] = await db.select({ count: count() }).from(guestMemories);
+  const [memoriesWithEmbed] = await db.select({ count: count() }).from(guestMemories).where(isNotNull(guestMemories.embedding));
+
   const status: SystemStatus & { version: string } = {
     version: getVersion(),
     healthy: issues.filter((i) => i.severity === 'critical').length === 0,
@@ -218,6 +226,10 @@ systemRoutes.get('/status', async (c) => {
       total: knowledgeBaseTotal,
       withoutEmbeddings: knowledgeBaseWithoutEmbeddings,
       needsReindex: knowledgeBaseWithoutEmbeddings > 0,
+    },
+    memories: {
+      total: memoriesTotal?.count ?? 0,
+      withEmbeddings: memoriesWithEmbed?.count ?? 0,
     },
   };
 

@@ -75,6 +75,15 @@
         "14d": "14 يوماً",
         "30d": "30 يوماً"
       }
-    }
+    },
+    "systemStatus": {
+      "title": "حالة النظام",
+      "operational": "جميع الأنظمة تعمل",
+      "warning": "يحتاج إلى انتباه",
+      "error": "تم اكتشاف مشكلات"
+    },
+    "memories": "الذكريات",
+    "memoriesReembed": "إصلاح الآن",
+    "memoriesReembedHint": "{{count}} ذكريات تفتقر إلى التضمين."
   }
 }

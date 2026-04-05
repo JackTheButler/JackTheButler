@@ -1,18 +1,37 @@
-import { Bot, MessageSquare, Cpu, Plug, Book } from 'lucide-react';
+import { useState } from 'react';
+import { Bot, MessageSquare, Cpu, Puzzle, Book, Brain } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
+import { useQueryClient } from '@tanstack/react-query';
 import { PageContainer, PageHeader, StatsColumn, ActionItems, DemoDataCard } from '@/components';
 import { AnalyticsCards } from '@/components/home/AnalyticsCards';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
+import { api } from '@/lib/api';
 
 export function HomePage() {
   const { t } = useTranslation();
   const { can } = usePermissions();
   const canManageSettings = can(PERMISSIONS.SETTINGS_MANAGE);
-  const { providers, apps, knowledgeBase, isLoading } = useSystemStatus();
+  const canManageGuests = can(PERMISSIONS.GUESTS_MANAGE);
+  const { providers, apps, knowledgeBase, memories, isLoading, refetch } = useSystemStatus();
+  const queryClient = useQueryClient();
+  const [isBackfilling, setIsBackfilling] = useState(false);
 
   const kbIndexed = (knowledgeBase?.total ?? 0) - (knowledgeBase?.withoutEmbeddings ?? 0);
   const kbTotal = knowledgeBase?.total ?? 0;
+
+  const memoriesNeedBackfill = (memories?.withEmbeddings ?? 0) < (memories?.total ?? 0);
+
+  async function handleBackfillMemories() {
+    setIsBackfilling(true);
+    try {
+      await api.post('/guests/memories/backfill-embeddings', {});
+      await refetch();
+      queryClient.invalidateQueries({ queryKey: ['system-status'] });
+    } finally {
+      setIsBackfilling(false);
+    }
+  }
 
   const stats = [
     {
@@ -34,16 +53,31 @@ export function HomePage() {
       variant: (apps?.channel ?? 0) > 0 ? 'success' : 'warning',
     },
     {
+      label: t('home.apps'),
+      value: (apps?.ai ?? 0) + (apps?.channel ?? 0) + (apps?.pms ?? 0) + (apps?.tool ?? 0),
+      icon: Puzzle,
+      variant: 'default',
+    },
+    {
       label: t('home.knowledge'),
       value: `${kbIndexed}/${kbTotal}`,
       icon: Book,
       variant: kbTotal === 0 ? 'warning' : knowledgeBase?.needsReindex ? 'warning' : 'success',
+      progress: kbTotal > 0 ? kbIndexed / kbTotal : 0,
     },
     {
-      label: t('home.apps'),
-      value: (apps?.ai ?? 0) + (apps?.channel ?? 0) + (apps?.pms ?? 0) + (apps?.tool ?? 0),
-      icon: Plug,
-      variant: 'default',
+      label: t('home.memories'),
+      value: `${memories?.withEmbeddings ?? 0}/${memories?.total ?? 0}`,
+      icon: Brain,
+      variant: memoriesNeedBackfill ? 'warning' : (memories?.total ?? 0) > 0 ? 'success' : 'default',
+      progress: (memories?.total ?? 0) > 0 ? (memories?.withEmbeddings ?? 0) / (memories?.total ?? 1) : 0,
+      ...(memoriesNeedBackfill && canManageGuests && {
+        action: {
+          hint: t('home.memoriesReembedHint', { count: (memories?.total ?? 0) - (memories?.withEmbeddings ?? 0) }),
+          label: isBackfilling ? t('common.loading') : t('home.memoriesReembed'),
+          onClick: handleBackfillMemories,
+        },
+      }),
     },
   ] as const;
 
@@ -62,10 +96,10 @@ export function HomePage() {
             <ActionItems disabled={!canManageSettings} />
           </div>
 
-          {/* Right column: Demo Data + System Status */}
+          {/* Right column: System Status + Demo Data */}
           <div className="flex flex-col gap-6">
-            <DemoDataCard disabled={!canManageSettings} />
             {!isLoading && <StatsColumn items={[...stats]} />}
+            <DemoDataCard disabled={!canManageSettings} />
           </div>
         </div>
       </div>

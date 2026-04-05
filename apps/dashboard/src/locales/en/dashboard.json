@@ -75,6 +75,15 @@
         "14d": "14 days",
         "30d": "30 days"
       }
-    }
+    },
+    "systemStatus": {
+      "title": "System Status",
+      "operational": "All systems operational",
+      "warning": "Needs attention",
+      "error": "Issues detected"
+    },
+    "memories": "Memories",
+    "memoriesReembed": "Fix now",
+    "memoriesReembedHint": "{{count}} memories missing embeddings."
   }
 }

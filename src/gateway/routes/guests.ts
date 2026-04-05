@@ -8,9 +8,9 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, isNull } from 'drizzle-orm';
 import type { MemoryFact } from '@/services/memory.js';
-import { db, guests, reservations, conversations } from '@/db/index.js';
+import { db, guests, reservations, conversations, guestMemories } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { validateBody, requireAuth, requirePermission } from '@/gateway/middleware/index.js';
@@ -18,6 +18,7 @@ import { normalizePhone } from '@/services/guest.js';
 import { now } from '@/utils/time.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import { memoryService } from '@/services/memory.js';
+import { getAppRegistry } from '@/apps/index.js';
 
 const log = createLogger('routes:guests');
 
@@ -554,6 +555,47 @@ guestRoutes.delete('/:id', requirePermission(PERMISSIONS.GUESTS_MANAGE), async (
   }
 
   return c.json({ success: true });
+});
+
+/**
+ * POST /api/v1/guests/memories/backfill-embeddings
+ * Embed all guest memories that currently have no embedding.
+ */
+guestRoutes.post('/memories/backfill-embeddings', requirePermission(PERMISSIONS.GUESTS_MANAGE), async (c) => {
+  const registry = getAppRegistry();
+  const provider = registry.getEmbeddingProvider();
+
+  if (!provider) {
+    return c.json(
+      { error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Engine > Apps.' },
+      400
+    );
+  }
+
+  const unembedded = await db
+    .select({ id: guestMemories.id, content: guestMemories.content })
+    .from(guestMemories)
+    .where(isNull(guestMemories.embedding));
+
+  log.info({ count: unembedded.length }, 'Starting memory embedding backfill');
+
+  let success = 0;
+  let failed = 0;
+
+  for (const memory of unembedded) {
+    try {
+      const { embedding } = await provider.embed({ text: memory.content });
+      await memoryService.updateEmbedding(memory.id, embedding);
+      success++;
+    } catch (err) {
+      log.warn({ id: memory.id, error: err }, 'Failed to embed memory');
+      failed++;
+    }
+  }
+
+  log.info({ success, failed }, 'Memory embedding backfill completed');
+
+  return c.json({ total: unembedded.length, success, failed });
 });
 
 export { guestRoutes };

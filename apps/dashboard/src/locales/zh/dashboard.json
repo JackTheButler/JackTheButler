@@ -75,6 +75,15 @@
         "14d": "14天",
         "30d": "30天"
       }
-    }
+    },
+    "systemStatus": {
+      "title": "系统状态",
+      "operational": "所有系统正常",
+      "warning": "需要关注",
+      "error": "发现问题"
+    },
+    "memories": "记忆",
+    "memoriesReembed": "立即修复",
+    "memoriesReembedHint": "{{count}} 条记忆缺少向量嵌入。"
   }
 }
