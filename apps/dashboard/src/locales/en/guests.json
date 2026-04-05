@@ -56,6 +56,8 @@
     "saveMemory": "Save",
     "failedToSaveMemory": "Failed to save memory",
     "failedToDeleteMemory": "Failed to delete memory",
+    "fixEmbedding": "Fix embedding",
+    "failedToFixEmbedding": "Failed to generate embedding",
     "deleteMemoryTitle": "Delete memory",
     "deleteMemoryDescription": "Are you sure you want to delete this memory? Jack will no longer use it when responding to this guest.",
     "deleteMemoryConfirm": "Delete",

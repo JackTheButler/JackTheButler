@@ -82,6 +82,62 @@
       "warning": "Needs attention",
       "error": "Issues detected"
     },
+    "activity": {
+      "title": "Live Activity",
+      "live": "LIVE",
+      "allEvents": "All events",
+      "nOfTotal": "{{count}} of {{total}}",
+      "hideAll": "Hide all",
+      "showAll": "Show all",
+      "loading": "Loading activity...",
+      "empty": "No recent activity",
+      "filters": {
+        "ai_reply": "AI Replies",
+        "ai_resolved": "AI Resolved",
+        "task_created": "Tasks",
+        "checkin": "Check-ins",
+        "checkout": "Check-outs",
+        "escalated": "Escalations"
+      },
+      "time": {
+        "justNow": "just now",
+        "secondsAgo": "{{count}}s ago",
+        "minutesAgo": "{{count}}m ago",
+        "hoursAgo": "{{count}}h ago",
+        "daysAgo": "{{count}}d ago"
+      },
+      "text": {
+        "ai_reply": "AI replied to guest",
+        "ai_resolved": "AI resolved {{intent}}",
+        "task_created": "{{taskType}} task created",
+        "checkin": "{{guestName}} checked in",
+        "checkout": "{{guestName}} checked out",
+        "escalated": "Conversation escalated to staff"
+      },
+      "detail": {
+        "room": "Room {{number}}",
+        "newTask": "New task",
+        "guestStay": "Guest stay"
+      },
+      "taskTypes": {
+        "housekeeping": "Housekeeping",
+        "maintenance": "Maintenance",
+        "room_service": "Room service",
+        "concierge": "Concierge",
+        "other": "Other"
+      },
+      "priority": {
+        "urgent": "Urgent",
+        "high": "High",
+        "low": "Low"
+      },
+      "channels": {
+        "whatsapp": "WhatsApp",
+        "email": "Email",
+        "sms": "SMS",
+        "webchat": "Webchat"
+      }
+    },
     "memories": "Memories",
     "memoriesReembed": "Fix now",
     "memoriesReembedHint": "{{count}} memories missing embeddings."

@@ -14,6 +14,7 @@ import { getAppRegistry } from '@/apps/index.js';
 import type { NormalizedGuest, NormalizedReservation, SyncResult } from '@jack/shared';
 import type { Guest, Reservation } from '@/db/schema.js';
 import { now } from '@/utils/time.js';
+import { events, EventTypes } from '@/events/index.js';
 
 const log = createLogger('pms-sync');
 
@@ -197,6 +198,29 @@ export class PMSSyncService {
         .where(eq(reservations.id, existingRes.id));
 
       log.debug({ reservationId: existingRes.id, confirmation: pmsRes.confirmationNumber }, 'Updated reservation');
+
+      // Emit check-in / check-out events on status transitions
+      if (existingRes.status !== status) {
+        const roomNumber = pmsRes.roomNumber ?? existingRes.roomNumber ?? '';
+        if (status === 'checked_in') {
+          events.emit({
+            type: EventTypes.RESERVATION_CHECKED_IN,
+            timestamp: new Date(),
+            reservationId: existingRes.id,
+            guestId: guest.id,
+            roomNumber,
+          });
+        } else if (status === 'checked_out') {
+          events.emit({
+            type: EventTypes.RESERVATION_CHECKED_OUT,
+            timestamp: new Date(),
+            reservationId: existingRes.id,
+            guestId: guest.id,
+            roomNumber,
+          });
+        }
+      }
+
       return 'updated';
     }
 

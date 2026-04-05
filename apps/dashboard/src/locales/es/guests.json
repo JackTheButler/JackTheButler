@@ -56,6 +56,8 @@
     "saveMemory": "Guardar",
     "failedToSaveMemory": "Error al guardar la memoria",
     "failedToDeleteMemory": "Error al eliminar la memoria",
+    "fixEmbedding": "Corregir embedding",
+    "failedToFixEmbedding": "Error al generar el embedding",
     "deleteMemoryTitle": "Eliminar memoria",
     "deleteMemoryDescription": "¿Estás seguro de que deseas eliminar esta memoria? Jack ya no la usará al responder a este huésped.",
     "deleteMemoryConfirm": "Eliminar",

@@ -44,6 +44,8 @@ export async function runExtraction(event: ConversationClosedEvent): Promise<voi
     return;
   }
 
+  const embeddingProvider = getAppRegistry().getEmbeddingProvider();
+
   const messages = await conversationService.getMessages(conversationId, { limit: 500 });
 
   // Skip extraction if the guest barely spoke — no durable facts can be inferred
@@ -58,7 +60,7 @@ export async function runExtraction(event: ConversationClosedEvent): Promise<voi
 
   if (facts.length === 0) return;
 
-  // MemoryService(provider) handles embedding + deduplication on write
-  const memoryService = new MemoryService(provider);
+  // MemoryService(completionProvider, embeddingProvider) handles embedding + deduplication on write
+  const memoryService = new MemoryService(provider, embeddingProvider ?? undefined);
   await memoryService.insert(guestId, conversationId, facts);
 }

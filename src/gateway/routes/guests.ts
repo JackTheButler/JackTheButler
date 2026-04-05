@@ -10,6 +10,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { eq, desc, sql, isNull } from 'drizzle-orm';
 import type { MemoryFact } from '@/services/memory.js';
+import { MemoryService } from '@/services/memory.js';
 import { db, guests, reservations, conversations, guestMemories } from '@/db/index.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -314,7 +315,7 @@ guestRoutes.get('/:id/memories', requirePermission(PERMISSIONS.GUESTS_VIEW), asy
   const rows = await memoryService.listForGuest(id);
 
   // Strip binary embedding blobs — not useful to the UI and wasteful on the wire
-  const memories = rows.map(({ embedding: _embedding, ...m }) => m);
+  const memories = rows.map(({ embedding, ...m }) => ({ ...m, hasEmbedding: embedding !== null }));
 
   return c.json({ memories });
 });
@@ -347,12 +348,14 @@ guestRoutes.post('/:id/memories', requirePermission(PERMISSIONS.GUESTS_MANAGE), 
   if (!guest) return c.json({ error: 'Guest not found' }, 404);
 
   const fact: MemoryFact = { category: data.category, content: data.content, confidence: 1.0 };
-  const [memory] = await memoryService.insert(id, null, [fact], 'manual');
+  const registry = getAppRegistry();
+  const svc = new MemoryService(registry.getActiveAIProvider(), registry.getEmbeddingProvider() ?? undefined);
+  const [memory] = await svc.insert(id, null, [fact], 'manual');
 
   log.info({ guestId: id, memoryId: memory!.id }, 'Manual memory created');
 
-  const { embedding: _embedding, ...row } = memory!;
-  return c.json(row, 201);
+  const { embedding, ...row } = memory!;
+  return c.json({ ...row, hasEmbedding: embedding !== null }, 201);
 });
 
 /**
@@ -385,8 +388,8 @@ guestRoutes.patch('/:id/memories/:memoryId', requirePermission(PERMISSIONS.GUEST
   };
   const updated = await memoryService.update(memoryId, patch);
 
-  const { embedding: _embedding, ...row } = updated;
-  return c.json(row);
+  const { embedding, ...row } = updated;
+  return c.json({ ...row, hasEmbedding: embedding !== null });
 });
 
 /**
@@ -410,6 +413,37 @@ guestRoutes.delete('/:id/memories/:memoryId', requirePermission(PERMISSIONS.GUES
   }
 
   await memoryService.delete(memoryId);
+  return c.json({ success: true });
+});
+
+/**
+ * POST /api/v1/guests/:id/memories/:memoryId/embed
+ * Generate embedding for a single memory that is missing one.
+ */
+guestRoutes.post('/:id/memories/:memoryId/embed', requirePermission(PERMISSIONS.GUESTS_MANAGE), async (c) => {
+  const guestId = c.req.param('id');
+  const memoryId = c.req.param('memoryId');
+
+  const registry = getAppRegistry();
+  const provider = registry.getEmbeddingProvider();
+  if (!provider) {
+    return c.json({ error: 'No embedding provider available. Please enable Local AI or configure OpenAI in Engine > Apps.' }, 422);
+  }
+
+  let existing;
+  try {
+    existing = await memoryService.getById(memoryId);
+  } catch {
+    return c.json({ error: 'Memory not found' }, 404);
+  }
+
+  if (existing.guestId !== guestId) {
+    return c.json({ error: 'Memory not found' }, 404);
+  }
+
+  const { embedding } = await provider.embed({ text: existing.content });
+  await memoryService.updateEmbedding(memoryId, embedding);
+
   return c.json({ success: true });
 });
 

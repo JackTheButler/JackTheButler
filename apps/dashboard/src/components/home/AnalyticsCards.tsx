@@ -96,17 +96,7 @@ function SparkTooltip({
 // ---------------------------------------------------------------------------
 
 function SparklineSkeleton() {
-  return (
-    <div className="h-10 -mx-1 flex items-end gap-0.5 px-1">
-      {[40, 60, 45, 70, 55, 80, 65].map((h, i) => (
-        <div
-          key={i}
-          className="flex-1 bg-muted animate-pulse rounded-sm"
-          style={{ height: `${h}%` }}
-        />
-      ))}
-    </div>
-  );
+  return <div className="h-10 rounded-md bg-muted/40 animate-pulse" />;
 }
 
 // ---------------------------------------------------------------------------
@@ -135,7 +125,7 @@ function AnalyticItem({
   const series: SeriesPoint[] = metric?.series ?? [];
 
   return (
-    <div className="flex-1 flex flex-col px-4 pt-3 pb-0 min-w-[200px]">
+    <div className="flex-1 flex flex-col px-4 pt-3 pb-3 min-w-[200px]">
       {/* Value + delta */}
       <div className="flex items-center justify-between gap-2 mb-0.5">
         <span className="text-xl font-bold tracking-tight text-foreground">

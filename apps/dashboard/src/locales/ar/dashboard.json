@@ -82,6 +82,62 @@
       "warning": "يحتاج إلى انتباه",
       "error": "تم اكتشاف مشكلات"
     },
+    "activity": {
+      "title": "النشاط المباشر",
+      "live": "مباشر",
+      "allEvents": "جميع الأحداث",
+      "nOfTotal": "{{count}} من {{total}}",
+      "hideAll": "إخفاء الكل",
+      "showAll": "إظهار الكل",
+      "loading": "جارٍ تحميل النشاط...",
+      "empty": "لا يوجد نشاط حديث",
+      "filters": {
+        "ai_reply": "ردود الذكاء الاصطناعي",
+        "ai_resolved": "حُلّ بالذكاء الاصطناعي",
+        "task_created": "المهام",
+        "checkin": "تسجيل الوصول",
+        "checkout": "تسجيل المغادرة",
+        "escalated": "التصعيدات"
+      },
+      "time": {
+        "justNow": "الآن",
+        "secondsAgo": "منذ {{count}}ث",
+        "minutesAgo": "منذ {{count}}د",
+        "hoursAgo": "منذ {{count}}س",
+        "daysAgo": "منذ {{count}} يوم"
+      },
+      "text": {
+        "ai_reply": "الذكاء الاصطناعي ردّ على الضيف",
+        "ai_resolved": "الذكاء الاصطناعي حلّ: {{intent}}",
+        "task_created": "تم إنشاء مهمة {{taskType}}",
+        "checkin": "{{guestName}} سجّل وصوله",
+        "checkout": "{{guestName}} سجّل مغادرته",
+        "escalated": "تمت إحالة المحادثة إلى الموظفين"
+      },
+      "detail": {
+        "room": "غرفة {{number}}",
+        "newTask": "مهمة جديدة",
+        "guestStay": "إقامة ضيف"
+      },
+      "taskTypes": {
+        "housekeeping": "التدبير المنزلي",
+        "maintenance": "الصيانة",
+        "room_service": "خدمة الغرفة",
+        "concierge": "الكونسيرج",
+        "other": "أخرى"
+      },
+      "priority": {
+        "urgent": "عاجل",
+        "high": "مرتفع",
+        "low": "منخفض"
+      },
+      "channels": {
+        "whatsapp": "واتساب",
+        "email": "البريد الإلكتروني",
+        "sms": "رسالة نصية",
+        "webchat": "دردشة الويب"
+      }
+    },
     "memories": "الذكريات",
     "memoriesReembed": "إصلاح الآن",
     "memoriesReembedHint": "{{count}} ذكريات تفتقر إلى التضمين."

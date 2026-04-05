@@ -41,6 +41,9 @@ export function useWebSocket() {
           queryClient.invalidateQueries({ queryKey: ['conversations'] });
           break;
         }
+        case 'activity:event':
+          window.dispatchEvent(new CustomEvent('ws:activity:event', { detail: message.payload }));
+          break;
         case 'connected':
           console.log('[WebSocket] Connected', message.payload);
           break;

@@ -82,6 +82,62 @@
       "warning": "Necesita atención",
       "error": "Problemas detectados"
     },
+    "activity": {
+      "title": "Actividad en Vivo",
+      "live": "EN VIVO",
+      "allEvents": "Todos los eventos",
+      "nOfTotal": "{{count}} de {{total}}",
+      "hideAll": "Ocultar todo",
+      "showAll": "Mostrar todo",
+      "loading": "Cargando actividad...",
+      "empty": "Sin actividad reciente",
+      "filters": {
+        "ai_reply": "Respuestas IA",
+        "ai_resolved": "Resuelto por IA",
+        "task_created": "Tareas",
+        "checkin": "Check-ins",
+        "checkout": "Check-outs",
+        "escalated": "Escalaciones"
+      },
+      "time": {
+        "justNow": "ahora mismo",
+        "secondsAgo": "hace {{count}}s",
+        "minutesAgo": "hace {{count}}m",
+        "hoursAgo": "hace {{count}}h",
+        "daysAgo": "hace {{count}}d"
+      },
+      "text": {
+        "ai_reply": "IA respondió al huésped",
+        "ai_resolved": "IA resolvió: {{intent}}",
+        "task_created": "Tarea de {{taskType}} creada",
+        "checkin": "{{guestName}} hizo check-in",
+        "checkout": "{{guestName}} hizo check-out",
+        "escalated": "Conversación escalada al personal"
+      },
+      "detail": {
+        "room": "Habitación {{number}}",
+        "newTask": "Nueva tarea",
+        "guestStay": "Estancia de huésped"
+      },
+      "taskTypes": {
+        "housekeeping": "limpieza",
+        "maintenance": "mantenimiento",
+        "room_service": "servicio a la habitación",
+        "concierge": "conserjería",
+        "other": "otro"
+      },
+      "priority": {
+        "urgent": "Urgente",
+        "high": "Alta",
+        "low": "Baja"
+      },
+      "channels": {
+        "whatsapp": "WhatsApp",
+        "email": "Correo",
+        "sms": "SMS",
+        "webchat": "Chat web"
+      }
+    },
     "memories": "Memorias",
     "memoriesReembed": "Corregir ahora",
     "memoriesReembedHint": "{{count}} memorias sin embeddings."

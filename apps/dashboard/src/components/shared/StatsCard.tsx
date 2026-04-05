@@ -83,7 +83,7 @@ export function StatsColumn({ items }: StatsBarProps) {
     <Card>
       {/* Header */}
       <div className="flex items-center justify-between px-4 py-3 border-b border-border/50">
-        <p className="text-xs font-medium">{t('home.systemStatus.title')}</p>
+        <p className="text-xs font-semibold tracking-wide text-foreground">{t('home.systemStatus.title')}</p>
         <div className="flex items-center gap-1.5">
           <span className={cn('w-1.5 h-1.5 rounded-full', dotColors[overallHealth])} />
           <span className="text-[11px] text-muted-foreground">{statusText}</span>

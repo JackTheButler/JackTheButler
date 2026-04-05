@@ -82,6 +82,62 @@
       "warning": "需要关注",
       "error": "发现问题"
     },
+    "activity": {
+      "title": "实时动态",
+      "live": "直播",
+      "allEvents": "全部事件",
+      "nOfTotal": "{{total}} 中的 {{count}}",
+      "hideAll": "隐藏全部",
+      "showAll": "显示全部",
+      "loading": "正在加载...",
+      "empty": "暂无近期动态",
+      "filters": {
+        "ai_reply": "AI 回复",
+        "ai_resolved": "AI 解决",
+        "task_created": "任务",
+        "checkin": "入住",
+        "checkout": "退房",
+        "escalated": "升级处理"
+      },
+      "time": {
+        "justNow": "刚刚",
+        "secondsAgo": "{{count}}秒前",
+        "minutesAgo": "{{count}}分钟前",
+        "hoursAgo": "{{count}}小时前",
+        "daysAgo": "{{count}}天前"
+      },
+      "text": {
+        "ai_reply": "AI 回复了客人",
+        "ai_resolved": "AI 解决了: {{intent}}",
+        "task_created": "已创建{{taskType}}任务",
+        "checkin": "{{guestName}} 已入住",
+        "checkout": "{{guestName}} 已退房",
+        "escalated": "对话已升级至员工处理"
+      },
+      "detail": {
+        "room": "{{number}} 号房",
+        "newTask": "新任务",
+        "guestStay": "客人入住"
+      },
+      "taskTypes": {
+        "housekeeping": "客房清洁",
+        "maintenance": "维修",
+        "room_service": "客房服务",
+        "concierge": "礼宾",
+        "other": "其他"
+      },
+      "priority": {
+        "urgent": "紧急",
+        "high": "高",
+        "low": "低"
+      },
+      "channels": {
+        "whatsapp": "WhatsApp",
+        "email": "邮件",
+        "sms": "短信",
+        "webchat": "网页聊天"
+      }
+    },
     "memories": "记忆",
     "memoriesReembed": "立即修复",
     "memoriesReembedHint": "{{count}} 条记忆缺少向量嵌入。"

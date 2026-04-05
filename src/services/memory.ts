@@ -32,10 +32,12 @@ export interface MemoryFact {
 type DedupeClassification = 'CONFIRMS' | 'CONTRADICTS' | 'DIFFERENT';
 
 export class MemoryService {
-  private readonly provider: AIProvider | undefined;
+  private readonly completionProvider: AIProvider | undefined;
+  private readonly embeddingProvider: AIProvider | undefined;
 
-  constructor(provider?: AIProvider) {
-    this.provider = provider;
+  constructor(completionProvider?: AIProvider, embeddingProvider?: AIProvider) {
+    this.completionProvider = completionProvider;
+    this.embeddingProvider = embeddingProvider;
   }
 
   // ---------------------------------------------------------------------------
@@ -68,9 +70,9 @@ export class MemoryService {
     for (const fact of facts) {
       // Attempt to embed for dedup — null means no provider or embed failed
       let embeddingBuf: Buffer | null = null;
-      if (this.provider) {
+      if (this.embeddingProvider) {
         try {
-          const { embedding } = await this.provider.embed({ text: fact.content });
+          const { embedding } = await this.embeddingProvider.embed({ text: fact.content });
           embeddingBuf = Buffer.from(new Float32Array(embedding).buffer);
         } catch (err) {
           log.warn({ err }, 'Failed to embed fact — inserting without dedup check');
@@ -303,9 +305,9 @@ export class MemoryService {
    * Defaults to DIFFERENT on any error so insertion is always safe.
    */
   private async classify(existingContent: string, incomingContent: string): Promise<DedupeClassification> {
-    if (!this.provider) return 'DIFFERENT';
+    if (!this.completionProvider) return 'DIFFERENT';
     try {
-      const response = await this.provider.complete({
+      const response = await this.completionProvider.complete({
         modelTier: 'utility',
         temperature: 0,
         maxTokens: 10,
@@ -332,6 +334,7 @@ export class MemoryService {
 
 /**
  * Singleton for read-only operations (list, get, delete).
- * For writes with deduplication, instantiate with: new MemoryService(provider)
+ * For writes with embedding + deduplication, instantiate with:
+ *   new MemoryService(completionProvider, embeddingProvider)
  */
 export const memoryService = new MemoryService();

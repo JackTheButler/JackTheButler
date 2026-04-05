@@ -56,6 +56,8 @@
     "saveMemory": "حفظ",
     "failedToSaveMemory": "فشل حفظ الذاكرة",
     "failedToDeleteMemory": "فشل حذف الذاكرة",
+    "fixEmbedding": "إصلاح التضمين",
+    "failedToFixEmbedding": "فشل إنشاء التضمين",
     "deleteMemoryTitle": "حذف الذاكرة",
     "deleteMemoryDescription": "هل أنت متأكد أنك تريد حذف هذه الذاكرة؟ لن يستخدمها جاك بعد الآن عند الرد على هذا الضيف.",
     "deleteMemoryConfirm": "حذف",

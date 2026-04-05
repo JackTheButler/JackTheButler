@@ -56,6 +56,8 @@
     "saveMemory": "सहेजें",
     "failedToSaveMemory": "याद सहेजने में विफल",
     "failedToDeleteMemory": "याद हटाने में विफल",
+    "fixEmbedding": "एम्बेडिंग ठीक करें",
+    "failedToFixEmbedding": "एम्बेडिंग बनाने में विफल",
     "deleteMemoryTitle": "याद हटाएं",
     "deleteMemoryDescription": "क्या आप वाकई इस याद को हटाना चाहते हैं? Jack इस अतिथि को जवाब देते समय इसे अब उपयोग नहीं करेगा।",
     "deleteMemoryConfirm": "हटाएं",

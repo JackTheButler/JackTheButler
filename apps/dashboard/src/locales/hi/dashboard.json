@@ -82,6 +82,62 @@
       "warning": "ध्यान देने की जरूरत है",
       "error": "समस्याएं मिलीं"
     },
+    "activity": {
+      "title": "लाइव गतिविधि",
+      "live": "लाइव",
+      "allEvents": "सभी इवेंट",
+      "nOfTotal": "{{total}} में से {{count}}",
+      "hideAll": "सब छुपाएं",
+      "showAll": "सब दिखाएं",
+      "loading": "गतिविधि लोड हो रही है...",
+      "empty": "कोई हालिया गतिविधि नहीं",
+      "filters": {
+        "ai_reply": "AI जवाब",
+        "ai_resolved": "AI द्वारा हल",
+        "task_created": "कार्य",
+        "checkin": "चेक-इन",
+        "checkout": "चेक-आउट",
+        "escalated": "एस्केलेशन"
+      },
+      "time": {
+        "justNow": "अभी",
+        "secondsAgo": "{{count}}से. पहले",
+        "minutesAgo": "{{count}}मि. पहले",
+        "hoursAgo": "{{count}}घ. पहले",
+        "daysAgo": "{{count}}दि. पहले"
+      },
+      "text": {
+        "ai_reply": "AI ने अतिथि को जवाब दिया",
+        "ai_resolved": "AI ने हल किया: {{intent}}",
+        "task_created": "{{taskType}} कार्य बनाया गया",
+        "checkin": "{{guestName}} ने चेक-इन किया",
+        "checkout": "{{guestName}} ने चेक-आउट किया",
+        "escalated": "बातचीत स्टाफ को भेजी गई"
+      },
+      "detail": {
+        "room": "कमरा {{number}}",
+        "newTask": "नया कार्य",
+        "guestStay": "अतिथि प्रवास"
+      },
+      "taskTypes": {
+        "housekeeping": "हाउसकीपिंग",
+        "maintenance": "रखरखाव",
+        "room_service": "रूम सर्विस",
+        "concierge": "कंसीयर्ज",
+        "other": "अन्य"
+      },
+      "priority": {
+        "urgent": "अत्यावश्यक",
+        "high": "उच्च",
+        "low": "निम्न"
+      },
+      "channels": {
+        "whatsapp": "WhatsApp",
+        "email": "ईमेल",
+        "sms": "SMS",
+        "webchat": "वेब चैट"
+      }
+    },
     "memories": "यादें",
     "memoriesReembed": "अभी ठीक करें",
     "memoriesReembedHint": "{{count}} यादों में एम्बेडिंग नहीं है।"

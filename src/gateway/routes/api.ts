@@ -26,6 +26,7 @@ import { rolesRouter, permissionsRouter } from './roles.js';
 import { staffRouter } from './staff.js';
 import { webchatRouter } from './webchat.js';
 import { configRoutes } from './config.js';
+import { activitiesRouter } from './activities.js';
 
 const api = new Hono();
 
@@ -91,6 +92,9 @@ api.route('/permissions', permissionsRouter);
 
 // Staff management routes
 api.route('/staff', staffRouter);
+
+// Activity feed routes
+api.route('/activities', activitiesRouter);
 
 // WebChat routes (session-token auth, not JWT)
 api.route('/webchat', webchatRouter);

@@ -56,6 +56,8 @@
     "saveMemory": "保存",
     "failedToSaveMemory": "保存记忆失败",
     "failedToDeleteMemory": "删除记忆失败",
+    "fixEmbedding": "修复嵌入向量",
+    "failedToFixEmbedding": "生成嵌入向量失败",
     "deleteMemoryTitle": "删除记忆",
     "deleteMemoryDescription": "确定要删除此记忆吗？Jack在回复此客人时将不再使用它。",
     "deleteMemoryConfirm": "删除",

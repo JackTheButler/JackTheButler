@@ -127,6 +127,7 @@ export function GuestProfilePage() {
   const [memoryToDelete, setMemoryToDelete] = useState<GuestMemory | null>(null);
   const [deletingMemory, setDeletingMemory] = useState(false);
   const [savingMemory, setSavingMemory] = useState(false);
+  const [fixingEmbeddingId, setFixingEmbeddingId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [editing, setEditing] = useState(false);
@@ -259,6 +260,19 @@ export function GuestProfilePage() {
       setMemoryToDelete(null);
     } finally {
       setDeletingMemory(false);
+    }
+  };
+
+  const handleFixEmbedding = async (memoryId: string) => {
+    if (!id) return;
+    setFixingEmbeddingId(memoryId);
+    try {
+      await api.post(`/guests/${id}/memories/${memoryId}/embed`, {});
+      setMemories((prev) => prev.map((m) => m.id === memoryId ? { ...m, hasEmbedding: true } : m));
+    } catch (err) {
+      setMemoryError(err instanceof Error ? err.message : t('guestProfile.failedToFixEmbedding'));
+    } finally {
+      setFixingEmbeddingId(null);
     }
   };
 
@@ -749,7 +763,7 @@ export function GuestProfilePage() {
                                 {memory.content}
                               </p>
 
-                              {/* Card footer: source + date */}
+                              {/* Card footer: source + date + fix embedding */}
                               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                 <span className="font-medium">
                                   {memory.source === 'ai_extracted' && memory.conversationId ? (
@@ -766,6 +780,18 @@ export function GuestProfilePage() {
                                 </span>
                                 <span>·</span>
                                 <span>{formatDate(memory.lastReinforcedAt)}</span>
+                                {!memory.hasEmbedding && canManageGuests && (
+                                  <>
+                                    <span>·</span>
+                                    <button
+                                      onClick={() => handleFixEmbedding(memory.id)}
+                                      disabled={fixingEmbeddingId === memory.id}
+                                      className="text-amber-500 hover:text-amber-600 disabled:opacity-50 transition-colors"
+                                    >
+                                      {t('guestProfile.fixEmbedding')}
+                                    </button>
+                                  </>
+                                )}
                               </div>
                             </>
                           )}

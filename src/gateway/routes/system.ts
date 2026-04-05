@@ -129,7 +129,7 @@ systemRoutes.get('/status', async (c) => {
     });
   }
 
-  // Count active extensions by category
+  // Count active extensions by category and collect active app identifiers
   const allExtensions = registry.getAll();
   const activeByCategory = {
     ai: 0,
@@ -137,7 +137,6 @@ systemRoutes.get('/status', async (c) => {
     pms: 0,
     tool: 0,
   };
-
   for (const ext of allExtensions) {
     if (ext.status === 'active') {
       const category = ext.manifest.category as keyof typeof activeByCategory;
@@ -221,7 +220,7 @@ systemRoutes.get('/status', async (c) => {
       completionIsLocal: completionProvider?.name === 'local',
       embeddingIsLocal: embeddingProvider?.name === 'local',
     },
-    apps: activeByCategory,
+    apps: { ...activeByCategory },
     knowledgeBase: {
       total: knowledgeBaseTotal,
       withoutEmbeddings: knowledgeBaseWithoutEmbeddings,

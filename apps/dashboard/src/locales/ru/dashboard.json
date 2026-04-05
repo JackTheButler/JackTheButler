@@ -82,6 +82,62 @@
       "warning": "Требует внимания",
       "error": "Обнаружены проблемы"
     },
+    "activity": {
+      "title": "Активность",
+      "live": "LIVE",
+      "allEvents": "Все события",
+      "nOfTotal": "{{count}} из {{total}}",
+      "hideAll": "Скрыть все",
+      "showAll": "Показать все",
+      "loading": "Загрузка...",
+      "empty": "Нет последних событий",
+      "filters": {
+        "ai_reply": "Ответы ИИ",
+        "ai_resolved": "Решено ИИ",
+        "task_created": "Задачи",
+        "checkin": "Заселение",
+        "checkout": "Выселение",
+        "escalated": "Эскалации"
+      },
+      "time": {
+        "justNow": "только что",
+        "secondsAgo": "{{count}}с назад",
+        "minutesAgo": "{{count}}м назад",
+        "hoursAgo": "{{count}}ч назад",
+        "daysAgo": "{{count}}д назад"
+      },
+      "text": {
+        "ai_reply": "ИИ ответил гостю",
+        "ai_resolved": "ИИ решил: {{intent}}",
+        "task_created": "Задача создана: {{taskType}}",
+        "checkin": "{{guestName}} заселился",
+        "checkout": "{{guestName}} выселился",
+        "escalated": "Разговор передан сотруднику"
+      },
+      "detail": {
+        "room": "Номер {{number}}",
+        "newTask": "Новая задача",
+        "guestStay": "Проживание гостя"
+      },
+      "taskTypes": {
+        "housekeeping": "уборка",
+        "maintenance": "техобслуживание",
+        "room_service": "обслуживание номера",
+        "concierge": "консьерж",
+        "other": "прочее"
+      },
+      "priority": {
+        "urgent": "Срочно",
+        "high": "Высокий",
+        "low": "Низкий"
+      },
+      "channels": {
+        "whatsapp": "WhatsApp",
+        "email": "Эл. почта",
+        "sms": "SMS",
+        "webchat": "Веб-чат"
+      }
+    },
     "memories": "Воспоминания",
     "memoriesReembed": "Исправить сейчас",
     "memoriesReembedHint": "{{count}} воспоминаний без векторов."

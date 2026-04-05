@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageContainer, PageHeader, StatsColumn, ActionItems, DemoDataCard } from '@/components';
 import { AnalyticsCards } from '@/components/home/AnalyticsCards';
+import { ActivityTicker } from '@/components/home/ActivityTicker';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import { api } from '@/lib/api';
@@ -91,8 +92,9 @@ export function HomePage() {
 
         {/* Cards Row */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-          {/* Getting Started - 2/3 */}
-          <div className="lg:col-span-2">
+          {/* Left column: Live Activity + Getting Started */}
+          <div className="lg:col-span-2 flex flex-col gap-6">
+            <ActivityTicker />
             <ActionItems disabled={!canManageSettings} />
           </div>
 

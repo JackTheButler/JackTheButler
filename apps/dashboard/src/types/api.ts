@@ -59,6 +59,7 @@ export interface GuestMemory {
   confidence: number;
   createdAt: string;
   lastReinforcedAt: string;
+  hasEmbedding: boolean;
 }
 
 // --- Reservation ---
