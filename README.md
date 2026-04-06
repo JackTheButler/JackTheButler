@@ -7,6 +7,7 @@
 
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic--2.0-blue.svg)](LICENSE.txt)
 [![Website](https://img.shields.io/badge/Website-JackTheButler.com-blue)](https://jackthebutler.com)
+[![Demo](https://img.shields.io/badge/Demo-Demo.JackTheButler.com-green)](https://demo.jackthebutler.com/register)
 [![Deploy on Railway](https://img.shields.io/badge/Deploy-Railway-blueviolet)](https://railway.com/deploy/jack-the-butler)
 
 **Website**: [https://jackthebutler.com](https://jackthebutler.com)
@@ -19,6 +20,7 @@
 Jack The Butler is a **free, open-source hotel chatbot** that handles guest communication 24/7 across WhatsApp, SMS, email, and web chat. Unlike expensive SaaS solutions, Jack is **self-hosted** — your data stays on your server.
 
 **Perfect for:**
+
 - Hotels looking for an **AI concierge** without per-message fees
 - Properties wanting to **automate guest messaging** on WhatsApp
 - Hospitality businesses needing **24/7 automated responses**
@@ -53,8 +55,8 @@ The AI chatbot handles routine guest requests autonomously while intelligently r
 
 Deploy Jack with one click - no installation needed:
 
-| Railway | Render | Zeabur |
-|---------|--------|--------|
+| Railway                                                                                                       | Render                                                                                                                                                      | Zeabur                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
 | [![Deploy on Railway](https://railway.com/button.svg)](https://railway.com/deploy/W82qDp?referralCode=Aizkfk) | [![Deploy to Render](https://render.com/images/deploy-to-render-button.svg)](https://render.com/deploy?repo=https://github.com/JackTheButler/JackTheButler) | [![Deploy on Zeabur](https://zeabur.com/button.svg)](https://zeabur.com/templates?repo=JackTheButler/JackTheButler) |
 
 1. Click a deploy button above
@@ -81,11 +83,11 @@ Your Jack will be live at a public URL with automatic HTTPS.
 
 Docker is a tool that runs Jack in an isolated container. It's free and easy to install:
 
-| Operating System | Installation |
-|------------------|--------------|
-| **Mac** | Download [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/) |
-| **Windows** | Download [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) |
-| **Linux** | Run: `curl -fsSL https://get.docker.com \| sh` |
+| Operating System | Installation                                                                                    |
+| ---------------- | ----------------------------------------------------------------------------------------------- |
+| **Mac**          | Download [Docker Desktop for Mac](https://docs.docker.com/desktop/install/mac-install/)         |
+| **Windows**      | Download [Docker Desktop for Windows](https://docs.docker.com/desktop/install/windows-install/) |
+| **Linux**        | Run: `curl -fsSL https://get.docker.com \| sh`                                                  |
 
 After installing, make sure Docker is running (you'll see the Docker icon in your system tray/menu bar).
 
@@ -106,18 +108,21 @@ Once installation completes, open your web browser and go to:
 **http://localhost:3000**
 
 The **Setup Wizard** will guide you through:
+
 1. **Property Info** - Enter your property name and type
 2. **AI Provider** - Choose Local AI or configure Anthropic/OpenAI
 3. **Knowledge Base** - Optionally import from your website
 4. **Admin Account** - Create your login credentials
 
 > **Skip Setup?** If you skip the wizard, use default credentials:
+>
 > - Email: `admin@butler.com`
 > - Password: `pa$$word2026`
 
 #### Step 4: You're Ready!
 
 After completing setup, Jack is ready to use. You can:
+
 - View and respond to guest conversations
 - Manage tasks assigned to staff
 - Add more knowledge to the knowledge base
@@ -129,13 +134,13 @@ After completing setup, Jack is ready to use. You can:
 
 Common commands to manage your Jack installation:
 
-| Action | Command |
-|--------|---------|
-| **Stop Jack** | `docker stop jack` |
-| **Start Jack** | `docker start jack` |
-| **View logs** | `docker logs -f jack` |
-| **Restart Jack** | `docker restart jack` |
-| **Uninstall Jack** | `docker rm -f jack` |
+| Action             | Command               |
+| ------------------ | --------------------- |
+| **Stop Jack**      | `docker stop jack`    |
+| **Start Jack**     | `docker start jack`   |
+| **View logs**      | `docker logs -f jack` |
+| **Restart Jack**   | `docker restart jack` |
+| **Uninstall Jack** | `docker rm -f jack`   |
 
 ---
 
@@ -165,17 +170,17 @@ pnpm dev
 
 #### Development Commands
 
-| Command | Description |
-|---------|-------------|
-| `pnpm dev` | Start full dev server (API + dashboard) |
-| `pnpm dev:dashboard` | Start only the staff dashboard |
-| `pnpm dev:webchat` | Start the guest webchat widget |
-| `pnpm dev:website` | Start the landing page |
-| `pnpm build:webchat` | Build webchat widget for production |
-| `pnpm test` | Run all tests |
-| `pnpm test:webchat` | Serve webchat locally on port 8080 for manual testing |
-| `pnpm typecheck` | TypeScript type checking |
-| `pnpm lint` | Run linter |
+| Command              | Description                                           |
+| -------------------- | ----------------------------------------------------- |
+| `pnpm dev`           | Start full dev server (API + dashboard)               |
+| `pnpm dev:dashboard` | Start only the staff dashboard                        |
+| `pnpm dev:webchat`   | Start the guest webchat widget                        |
+| `pnpm dev:website`   | Start the landing page                                |
+| `pnpm build:webchat` | Build webchat widget for production                   |
+| `pnpm test`          | Run all tests                                         |
+| `pnpm test:webchat`  | Serve webchat locally on port 8080 for manual testing |
+| `pnpm typecheck`     | TypeScript type checking                              |
+| `pnpm lint`          | Run linter                                            |
 
 ### Building Plugins
 
@@ -184,20 +189,24 @@ Jack supports community plugins for new AI providers, communication channels, an
 Each plugin is a standalone npm package that exports a `manifest` object. Jack's loader imports it at startup and registers it in the app registry. Plugins are named `{category}-{provider}` and published under the `@jack-plugins/` npm scope.
 
 **1. Copy the starter for your category:**
+
 ```bash
 cp packages/plugin-starter/src/pms-example.ts packages/pms-yourpms/src/index.ts
 # or ai-example.ts / channel-example.ts
 ```
 
 **2. Add to root `package.json` and install:**
+
 ```json
 "@jack-plugins/pms-yourpms": "workspace:*"
 ```
+
 ```bash
 pnpm install   # links the workspace package — auto-discovered on next restart
 ```
 
 **3. Build and verify:**
+
 ```bash
 pnpm --filter @jack-plugins/pms-yourpms build   # compile your plugin
 pnpm typecheck                                   # full repo type check
@@ -205,6 +214,7 @@ pnpm test                                        # run tests
 ```
 
 **4. Publish or contribute:**
+
 ```bash
 # Publish to npm as a community plugin
 npm publish --access public
@@ -219,13 +229,13 @@ See the **[Plugin Authoring Guide](docs/05-operations/plugin-authoring.md)** for
 
 ### API & WebSocket Access
 
-| Interface | URL | Description |
-|-----------|-----|-------------|
-| **Dashboard** | http://localhost:3000 | Staff web interface |
-| **REST API** | http://localhost:3000/api/v1 | JSON API for integrations |
-| **WebSocket** | ws://localhost:3000/ws | Real-time updates (requires JWT) |
-| **Health Check** | http://localhost:3000/health | Server health status |
-| **Webhooks** | http://localhost:3000/webhooks/* | WhatsApp, SMS, Email webhooks |
+| Interface        | URL                               | Description                      |
+| ---------------- | --------------------------------- | -------------------------------- |
+| **Dashboard**    | http://localhost:3000             | Staff web interface              |
+| **REST API**     | http://localhost:3000/api/v1      | JSON API for integrations        |
+| **WebSocket**    | ws://localhost:3000/ws            | Real-time updates (requires JWT) |
+| **Health Check** | http://localhost:3000/health      | Server health status             |
+| **Webhooks**     | http://localhost:3000/webhooks/\* | WhatsApp, SMS, Email webhooks    |
 
 ### API Authentication
 
@@ -297,11 +307,13 @@ See the [docs](docs/) folder for full documentation:
 This project is licensed under the [Elastic License 2.0](LICENSE.txt).
 
 **You may:**
+
 - Use Jack for free at your property
 - Modify the source code for your own use
 - Self-host on your own infrastructure
 
 **You may not:**
+
 - Provide Jack to third parties as a hosted or managed service
 - Remove or circumvent any license key functionality
 
@@ -333,16 +345,16 @@ By submitting a PR, you agree to the terms in [CLA.md](CLA.md).
 
 ## Why Jack?
 
-| Feature | Jack | Other Hotel Chatbots |
-|---------|------|---------------------|
-| **Price** | Free | $200-2000/month |
-| **Per-message fees** | None | $0.01-0.10/message |
-| **Self-hosted** | ✅ | ❌ |
-| **Open source** | ✅ | ❌ |
-| **Data ownership** | 100% yours | Vendor servers |
-| **WhatsApp support** | ✅ | ✅ |
-| **Local AI option** | ✅ | ❌ |
-| **Plugin ecosystem** | ✅ | ❌ |
+| Feature              | Jack       | Other Hotel Chatbots |
+| -------------------- | ---------- | -------------------- |
+| **Price**            | Free       | $200-2000/month      |
+| **Per-message fees** | None       | $0.01-0.10/message   |
+| **Self-hosted**      | ✅         | ❌                   |
+| **Open source**      | ✅         | ❌                   |
+| **Data ownership**   | 100% yours | Vendor servers       |
+| **WhatsApp support** | ✅         | ✅                   |
+| **Local AI option**  | ✅         | ❌                   |
+| **Plugin ecosystem** | ✅         | ❌                   |
 
 ---
 
