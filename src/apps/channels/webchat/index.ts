@@ -20,10 +20,10 @@ import type {
   SendResult,
 } from '@jack/shared';
 import { processMessage } from '@/core/pipeline/index.js';
-import { appConfigService } from '@/services/app-config.js';
+import { appConfigService } from '@/apps/config.js';
 import { conversationService } from '@/services/conversation.js';
-import { webchatSessionService } from '@/services/webchat-session.js';
-import { webchatActionService } from '@/services/webchat-action.js';
+import { webchatSessionService } from '@/apps/channels/webchat/session.js';
+import { webchatActionService } from '@/apps/channels/webchat/actions.js';
 import type { WebChatSession } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';

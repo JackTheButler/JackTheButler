@@ -8,7 +8,7 @@ import { db } from '@/db/index.js';
 import { staff } from '@/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
-import { authService } from '@/services/auth.js';
+import { authService } from '@/auth/auth.js';
 import { writeActivityLog } from '@/services/activity-log.js';
 import { describeError } from '@/gateway/routes/system.js';
 

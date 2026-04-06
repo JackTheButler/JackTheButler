@@ -10,7 +10,7 @@ import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
 import { PERMISSIONS, WILDCARD_PERMISSION } from '@/core/permissions/index.js';
 import { requireAuth, requirePermission, requireAnyPermission } from '@/gateway/middleware/auth.js';
 import { errorHandler } from '@/gateway/middleware/error-handler.js';
-import { AuthService } from '@/services/auth.js';
+import { AuthService } from '@/auth/auth.js';
 
 describe('Permission Middleware', () => {
   const authService = new AuthService();

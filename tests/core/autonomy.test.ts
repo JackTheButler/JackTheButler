@@ -14,7 +14,7 @@ import {
   getLevelDescription,
   type AutonomySettings,
   type GuestContext,
-} from '@/core/autonomy.js';
+} from '@/core/approval/autonomy.js';
 
 describe('AutonomyEngine', () => {
   let engine: AutonomyEngine;

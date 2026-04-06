@@ -1,4 +1,4 @@
-import { getEscalationManager } from '@/core/escalation-engine.js';
+import { getEscalationManager } from '@/core/conversation/escalation.js';
 import { conversationService } from '@/services/conversation.js';
 import { events, EventTypes } from '@/events/index.js';
 import { createLogger } from '@/utils/logger.js';

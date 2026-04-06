@@ -7,7 +7,7 @@ import { app } from '@/gateway/server.js';
 import { db, staff, conversations, messages, tasks, approvalQueue, webchatSessions } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
-import { authService } from '@/services/auth.js';
+import { authService } from '@/auth/auth.js';
 
 describe('Conversation Routes', () => {
   let accessToken: string;

@@ -8,7 +8,7 @@
 import { Hono } from 'hono';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/index.js';
-import { appConfigService } from '@/services/app-config.js';
+import { appConfigService } from '@/apps/config.js';
 import { createHmac } from 'node:crypto';
 
 const log = createLogger('webhook:whatsapp');

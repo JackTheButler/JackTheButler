@@ -6,21 +6,21 @@
  * by the widget. Form submissions go directly to REST endpoints — not
  * through the AI.
  *
- * @module services/webchat-action
+ * @module apps/channels/webchat/actions
  */
 
 import { createLogger } from '@/utils/logger.js';
-import { appConfigService } from './app-config.js';
-import { webchatSessionService } from './webchat-session.js';
-import { conversationService } from './conversation.js';
+import { appConfigService } from '@/apps/config.js';
+import { webchatSessionService } from '@/apps/channels/webchat/session.js';
+import { conversationService } from '@/services/conversation.js';
 import { webchatConnectionManager, getSessionLocale } from '@/apps/channels/webchat/index.js';
 import { t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
-import { verifyReservation } from './webchat-verification.js';
+import { verifyReservation } from './verification.js';
 import { now } from '@/utils/time.js';
 
 // Re-export so scheduler.ts import path stays unchanged
-export { cleanupRateLimitMaps } from './webchat-verification.js';
+export { cleanupRateLimitMaps } from './verification.js';
 
 const log = createLogger('webchat-action');
 

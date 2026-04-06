@@ -7,9 +7,9 @@ import { app } from '@/gateway/server.js';
 import { db, staff, settings, authTokens } from '@/db/index.js';
 import { eq, and } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
-import { authService } from '@/services/auth.js';
-import { authSettingsService } from '@/services/auth-settings.js';
-import { authTokenService } from '@/services/auth-token.js';
+import { authService } from '@/auth/auth.js';
+import { authSettingsService } from '@/auth/auth-settings.js';
+import { authTokenService } from '@/auth/auth-token.js';
 
 describe('Auth Registration & Recovery', () => {
   const adminUserId = 'staff-reg-test-admin';

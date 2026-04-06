@@ -10,7 +10,7 @@ import { Hono } from 'hono';
 import { z } from 'zod';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/index.js';
-import { appConfigService } from '@/services/app-config.js';
+import { appConfigService } from '@/apps/config.js';
 import type { NormalizedGuest, NormalizedReservation, PMSEvent, PMSEventType } from '@jack/shared';
 import { validateBody } from '../../middleware/validator.js';
 import { now } from '@/utils/time.js';
@@ -289,7 +289,7 @@ pmsWebhooks.post('/cloudbeds', async (c) => {
  */
 async function processGuestWebhook(guest: NormalizedGuest): Promise<void> {
   // Import dynamically to avoid circular dependencies
-  const { pmsSyncService } = await import('@/services/pms-sync.js');
+  const { pmsSyncService } = await import('@/apps/pms/sync.js');
   await pmsSyncService.upsertGuest(guest);
 }
 
@@ -297,7 +297,7 @@ async function processGuestWebhook(guest: NormalizedGuest): Promise<void> {
  * Process reservation webhook - sync to database
  */
 async function processReservationWebhook(reservation: NormalizedReservation): Promise<void> {
-  const { pmsSyncService } = await import('@/services/pms-sync.js');
+  const { pmsSyncService } = await import('@/apps/pms/sync.js');
   await pmsSyncService.upsertReservation(reservation);
 }
 
@@ -305,7 +305,7 @@ async function processReservationWebhook(reservation: NormalizedReservation): Pr
  * Process event webhook - handle various event types
  */
 async function processEventWebhook(event: PMSEvent): Promise<void> {
-  const { pmsSyncService } = await import('@/services/pms-sync.js');
+  const { pmsSyncService } = await import('@/apps/pms/sync.js');
 
   switch (event.type) {
     case 'reservation.created':

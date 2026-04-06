@@ -8,9 +8,9 @@
  */
 
 import { createLogger } from '@/utils/logger.js';
-import { getIntentDefinition, type IntentDefinition } from '@/ai/intent/taxonomy.js';
-import type { ClassificationResult } from '@/ai/intent/index.js';
-import { getAutonomyEngine, mapTaskTypeToActionType, type GuestContext as AutonomyContext } from './autonomy.js';
+import { getIntentDefinition, type IntentDefinition } from '@/core/ai/intent/taxonomy.js';
+import type { ClassificationResult } from '@/core/ai/intent/index.js';
+import { getAutonomyEngine, mapTaskTypeToActionType, type GuestContext as AutonomyContext } from './approval/autonomy.js';
 
 const log = createLogger('core:task-router');
 

@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { app } from '@/gateway/server.js';
 import { createHmac } from 'node:crypto';
-import { appConfigService } from '@/services/app-config.js';
+import { appConfigService } from '@/apps/config.js';
 
 // Mock the WhatsApp adapter
 vi.mock('@/channels/whatsapp/index.js', () => ({
@@ -16,7 +16,7 @@ vi.mock('@/channels/whatsapp/index.js', () => ({
 }));
 
 // Mock the app config service
-vi.mock('@/services/app-config.js', () => ({
+vi.mock('@/apps/config.js', () => ({
   appConfigService: {
     getAppConfig: vi.fn(),
   },

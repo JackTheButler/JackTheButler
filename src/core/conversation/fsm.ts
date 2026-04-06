@@ -6,7 +6,7 @@
  *
  * Part of the kernel - this is core business logic for conversation management.
  *
- * @module core/conversation-fsm
+ * @module core/conversation/fsm
  */
 
 import { createLogger } from '@/utils/logger.js';

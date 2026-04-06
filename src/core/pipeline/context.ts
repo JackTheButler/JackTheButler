@@ -10,9 +10,9 @@
 
 import type { Guest, Conversation, GuestMemory } from '@/db/schema.js';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
-import type { GuestContext } from '@/core/guest-context.js';
-import type { Response as AIResponse } from '@/ai/types.js';
-import type { KnowledgeSearchResult } from '@/ai/knowledge/index.js';
+import type { GuestContext } from '@/core/conversation/guest-context.js';
+import type { Response as AIResponse } from '@/core/ai/types.js';
+import type { KnowledgeSearchResult } from '@/core/ai/knowledge/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('core:pipeline');

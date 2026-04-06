@@ -8,7 +8,7 @@ import { db, staff } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { resetAppRegistry, getAppRegistry } from '@/apps/registry.js';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
-import { AuthService, authService } from '@/services/auth.js';
+import { AuthService, authService } from '@/auth/auth.js';
 import type { AIAppManifest } from '@/apps/types.js';
 
 describe('System Status API', () => {

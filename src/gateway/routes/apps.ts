@@ -9,7 +9,7 @@
 import { randomBytes } from 'node:crypto';
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { appConfigService } from '@/services/app-config.js';
+import { appConfigService } from '@/apps/config.js';
 import { getAllManifests, getManifest } from '@/apps/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { maskConfig } from '@/utils/crypto.js';

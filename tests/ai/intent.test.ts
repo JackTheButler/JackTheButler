@@ -3,9 +3,9 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { IntentClassifier } from '@/ai/intent/index.js';
-import { IntentTaxonomy, getIntentDefinition, getIntentNames } from '@/ai/intent/taxonomy.js';
-import type { LLMProvider, CompletionResponse } from '@/ai/types.js';
+import { IntentClassifier } from '@/core/ai/intent/index.js';
+import { IntentTaxonomy, getIntentDefinition, getIntentNames } from '@/core/ai/intent/taxonomy.js';
+import type { LLMProvider, CompletionResponse } from '@/core/ai/types.js';
 
 /**
  * Create a mock LLM provider

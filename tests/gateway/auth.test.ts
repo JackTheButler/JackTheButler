@@ -8,7 +8,7 @@ import { db, staff, roles } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
-import { authService } from '@/services/auth.js';
+import { authService } from '@/auth/auth.js';
 
 describe('Auth Routes', () => {
   const testUserId = 'staff-test-auth-001';

@@ -4,7 +4,7 @@
  * Subscribes to CONVERSATION_CLOSED and runs memory extraction
  * asynchronously. Fire-and-forget — never blocks message processing.
  *
- * @module core/memory-event-subscriber
+ * @module core/memory/event-subscriber
  */
 
 import { events, EventTypes } from '@/events/index.js';
@@ -12,7 +12,7 @@ import type { ConversationClosedEvent } from '@/types/events.js';
 import { getAppRegistry } from '@/apps/registry.js';
 import { conversationService } from '@/services/conversation.js';
 import { MemoryService } from '@/services/memory.js';
-import { MemoryExtractor } from './memory-extractor.js';
+import { MemoryExtractor } from './extractor.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('core:memory-events');

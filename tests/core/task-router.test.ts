@@ -12,7 +12,7 @@ import {
   type GuestContext,
   type RoutingDecision,
 } from '@/core/task-router.js';
-import type { ClassificationResult } from '@/ai/intent/index.js';
+import type { ClassificationResult } from '@/core/ai/intent/index.js';
 
 describe('TaskRouter', () => {
   let router: TaskRouter;

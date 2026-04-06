@@ -1,7 +1,7 @@
 /**
  * WebChat Widget Types
  *
- * Mirrors server-side types from src/services/webchat-action.ts
+ * Mirrors server-side types from src/apps/channels/webchat/actions.ts
  */
 
 import type { WidgetStrings } from './defaults.js';

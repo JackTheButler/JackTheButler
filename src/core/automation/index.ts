@@ -28,7 +28,7 @@ import type { ActionDefinition } from './types.js';
 import { createLogger } from '@/utils/logger.js';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
-import { pmsSyncService } from '@/services/pms-sync.js';
+import { pmsSyncService } from '@/apps/pms/sync.js';
 
 const log = createLogger('automation');
 

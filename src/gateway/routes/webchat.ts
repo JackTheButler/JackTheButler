@@ -8,9 +8,9 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { webchatActionService } from '@/services/webchat-action.js';
-import { webchatSessionService } from '@/services/webchat-session.js';
-import { appConfigService } from '@/services/app-config.js';
+import { webchatActionService } from '@/apps/channels/webchat/actions.js';
+import { webchatSessionService } from '@/apps/channels/webchat/session.js';
+import { appConfigService } from '@/apps/config.js';
 import { validateBody } from '../middleware/validator.js';
 import { UnauthorizedError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';

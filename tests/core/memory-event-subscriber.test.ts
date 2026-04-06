@@ -8,7 +8,7 @@ import { guests, conversations, messages, guestMemories } from '@/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
-import { runExtraction } from '@/core/memory-event-subscriber.js';
+import { runExtraction } from '@/core/memory/event-subscriber.js';
 import type { ConversationClosedEvent } from '@/types/events.js';
 
 vi.mock('@/apps/registry.js', () => ({

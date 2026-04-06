@@ -6,7 +6,7 @@
 
 import { Hono } from 'hono';
 import { isDatabaseHealthy } from '@/db/index.js';
-import { scheduler } from '@/services/scheduler.js';
+import { scheduler } from '@/scheduler/index.js';
 import { getVersion } from '@/config/version.js';
 import { now } from '@/utils/time.js';
 

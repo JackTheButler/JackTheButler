@@ -6,7 +6,7 @@
  *
  * Part of the kernel - this is core business logic for hospitality AI.
  *
- * @module core/guest-context
+ * @module core/conversation/guest-context
  */
 
 import { eq, and, sql } from 'drizzle-orm';
@@ -15,7 +15,7 @@ import type { Guest, Reservation } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
 import { guestService, normalizePhone } from '@/services/guest.js';
 import { now } from '@/utils/time.js';
-import { pmsSyncService } from '@/services/pms-sync.js';
+import { pmsSyncService } from '@/apps/pms/sync.js';
 
 const log = createLogger('core:guest-context');
 

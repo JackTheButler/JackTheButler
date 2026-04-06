@@ -15,8 +15,8 @@ import { createLogger } from '@/utils/logger.js';
 import { validateBody, requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
-import { KnowledgeService } from '@/ai/knowledge/index.js';
-import type { LLMProvider } from '@/ai/types.js';
+import { KnowledgeService } from '@/core/ai/knowledge/index.js';
+import type { LLMProvider } from '@/core/ai/types.js';
 import { now } from '@/utils/time.js';
 
 /**

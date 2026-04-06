@@ -11,8 +11,8 @@ import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { NotFoundError, ValidationError, ForbiddenError } from '@/errors/index.js';
 import { WILDCARD_PERMISSION } from '@/core/permissions/index.js';
-import { authService } from './auth.js';
-import { authSettingsService } from './auth-settings.js';
+import { authService } from '../auth/auth.js';
+import { authSettingsService } from '../auth/auth-settings.js';
 import { now } from '@/utils/time.js';
 
 const log = createLogger('staff');

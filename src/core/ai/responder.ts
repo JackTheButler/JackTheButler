@@ -8,7 +8,7 @@
 import type { Conversation, Message, GuestMemory } from '@/db/schema.js';
 import { settingsService } from '@/services/settings.js';
 import type { InboundMessage } from '@/types/message.js';
-import type { GuestContext } from '@/services/guest-context.js';
+import type { GuestContext } from '@/core/conversation/guest-context.js';
 import type { LLMProvider, Response, Responder } from './types.js';
 import { KnowledgeService } from './knowledge/index.js';
 import type { KnowledgeSearchResult } from './knowledge/index.js';
@@ -16,7 +16,7 @@ import { IntentClassifier, type ClassificationResult } from './intent/index.js';
 import { ConversationService } from '@/services/conversation.js';
 import { createLogger } from '@/utils/logger.js';
 import { getResponseCache, type ResponseCacheService } from './cache.js';
-import { translate, getPropertyLanguage } from '@/services/translation.js';
+import { translate, getPropertyLanguage } from '@/utils/translation.js';
 
 /**
  * Hotel profile from settings

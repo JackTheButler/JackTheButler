@@ -7,13 +7,13 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { conversationService } from '@/services/conversation.js';
-import { guestContextService } from '@/services/guest-context.js';
+import { guestContextService } from '@/core/conversation/guest-context.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import type { ContentType, ChannelType } from '@/types/index.js';
 import { getAppRegistry } from '@/apps/index.js';
-import { translate, getPropertyLanguage } from '@/services/translation.js';
+import { translate, getPropertyLanguage } from '@/utils/translation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('api:conversations');

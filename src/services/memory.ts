@@ -11,7 +11,7 @@
 import { eq, desc, sql } from 'drizzle-orm';
 import { db, sqlite, guestMemories } from '@/db/index.js';
 import type { GuestMemory } from '@/db/schema.js';
-import type { AIProvider } from '@/ai/types.js';
+import type { AIProvider } from '@/core/ai/types.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { NotFoundError } from '@/errors/index.js';

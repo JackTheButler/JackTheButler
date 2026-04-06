@@ -7,7 +7,7 @@ import { app } from '@/gateway/server.js';
 import { db, staff, settings } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
-import { authService } from '@/services/auth.js';
+import { authService } from '@/auth/auth.js';
 
 describe('Auth Settings API', () => {
   const adminUserId = 'auth-settings-api-admin';

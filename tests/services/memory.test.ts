@@ -9,7 +9,7 @@ import { MemoryService } from '@/services/memory.js';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
-import type { AIProvider } from '@/ai/types.js';
+import type { AIProvider } from '@/core/ai/types.js';
 
 // A mock embedding that produces high cosine similarity to itself
 const SIMILAR_VEC = Array.from({ length: 8 }, (_, i) => (i + 1) * 0.1);

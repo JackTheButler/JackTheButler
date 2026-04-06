@@ -7,11 +7,11 @@
 
 import { NotFoundError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
-import { pmsSyncService, getPMSSyncConfig } from './pms-sync.js';
-import { writeActivityLog } from './activity-log.js';
+import { pmsSyncService, getPMSSyncConfig } from '@/apps/pms/sync.js';
+import { writeActivityLog } from '../services/activity-log.js';
 import { sqlite } from '@/db/index.js';
 import { getAppRegistry } from '@/apps/registry.js';
-import { conversationService } from './conversation.js';
+import { conversationService } from '../services/conversation.js';
 
 const log = createLogger('scheduler');
 
@@ -63,13 +63,13 @@ export class Scheduler {
 
     // WebChat session cleanup (every hour)
     this.scheduleJob('webchat-session-cleanup', 60 * 60 * 1000, async () => {
-      const { webchatSessionService } = await import('./webchat-session.js');
+      const { webchatSessionService } = await import('@/apps/channels/webchat/session.js');
       const sessionsDeleted = await webchatSessionService.cleanupExpired();
       if (sessionsDeleted > 0) {
         log.info({ deleted: sessionsDeleted }, 'Cleaned up expired webchat sessions');
       }
 
-      const { cleanupRateLimitMaps } = await import('./webchat-action.js');
+      const { cleanupRateLimitMaps } = await import('@/apps/channels/webchat/actions.js');
       const rateLimitCleaned = cleanupRateLimitMaps();
       if (rateLimitCleaned > 0) {
         log.info({ cleaned: rateLimitCleaned }, 'Cleaned up stale rate-limit entries');
@@ -139,13 +139,13 @@ export class Scheduler {
     } else if (name === 'conversation-idle-timeout') {
       await this.runConversationIdleTimeout();
     } else if (name === 'webchat-session-cleanup') {
-      const { webchatSessionService } = await import('./webchat-session.js');
+      const { webchatSessionService } = await import('@/apps/channels/webchat/session.js');
       const count = await webchatSessionService.cleanupExpired();
       if (count > 0) {
         log.info({ deleted: count }, 'Cleaned up expired webchat sessions');
       }
 
-      const { cleanupRateLimitMaps } = await import('./webchat-action.js');
+      const { cleanupRateLimitMaps } = await import('@/apps/channels/webchat/actions.js');
       const rateLimitCleaned = cleanupRateLimitMaps();
       if (rateLimitCleaned > 0) {
         log.info({ cleaned: rateLimitCleaned }, 'Cleaned up stale rate-limit entries');

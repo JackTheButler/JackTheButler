@@ -6,7 +6,7 @@
  *
  * Part of the kernel - this is core business logic for hospitality AI.
  *
- * @module core/escalation-engine
+ * @module core/conversation/escalation
  */
 
 import { eq, desc } from 'drizzle-orm';
@@ -14,7 +14,7 @@ import { db } from '@/db/index.js';
 import { messages, conversations, guests, reservations } from '@/db/schema.js';
 import type { Guest } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
-import { getAutonomyEngine } from './autonomy.js';
+import { getAutonomyEngine } from '../approval/autonomy.js';
 
 const log = createLogger('core:escalation');
 

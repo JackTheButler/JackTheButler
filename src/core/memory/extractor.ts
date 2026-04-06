@@ -5,11 +5,11 @@
  * using the active AI provider. Returns typed MemoryFact[] for storage
  * by MemoryService. Does not write to the database.
  *
- * @module core/memory-extractor
+ * @module core/memory/extractor
  */
 
 import type { Message } from '@/db/schema.js';
-import type { LLMProvider } from '@/ai/types.js';
+import type { LLMProvider } from '@/core/ai/types.js';
 import type { MemoryFact } from '@/services/memory.js';
 import { createLogger } from '@/utils/logger.js';
 

@@ -1,5 +1,5 @@
 import { conversationService } from '@/services/conversation.js';
-import { getPropertyLanguage } from '@/services/translation.js';
+import { getPropertyLanguage } from '@/utils/translation.js';
 import { createLogger } from '@/utils/logger.js';
 import type { MessageContext } from '../context.js';
 

@@ -1,4 +1,4 @@
-import { translate } from '@/services/translation.js';
+import { translate } from '@/utils/translation.js';
 import { createLogger } from '@/utils/logger.js';
 import type { MessageContext } from '../context.js';
 

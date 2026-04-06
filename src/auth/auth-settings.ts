@@ -4,14 +4,14 @@
  * Manages authentication settings stored in the settings table.
  * Follows the same key-value pattern as hotel_profile.
  *
- * @module services/auth-settings
+ * @module auth/auth-settings
  */
 
 import { eq } from 'drizzle-orm';
 import { db, roles } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { ValidationError } from '@/errors/index.js';
-import { settingsService } from './settings.js';
+import { settingsService } from '../services/settings.js';
 
 const log = createLogger('auth-settings');
 

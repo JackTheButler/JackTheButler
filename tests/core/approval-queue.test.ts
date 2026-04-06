@@ -10,7 +10,7 @@ import {
   getApprovalQueue,
   resetApprovalQueue,
   type CreateApprovalInput,
-} from '@/core/approval-queue.js';
+} from '@/core/approval/queue.js';
 
 // Mock the database with proper item storage
 const mockItems = new Map<string, Record<string, unknown>>();

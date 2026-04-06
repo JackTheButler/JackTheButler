@@ -12,7 +12,7 @@ import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
-import { getApprovalQueue } from '@/core/approval-queue.js';
+import { getApprovalQueue } from '@/core/approval/queue.js';
 import { handleGuestConnection } from '@/apps/channels/webchat/index.js';
 
 const log = createLogger('websocket');

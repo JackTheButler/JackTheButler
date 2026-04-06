@@ -15,7 +15,7 @@ import type { ActivityItem } from './routes/activities.js';
 import { broadcast } from './websocket.js';
 import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
-import { getApprovalQueue } from '@/core/approval-queue.js';
+import { getApprovalQueue } from '@/core/approval/queue.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('websocket-bridge');

@@ -1,4 +1,4 @@
-import { KnowledgeService } from '@/ai/knowledge/index.js';
+import { KnowledgeService } from '@/core/ai/knowledge/index.js';
 import type { MessageContext } from '../context.js';
 
 // No embedding provider needed — searchByEmbedding works with a pre-computed vector

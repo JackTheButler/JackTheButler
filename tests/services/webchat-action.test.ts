@@ -9,8 +9,8 @@ import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db, webchatSessions, guests } from '@/db/index.js';
-import { WebChatActionService } from '@/services/webchat-action.js';
-import { webchatSessionService } from '@/services/webchat-session.js';
+import { WebChatActionService } from '@/apps/channels/webchat/actions.js';
+import { webchatSessionService } from '@/apps/channels/webchat/session.js';
 import { guestService } from '@/services/guest.js';
 import type { NormalizedReservation } from '@/core/interfaces/pms.js';
 
@@ -33,7 +33,7 @@ vi.mock('@/apps/registry.js', () => ({
   getAppRegistry: () => ({ getActivePMSAdapter: mockGetActivePMSAdapter }),
 }));
 
-vi.mock('@/services/app-config.js', () => ({
+vi.mock('@/apps/config.js', () => ({
   appConfigService: { getAppConfig: mockGetAppConfig },
 }));
 
@@ -148,7 +148,7 @@ describe('WebChatActionService', () => {
 
   describe('execute() pre-flight', () => {
     it('returns action_disabled for a disabled action', async () => {
-      const { appConfigService } = await import('@/services/app-config.js');
+      const { appConfigService } = await import('@/apps/config.js');
       mockGetAppConfig.mockResolvedValue({
         appId: 'channel-webchat',
         config: { enabledActions: 'request-service' },

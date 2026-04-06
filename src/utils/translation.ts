@@ -8,7 +8,7 @@
  */
 
 import { getAppRegistry } from '@/apps/index.js';
-import { settingsService } from './settings.js';
+import { settingsService } from '@/services/settings.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('translation');

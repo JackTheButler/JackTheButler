@@ -1,4 +1,4 @@
-import { guestContextService } from '@/core/guest-context.js';
+import { guestContextService } from '@/core/conversation/guest-context.js';
 import { createLogger } from '@/utils/logger.js';
 import type { MessageContext } from '../context.js';
 

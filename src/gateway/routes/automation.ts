@@ -18,7 +18,7 @@ import {
   type ActionType,
   type TriggerConfig,
   type ActionConfig,
-} from '@/automation/index.js';
+} from '@/core/automation/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { generateId } from '@/utils/id.js';

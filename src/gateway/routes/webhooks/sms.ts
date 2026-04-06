@@ -9,7 +9,7 @@ import { Hono } from 'hono';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/index.js';
-import { appConfigService } from '@/services/app-config.js';
+import { appConfigService } from '@/apps/config.js';
 
 const log = createLogger('webhook:sms');
 

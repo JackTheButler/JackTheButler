@@ -18,11 +18,11 @@ vi.mock('@/services/conversation.js', () => ({
   },
 }));
 
-import { AIResponder } from '@/ai/responder.js';
-import type { LLMProvider } from '@/ai/types.js';
+import { AIResponder } from '@/core/ai/responder.js';
+import type { LLMProvider } from '@/core/ai/types.js';
 import type { Conversation, GuestMemory } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
-import type { KnowledgeSearchResult } from '@/ai/knowledge/index.js';
+import type { KnowledgeSearchResult } from '@/core/ai/knowledge/index.js';
 
 function createMockProvider(): LLMProvider {
   return {

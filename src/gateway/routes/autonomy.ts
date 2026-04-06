@@ -11,8 +11,8 @@ import {
   DEFAULT_AUTONOMY_SETTINGS,
   type AutonomySettings,
   type ActionConfig,
-} from '@/core/autonomy.js';
-import { getApprovalQueue } from '@/core/approval-queue.js';
+} from '@/core/approval/autonomy.js';
+import { getApprovalQueue } from '@/core/approval/queue.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';

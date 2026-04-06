@@ -1,8 +1,8 @@
 import { taskService, type TaskType } from '@/services/task.js';
 import { getTaskRouter, type GuestContext as TaskRouterContext } from '@/core/task-router.js';
-import { getApprovalQueue } from '@/core/approval-queue.js';
-import { getIntentDefinition, type ClassificationResult } from '@/ai/intent/index.js';
-import { mapTaskTypeToActionType } from '@/core/autonomy.js';
+import { getApprovalQueue } from '@/core/approval/queue.js';
+import { getIntentDefinition, type ClassificationResult } from '@/core/ai/intent/index.js';
+import { mapTaskTypeToActionType } from '@/core/approval/autonomy.js';
 import { events, EventTypes } from '@/events/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { mergeResponseMetadata } from '../context.js';

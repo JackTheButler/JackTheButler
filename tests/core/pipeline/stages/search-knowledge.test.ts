@@ -6,7 +6,7 @@ import { describe, it, expect, vi } from 'vitest';
 import { searchKnowledge } from '@/core/pipeline/stages/search-knowledge.js';
 import { createContext } from '@/core/pipeline/context.js';
 import type { InboundMessage } from '@/types/index.js';
-import type { KnowledgeSearchResult } from '@/ai/knowledge/index.js';
+import type { KnowledgeSearchResult } from '@/core/ai/knowledge/index.js';
 
 const testInbound: InboundMessage = {
   id: 'msg-001',

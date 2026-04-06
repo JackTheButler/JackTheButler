@@ -5,7 +5,7 @@
  * Used in L1 (Assisted) mode where all actions require approval,
  * and for specific actions that require review even at higher levels.
  *
- * @module core/approval-queue
+ * @module core/approval/queue
  */
 
 import { eq, and, desc, inArray, lte } from 'drizzle-orm';

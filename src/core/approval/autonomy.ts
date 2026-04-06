@@ -9,7 +9,7 @@
  * - L2 (Supervised): Auto-execute, staff monitors
  * - L3 (Autonomous): Full end-to-end handling
  *
- * @module core/autonomy
+ * @module core/approval/autonomy
  */
 
 import { createLogger } from '@/utils/logger.js';

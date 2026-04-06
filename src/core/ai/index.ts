@@ -12,7 +12,7 @@
 
 import type { Conversation, GuestMemory } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
-import type { GuestContext } from '@/services/guest-context.js';
+import type { GuestContext } from '@/core/conversation/guest-context.js';
 import type { KnowledgeSearchResult } from './knowledge/index.js';
 import type { Response, Responder } from './types.js';
 import { createLogger } from '@/utils/logger.js';
@@ -42,7 +42,7 @@ export {
   resetEscalationManager,
   type EscalationDecision,
   type EscalationConfig,
-} from '@/core/escalation-engine.js';
+} from '@/core/conversation/escalation.js';
 
 // ===================
 // Responder Factory

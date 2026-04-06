@@ -27,7 +27,7 @@ export {
   resetEscalationManager,
   type EscalationDecision,
   type EscalationConfig,
-} from './escalation-engine.js';
+} from './conversation/escalation.js';
 
 // ============================================
 // Guest Context
@@ -36,7 +36,7 @@ export {
   GuestContextService,
   guestContextService,
   type GuestContext,
-} from './guest-context.js';
+} from './conversation/guest-context.js';
 
 // ============================================
 // Conversation State Machine
@@ -48,7 +48,7 @@ export {
   type ConversationState,
   type ConversationEvent,
   type TransitionResult,
-} from './conversation-fsm.js';
+} from './conversation/fsm.js';
 
 // ============================================
 // Task Router

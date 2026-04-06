@@ -3,8 +3,8 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import { MemoryExtractor } from '@/core/memory-extractor.js';
-import type { LLMProvider } from '@/ai/types.js';
+import { MemoryExtractor } from '@/core/memory/extractor.js';
+import type { LLMProvider } from '@/core/ai/types.js';
 import type { Message } from '@/db/schema.js';
 
 // Minimal Message factory — only fields the extractor uses

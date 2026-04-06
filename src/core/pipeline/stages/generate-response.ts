@@ -1,4 +1,4 @@
-import { defaultResponder } from '@/ai/index.js';
+import { defaultResponder } from '@/core/ai/index.js';
 import { createLogger } from '@/utils/logger.js';
 import type { MessageContext } from '../context.js';
 

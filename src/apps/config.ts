@@ -4,7 +4,7 @@
  * Manages app configurations stored in the database.
  * Bridges the dashboard UI with the AppRegistry for runtime activation.
  *
- * @module services/app-config
+ * @module apps/config
  */
 
 import { eq, and, desc } from 'drizzle-orm';
@@ -21,7 +21,7 @@ import {
   type AppCategory,
 } from '@/apps/index.js';
 import type { ConnectionTestResult } from '@/apps/types.js';
-import { resetResponder } from '@/ai/index.js';
+import { resetResponder } from '@/core/ai/index.js';
 import { now } from '@/utils/time.js';
 
 const log = createLogger('service:app-config');

@@ -9,7 +9,7 @@ import { searchKnowledge } from '@/core/pipeline/stages/search-knowledge.js';
 import { createContext } from '@/core/pipeline/context.js';
 import type { InboundMessage } from '@/types/index.js';
 import type { GuestMemory } from '@/db/schema.js';
-import type { GuestContext } from '@/core/guest-context.js';
+import type { GuestContext } from '@/core/conversation/guest-context.js';
 
 vi.mock('@/services/memory.js', () => ({
   memoryService: {

@@ -7,7 +7,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { authSettingsService, type AuthSettings } from '@/services/auth-settings.js';
+import { authSettingsService, type AuthSettings } from '@/auth/auth-settings.js';
 import { settingsService } from '@/services/settings.js';
 import { TEMPLATES_SETTINGS_KEY, type EmailTemplates } from '@/services/email.js';
 import { validateBody } from '../middleware/validator.js';

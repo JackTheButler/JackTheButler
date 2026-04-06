@@ -12,8 +12,8 @@
  * and integrations to fulfill business requirements.
  */
 
-export { AuthService } from './auth.js';
+export { AuthService } from '../auth/auth.js';
 export { ConversationService, conversationService } from './conversation.js';
-export { AppConfigService, appConfigService } from './app-config.js';
-export type { ProviderConfig, AppConfigRecord, AppWithStatus } from './app-config.js';
+export { AppConfigService, appConfigService } from '@/apps/config.js';
+export type { ProviderConfig, AppConfigRecord, AppWithStatus } from '@/apps/config.js';
 export { SettingsService, settingsService } from './settings.js';

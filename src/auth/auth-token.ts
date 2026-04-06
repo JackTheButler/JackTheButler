@@ -3,7 +3,7 @@
  *
  * Token generation and validation for password reset and email verification.
  *
- * @module services/auth-token
+ * @module auth/auth-token
  */
 
 import { randomBytes } from 'node:crypto';

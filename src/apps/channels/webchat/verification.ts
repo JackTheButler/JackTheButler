@@ -7,20 +7,20 @@
  *
  * Extracted from webchat-action.ts — single responsibility: verifying guests.
  *
- * @module services/webchat-verification
+ * @module apps/channels/webchat/verification
  */
 
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/registry.js';
-import { webchatSessionService } from './webchat-session.js';
-import { conversationService } from './conversation.js';
-import { guestService } from './guest.js';
+import { webchatSessionService } from '@/apps/channels/webchat/session.js';
+import { conversationService } from '@/services/conversation.js';
+import { guestService } from '@/services/guest.js';
 import { webchatConnectionManager } from '@/apps/channels/webchat/index.js';
 import { t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
 import type { NormalizedReservation } from '@jack/shared';
-import type { ActionResult } from './webchat-action.js';
+import type { ActionResult } from './actions.js';
 import { now } from '@/utils/time.js';
 
 const log = createLogger('webchat-verification');

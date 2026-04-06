@@ -11,10 +11,10 @@ import { eq } from 'drizzle-orm';
 import { db, setupState, knowledgeBase, staff } from '@/db/index.js';
 import { settingsService } from './settings.js';
 import { createLogger } from '@/utils/logger.js';
-import { appConfigService } from './app-config.js';
+import { appConfigService } from '@/apps/config.js';
 import { getAppRegistry, getManifest } from '@/apps/index.js';
 import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
-import { authService } from './auth.js';
+import { authService } from '../auth/auth.js';
 import { now } from '@/utils/time.js';
 
 const log = createLogger('service:setup');

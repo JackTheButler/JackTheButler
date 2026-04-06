@@ -1,7 +1,7 @@
-import { getAutonomyEngine, type GuestContext as AutonomyContext } from '@/core/autonomy.js';
-import { getApprovalQueue } from '@/core/approval-queue.js';
+import { getAutonomyEngine, type GuestContext as AutonomyContext } from '@/core/approval/autonomy.js';
+import { getApprovalQueue } from '@/core/approval/queue.js';
 import { conversationService } from '@/services/conversation.js';
-import { translate } from '@/services/translation.js';
+import { translate } from '@/utils/translation.js';
 import { createLogger } from '@/utils/logger.js';
 import type { MessageContext } from '../context.js';
 
