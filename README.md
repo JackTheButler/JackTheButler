@@ -9,7 +9,7 @@
 [![Website](https://img.shields.io/badge/Website-JackTheButler.com-blue)](https://jackthebutler.com)
 [![Deploy on Railway](https://img.shields.io/badge/Deploy-Railway-blueviolet)](https://railway.com/deploy/jack-the-butler)
 
-[![Demo](https://img.shields.io/badge/Demo-Demo.JackTheButler.com-green)](https://demo.jackthebutler.com/register)
+[![Try Demo](https://img.shields.io/badge/Demo-JackTheButler.com-lightgreen)](https://demo.jackthebutler.com/register)
 
 ---
 
