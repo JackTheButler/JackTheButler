@@ -7,11 +7,9 @@
 
 [![License: Elastic-2.0](https://img.shields.io/badge/License-Elastic--2.0-blue.svg)](LICENSE.txt)
 [![Website](https://img.shields.io/badge/Website-JackTheButler.com-blue)](https://jackthebutler.com)
-[![Demo](https://img.shields.io/badge/Demo-Demo.JackTheButler.com-green)](https://demo.jackthebutler.com/register)
 [![Deploy on Railway](https://img.shields.io/badge/Deploy-Railway-blueviolet)](https://railway.com/deploy/jack-the-butler)
 
-**Website**: [https://jackthebutler.com](https://jackthebutler.com)
-**Demo**: [https://demo.jackthebutler.com/register](https://demo.jackthebutler.com/register)
+[![Demo](https://img.shields.io/badge/Demo-Demo.JackTheButler.com-green)](https://demo.jackthebutler.com/register)
 
 ---
 
