@@ -144,7 +144,8 @@ export const apps: App[] = [
     slug: 'telegram',
     category: 'messaging',
     summary: 'Connect with guests on Telegram with bot integration.',
-    status: 'planned',
+    logo: '/logos/telegram.svg',
+    status: 'available',
   },
   {
     id: 'web-chat',

@@ -8,6 +8,7 @@ import { Hono } from 'hono';
 import { whatsappWebhook } from './whatsapp.js';
 import { smsWebhook } from './sms.js';
 import { pmsWebhooks } from './pms.js';
+import { telegramWebhook } from './telegram.js';
 
 export const webhookRoutes = new Hono();
 
@@ -20,4 +21,7 @@ webhookRoutes.route('/sms', smsWebhook);
 // PMS webhooks
 webhookRoutes.route('/pms', pmsWebhooks);
 
-export { whatsappWebhook, smsWebhook, pmsWebhooks };
+// Telegram webhook
+webhookRoutes.route('/telegram', telegramWebhook);
+
+export { whatsappWebhook, smsWebhook, pmsWebhooks, telegramWebhook };

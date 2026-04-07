@@ -38,6 +38,9 @@ importers:
       '@jack-plugins/channel-smtp':
         specifier: workspace:*
         version: link:packages/channel-smtp
+      '@jack-plugins/channel-telegram':
+        specifier: workspace:*
+        version: link:packages/channel-telegram
       '@jack-plugins/channel-twilio':
         specifier: workspace:*
         version: link:packages/channel-twilio
@@ -375,6 +378,16 @@ importers:
       '@types/nodemailer':
         specifier: ^7.0.9
         version: 7.0.9
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+
+  packages/channel-telegram:
+    dependencies:
+      '@jack/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3

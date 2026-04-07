@@ -28,6 +28,7 @@ const customIcons: Record<string, string> = {
   openai: '/icons/openai.svg',
   gmail: '/icons/gmail.svg',
   sendgrid: '/icons/sendgrid.svg',
+  telegram: '/icons/telegram.svg',
 };
 
 // Mapping app/provider IDs to icons
@@ -59,6 +60,7 @@ const iconMapping: Record<string, LucideIcon | string> = {
   'email-mailgun': 'mailgun',
   sendgrid: 'sendgrid',
   'email-sendgrid': 'sendgrid',
+  telegram: 'telegram',
   builtin: 'chat-round',
   'channel-webchat': 'chat-round',
 

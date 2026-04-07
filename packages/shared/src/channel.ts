@@ -7,7 +7,7 @@
 /**
  * Supported messaging channels
  */
-export type ChannelType = 'whatsapp' | 'sms' | 'email' | 'webchat';
+export type ChannelType = 'whatsapp' | 'sms' | 'email' | 'webchat' | 'telegram';
 
 /**
  * Content type for messages

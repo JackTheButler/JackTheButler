@@ -552,6 +552,7 @@ function formatChannelId(channel: string, id: string): string {
       return `${prefix}${id.slice(0, -4)}****`;
     }
   }
+  if (channel === 'telegram') return `Telegram ${id}`;
   if (channel === 'webchat') return 'Web Visitor';
   if (channel === 'email') return id;
   return 'Guest';

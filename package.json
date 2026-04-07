@@ -75,6 +75,7 @@
     "@jack-plugins/channel-mailgun": "workspace:*",
     "@jack-plugins/channel-sendgrid": "workspace:*",
     "@jack-plugins/channel-gmail": "workspace:*",
+    "@jack-plugins/channel-telegram": "workspace:*",
     "@jack-plugins/pms-mock": "workspace:*",
     "@jack-plugins/pms-mews": "workspace:*",
     "@jack-plugins/pms-cloudbeds": "workspace:*",
