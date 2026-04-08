@@ -395,7 +395,19 @@ systemRoutes.get('/health', requirePermission(PERMISSIONS.HEALTH_VIEW), (c) => {
        WHERE app_id = ? AND provider_id = ? ORDER BY created_at DESC LIMIT 1`
     ).get(logAppId, providerId) as { status: string; created_at: string; error_message: string | null; latency_ms: number | null } | undefined;
 
-    const status = deriveStatus(lastRow);
+    let status = deriveStatus(lastRow);
+    // For channels without outbound API calls (e.g. webchat), app_logs goes stale.
+    // If activity_log shows recent messages, override warning → healthy.
+    if (status === 'warning' && category === 'channel') {
+      const source = channelSource(registryApp.manifest.id);
+      const recentActivity = sqlite.prepare(
+        `SELECT created_at FROM activity_log WHERE source = ? AND event_type = 'message.sent' ORDER BY created_at DESC LIMIT 1`
+      ).get(source) as { created_at: string } | undefined;
+      if (recentActivity) {
+        const ageMs = Date.now() - new Date(recentActivity.created_at).getTime();
+        if (ageMs < 24 * 60 * 60 * 1000) status = 'healthy';
+      }
+    }
 
     // Avg latency — last 20 successful rows
     const latencyRow = sqlite.prepare(
@@ -443,6 +455,13 @@ systemRoutes.get('/health', requirePermission(PERMISSIONS.HEALTH_VIEW), (c) => {
       activityCount = countRow.cnt;
       const label = source === 'whatsapp' ? 'WhatsApp messages' : source === 'sms' ? 'SMS messages' : source === 'webchat' ? 'messages' : 'emails';
       summary = `${countRow.cnt} ${label} sent today`;
+      // Use activity_log for last activity timestamp — channels like webchat don't write to app_logs on every send
+      const lastActivityRow = sqlite.prepare(
+        `SELECT created_at FROM activity_log WHERE source = ? AND event_type = 'message.sent' ORDER BY created_at DESC LIMIT 1`
+      ).get(source) as { created_at: string } | undefined;
+      if (lastActivityRow) {
+        detail = `last activity ${formatRelativeTime(lastActivityRow.created_at)}`;
+      }
     } else if (category === 'pms') {
       const syncRow = sqlite.prepare(
         `SELECT created_at, details, status FROM activity_log WHERE source = 'system' AND event_type = 'scheduler.outcome' ORDER BY created_at DESC LIMIT 1`
@@ -481,7 +500,7 @@ systemRoutes.get('/health', requirePermission(PERMISSIONS.HEALTH_VIEW), (c) => {
       summary,
       activityCount,
       detail,
-      avgLatencyMs,
+      avgLatencyMs: avgLatencyMs ?? (providerId === 'channel-webchat' ? 0 : null),
       latencyTrend,
       lastErrorRaw: lastErrorRow?.error_message ?? null,
       partialFailure,

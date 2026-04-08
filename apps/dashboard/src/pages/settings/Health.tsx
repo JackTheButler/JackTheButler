@@ -125,6 +125,7 @@ function RelativeTime({ createdAt, now }: { createdAt: string; now: number }) {
 
 function formatLatency(ms: number | null): string {
   if (ms === null) return '—';
+  if (ms === 0) return '<1ms';
   if (ms >= 1000) return `${(ms / 1000).toFixed(1)}s`;
   return `${ms}ms`;
 }
