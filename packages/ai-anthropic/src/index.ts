@@ -129,7 +129,8 @@ export class AnthropicProvider implements AIProvider, BaseProvider {
       createParams.stop_sequences = request.stopSequences;
     }
 
-    const response = await this.appLog('completion', { model, ...(request.purpose && { purpose: request.purpose }) }, async () => {
+    const eventType = request.purpose ? `completion.${request.purpose}` : 'completion';
+    const response = await this.appLog(eventType, { model, ...(request.purpose && { purpose: request.purpose }) }, async () => {
       const result = await this.client.messages.create(createParams);
       const textBlock = result.content.find((c) => c.type === 'text');
       const text = textBlock?.type === 'text' ? textBlock.text : '';

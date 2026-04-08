@@ -321,7 +321,8 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
     const modelName = request.modelTier === 'utility' ? this.utilityModel : this.completionModel;
     log.debug({ messageCount: request.messages.length, model: modelName }, 'Generating local completion');
 
-    return this.appLog('completion', { model: modelName, ...(request.purpose && { purpose: request.purpose }) }, async () => {
+    const eventType = request.purpose ? `completion.${request.purpose}` : 'completion';
+    return this.appLog(eventType, { model: modelName, ...(request.purpose && { purpose: request.purpose }) }, async () => {
       const generator = await this.getTextPipeline(modelName);
       const prompt = this.buildPrompt(request.messages, modelName);
 

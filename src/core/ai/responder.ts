@@ -12,7 +12,7 @@ import type { GuestContext } from '@/core/conversation/guest-context.js';
 import type { LLMProvider, Response, Responder } from './types.js';
 import { KnowledgeService } from './knowledge/index.js';
 import type { KnowledgeSearchResult } from './knowledge/index.js';
-import { IntentClassifier, type ClassificationResult } from './intent/index.js';
+import type { ClassificationResult } from './intent/index.js';
 import { ConversationService } from '@/services/conversation.js';
 import { createLogger } from '@/utils/logger.js';
 import { getResponseCache, type ResponseCacheService } from './cache.js';
@@ -104,7 +104,6 @@ export interface AIResponderConfig {
 export class AIResponder implements Responder {
   private provider: LLMProvider;
   private knowledge: KnowledgeService;
-  private classifier: IntentClassifier;
   private conversationService: ConversationService;
   private cache: ResponseCacheService | null;
   private maxContextMessages: number;
@@ -114,7 +113,6 @@ export class AIResponder implements Responder {
   constructor(config: AIResponderConfig) {
     this.provider = config.provider;
     this.knowledge = new KnowledgeService(config.embeddingProvider || config.provider);
-    this.classifier = new IntentClassifier(config.provider);
     this.conversationService = new ConversationService();
     this.maxContextMessages = config.maxContextMessages ?? 10;
     this.maxKnowledgeResults = config.maxKnowledgeResults ?? 3;
@@ -131,7 +129,7 @@ export class AIResponder implements Responder {
   /**
    * Generate a response for a message
    */
-  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext, knowledgeResults?: KnowledgeSearchResult[], memories?: GuestMemory[]): Promise<Response> {
+  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext, knowledgeResults?: KnowledgeSearchResult[], memories?: GuestMemory[], classification?: ClassificationResult): Promise<Response> {
     const startTime = Date.now();
 
     log.debug(
@@ -176,9 +174,8 @@ export class AIResponder implements Responder {
     // Resolve property language once for the entire request
     const propertyLanguage = await getPropertyLanguage();
 
-    // 1. Classify intent (use translated content if available for better accuracy)
-    const classifyContent = (message.metadata?.translatedContent as string) ?? message.content;
-    const classification = await this.classifier.classify(classifyContent);
+    // 1. Use pre-computed classification from the classifyIntent pipeline stage
+    const resolvedClassification = classification ?? { intent: 'unknown', confidence: 0, department: null, requiresAction: false };
 
     // 2. Search knowledge base for context
     // Translate query to English for RAG (KB + embeddings are English-only)
@@ -226,7 +223,7 @@ export class AIResponder implements Responder {
     // Use translated content for the prompt so the entire context is in the property language
     const promptMessage = (message.metadata?.translatedContent as string) ?? message.content;
     const channelActions = message.metadata?.channelActions as ChannelActionsMetadata | undefined;
-    const messages = this.buildPromptMessages(promptMessage, classification, knowledgeContext, history, guestContext, hotelProfile, channelActions, propertyLanguage, memories);
+    const messages = this.buildPromptMessages(promptMessage, resolvedClassification, knowledgeContext, history, guestContext, hotelProfile, channelActions, propertyLanguage, memories);
 
     // 6. Generate response
     const response = await this.provider.complete({
@@ -259,8 +256,8 @@ export class AIResponder implements Responder {
     log.info(
       {
         conversationId: conversation.id,
-        intent: classification.intent,
-        confidence: classification.confidence,
+        intent: resolvedClassification.intent,
+        confidence: resolvedClassification.confidence,
         knowledgeHits: knowledgeContext.length,
         memoriesCount: memories?.length ?? 0,
         guestName: guestContext?.guest?.fullName,
@@ -273,20 +270,20 @@ export class AIResponder implements Responder {
 
     // Cache the response for FAQ-style queries
     // Skip caching inquiry responses with no KB hits (prevents caching "I don't know" answers)
-    const isInquiry = classification.intent?.startsWith('inquiry');
+    const isInquiry = resolvedClassification.intent?.startsWith('inquiry');
     const hasKnowledge = knowledgeContext.length > 0;
-    if (canUseCache && this.cache && classification.confidence > 0.7 && (!isInquiry || hasKnowledge)) {
-      this.cache.set(message.content, content, classification.intent).catch((err) => {
+    if (canUseCache && this.cache && resolvedClassification.confidence > 0.7 && (!isInquiry || hasKnowledge)) {
+      this.cache.set(message.content, content, resolvedClassification.intent).catch((err) => {
         log.error({ err }, 'Failed to cache response');
       });
     }
 
     return {
       content,
-      confidence: classification.confidence,
-      intent: classification.intent,
+      confidence: resolvedClassification.confidence,
+      intent: resolvedClassification.intent,
       metadata: {
-        classification,
+        classification: resolvedClassification,
         knowledgeContext: knowledgeContext.map((k) => ({ id: k.id, title: k.title, similarity: k.similarity })),
         usage: response.usage,
         suggestedAction,
@@ -526,13 +523,6 @@ export class AIResponder implements Responder {
    */
   getKnowledgeService(): KnowledgeService {
     return this.knowledge;
-  }
-
-  /**
-   * Get the intent classifier (for external use)
-   */
-  getClassifier(): IntentClassifier {
-    return this.classifier;
   }
 
   /**

@@ -8,7 +8,7 @@
  */
 
 import { createLogger } from '@/utils/logger.js';
-import { getIntentDefinition, type IntentDefinition } from '@/core/ai/intent/taxonomy.js';
+import { getIntentDefinition, type IntentDefinition } from '@/core/ai/intent/intent-definitions.js';
 import type { ClassificationResult } from '@/core/ai/intent/index.js';
 import { getAutonomyEngine, mapTaskTypeToActionType, type GuestContext as AutonomyContext } from './approval/autonomy.js';
 

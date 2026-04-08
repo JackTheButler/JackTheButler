@@ -14,6 +14,7 @@ import type { Conversation, GuestMemory } from '@/db/schema.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/core/conversation/guest-context.js';
 import type { KnowledgeSearchResult } from './knowledge/index.js';
+import type { ClassificationResult } from './intent/index.js';
 import type { Response, Responder } from './types.js';
 import { createLogger } from '@/utils/logger.js';
 
@@ -30,7 +31,7 @@ export * from './types.js';
 // ===================
 
 export { KnowledgeService } from './knowledge/index.js';
-export { IntentClassifier, IntentTaxonomy, getIntentDefinition } from './intent/index.js';
+export { IntentClassifier, IntentDefinitions, getIntentDefinition } from './intent/index.js';
 export { AIResponder, type AIResponderConfig } from './responder.js';
 export { EchoResponder } from './echo-responder.js';
 export { ResponseCacheService, getResponseCache, type CacheConfig, type CachedResponse } from './cache.js';
@@ -143,10 +144,11 @@ export function getResponder(): Responder {
       message: InboundMessage,
       guestContext?: GuestContext,
       knowledgeResults?: KnowledgeSearchResult[],
-      memories?: GuestMemory[]
+      memories?: GuestMemory[],
+      classification?: ClassificationResult
     ): Promise<Response> {
       const responder = await getResponderAsync();
-      return responder.generate(conversation, message, guestContext, knowledgeResults, memories);
+      return responder.generate(conversation, message, guestContext, knowledgeResults, memories, classification);
     },
   };
 }
@@ -169,8 +171,9 @@ export const defaultResponder: Responder = {
     message: InboundMessage,
     guestContext?: GuestContext,
     knowledgeResults?: KnowledgeSearchResult[],
-    memories?: GuestMemory[]
+    memories?: GuestMemory[],
+    classification?: ClassificationResult
   ): Promise<Response> {
-    return getResponder().generate(conversation, message, guestContext, knowledgeResults, memories);
+    return getResponder().generate(conversation, message, guestContext, knowledgeResults, memories, classification);
   },
 };

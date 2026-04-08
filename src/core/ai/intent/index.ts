@@ -5,12 +5,12 @@
  */
 
 import type { LLMProvider } from '../types.js';
-import { IntentTaxonomy, getIntentDefinition } from './taxonomy.js';
+import { IntentDefinitions, getIntentDefinition } from './intent-definitions.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('ai:intent');
 
-export { IntentTaxonomy, getIntentDefinition, getIntentNames } from './taxonomy.js';
+export { IntentDefinitions, getIntentDefinition, getIntentNames } from './intent-definitions.js';
 
 /**
  * Classification result
@@ -35,13 +35,14 @@ export class IntentClassifier {
   }
 
   /**
-   * Classify a message into an intent category
+   * Classify a message into an intent category.
+   * Pass recent conversation history (excluding the current message) for context-aware classification.
    */
-  async classify(message: string): Promise<ClassificationResult> {
-    log.debug({ message: message.substring(0, 50) }, 'Classifying message');
+  async classify(message: string, history?: Array<{ role: 'user' | 'assistant'; content: string }>): Promise<ClassificationResult> {
+    log.debug({ message: message.substring(0, 50), historyLength: history?.length ?? 0 }, 'Classifying message');
 
     const systemPrompt = this.buildSystemPrompt();
-    const userPrompt = this.buildUserPrompt(message);
+    const userPrompt = this.buildUserPrompt(message, history);
 
     try {
       let parsed: ClassificationResult | undefined;
@@ -86,10 +87,10 @@ export class IntentClassifier {
   }
 
   /**
-   * Build the system prompt with intent taxonomy
+   * Build the system prompt with intent definitions
    */
   private buildSystemPrompt(): string {
-    const intentList = Object.entries(IntentTaxonomy)
+    const intentList = Object.entries(IntentDefinitions)
       .map(([name, def]) => `- ${name}: ${def.description}`)
       .join('\n');
 
@@ -112,12 +113,23 @@ Rules:
   }
 
   /**
-   * Build the user prompt
+   * Build the user prompt, optionally including recent conversation context.
    */
-  private buildUserPrompt(message: string): string {
-    return `Classify this guest message:
+  private buildUserPrompt(message: string, history?: Array<{ role: 'user' | 'assistant'; content: string }>): string {
+    if (!history || history.length === 0) {
+      return `Classify this guest message:\n\n"${message}"\n\nRespond with JSON only.`;
+    }
 
-"${message}"
+    const contextLines = history
+      .map((m) => `[${m.role === 'assistant' ? 'Jack' : 'Guest'}] ${m.content}`)
+      .join('\n');
+
+    return `Classify the current guest message based on the recent conversation context.
+
+Recent conversation:
+${contextLines}
+
+Current message: "${message}"
 
 Respond with JSON only.`;
   }
@@ -161,20 +173,6 @@ Respond with JSON only.`;
     }
   }
 
-  /**
-   * Classify multiple messages in batch
-   */
-  async classifyBatch(messages: string[]): Promise<ClassificationResult[]> {
-    // For now, classify sequentially (could be parallelized)
-    const results: ClassificationResult[] = [];
-
-    for (const message of messages) {
-      const result = await this.classify(message);
-      results.push(result);
-    }
-
-    return results;
-  }
 }
 
 export { IntentClassifier as default };

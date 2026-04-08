@@ -8,11 +8,12 @@
  * @module core/pipeline/context
  */
 
-import type { Guest, Conversation, GuestMemory } from '@/db/schema.js';
+import type { Conversation, GuestMemory } from '@/db/schema.js';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/core/conversation/guest-context.js';
 import type { Response as AIResponse } from '@/core/ai/types.js';
 import type { KnowledgeSearchResult } from '@/core/ai/knowledge/index.js';
+import type { ClassificationResult } from '@/core/ai/intent/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('core:pipeline');
@@ -29,7 +30,6 @@ export interface MessageContext {
   startTime: number;
 
   // ── Guest ─────────────────────────────────────────────────
-  guest?: Guest;
   guestContext?: GuestContext;
 
   // ── Conversation ──────────────────────────────────────────
@@ -48,6 +48,9 @@ export interface MessageContext {
   queryEmbedding?: number[];
   knowledgeResults?: KnowledgeSearchResult[];
   memories?: GuestMemory[];
+
+  // ── Classification ─────────────────────────────────────────
+  classification?: ClassificationResult;
 
   // ── AI response ───────────────────────────────────────────
   aiResponse?: AIResponse;

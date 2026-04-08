@@ -130,7 +130,8 @@ export class OllamaProvider implements AIProvider, BaseProvider {
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
     const model = request.modelTier === 'utility' ? this.utilityModel : this.model;
 
-    const data = await this.appLog('completion', { model, ...(request.purpose && { purpose: request.purpose }) }, async () => {
+    const eventType = request.purpose ? `completion.${request.purpose}` : 'completion';
+    const data = await this.appLog(eventType, { model, ...(request.purpose && { purpose: request.purpose }) }, async () => {
       const response = await fetch(`${this.baseUrl}/api/chat`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },

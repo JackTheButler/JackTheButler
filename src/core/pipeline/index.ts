@@ -10,14 +10,13 @@
  */
 
 import { createContext, runPipeline } from './context.js';
-import { identifyGuest } from './stages/identify-guest.js';
 import { resolveConversation } from './stages/resolve-conversation.js';
-import { loadGuestContext } from './stages/load-guest-context.js';
 import { detectLanguage } from './stages/detect-language.js';
 import { saveInboundMessage } from './stages/save-inbound-message.js';
 import { computeEmbedding } from './stages/compute-embedding.js';
 import { searchKnowledge } from './stages/search-knowledge.js';
 import { recallMemories } from './stages/recall-memories.js';
+import { classifyIntent } from './stages/classify-intent.js';
 import { generateResponse } from './stages/generate-response.js';
 import { routeTask } from './stages/route-task.js';
 import { checkEscalation } from './stages/check-escalation.js';
@@ -32,11 +31,10 @@ import type { InboundMessage, OutboundMessage } from '@/types/message.js';
 const log = createLogger('core:processor');
 
 const STAGES = [
-  identifyGuest,
   resolveConversation,
-  loadGuestContext,
   detectLanguage,
   saveInboundMessage,
+  classifyIntent,
   computeEmbedding,
   searchKnowledge,
   recallMemories,

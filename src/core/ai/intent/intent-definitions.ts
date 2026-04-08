@@ -1,5 +1,5 @@
 /**
- * Intent Taxonomy
+ * Intent Definitions
  *
  * Defines the classification categories for guest messages.
  * Each intent has a description, examples, and routing information.
@@ -17,9 +17,9 @@ export interface IntentDefinition {
 }
 
 /**
- * Hotel-specific intent taxonomy
+ * All supported guest message intents
  */
-export const IntentTaxonomy: Record<string, IntentDefinition> = {
+export const IntentDefinitions: Record<string, IntentDefinition> = {
   // Service Requests
   'request.housekeeping.towels': {
     description: 'Request for additional towels',
@@ -482,6 +482,19 @@ export const IntentTaxonomy: Record<string, IntentDefinition> = {
     priority: 'urgent',
   },
 
+  // Verification
+  'verification.provide_credentials': {
+    description: 'Guest is providing identity credentials (last name + confirmation number) to verify their booking',
+    examples: [
+      'Smith, confirmation ABC123',
+      'My last name is Johnson, booking number 98765',
+      'Here are my details: Brown, ref 112233',
+    ],
+    department: null,
+    requiresAction: false,
+    priority: 'low',
+  },
+
   // Unknown
   'unknown': {
     description: 'Unable to classify the intent',
@@ -496,21 +509,21 @@ export const IntentTaxonomy: Record<string, IntentDefinition> = {
  * Get all intent names
  */
 export function getIntentNames(): string[] {
-  return Object.keys(IntentTaxonomy);
+  return Object.keys(IntentDefinitions);
 }
 
 /**
  * Get intent definition by name
  */
 export function getIntentDefinition(intent: string): IntentDefinition | undefined {
-  return IntentTaxonomy[intent];
+  return IntentDefinitions[intent];
 }
 
 /**
  * Get intents by department
  */
 export function getIntentsByDepartment(department: string): string[] {
-  return Object.entries(IntentTaxonomy)
+  return Object.entries(IntentDefinitions)
     .filter(([_, def]) => def.department === department)
     .map(([name]) => name);
 }
@@ -519,7 +532,7 @@ export function getIntentsByDepartment(department: string): string[] {
  * Get intents that require action
  */
 export function getActionableIntents(): string[] {
-  return Object.entries(IntentTaxonomy)
+  return Object.entries(IntentDefinitions)
     .filter(([_, def]) => def.requiresAction)
     .map(([name]) => name);
 }
