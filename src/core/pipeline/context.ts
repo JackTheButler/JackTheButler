@@ -14,6 +14,7 @@ import type { GuestContext } from '@/core/conversation/guest-context.js';
 import type { Response as AIResponse } from '@/core/ai/types.js';
 import type { KnowledgeSearchResult } from '@/core/ai/knowledge/index.js';
 import type { ClassificationResult } from '@/core/ai/intent/index.js';
+import type { VerificationState } from '@/services/verification.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('core:pipeline');
@@ -49,8 +50,14 @@ export interface MessageContext {
   knowledgeResults?: KnowledgeSearchResult[];
   memories?: GuestMemory[];
 
+  // ── Conversation history ──────────────────────────────────
+  conversationHistory?: Array<{ role: 'user' | 'assistant'; content: string }>;
+
   // ── Classification ─────────────────────────────────────────
   classification?: ClassificationResult;
+
+  // ── Verification ───────────────────────────────────────────
+  verification?: VerificationState;
 
   // ── AI response ───────────────────────────────────────────
   aiResponse?: AIResponse;

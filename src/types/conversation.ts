@@ -48,6 +48,7 @@ export interface UpdateConversationInput {
   state?: ConversationState | undefined;
   assignedTo?: string | null | undefined;
   guestId?: string | undefined;
+  reservationId?: string | null | undefined;
   currentIntent?: string | undefined;
   metadata?: Record<string, unknown> | undefined;
   guestLanguage?: string | undefined;

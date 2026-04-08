@@ -12,16 +12,19 @@
 
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { createLogger } from '@/utils/logger.js';
-import { getAppRegistry } from '@/apps/registry.js';
 import { webchatSessionService } from '@/apps/channels/webchat/session.js';
 import { conversationService } from '@/services/conversation.js';
-import { guestService } from '@/services/guest.js';
 import { webchatConnectionManager } from '@/apps/channels/webchat/index.js';
 import { t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
-import type { NormalizedReservation } from '@jack/shared';
+import type { Guest, Reservation } from '@/db/schema.js';
 import type { ActionResult } from './actions.js';
-import { now } from '@/utils/time.js';
+import {
+  lookupReservationByConfirmation,
+  lookupReservationsByEmail,
+  pickBestReservation,
+  MAX_VERIFICATION_ATTEMPTS,
+} from '@/services/verification.js';
 
 const log = createLogger('webchat-verification');
 
@@ -29,7 +32,7 @@ const log = createLogger('webchat-verification');
 // Constants
 // ============================================
 
-export const MAX_VERIFICATION_ATTEMPTS = 5;
+export { MAX_VERIFICATION_ATTEMPTS } from '@/services/verification.js';
 const MAX_CODE_REQUESTS_PER_HOUR = 3;
 const MAX_CODE_REQUESTS_PER_EMAIL_PER_HOUR = 5;
 
@@ -101,18 +104,18 @@ async function verifyByBookingName(
     return { success: false, message: t(locale, 'messages.missingBookingRef'), error: 'missing_fields' };
   }
 
-  const reservation = await lookupByConfirmation(confirmationNumber);
-  if (!reservation) {
+  const result = await lookupReservationByConfirmation(confirmationNumber);
+  if (!result) {
     await webchatSessionService.incrementVerificationAttempts(sessionId);
     return { success: false, message: t(locale, 'messages.noReservationFound'), error: 'not_found' };
   }
 
-  if (reservation.guest.lastName.toLowerCase() !== lastName.toLowerCase()) {
+  if (result.guest.lastName.toLowerCase() !== lastName.toLowerCase()) {
     await webchatSessionService.incrementVerificationAttempts(sessionId);
     return { success: false, message: t(locale, 'messages.lastNameMismatch'), error: 'mismatch' };
   }
 
-  return completeVerification(sessionId, reservation, locale);
+  return completeVerification(sessionId, result, locale);
 }
 
 // ============================================
@@ -129,18 +132,18 @@ async function verifyByBookingEmail(
     return { success: false, message: t(locale, 'messages.missingBookingEmail'), error: 'missing_fields' };
   }
 
-  const reservation = await lookupByConfirmation(confirmationNumber);
-  if (!reservation) {
+  const result = await lookupReservationByConfirmation(confirmationNumber);
+  if (!result) {
     await webchatSessionService.incrementVerificationAttempts(sessionId);
     return { success: false, message: t(locale, 'messages.noReservationFound'), error: 'not_found' };
   }
 
-  if (!reservation.guest.email || reservation.guest.email.toLowerCase() !== email.toLowerCase()) {
+  if (!result.guest.email || result.guest.email.toLowerCase() !== email.toLowerCase()) {
     await webchatSessionService.incrementVerificationAttempts(sessionId);
     return { success: false, message: t(locale, 'messages.emailMismatch'), error: 'mismatch' };
   }
 
-  return completeVerification(sessionId, reservation, locale);
+  return completeVerification(sessionId, result, locale);
 }
 
 // ============================================
@@ -157,13 +160,8 @@ async function verifyEmailCodeStep1(
     return { success: false, message: t(locale, 'messages.missingEmail'), error: 'missing_fields' };
   }
 
-  const pmsAdapter = getAppRegistry().getActivePMSAdapter();
-  if (!pmsAdapter) {
-    return { success: false, message: t(locale, 'messages.verificationUnavailable'), error: 'no_pms' };
-  }
-
-  const reservations = await pmsAdapter.searchReservations({ guestEmail: email.toLowerCase() });
-  if (reservations.length === 0) {
+  const results = await lookupReservationsByEmail(email);
+  if (results.length === 0) {
     await webchatSessionService.incrementVerificationAttempts(sessionId);
     return { success: false, message: t(locale, 'messages.noReservationForEmail'), error: 'not_found' };
   }
@@ -252,92 +250,33 @@ async function verifyEmailCodeStep2(
     return { success: false, message: t(locale, 'messages.invalidCode'), error: 'code_mismatch' };
   }
 
-  // Code matches — find the reservation by email
-  const pmsAdapter = getAppRegistry().getActivePMSAdapter();
-  if (!pmsAdapter) {
-    return { success: false, message: t(locale, 'messages.verificationUnavailable'), error: 'no_pms' };
-  }
-
-  const reservations = await pmsAdapter.searchReservations({ guestEmail: email.toLowerCase() });
-  const reservation = pickBestReservation(reservations);
-  if (!reservation) {
+  // Code matches — find the best reservation for this email
+  const results = await lookupReservationsByEmail(email);
+  const best = pickBestReservation(results);
+  if (!best) {
     return { success: false, message: t(locale, 'messages.noReservationFoundGeneric'), error: 'not_found' };
   }
 
-  return completeVerification(sessionId, reservation, locale);
+  return completeVerification(sessionId, best, locale);
 }
 
 // ============================================
 // Helpers
 // ============================================
 
-async function lookupByConfirmation(confirmationNumber: string): Promise<NormalizedReservation | null> {
-  const pmsAdapter = getAppRegistry().getActivePMSAdapter();
-  if (!pmsAdapter) {
-    log.warn('No PMS adapter configured for verification');
-    return null;
-  }
-  return pmsAdapter.getReservationByConfirmation(confirmationNumber);
-}
-
 /**
- * Pick the most relevant reservation from a list:
- * 1. Currently checked in
- * 2. Upcoming (earliest future arrival)
- * 3. Most recent past reservation
- */
-export function pickBestReservation(reservations: NormalizedReservation[]): NormalizedReservation | null {
-  if (reservations.length === 0) return null;
-
-  const checkedIn = reservations.find((r) => r.status === 'checked_in');
-  if (checkedIn) return checkedIn;
-
-  const today = now().split('T')[0]!;
-
-  const upcoming = reservations
-    .filter((r) => r.status === 'confirmed' && r.arrivalDate >= today)
-    .sort((a, b) => a.arrivalDate.localeCompare(b.arrivalDate));
-  if (upcoming.length > 0) return upcoming[0]!;
-
-  const past = reservations
-    .filter((r) => r.status === 'checked_out')
-    .sort((a, b) => b.departureDate.localeCompare(a.departureDate));
-  if (past.length > 0) return past[0]!;
-
-  return reservations[0]!;
-}
-
-/**
- * Complete verification: find/create guest, update session, restore conversation, broadcast.
+ * Complete verification: update session, restore conversation, broadcast.
  */
 async function completeVerification(
   sessionId: string,
-  reservation: NormalizedReservation,
+  { reservation, guest }: { reservation: Reservation; guest: Guest },
   locale: SupportedLocale = 'en',
 ): Promise<ActionResult> {
-  // Find or create guest in our DB
-  let guest = reservation.guest.email
-    ? await guestService.findByEmail(reservation.guest.email)
-    : null;
-
-  if (!guest && reservation.guest.phone) {
-    guest = await guestService.findByPhone(reservation.guest.phone);
-  }
-
-  if (!guest) {
-    guest = await guestService.create({
-      firstName: reservation.guest.firstName,
-      lastName: reservation.guest.lastName,
-      email: reservation.guest.email,
-      phone: reservation.guest.phone,
-    });
-  }
-
   // Update session with verification + stay-aware expiry
   await webchatSessionService.verify(
     sessionId,
     guest.id,
-    reservation.externalId,
+    reservation.externalId ?? reservation.confirmationNumber,
     reservation.arrivalDate,
     reservation.departureDate,
   );
@@ -354,7 +293,8 @@ async function completeVerification(
     await webchatSessionService.linkConversation(sessionId, previousConv.id);
     await conversationService.update(previousConv.id, {
       guestId: guest.id,
-      metadata: { reservationId: reservation.externalId },
+      reservationId: reservation.id,
+      metadata: { verification: null },
     });
 
     // Send merged history (old + current messages, chronological)
@@ -373,10 +313,11 @@ async function completeVerification(
       log.warn({ error, sessionId, conversationId: previousConv.id }, 'Failed to send restored history');
     }
   } else if (session?.conversationId) {
-    // No previous conversation — just link current one to guest
+    // No previous conversation — just link current one to guest + reservation
     await conversationService.update(session.conversationId, {
       guestId: guest.id,
-      metadata: { reservationId: reservation.externalId },
+      reservationId: reservation.id,
+      metadata: { verification: null },
     });
   }
 
@@ -387,15 +328,15 @@ async function completeVerification(
   });
 
   log.info(
-    { sessionId, guestId: guest.id, reservationId: reservation.externalId },
+    { sessionId, guestId: guest.id, reservationId: reservation.id },
     'Reservation verified',
   );
 
   return {
     success: true,
-    message: t(locale, 'messages.verifiedWelcome', { firstName: reservation.guest.firstName }),
+    message: t(locale, 'messages.verifiedWelcome', { firstName: guest.firstName }),
     data: {
-      guestName: `${reservation.guest.firstName} ${reservation.guest.lastName}`,
+      guestName: `${guest.firstName} ${guest.lastName}`,
       checkIn: reservation.arrivalDate,
       checkOut: reservation.departureDate,
     },

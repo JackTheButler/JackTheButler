@@ -10,6 +10,7 @@ import { settingsService } from '@/services/settings.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/core/conversation/guest-context.js';
 import type { LLMProvider, Response, Responder } from './types.js';
+import { MAX_VERIFICATION_ATTEMPTS, type VerificationState } from '@/services/verification.js';
 import { KnowledgeService } from './knowledge/index.js';
 import type { KnowledgeSearchResult } from './knowledge/index.js';
 import type { ClassificationResult } from './intent/index.js';
@@ -129,7 +130,7 @@ export class AIResponder implements Responder {
   /**
    * Generate a response for a message
    */
-  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext, knowledgeResults?: KnowledgeSearchResult[], memories?: GuestMemory[], classification?: ClassificationResult): Promise<Response> {
+  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext, knowledgeResults?: KnowledgeSearchResult[], memories?: GuestMemory[], classification?: ClassificationResult, verificationState?: VerificationState): Promise<Response> {
     const startTime = Date.now();
 
     log.debug(
@@ -175,7 +176,7 @@ export class AIResponder implements Responder {
     const propertyLanguage = await getPropertyLanguage();
 
     // 1. Use pre-computed classification from the classifyIntent pipeline stage
-    const resolvedClassification = classification ?? { intent: 'unknown', confidence: 0, department: null, requiresAction: false };
+    const resolvedClassification = classification ?? { intent: 'unknown', confidence: 0, department: null, requiresAction: false, requiresIdentity: false };
 
     // 2. Search knowledge base for context
     // Translate query to English for RAG (KB + embeddings are English-only)
@@ -223,7 +224,7 @@ export class AIResponder implements Responder {
     // Use translated content for the prompt so the entire context is in the property language
     const promptMessage = (message.metadata?.translatedContent as string) ?? message.content;
     const channelActions = message.metadata?.channelActions as ChannelActionsMetadata | undefined;
-    const messages = this.buildPromptMessages(promptMessage, resolvedClassification, knowledgeContext, history, guestContext, hotelProfile, channelActions, propertyLanguage, memories);
+    const messages = this.buildPromptMessages(promptMessage, resolvedClassification, knowledgeContext, history, guestContext, hotelProfile, channelActions, propertyLanguage, memories, verificationState);
 
     // 6. Generate response
     const response = await this.provider.complete({
@@ -329,6 +330,7 @@ export class AIResponder implements Responder {
     channelActions?: ChannelActionsMetadata,
     propertyLanguage?: string,
     memories?: GuestMemory[],
+    verificationState?: VerificationState,
   ): Array<{ role: 'system' | 'user' | 'assistant'; content: string }> {
     const messages: Array<{ role: 'system' | 'user' | 'assistant'; content: string }> = [];
 
@@ -443,6 +445,22 @@ export class AIResponder implements Responder {
       }
       if (classification.requiresAction) {
         systemContent += '\nNote: This may require creating a task or action.';
+      }
+    }
+
+    // Verification instructions — only when guest is not yet identified
+    if (!guestContext?.guest) {
+      if (verificationState && verificationState.attempts >= MAX_VERIFICATION_ATTEMPTS) {
+        systemContent += '\n\nIMPORTANT: The guest has exceeded the maximum verification attempts. Apologise and direct them to contact the front desk directly. Do not fulfil any requests.';
+      } else if (verificationState?.failed) {
+        const remaining = MAX_VERIFICATION_ATTEMPTS - verificationState.attempts;
+        systemContent += `\n\nIMPORTANT: The last name and confirmation number the guest provided did not match any booking. Let them know politely and invite them to try again (${remaining} attempt(s) remaining). Do not fulfil any requests until verified.`;
+      } else if (verificationState?.lastName && !verificationState.confirmationNumber) {
+        systemContent += '\n\nIMPORTANT: The guest has provided their last name. Ask for their booking confirmation number to complete verification.';
+      } else if (!verificationState?.lastName && verificationState?.confirmationNumber) {
+        systemContent += '\n\nIMPORTANT: The guest has provided their confirmation number. Ask for their last name to complete verification.';
+      } else if (classification.requiresIdentity) {
+        systemContent += '\n\nIMPORTANT: This request requires guest identity. Ask for their last name and booking confirmation number before fulfilling the request. Do not promise to fulfil the request until they are identified.';
       }
     }
 

@@ -20,7 +20,9 @@ export class EchoResponder implements Responder {
     message: InboundMessage,
     guestContext?: GuestContext,
     _knowledgeResults?: KnowledgeSearchResult[],
-    _memories?: GuestMemory[]
+    _memories?: GuestMemory[],
+    _classification?: import('./intent/index.js').ClassificationResult,
+    _verificationState?: import('@/services/verification.js').VerificationState
   ): Promise<Response> {
     // Include guest name in echo if available
     const greeting = guestContext?.guest ? `Hello ${guestContext.guest.firstName}! ` : '';

@@ -332,6 +332,10 @@ export class ConversationService {
       updates.guestId = input.guestId;
     }
 
+    if (input.reservationId !== undefined) {
+      updates.reservationId = input.reservationId;
+    }
+
     if (input.currentIntent !== undefined) {
       updates.currentIntent = input.currentIntent;
     }

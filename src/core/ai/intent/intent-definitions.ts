@@ -13,6 +13,8 @@ export interface IntentDefinition {
   examples: string[];
   department: string | null;
   requiresAction: boolean;
+  /** Whether the guest must be identified before this intent can be acted on */
+  requiresIdentity: boolean;
   priority: 'low' | 'standard' | 'high' | 'urgent';
 }
 
@@ -26,6 +28,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     examples: ['I need more towels', 'Can I get extra towels please?', 'Send some towels to my room'],
     department: 'housekeeping',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'request.housekeeping.cleaning': {
@@ -33,6 +36,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     examples: ['Can you clean my room?', 'I need housekeeping', 'The room needs cleaning'],
     department: 'housekeeping',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'request.housekeeping.amenities': {
@@ -45,6 +49,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'housekeeping',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'request.maintenance': {
@@ -58,6 +63,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'maintenance',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'high',
   },
   'request.room_service': {
@@ -70,6 +76,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'room_service',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'request.concierge': {
@@ -82,6 +89,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'concierge',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'inquiry.concierge': {
@@ -94,6 +102,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'request.transport': {
@@ -106,6 +115,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'concierge',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'inquiry.transport': {
@@ -118,6 +128,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'request.wakeup': {
@@ -130,6 +141,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'request.luggage': {
@@ -142,6 +154,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'request.laundry': {
@@ -154,6 +167,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'housekeeping',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'request.dnd': {
@@ -166,6 +180,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'housekeeping',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'low',
   },
   'request.room_change': {
@@ -178,6 +193,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'high',
   },
   'request.lost_found': {
@@ -190,6 +206,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'request.security': {
@@ -202,6 +219,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'high',
   },
   'request.noise': {
@@ -214,6 +232,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'high',
   },
   'request.special_occasion': {
@@ -226,6 +245,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'concierge',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'inquiry.parking': {
@@ -238,6 +258,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'inquiry.accessibility': {
@@ -250,6 +271,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'inquiry.pet_policy': {
@@ -262,6 +284,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'request.reservation.cancel': {
@@ -274,6 +297,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'high',
   },
 
@@ -287,6 +311,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'request.checkout.late': {
@@ -298,6 +323,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'inquiry.checkin': {
@@ -309,6 +335,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'request.checkin.early': {
@@ -320,6 +347,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'inquiry.wifi': {
@@ -332,6 +360,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'request.maintenance.wifi': {
@@ -344,6 +373,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'maintenance',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'high',
   },
   'inquiry.amenity': {
@@ -356,6 +386,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'inquiry.dining': {
@@ -368,6 +399,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'inquiry.location': {
@@ -380,6 +412,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'inquiry.billing': {
@@ -392,6 +425,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: false,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'request.billing.receipt': {
@@ -404,6 +438,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
   'inquiry.reservation.status': {
@@ -416,6 +451,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: true,
     priority: 'low',
   },
   'request.reservation.modify': {
@@ -428,6 +464,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'standard',
   },
 
@@ -442,6 +479,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: true,
     priority: 'high',
   },
   'feedback.compliment': {
@@ -454,6 +492,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
 
@@ -463,6 +502,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     examples: ['Hello', 'Hi', 'Good morning', 'Hey there'],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
   'farewell': {
@@ -470,6 +510,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     examples: ['Goodbye', 'Thanks', 'Bye', 'Have a nice day'],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
 
@@ -479,6 +520,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     examples: ['There is a fire', 'Medical emergency', 'Someone is hurt', 'Help!', 'Call 911'],
     department: 'front_desk',
     requiresAction: true,
+    requiresIdentity: false,
     priority: 'urgent',
   },
 
@@ -492,6 +534,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     ],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
 
@@ -501,6 +544,7 @@ export const IntentDefinitions: Record<string, IntentDefinition> = {
     examples: [],
     department: null,
     requiresAction: false,
+    requiresIdentity: false,
     priority: 'low',
   },
 } as const;

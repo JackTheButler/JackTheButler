@@ -43,6 +43,7 @@ import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/core/conversation/guest-context.js';
 import type { KnowledgeSearchResult } from './knowledge/index.js';
 import type { ClassificationResult } from './intent/index.js';
+import type { VerificationState } from '@/services/verification.js';
 
 /**
  * Response from the responder
@@ -75,6 +76,7 @@ export interface Responder {
     guestContext?: GuestContext,
     knowledgeResults?: KnowledgeSearchResult[],
     memories?: GuestMemory[],
-    classification?: ClassificationResult
+    classification?: ClassificationResult,
+    verificationState?: VerificationState
   ): Promise<Response>;
 }

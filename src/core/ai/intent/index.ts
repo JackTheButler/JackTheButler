@@ -20,6 +20,7 @@ export interface ClassificationResult {
   confidence: number;
   department: string | null;
   requiresAction: boolean;
+  requiresIdentity: boolean;
   reasoning?: string | undefined;
 }
 
@@ -82,6 +83,7 @@ export class IntentClassifier {
         confidence: 0,
         department: null,
         requiresAction: false,
+        requiresIdentity: false,
       };
     }
   }
@@ -159,6 +161,7 @@ Respond with JSON only.`;
         confidence: Math.min(1, Math.max(0, parsed.confidence || 0)),
         department: definition?.department ?? null,
         requiresAction: definition?.requiresAction ?? false,
+        requiresIdentity: definition?.requiresIdentity ?? false,
         reasoning: parsed.reasoning,
       };
     } catch (error) {
@@ -169,6 +172,7 @@ Respond with JSON only.`;
         confidence: 0,
         department: null,
         requiresAction: false,
+        requiresIdentity: false,
       };
     }
   }
