@@ -166,7 +166,7 @@ export class KnowledgeService {
    */
   async search(query: string, options: SearchOptions = {}): Promise<KnowledgeSearchResult[]> {
     log.debug({ query, limit: options.limit }, 'Searching knowledge base');
-    const queryEmbedding = await this.requireProvider().embed({ text: query });
+    const queryEmbedding = await this.requireProvider().embed({ text: query, purpose: 'query' });
     return this.searchByEmbedding(queryEmbedding.embedding, options);
   }
 
@@ -220,7 +220,7 @@ export class KnowledgeService {
    * Generate and store embedding for a knowledge item
    */
   private async generateEmbedding(id: string, content: string): Promise<void> {
-    const response = await this.requireProvider().embed({ text: content });
+    const response = await this.requireProvider().embed({ text: content, purpose: 'store' });
 
     // Delete existing embedding if any
     await db.delete(knowledgeEmbeddings).where(eq(knowledgeEmbeddings.id, id));

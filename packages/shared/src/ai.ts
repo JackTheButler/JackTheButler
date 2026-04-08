@@ -61,6 +61,7 @@ export interface CompletionResponse {
  */
 export interface EmbeddingRequest {
   text: string;
+  purpose?: string;
 }
 
 /**

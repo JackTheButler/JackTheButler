@@ -23,6 +23,7 @@ export async function saveInboundMessage(ctx: MessageContext): Promise<void> {
     channel: ctx.inbound.channel,
     content: ctx.inbound.content,
     contentType: ctx.inbound.contentType,
+    ...(ctx.detectedLanguage && { detectedLanguage: ctx.detectedLanguage }),
     timestamp: new Date(),
   });
 }

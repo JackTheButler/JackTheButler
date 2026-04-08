@@ -64,7 +64,7 @@ export function writeActivityLog(
 export function subscribeActivityLogToEvents(): void {
   events.on(EventTypes.MESSAGE_RECEIVED, (event: MessageReceivedEvent) => {
     try {
-      writeActivityLog(event.channel, 'message.received', 'success', event.conversationId, undefined, undefined, {
+      writeActivityLog(event.channel, 'message.saved', 'success', event.conversationId, undefined, undefined, {
         messageId: event.messageId,
         contentType: event.contentType,
         contentLength: event.content?.length ?? 0,

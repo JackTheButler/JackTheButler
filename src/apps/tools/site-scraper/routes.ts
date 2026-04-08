@@ -427,7 +427,7 @@ async function generateAndStoreEmbedding(
   embeddingProvider: AIProvider
 ): Promise<void> {
   try {
-    const response = await embeddingProvider.embed({ text: content });
+    const response = await embeddingProvider.embed({ text: content, purpose: 'store' });
 
     // Delete existing embedding if any
     await db.delete(knowledgeEmbeddings).where(eq(knowledgeEmbeddings.id, id)).run();

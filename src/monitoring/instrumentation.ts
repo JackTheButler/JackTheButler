@@ -19,11 +19,9 @@
 import { db, appLogs } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { now } from '@/utils/time.js';
+import { LOG_EXTRA } from '@jack/shared';
 
 const log = createLogger('instrumentation');
-
-// Symbol used to attach extra log details to a success result without affecting the value.
-const LOG_EXTRA = Symbol('logExtra');
 
 /**
  * Tag a return value with extra details to be merged into app_logs.details on success.

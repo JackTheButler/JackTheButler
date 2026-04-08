@@ -13,7 +13,7 @@ import type { SenderType } from './message.js';
  */
 export const EventTypes = {
   // Message events
-  MESSAGE_RECEIVED: 'message.received',
+  MESSAGE_RECEIVED: 'message.saved',
   MESSAGE_SENT: 'message.sent',
   MESSAGE_DELIVERED: 'message.delivered',
   MESSAGE_FAILED: 'message.failed',
@@ -78,6 +78,7 @@ export interface MessageReceivedEvent extends BaseEvent {
   channel: ChannelType;
   content: string;
   contentType: ContentType;
+  detectedLanguage?: string;
 }
 
 /**

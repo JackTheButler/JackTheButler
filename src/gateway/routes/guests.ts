@@ -441,7 +441,7 @@ guestRoutes.post('/:id/memories/:memoryId/embed', requirePermission(PERMISSIONS.
     return c.json({ error: 'Memory not found' }, 404);
   }
 
-  const { embedding } = await provider.embed({ text: existing.content });
+  const { embedding } = await provider.embed({ text: existing.content, purpose: 'store' });
   await memoryService.updateEmbedding(memoryId, embedding);
 
   return c.json({ success: true });
@@ -618,7 +618,7 @@ guestRoutes.post('/memories/backfill-embeddings', requirePermission(PERMISSIONS.
 
   for (const memory of unembedded) {
     try {
-      const { embedding } = await provider.embed({ text: memory.content });
+      const { embedding } = await provider.embed({ text: memory.content, purpose: 'store' });
       await memoryService.updateEmbedding(memory.id, embedding);
       success++;
     } catch (err) {

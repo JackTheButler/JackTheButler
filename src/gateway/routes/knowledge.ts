@@ -23,7 +23,7 @@ import { now } from '@/utils/time.js';
  * Generate and store embedding for a knowledge entry
  */
 async function generateEmbedding(id: string, content: string, provider: LLMProvider): Promise<void> {
-  const response = await provider.embed({ text: content });
+  const response = await provider.embed({ text: content, purpose: 'store' });
 
   // Delete existing embedding if any
   await db.delete(knowledgeEmbeddings).where(eq(knowledgeEmbeddings.id, id));

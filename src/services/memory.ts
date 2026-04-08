@@ -72,7 +72,7 @@ export class MemoryService {
       let embeddingBuf: Buffer | null = null;
       if (this.embeddingProvider) {
         try {
-          const { embedding } = await this.embeddingProvider.embed({ text: fact.content });
+          const { embedding } = await this.embeddingProvider.embed({ text: fact.content, purpose: 'store' });
           embeddingBuf = Buffer.from(new Float32Array(embedding).buffer);
         } catch (err) {
           log.warn({ err }, 'Failed to embed fact — inserting without dedup check');

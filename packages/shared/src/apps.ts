@@ -44,9 +44,10 @@ export interface PluginContext {
 
 /**
  * Symbol used internally by withLogContext to attach extra details to a result.
+ * Exported so createAppLogger (in src/) can read it from the same symbol instance.
  * @internal
  */
-const _LOG_EXTRA = Symbol('logExtra');
+export const LOG_EXTRA = Symbol.for('jack.logExtra');
 
 /**
  * Tag a return value with extra details to be merged into app_logs on success.
@@ -58,7 +59,7 @@ const _LOG_EXTRA = Symbol('logExtra');
 export function withLogContext<T>(result: T, extra: Record<string, unknown>): T {
   if (result !== null && typeof result === 'object') {
     try {
-      Object.defineProperty(result, _LOG_EXTRA, {
+      Object.defineProperty(result, LOG_EXTRA, {
         value: extra,
         enumerable: false,
         configurable: true,

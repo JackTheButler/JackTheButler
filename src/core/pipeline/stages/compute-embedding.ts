@@ -10,7 +10,7 @@ export async function computeEmbedding(ctx: MessageContext): Promise<void> {
 
   const text = ctx.translatedContent ?? ctx.inbound.content;
   try {
-    const result = await provider.embed({ text });
+    const result = await provider.embed({ text, purpose: 'query' });
     ctx.queryEmbedding = result.embedding;
   } catch (err) {
     log.warn({ err }, 'Embedding skipped — provider unavailable');

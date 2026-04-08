@@ -293,7 +293,7 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
   async embed(request: EmbeddingRequest): Promise<EmbeddingResponse> {
     log.debug({ textLength: request.text.length }, 'Generating local embedding');
 
-    return this.appLog('embedding', { model: this.embeddingModel }, async () => {
+    return this.appLog('embedding', { model: this.embeddingModel, ...(request.purpose && { purpose: request.purpose }) }, async () => {
       const extractor = await this.getEmbeddingPipeline();
 
       const output = await extractor(request.text, {

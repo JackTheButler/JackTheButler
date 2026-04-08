@@ -63,4 +63,4 @@ export type {
   AppInstance,
 } from './apps.js';
 
-export { withLogContext, AppLogError } from './apps.js';
+export { withLogContext, AppLogError, LOG_EXTRA } from './apps.js';

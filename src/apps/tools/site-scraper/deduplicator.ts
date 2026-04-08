@@ -72,7 +72,7 @@ async function semanticDedup(
   const newEmbeddings: number[][] = [];
   for (const entry of entries) {
     const text = `${entry.title}\n${entry.content}`.substring(0, 1000);
-    const response = await embeddingProvider.embed({ text });
+    const response = await embeddingProvider.embed({ text, purpose: 'store' });
     newEmbeddings.push(response.embedding);
   }
 

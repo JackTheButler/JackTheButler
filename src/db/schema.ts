@@ -776,7 +776,7 @@ export const activityLog = sqliteTable(
     id: text('id').primaryKey(),
     // Channel or system origin: whatsapp | webchat | sms | email | system
     source: text('source').notNull(),
-    // Event type: message.received | message.sent | message.failed | conversation.escalated
+    // Event type: message.saved | message.sent | message.failed | conversation.escalated
     //             processor.outcome | webchat.connected | webchat.disconnected | scheduler.outcome
     eventType: text('event_type').notNull(),
     // Status: success | failed | warning
