@@ -131,20 +131,20 @@ function formatLatency(ms: number | null): string {
 
 // ─── Sub-components ───────────────────────────────────────────────────────────
 
-const STATUS_CONFIG: Record<HealthStatus, { label: string; color: string; dot: string }> = {
-  healthy: { label: 'Healthy', color: 'text-success-foreground', dot: 'bg-success-foreground' },
-  warning: { label: 'Warning', color: 'text-warning-foreground', dot: 'bg-warning-foreground' },
-  error:   { label: 'Error',   color: 'text-destructive',        dot: 'bg-destructive' },
-  unknown: { label: 'Unknown', color: 'text-muted-foreground',   dot: 'bg-muted-foreground/40' },
+const STATUS_DOT: Record<HealthStatus, { label: string; dot: string; ping: string }> = {
+  healthy: { label: 'Healthy', dot: 'bg-green-500',  ping: 'bg-green-400' },
+  warning: { label: 'Warning', dot: 'bg-yellow-400', ping: 'bg-yellow-300' },
+  error:   { label: 'Error',   dot: 'bg-red-500',    ping: '' },
+  unknown: { label: 'Unknown', dot: 'bg-muted-foreground/40', ping: '' },
 };
 
 function StatusDot({ status }: { status: HealthStatus }) {
-  const cfg = STATUS_CONFIG[status];
+  const cfg = STATUS_DOT[status];
   return (
     <Tooltip content={cfg.label}>
       <span className="relative flex h-2.5 w-2.5 flex-shrink-0 cursor-default">
-        {status === 'healthy' && (
-          <span className={cn('animate-ping absolute inline-flex h-full w-full rounded-full opacity-50', cfg.dot)} />
+        {cfg.ping && (
+          <span className={cn('animate-ping absolute inline-flex h-full w-full rounded-full opacity-75', cfg.ping)} />
         )}
         <span className={cn('relative inline-flex rounded-full h-2.5 w-2.5', cfg.dot)} />
       </span>
@@ -152,106 +152,92 @@ function StatusDot({ status }: { status: HealthStatus }) {
   );
 }
 
-function AppHealthCard({ app }: { app: AppActivity }) {
+function AppHealthItem({ app }: { app: AppActivity }) {
   const [showDetails, setShowDetails] = useState(false);
   const warnMs = LATENCY_WARN_MS[app.category] ?? DEFAULT_LATENCY_WARN_MS;
   const latencyOver = app.avgLatencyMs !== null && app.avgLatencyMs > warnMs;
   const isUnhealthy = app.status === 'error' || app.status === 'warning';
 
   return (
-    <div className={cn(
-      'p-4 rounded-lg border',
-      app.status === 'error'   && 'border-[hsl(var(--error-border))] bg-destructive/5',
-      app.status === 'warning' && 'border-warning-border bg-warning/5',
-      (app.status === 'healthy' || app.status === 'unknown') && 'border-border',
-    )}>
-      <div className="flex-1 min-w-0">
+    <div className="flex flex-col gap-3 p-4 min-w-[300px] flex-shrink-0">
 
-        {/* Row 1: app icon · name · status dot */}
-        <div className="flex items-center gap-2 min-w-0 flex-wrap">
-          <AppIcon id={app.appId} size="sm" />
-          <span className="font-medium text-sm">{app.name}</span>
-          <StatusDot status={app.status} />
+      {/* Row 1: app icon · name · status dot */}
+      <div className="flex items-center gap-2 min-w-0">
+        <AppIcon id={app.appId} size="sm" />
+        <span className="font-medium text-sm flex-1 truncate">{app.name}</span>
+        <StatusDot status={app.status} />
+      </div>
+
+      {/* Activity count · detail */}
+      {(app.activityCount !== null || app.detail) && (
+        <div className="flex items-center gap-2">
+          {app.activityCount !== null && (
+            <Tooltip content={app.summary}>
+              <span className="flex items-center gap-1 text-xs text-foreground/70 cursor-default">
+                <MessageSquare className="h-3 w-3 shrink-0" />
+                {app.activityCount}
+              </span>
+            </Tooltip>
+          )}
+          {app.activityCount !== null && app.detail && (
+            <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/50 shrink-0" />
+          )}
+          {app.detail && <span className="text-xs text-muted-foreground truncate">{app.detail}</span>}
         </div>
+      )}
 
-        {/* Row 2: activity count · detail */}
-        {(app.activityCount !== null || app.detail) && (
-          <div className="mt-3 flex items-center gap-2">
-            {app.activityCount !== null && (
-              <Tooltip content={app.summary}>
-                <span className="flex items-center gap-1 text-xs text-foreground/70 cursor-default">
-                  <MessageSquare className="h-3 w-3 shrink-0" />
-                  {app.activityCount}
-                </span>
-              </Tooltip>
-            )}
-            {app.activityCount !== null && app.detail && (
-              <span className="inline-block h-1 w-1 rounded-full bg-muted-foreground/50 shrink-0" />
-            )}
-            {app.detail && <span className="text-xs text-muted-foreground">{app.detail}</span>}
-          </div>
-        )}
+      {/* Latency */}
+      {app.avgLatencyMs !== null && (
+        <span className={cn(
+          'flex items-center gap-1 text-xs',
+          latencyOver ? 'text-warning-foreground' : 'text-muted-foreground',
+        )}>
+          <Wifi className="h-3 w-3" />
+          avg {formatLatency(app.avgLatencyMs)}
+          {app.latencyTrend === 'up'   && <TrendingUp   className="h-3 w-3 text-warning-foreground" />}
+          {app.latencyTrend === 'down' && <TrendingDown className="h-3 w-3 text-success-foreground" />}
+        </span>
+      )}
 
-        {/* Row 3: latency */}
-        {app.avgLatencyMs !== null && (
-          <div className="mt-3 flex items-center gap-1">
-            <span className={cn(
-              'flex items-center gap-1 text-xs',
-              latencyOver ? 'text-warning-foreground' : 'text-muted-foreground',
-            )}>
-              <Wifi className="h-3 w-3" />
-              avg {formatLatency(app.avgLatencyMs)}
-              {app.latencyTrend === 'up'   && <TrendingUp   className="h-3 w-3 text-warning-foreground" />}
-              {app.latencyTrend === 'down' && <TrendingDown className="h-3 w-3 text-success-foreground" />}
-            </span>
-          </div>
-        )}
+      {/* Partial failure */}
+      {app.partialFailure && (
+        <p className="flex items-center gap-1 text-xs text-warning-foreground">
+          <AlertTriangle className="h-3 w-3 flex-shrink-0" />
+          {app.partialFailure}
+        </p>
+      )}
 
-        {/* Partial failure — visible even on healthy cards */}
-        {app.partialFailure && (
-          <p className="mt-3 flex items-center gap-1 text-xs text-warning-foreground">
-            <AlertTriangle className="h-3 w-3 flex-shrink-0" />
-            {app.partialFailure}
-          </p>
-        )}
-
-        {/* Error state: plain description + action row */}
-        {isUnhealthy && (
-          <div className="mt-3 space-y-3">
-            {/* Plain-language error description */}
-            {app.errorDescription && (
-              <p className="text-xs text-destructive">{app.errorDescription}</p>
-            )}
-
-            {/* Action row: App Settings + Details toggle */}
-            <div className="flex items-center gap-3">
-              <Link
-                to={`/engine/apps/${app.appId}`}
+      {/* Error state */}
+      {isUnhealthy && (
+        <div className="space-y-2">
+          {app.errorDescription && (
+            <p className="text-xs text-destructive">{app.errorDescription}</p>
+          )}
+          <div className="flex items-center gap-3">
+            <Link
+              to={`/engine/apps/${app.appId}`}
+              className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
+            >
+              <ExternalLink className="h-3 w-3" /> Settings
+            </Link>
+            {app.lastErrorRaw && (
+              <button
+                onClick={() => setShowDetails(!showDetails)}
                 className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
               >
-<ExternalLink className="h-3 w-3" /> Settings
-              </Link>
-              {app.lastErrorRaw && (
-                <button
-                  onClick={() => setShowDetails(!showDetails)}
-                  className="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground transition-colors"
-                >
-                  {showDetails
-                    ? <><ChevronDown className="h-3 w-3" /> Hide details</>
-                    : <><ChevronRight className="h-3 w-3" /> Details</>}
-                </button>
-              )}
-            </div>
-
-            {/* Raw technical error — revealed on expand */}
-            {showDetails && app.lastErrorRaw && (
-              <p className="font-mono text-[11px] text-muted-foreground bg-muted/50 rounded px-2 py-1.5 break-all">
-                {app.lastErrorRaw}
-              </p>
+                {showDetails
+                  ? <><ChevronDown className="h-3 w-3" /> Hide details</>
+                  : <><ChevronRight className="h-3 w-3" /> Details</>}
+              </button>
             )}
           </div>
-        )}
-      </div>
+          {showDetails && app.lastErrorRaw && (
+            <p className="font-mono text-[11px] text-muted-foreground bg-muted/50 rounded px-2 py-1.5 break-all">
+              {app.lastErrorRaw}
+            </p>
+          )}
+        </div>
+      )}
     </div>
   );
 }
@@ -476,18 +462,22 @@ export function HealthContent() {
         )}
       </div>
 
-      {/* ── Zone 2: App health cards (all apps, always shown) ──────────────── */}
-      <div className="grid gap-3 sm:grid-cols-2">
+      {/* ── Zone 2: App health items (scrollable row) ──────────────────────── */}
+      <Card className="overflow-x-auto scrollbar-hide">
         {isLoading && (
-          <p className="text-sm text-muted-foreground col-span-2">Loading health data…</p>
+          <p className="text-sm text-muted-foreground p-4">Loading health data…</p>
         )}
         {!isLoading && activity.length === 0 && (
-          <p className="text-sm text-muted-foreground col-span-2">No apps configured yet.</p>
+          <p className="text-sm text-muted-foreground p-4">No apps configured yet.</p>
         )}
-        {activity.map((app) => (
-          <AppHealthCard key={app.appId} app={app} />
-        ))}
-      </div>
+        {!isLoading && activity.length > 0 && (
+          <div className="flex divide-x min-w-full">
+            {activity.map((app) => (
+              <AppHealthItem key={app.appId} app={app} />
+            ))}
+          </div>
+        )}
+      </Card>
 
       {/* ── Zone 3: System Logs (admin only) ─────────────────────────────────── */}
       {isAdmin && (
