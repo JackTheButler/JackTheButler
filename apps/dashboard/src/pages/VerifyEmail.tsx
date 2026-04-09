@@ -69,7 +69,7 @@ export function VerifyEmailPage() {
   }, [token, t, navigate, checkAuth]);
 
   return (
-    <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-muted aurora-layout flex flex-col items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="bg-card rounded-lg shadow-md w-full max-w-sm overflow-hidden relative">
         <div className="absolute top-2 left-2">
           <Tooltip content={isDark ? t('common.switchToLight') : t('common.switchToDark')} side="right">

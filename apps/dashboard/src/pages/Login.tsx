@@ -95,14 +95,14 @@ export function LoginPage() {
   // Show loading while checking setup state
   if (checkingSetup) {
     return (
-      <div className="min-h-screen bg-muted flex items-center justify-center">
+      <div className="min-h-screen bg-muted aurora-layout flex items-center justify-center">
         <div className="animate-pulse text-muted-foreground">{t('common.loading')}</div>
       </div>
     );
   }
 
   return (
-    <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-muted aurora-layout flex flex-col items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="bg-card rounded-lg shadow-md w-full max-w-4xl flex flex-col-reverse md:flex-row overflow-hidden relative">
         {/* Branding section - Top on mobile, Left on desktop */}
         <div className="bg-primary md:w-3/5 flex flex-col items-center justify-center gap-6 p-8 border-t md:border-t-0 md:border-r border-border">

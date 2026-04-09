@@ -38,7 +38,7 @@ export function ForgotPasswordPage() {
   };
 
   return (
-    <div className="min-h-screen bg-muted flex flex-col items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
+    <div className="min-h-screen bg-muted aurora-layout flex flex-col items-center justify-center p-4" dir={isRTL ? 'rtl' : 'ltr'}>
       <div className="bg-card rounded-lg shadow-md w-full max-w-sm overflow-hidden relative">
         <div className="absolute top-2 left-2">
           <Tooltip content={isDark ? t('common.switchToLight') : t('common.switchToDark')} side="right">
@@ -50,8 +50,7 @@ export function ForgotPasswordPage() {
 
         <div className="p-6 pt-12">
           <div className="flex justify-center mb-6">
-            <img src="/jack-the-butler-inverted.png" alt={t('app.name')} className="w-16 h-16 object-contain dark:hidden" />
-            <img src="/jack-the-butler.png" alt={t('app.name')} className="w-16 h-16 object-contain hidden dark:block" />
+            <img src="/favicon.svg" alt={t('app.name')} className="w-16 h-16 object-contain dark:invert" />
           </div>
 
           {sent ? (
