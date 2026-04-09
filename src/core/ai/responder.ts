@@ -5,7 +5,7 @@
  * and intent classification.
  */
 
-import type { Conversation, Message, GuestMemory } from '@/db/schema.js';
+import type { Conversation, GuestMemory } from '@/db/schema.js';
 import { settingsService } from '@/services/settings.js';
 import type { InboundMessage } from '@/types/message.js';
 import type { GuestContext } from '@/core/conversation/guest-context.js';
@@ -14,7 +14,6 @@ import { MAX_VERIFICATION_ATTEMPTS, type VerificationState } from '@/services/ve
 import { KnowledgeService } from './knowledge/index.js';
 import type { KnowledgeSearchResult } from './knowledge/index.js';
 import type { ClassificationResult } from './intent/index.js';
-import { ConversationService } from '@/services/conversation.js';
 import { createLogger } from '@/utils/logger.js';
 import { getResponseCache, type ResponseCacheService } from './cache.js';
 import { translate, getPropertyLanguage } from '@/utils/translation.js';
@@ -90,7 +89,6 @@ If you don't know something, just say so briefly and offer to connect them with 
 export interface AIResponderConfig {
   provider: LLMProvider;
   embeddingProvider?: LLMProvider | undefined;
-  maxContextMessages?: number | undefined;
   maxKnowledgeResults?: number | undefined;
   minKnowledgeSimilarity?: number | undefined;
   /** Enable response caching for FAQ-type queries */
@@ -105,17 +103,13 @@ export interface AIResponderConfig {
 export class AIResponder implements Responder {
   private provider: LLMProvider;
   private knowledge: KnowledgeService;
-  private conversationService: ConversationService;
   private cache: ResponseCacheService | null;
-  private maxContextMessages: number;
   private maxKnowledgeResults: number;
   private minKnowledgeSimilarity: number;
 
   constructor(config: AIResponderConfig) {
     this.provider = config.provider;
     this.knowledge = new KnowledgeService(config.embeddingProvider || config.provider);
-    this.conversationService = new ConversationService();
-    this.maxContextMessages = config.maxContextMessages ?? 10;
     this.maxKnowledgeResults = config.maxKnowledgeResults ?? 3;
     this.minKnowledgeSimilarity = config.minKnowledgeSimilarity ?? 0.3;
 
@@ -130,7 +124,7 @@ export class AIResponder implements Responder {
   /**
    * Generate a response for a message
    */
-  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext, knowledgeResults?: KnowledgeSearchResult[], memories?: GuestMemory[], classification?: ClassificationResult, verificationState?: VerificationState): Promise<Response> {
+  async generate(conversation: Conversation, message: InboundMessage, guestContext?: GuestContext, knowledgeResults?: KnowledgeSearchResult[], memories?: GuestMemory[], classification?: ClassificationResult, verificationState?: VerificationState, history?: Array<{ role: 'user' | 'assistant'; content: string }>): Promise<Response> {
     const startTime = Date.now();
 
     log.debug(
@@ -214,17 +208,14 @@ export class AIResponder implements Responder {
       }
     }
 
-    // 3. Get conversation history
-    const history = await this.getConversationHistory(conversation.id);
-
-    // 4. Get hotel profile
+    // 3. Get hotel profile
     const hotelProfile = await this.getHotelProfile();
 
     // 5. Build the prompt
     // Use translated content for the prompt so the entire context is in the property language
     const promptMessage = (message.metadata?.translatedContent as string) ?? message.content;
     const channelActions = message.metadata?.channelActions as ChannelActionsMetadata | undefined;
-    const messages = this.buildPromptMessages(promptMessage, resolvedClassification, knowledgeContext, history, guestContext, hotelProfile, channelActions, propertyLanguage, memories, verificationState);
+    const messages = this.buildPromptMessages(promptMessage, resolvedClassification, knowledgeContext, history ?? [], guestContext, hotelProfile, channelActions, propertyLanguage, memories, verificationState);
 
     // 6. Generate response
     const response = await this.provider.complete({
@@ -300,17 +291,6 @@ export class AIResponder implements Responder {
   }
 
   /**
-   * Get recent conversation history
-   */
-  private async getConversationHistory(conversationId: string): Promise<Message[]> {
-    const messages = await this.conversationService.getMessages(conversationId, {
-      limit: this.maxContextMessages,
-    });
-
-    return messages;
-  }
-
-  /**
    * Get hotel profile from settings
    */
   private async getHotelProfile(): Promise<HotelProfile | null> {
@@ -324,7 +304,7 @@ export class AIResponder implements Responder {
     currentMessage: string,
     classification: ClassificationResult,
     knowledgeContext: KnowledgeSearchResult[],
-    history: Message[],
+    history: Array<{ role: 'user' | 'assistant'; content: string }>,
     guestContext?: GuestContext,
     hotelProfile?: HotelProfile | null,
     channelActions?: ChannelActionsMetadata,
@@ -512,26 +492,13 @@ export class AIResponder implements Responder {
 
     messages.push({ role: 'system', content: systemContent });
 
-    // Add conversation history
-    // For inbound messages, use translatedContent (property language) so the AI
-    // sees a coherent conversation in the property language
+    // Add conversation history (already mapped to { role, content } by the pipeline)
     for (const msg of history) {
-      const role = msg.direction === 'inbound' ? 'user' : 'assistant';
-      const displayContent = msg.direction === 'inbound' && msg.translatedContent
-        ? msg.translatedContent
-        : msg.content;
-      messages.push({ role, content: displayContent });
+      messages.push(msg);
     }
 
-    // Add current message (if not already in history)
-    // Compare against display content (translated for inbound) to avoid duplicates
-    const lastHistoryMsg = history[history.length - 1];
-    const lastDisplayContent = lastHistoryMsg?.direction === 'inbound' && lastHistoryMsg.translatedContent
-      ? lastHistoryMsg.translatedContent
-      : lastHistoryMsg?.content;
-    if (!lastHistoryMsg || lastDisplayContent !== currentMessage) {
-      messages.push({ role: 'user', content: currentMessage });
-    }
+    // Add current message (history is loaded before saveInboundMessage, so it's never in there)
+    messages.push({ role: 'user', content: currentMessage });
 
     return messages;
   }

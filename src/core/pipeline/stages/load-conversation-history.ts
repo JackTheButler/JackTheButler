@@ -14,7 +14,7 @@ export async function loadConversationHistory(ctx: MessageContext): Promise<void
   if (!ctx.conversation) return;
 
   try {
-    const messages = await conversationService.getMessages(ctx.conversation.id, { limit: 5 });
+    const messages = await conversationService.getMessages(ctx.conversation.id, { limit: 10 });
     if (messages.length > 0) {
       ctx.conversationHistory = messages.map((m) => ({
         role: m.direction === 'inbound' ? 'user' : 'assistant',

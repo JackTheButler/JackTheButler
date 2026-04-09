@@ -77,6 +77,7 @@ export interface Responder {
     knowledgeResults?: KnowledgeSearchResult[],
     memories?: GuestMemory[],
     classification?: ClassificationResult,
-    verificationState?: VerificationState
+    verificationState?: VerificationState,
+    history?: Array<{ role: 'user' | 'assistant'; content: string }>
   ): Promise<Response>;
 }
