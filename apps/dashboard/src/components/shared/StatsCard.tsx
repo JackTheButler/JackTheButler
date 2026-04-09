@@ -2,6 +2,7 @@ import { LucideIcon } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { Card } from '@/components/ui/card';
+import { AppIcon } from '@/components/apps/AppIcon';
 
 const variants = {
   success: 'text-muted-foreground bg-muted',
@@ -34,6 +35,8 @@ interface StatItemProps {
   progress?: number;
   /** Optional action shown as a hint line below the progress bar */
   action?: { hint: string; label: string; onClick: () => void };
+  /** When provided, renders app icons + overflow count instead of a plain number */
+  appIds?: string[];
 }
 
 function StatItem({ label, value, icon: Icon, variant = 'default', subtitle }: StatItemProps) {
@@ -99,7 +102,18 @@ export function StatsColumn({ items }: StatsBarProps) {
                 <item.icon className="w-3.5 h-3.5" />
               </div>
               <p className="text-xs text-muted-foreground flex-1">{item.label}</p>
-              <p className="text-sm font-semibold">{item.value}</p>
+              {item.appIds && item.appIds.length > 0 ? (
+                <div className="flex items-center gap-1">
+                  {item.appIds.slice(0, 2).map((id) => (
+                    <AppIcon key={id} id={id} size="sm" />
+                  ))}
+                  {item.appIds.length > 2 && (
+                    <span className="text-xs font-semibold text-muted-foreground">+{item.appIds.length - 2}</span>
+                  )}
+                </div>
+              ) : (
+                <p className="text-sm font-semibold">{item.value}</p>
+              )}
             </div>
             {item.progress !== undefined && (
               <div className="ml-8 h-1.5 rounded-full bg-border/50 overflow-hidden">

@@ -86,7 +86,7 @@
       "title": "Live Activity",
       "live": "LIVE",
       "allEvents": "All events",
-      "nOfTotal": "{{count}} of {{total}}",
+      "nOfTotal": "{{count}} of {{total}} events",
       "hideAll": "Hide all",
       "showAll": "Show all",
       "loading": "Loading activity...",

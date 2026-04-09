@@ -86,7 +86,7 @@
       "title": "लाइव गतिविधि",
       "live": "लाइव",
       "allEvents": "सभी इवेंट",
-      "nOfTotal": "{{total}} में से {{count}}",
+      "nOfTotal": "{{total}} में से {{count}} घटनाएं",
       "hideAll": "सब छुपाएं",
       "showAll": "सब दिखाएं",
       "loading": "गतिविधि लोड हो रही है...",

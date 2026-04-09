@@ -92,6 +92,7 @@ export const apps: App[] = [
     slug: 'local-ai',
     category: 'ai-provider',
     summary: 'Built-in local AI using Transformers.js, no API keys needed.',
+    logo: '/logos/brain.svg',
     status: 'available',
   },
 

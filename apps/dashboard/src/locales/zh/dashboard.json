@@ -86,7 +86,7 @@
       "title": "实时动态",
       "live": "直播",
       "allEvents": "全部事件",
-      "nOfTotal": "{{total}} 中的 {{count}}",
+      "nOfTotal": "{{total}} 中的 {{count}} 个事件",
       "hideAll": "隐藏全部",
       "showAll": "显示全部",
       "loading": "正在加载...",

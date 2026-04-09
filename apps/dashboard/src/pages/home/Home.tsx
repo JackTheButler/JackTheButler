@@ -49,15 +49,17 @@ export function HomePage() {
     },
     {
       label: t('home.channels'),
-      value: apps?.channel ?? 0,
+      value: apps.channel.length,
       icon: MessageSquare,
-      variant: (apps?.channel ?? 0) > 0 ? 'success' : 'warning',
+      variant: apps.channel.length > 0 ? 'success' : 'warning',
+      appIds: apps.channel,
     },
     {
       label: t('home.apps'),
-      value: (apps?.ai ?? 0) + (apps?.channel ?? 0) + (apps?.pms ?? 0) + (apps?.tool ?? 0),
+      value: apps.ai.length + apps.channel.length + apps.pms.length + apps.tool.length,
       icon: Puzzle,
       variant: 'default',
+      appIds: [...apps.ai, ...apps.pms, ...apps.tool, ...apps.channel],
     },
     {
       label: t('home.knowledge'),
@@ -80,7 +82,7 @@ export function HomePage() {
         },
       }),
     },
-  ] as const;
+  ];
 
   return (
     <PageContainer>

@@ -42,6 +42,8 @@ const iconMapping: Record<string, LucideIcon | string> = {
   pms: 'building',
 
   // AI Providers
+  local: 'brain',
+  'ai-local': 'brain',
   anthropic: 'claude',
   openai: 'openai',
   ollama: 'ollama',

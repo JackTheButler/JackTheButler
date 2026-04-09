@@ -86,7 +86,7 @@
       "title": "النشاط المباشر",
       "live": "مباشر",
       "allEvents": "جميع الأحداث",
-      "nOfTotal": "{{count}} من {{total}}",
+      "nOfTotal": "{{count}} من {{total}} أحداث",
       "hideAll": "إخفاء الكل",
       "showAll": "إظهار الكل",
       "loading": "جارٍ تحميل النشاط...",

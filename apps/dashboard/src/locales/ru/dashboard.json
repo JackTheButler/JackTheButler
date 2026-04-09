@@ -86,7 +86,7 @@
       "title": "Активность",
       "live": "LIVE",
       "allEvents": "Все события",
-      "nOfTotal": "{{count}} из {{total}}",
+      "nOfTotal": "{{count}} из {{total}} событий",
       "hideAll": "Скрыть все",
       "showAll": "Показать все",
       "loading": "Загрузка...",

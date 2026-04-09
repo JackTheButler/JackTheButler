@@ -446,7 +446,7 @@ export const manifest: AIAppManifest = {
   category: 'ai',
   version: '2.0.0',
   description: 'Run AI locally with Transformers.js - embeddings and completion without external APIs',
-  icon: '🏠',
+  icon: 'brain',
   configSchema: [
     {
       key: 'embeddingModel',

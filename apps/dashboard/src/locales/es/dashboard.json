@@ -86,7 +86,7 @@
       "title": "Actividad en Vivo",
       "live": "EN VIVO",
       "allEvents": "Todos los eventos",
-      "nOfTotal": "{{count}} de {{total}}",
+      "nOfTotal": "{{count}} de {{total}} eventos",
       "hideAll": "Ocultar todo",
       "showAll": "Mostrar todo",
       "loading": "Cargando actividad...",

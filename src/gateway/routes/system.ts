@@ -55,10 +55,10 @@ interface SystemStatus {
     embeddingIsLocal: boolean;
   };
   apps: {
-    ai: number;
-    channel: number;
-    pms: number;
-    tool: number;
+    ai: string[];
+    channel: string[];
+    pms: string[];
+    tool: string[];
   };
   knowledgeBase: {
     total: number;
@@ -131,23 +131,23 @@ systemRoutes.get('/status', async (c) => {
 
   // Count active extensions by category and collect active app identifiers
   const allExtensions = registry.getAll();
-  const activeByCategory = {
-    ai: 0,
-    channel: 0,
-    pms: 0,
-    tool: 0,
+  const activeByCategory: { ai: string[]; channel: string[]; pms: string[]; tool: string[] } = {
+    ai: [],
+    channel: [],
+    pms: [],
+    tool: [],
   };
   for (const ext of allExtensions) {
     if (ext.status === 'active') {
       const category = ext.manifest.category as keyof typeof activeByCategory;
       if (category in activeByCategory) {
-        activeByCategory[category]++;
+        activeByCategory[category].push(ext.manifest.id);
       }
     }
   }
 
   // Check for no channels configured
-  if (activeByCategory.channel === 0) {
+  if (activeByCategory.channel.length === 0) {
     issues.push({
       type: 'no_channels',
       severity: 'warning',
