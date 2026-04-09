@@ -43,6 +43,8 @@
     "guestNotAvailable": "Информация о госте недоступна",
     "bookingInfo": "Информация о бронировании",
     "bookedOn": "Забронировано",
-    "source": "Источник"
+    "source": "Источник",
+    "backToReservations": "Назад к бронированиям",
+    "backToReservation": "Назад к бронированию"
   }
 }

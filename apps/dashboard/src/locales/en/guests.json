@@ -20,6 +20,7 @@
     "failedToSave": "Failed to save guest",
     "guestNotFoundDesc": "The guest you're looking for doesn't exist or has been removed.",
     "backToGuests": "Back to Guests",
+    "backToGuest": "Back to Guest",
     "overview": "Overview",
     "stayStatistics": "Stay Statistics",
     "totalStays": "Total Stays",

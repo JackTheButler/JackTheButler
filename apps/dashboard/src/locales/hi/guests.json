@@ -88,6 +88,7 @@
     "notes": "नोट्स",
     "notesPlaceholder": "इस अतिथि के बारे में अतिरिक्त नोट्स...",
     "createGuest": "अतिथि बनाएं",
-    "backToGuests": "अतिथियों पर वापस जाएं"
+    "backToGuests": "अतिथियों पर वापस जाएं",
+    "backToGuest": "अतिथि पर वापस जाएं"
   }
 }

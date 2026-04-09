@@ -43,6 +43,8 @@
     "guestNotAvailable": "Información del huésped no disponible",
     "bookingInfo": "Info de Reserva",
     "bookedOn": "Reservado el",
-    "source": "Fuente"
+    "source": "Fuente",
+    "backToReservations": "Volver a Reservas",
+    "backToReservation": "Volver a la Reserva"
   }
 }

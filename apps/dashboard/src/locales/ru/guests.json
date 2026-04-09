@@ -88,6 +88,7 @@
     "notes": "Заметки",
     "notesPlaceholder": "Дополнительные заметки о госте...",
     "createGuest": "Создать гостя",
-    "backToGuests": "Назад к гостям"
+    "backToGuests": "Назад к гостям",
+    "backToGuest": "Назад к гостю"
   }
 }

@@ -88,6 +88,7 @@
     "notes": "备注",
     "notesPlaceholder": "关于此客人的其他备注...",
     "createGuest": "创建客人",
-    "backToGuests": "返回客人列表"
+    "backToGuests": "返回客人列表",
+    "backToGuest": "返回客人"
   }
 }

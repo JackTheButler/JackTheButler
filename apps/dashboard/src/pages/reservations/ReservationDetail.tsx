@@ -1,8 +1,7 @@
-import { useParams, Link } from 'react-router-dom';
+import { useParams, useLocation, Link } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import {
-  ArrowLeft,
   Calendar,
   User,
   Bed,
@@ -22,7 +21,7 @@ import {
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
-import { PageContainer, EmptyState } from '@/components';
+import { PageContainer, EmptyState, DetailHeader } from '@/components';
 import type { ReservationStatus } from '@/types/api';
 
 interface GuestDetail {
@@ -75,6 +74,8 @@ function InfoRow({ label, value, icon: Icon }: { label: string; value: React.Rea
 export function ReservationDetailPage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
+  const location = useLocation();
+  const backLabel = (location.state as { fromLabel?: string } | null)?.fromLabel ?? t('reservationDetail.backToReservations');
 
   const { data: reservation, isLoading, error } = useQuery({
     queryKey: ['reservation', id],
@@ -112,28 +113,34 @@ export function ReservationDetailPage() {
 
   return (
     <PageContainer>
-      {/* Header */}
-      <div className="flex items-center gap-4 mb-6">
-        <Link
-          to="/reservations"
-          className="p-2 hover:bg-muted rounded-lg transition-colors"
-        >
-          <ArrowLeft className="w-5 h-5 rtl:rotate-180" />
-        </Link>
-        <div className="flex-1">
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl font-semibold">
-              {t('reservationDetail.reservation')} #{reservation.confirmationNumber}
-            </h1>
-            <Badge variant={reservationStatusVariants[reservation.status]} className="capitalize">
+      <DetailHeader
+        backTo="/reservations"
+        backLabel={backLabel}
+        icon={<Calendar className="w-8 h-8" />}
+        title={
+          <span className="flex items-center gap-3 flex-wrap">
+            {t('reservationDetail.reservation')} #{reservation.confirmationNumber}
+            <Badge variant={reservationStatusVariants[reservation.status]} className="capitalize text-sm font-normal">
               {reservation.status.replace('_', ' ')}
             </Badge>
-          </div>
-          <p className="text-muted-foreground">
-            {reservation.roomType} • {nights} {nightsLabel}
-          </p>
-        </div>
-      </div>
+          </span>
+        }
+        subtitle={[
+          reservation.roomType && reservation.roomType.toLowerCase() !== 'unknown' ? reservation.roomType : null,
+          `${nights} ${nightsLabel}`,
+        ].filter(Boolean).join(' • ')}
+        action={
+          reservation.guest ? (
+            <Link
+              to={`/guests/${reservation.guest.id}`}
+              state={{ fromLabel: t('reservationDetail.backToReservation') }}
+              className="inline-flex items-center gap-1.5 text-sm text-primary hover:underline"
+            >
+              {reservation.guest.firstName} {reservation.guest.lastName}
+            </Link>
+          ) : undefined
+        }
+      />
 
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
         {/* Main Info */}
@@ -325,6 +332,7 @@ export function ReservationDetailPage() {
                   <div>
                     <Link
                       to={`/guests/${reservation.guest.id}`}
+                      state={{ fromLabel: t('reservationDetail.backToReservation') }}
                       className="text-lg font-semibold hover:text-primary"
                     >
                       {reservation.guest.firstName} {reservation.guest.lastName}
@@ -378,6 +386,7 @@ export function ReservationDetailPage() {
 
                   <Link
                     to={`/guests/${reservation.guest.id}`}
+                    state={{ fromLabel: t('reservationDetail.backToReservation') }}
                     className="block text-sm text-primary hover:underline"
                   >
                     {t('reservationDetail.viewFullProfile')}

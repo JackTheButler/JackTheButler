@@ -88,6 +88,7 @@
     "notes": "Notas",
     "notesPlaceholder": "Notas adicionales sobre este huésped...",
     "createGuest": "Crear Huésped",
-    "backToGuests": "Volver a Huéspedes"
+    "backToGuests": "Volver a Huéspedes",
+    "backToGuest": "Volver al Huésped"
   }
 }

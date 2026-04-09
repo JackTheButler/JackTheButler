@@ -53,7 +53,7 @@ export function FilterTabs<T extends string>({
   }, [i18n.language, updateIndicator]);
 
   return (
-    <div ref={containerRef} className={cn('flex gap-1 flex-nowrap relative', className)}>
+    <div ref={containerRef} className={cn('flex gap-1 flex-nowrap relative overflow-x-auto scrollbar-none', className)}>
       {/* Sliding indicator */}
       <div
         className={cn(

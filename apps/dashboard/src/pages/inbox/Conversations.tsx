@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQuery } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
 import { api } from '@/lib/api';
@@ -11,8 +12,9 @@ import type { Conversation, ConversationState } from '@/types/api';
 
 export function ConversationsPage() {
   const { t } = useTranslation();
+  const [searchParams] = useSearchParams();
   const [filter, setFilter] = useState<ConversationState | 'all'>('all');
-  const [selectedId, setSelectedId] = useState<string | null>(null);
+  const [selectedId, setSelectedId] = useState<string | null>(searchParams.get('id'));
 
   const { data, isLoading } = useQuery({
     queryKey: ['conversations', filter],
@@ -32,12 +34,14 @@ export function ConversationsPage() {
       {/* Sidebar */}
       <div className={`w-full md:w-80 border-e bg-card flex-col ${selectedId ? 'hidden md:flex' : 'flex'}`}>
         {/* Filters */}
-        <div className="p-3 border-b">
-          <FilterTabs
-            options={conversationStateFilters}
-            value={filter}
-            onChange={setFilter}
-          />
+        <div className="px-3 py-3 border-b overflow-x-auto scrollbar-none">
+          <div className="min-w-fit">
+            <FilterTabs
+              options={conversationStateFilters}
+              value={filter}
+              onChange={setFilter}
+            />
+          </div>
         </div>
 
         {/* List */}

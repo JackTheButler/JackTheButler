@@ -1,7 +1,8 @@
 import { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
-import { PageContainer, EmptyState } from '@/components';
+import { PageContainer, EmptyState, DetailHeader } from '@/components';
+import { DataTable, type Column } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
@@ -18,15 +19,6 @@ import { Alert, AlertDescription } from '@/components/ui/alert';
 import { Spinner } from '@/components/ui/spinner';
 import { Tabs } from '@/components/ui/tabs';
 import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
-import {
-  ArrowLeft,
   AlertCircle,
   Pencil,
   Save,
@@ -113,6 +105,8 @@ export function GuestProfilePage() {
   const { t } = useTranslation();
   const { id } = useParams<{ id: string }>();
   const navigate = useNavigate();
+  const location = useLocation();
+  const backLabel = (location.state as { fromLabel?: string } | null)?.fromLabel ?? t('guestProfile.backToGuests');
   const { can } = usePermissions();
   const canManageGuests = can(PERMISSIONS.GUESTS_MANAGE);
   const [guest, setGuest] = useState<GuestWithCounts | null>(null);
@@ -347,77 +341,63 @@ export function GuestProfilePage() {
         </Alert>
       )}
 
-      {/* Back Button */}
-      <Link
-        to="/guests"
-        className="inline-flex items-center gap-2 text-sm text-muted-foreground hover:text-foreground mb-6"
-      >
-        <ArrowLeft className="w-4 h-4 rtl:rotate-180" />
-        {t('guestProfile.backToGuests')}
-      </Link>
-
-      {/* Header */}
-      <div className="flex items-start justify-between mb-6">
-        <div className="flex items-center gap-4">
-          <div className="w-16 h-16 rounded-full bg-muted flex items-center justify-center">
-            <User className="w-8 h-8 text-muted-foreground" />
-          </div>
-          <div>
-            <div className="flex items-center gap-3">
-              <h1 className="text-2xl font-semibold">
-                {guest.firstName} {guest.lastName}
-              </h1>
-              {guest.vipStatus && guest.vipStatus !== 'none' && (
-                <Badge variant="gold">
-                  <Crown className="w-3 h-3 me-1" />
-                  {guest.vipStatus.toUpperCase()}
-                </Badge>
-              )}
-              {guest.loyaltyTier && guest.loyaltyTier !== 'none' && (
-                <Badge variant="outline">{guest.loyaltyTier}</Badge>
-              )}
-            </div>
-            <div className="flex items-center gap-4 mt-1 text-sm text-muted-foreground">
-              {guest.email && (
-                <span className="flex items-center gap-1">
-                  <Mail className="w-4 h-4" />
-                  {guest.email}
-                </span>
-              )}
-              {guest.phone && (
-                <span className="flex items-center gap-1">
-                  <Phone className="w-4 h-4" />
-                  {guest.phone}
-                </span>
-              )}
-              <span className="flex items-center gap-1">
-                <Globe className="w-4 h-4" />
-                {guest.language.toUpperCase()}
-              </span>
-            </div>
-          </div>
-        </div>
-        {canManageGuests && (
-          <div className="flex gap-2">
-            {editing ? (
-              <>
-                <Button variant="outline" onClick={() => setEditing(false)}>
-                  {t('common.cancel')}
-                </Button>
-                <Button onClick={handleSave} disabled={saving}>
-                  {saving ? <Spinner size="sm" className="me-2" /> : <Save className="w-4 h-4 me-2" />}
-                  {t('common.save')}
-                </Button>
-              </>
-            ) : (
-              <Button variant="outline" onClick={() => setEditing(true)}>
-                <Pencil className="w-4 h-4 me-2" />
-                {t('common.edit')}
-              </Button>
+      <DetailHeader
+        backTo="/guests"
+        backLabel={backLabel}
+        icon={<User className="w-8 h-8 text-muted-foreground" />}
+        title={
+          <span className="flex items-center gap-3 flex-wrap">
+            {guest.firstName} {guest.lastName}
+            {guest.vipStatus && guest.vipStatus !== 'none' && (
+              <Badge variant="gold">
+                <Crown className="w-3 h-3 me-1" />
+                {guest.vipStatus.toUpperCase()}
+              </Badge>
             )}
+            {guest.loyaltyTier && guest.loyaltyTier !== 'none' && (
+              <Badge variant="outline">{guest.loyaltyTier}</Badge>
+            )}
+          </span>
+        }
+        subtitle={
+          <div className="flex items-center gap-4 text-sm">
+            {guest.email && (
+              <span className="flex items-center gap-1">
+                <Mail className="w-4 h-4" />
+                {guest.email}
+              </span>
+            )}
+            {guest.phone && (
+              <span className="flex items-center gap-1">
+                <Phone className="w-4 h-4" />
+                {guest.phone}
+              </span>
+            )}
+            <span className="flex items-center gap-1">
+              <Globe className="w-4 h-4" />
+              {guest.language.toUpperCase()}
+            </span>
           </div>
-        )}
-      </div>
+        }
+        actions={canManageGuests ? (
+          editing ? (
+            <>
+              <Button variant="outline" onClick={() => setEditing(false)}>
+                {t('common.cancel')}
+              </Button>
+              <Button onClick={handleSave} disabled={saving}>
+                {saving ? <Spinner size="sm" className="me-2" /> : <Save className="w-4 h-4 me-2" />}
+                {t('common.save')}
+              </Button>
+            </>
+          ) : (
+            <Button variant="outline" onClick={() => { setEditing(true); setActiveTab('overview'); }}>
+              <Pencil className="w-4 h-4 me-2" />
+              {t('common.edit')}
+            </Button>
+          )
+        ) : undefined}
+      />
 
       {/* Tabs */}
       <Tabs
@@ -767,7 +747,7 @@ export function GuestProfilePage() {
                               <div className="flex items-center gap-1.5 text-xs text-muted-foreground">
                                 <span className="font-medium">
                                   {memory.source === 'ai_extracted' && memory.conversationId ? (
-                                    <Link to={`/inbox/${memory.conversationId}`} className="hover:underline">
+                                    <Link to={`/inbox?id=${memory.conversationId}`} className="hover:underline">
                                       AI
                                     </Link>
                                   ) : memory.source === 'ai_extracted' ? (
@@ -807,99 +787,82 @@ export function GuestProfilePage() {
       )}
 
       {activeTab === 'reservations' && (
-        <Card>
-          <CardContent className="pt-6">
-            {reservations.length === 0 ? (
-              <EmptyState
-                icon={Hotel}
-                title={t('guestProfile.noReservations')}
-                description={t('guestProfile.noReservationsDesc')}
-              />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('guestProfile.confirmation')}</TableHead>
-                    <TableHead>{t('common.room')}</TableHead>
-                    <TableHead>{t('reservations.arrival')}</TableHead>
-                    <TableHead>{t('reservations.departure')}</TableHead>
-                    <TableHead>{t('common.status')}</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {reservations.map((res) => (
-                    <TableRow key={res.id}>
-                      <TableCell className="font-medium">{res.confirmationNumber}</TableCell>
-                      <TableCell>
-                        {res.roomNumber ? (
-                          <span>
-                            {res.roomNumber} <span className="text-muted-foreground/70">({res.roomType})</span>
-                          </span>
-                        ) : (
-                          <span className="text-muted-foreground/70">{res.roomType}</span>
-                        )}
-                      </TableCell>
-                      <TableCell>{formatDate(res.arrivalDate)}</TableCell>
-                      <TableCell>{formatDate(res.departureDate)}</TableCell>
-                      <TableCell>
-                        <Badge variant={reservationStatusVariants[res.status]} className="capitalize">
-                          {res.status.replace('_', ' ')}
-                        </Badge>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        <DataTable
+          data={reservations}
+          keyExtractor={(res) => res.id}
+          onRowClick={(res) => navigate(`/reservations/${res.id}`, { state: { fromLabel: t('guestProfile.backToGuest') } })}
+          emptyState={<EmptyState icon={Hotel} title={t('guestProfile.noReservations')} description={t('guestProfile.noReservationsDesc')} />}
+          columns={[
+            {
+              key: 'confirmationNumber',
+              header: t('guestProfile.confirmation'),
+              render: (res) => <span className="text-sm font-medium">{res.confirmationNumber}</span>,
+            },
+            {
+              key: 'room',
+              header: t('common.room'),
+              render: (res) => res.roomNumber ? (
+                <span className="text-sm">{res.roomNumber} <span className="text-muted-foreground">({res.roomType})</span></span>
+              ) : (
+                <span className="text-sm text-muted-foreground">{res.roomType}</span>
+              ),
+            },
+            {
+              key: 'arrivalDate',
+              header: t('reservations.arrival'),
+              render: (res) => <span className="text-sm text-muted-foreground">{formatDate(res.arrivalDate)}</span>,
+            },
+            {
+              key: 'departureDate',
+              header: t('reservations.departure'),
+              render: (res) => <span className="text-sm text-muted-foreground">{formatDate(res.departureDate)}</span>,
+            },
+            {
+              key: 'status',
+              header: t('common.status'),
+              render: (res) => (
+                <Badge variant={reservationStatusVariants[res.status]} className="capitalize">
+                  {res.status.replace('_', ' ')}
+                </Badge>
+              ),
+            },
+          ] as Column<ReservationSummary>[]}
+        />
       )}
 
       {activeTab === 'conversations' && (
-        <Card>
-          <CardContent className="pt-6">
-            {conversations.length === 0 ? (
-              <EmptyState
-                icon={MessageSquare}
-                title={t('guestProfile.noConversations')}
-                description={t('guestProfile.noConversationsDesc')}
-              />
-            ) : (
-              <Table>
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>{t('guestProfile.channel')}</TableHead>
-                    <TableHead>{t('common.status')}</TableHead>
-                    <TableHead>{t('guestProfile.lastMessage')}</TableHead>
-                    <TableHead>{t('common.created')}</TableHead>
-                    <TableHead></TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {conversations.map((conv) => (
-                    <TableRow key={conv.id}>
-                      <TableCell className="capitalize">{conv.channelType}</TableCell>
-                      <TableCell>
-                        <Badge variant={conversationStateVariants[conv.state]}>
-                          {conv.state}
-                        </Badge>
-                      </TableCell>
-                      <TableCell>{formatDate(conv.lastMessageAt)}</TableCell>
-                      <TableCell>{formatDate(conv.createdAt)}</TableCell>
-                      <TableCell>
-                        <Link to={`/inbox/${conv.id}`}>
-                          <Button variant="ghost" size="sm">
-                            {t('guestProfile.view')}
-                          </Button>
-                        </Link>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            )}
-          </CardContent>
-        </Card>
+        <DataTable
+          data={conversations}
+          keyExtractor={(conv) => conv.id}
+          onRowClick={(conv) => navigate(`/inbox?id=${conv.id}`, { state: { fromLabel: t('conversations.backToChat') } })}
+          emptyState={<EmptyState icon={MessageSquare} title={t('guestProfile.noConversations')} description={t('guestProfile.noConversationsDesc')} />}
+          columns={[
+            {
+              key: 'channelType',
+              header: t('guestProfile.channel'),
+              render: (conv) => <span className="text-sm font-medium capitalize">{conv.channelType}</span>,
+            },
+            {
+              key: 'state',
+              header: t('common.status'),
+              render: (conv) => (
+                <Badge variant={conversationStateVariants[conv.state]}>
+                  {conv.state}
+                </Badge>
+              ),
+            },
+            {
+              key: 'lastMessageAt',
+              header: t('guestProfile.lastMessage'),
+              render: (conv) => <span className="text-sm text-muted-foreground">{formatDate(conv.lastMessageAt)}</span>,
+            },
+            {
+              key: 'createdAt',
+              header: t('common.created'),
+              render: (conv) => <span className="text-sm text-muted-foreground">{formatDate(conv.createdAt)}</span>,
+            },
+          ] as Column<Conversation>[]}
+        />
       )}
       <ConfirmDialog
         open={!!memoryToDelete}

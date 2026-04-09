@@ -1,7 +1,8 @@
 import { useState, useRef, useEffect, useMemo } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ChevronDown, Languages, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Languages, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle, SquareArrowOutUpRight } from 'lucide-react';
+import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
 import { formatTime, formatDateTime } from '@/lib/formatters';
@@ -177,7 +178,18 @@ export function ConversationView({ id, onBack }: Props) {
             <ChannelIcon channel={conv.channelType} size="lg" boxed inverted />
             <div>
               <h2 className="font-medium text-foreground">
-                {conv.guestName || formatChannelId(conv.channelType, conv.channelId)}
+                {conv.guestId ? (
+                  <Link
+                    to={`/guests/${conv.guestId}`}
+                    state={{ fromLabel: t('conversations.backToChat') }}
+                    className="inline-flex items-center gap-1 group hover:text-foreground/80 transition-colors"
+                  >
+                    {conv.guestName || formatChannelId(conv.channelType, conv.channelId)}
+                    <SquareArrowOutUpRight className="w-3.5 h-3.5 opacity-0 group-hover:opacity-100 transition-opacity" />
+                  </Link>
+                ) : (
+                  conv.guestName || formatChannelId(conv.channelType, conv.channelId)
+                )}
               </h2>
               {(conv.guestLanguage || conv.currentIntent) && (
                 <div className="flex items-center gap-2">

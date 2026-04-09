@@ -43,6 +43,8 @@
     "guestNotAvailable": "客人信息不可用",
     "bookingInfo": "预订信息",
     "bookedOn": "预订日期",
-    "source": "来源"
+    "source": "来源",
+    "backToReservations": "返回预订列表",
+    "backToReservation": "返回预订"
   }
 }

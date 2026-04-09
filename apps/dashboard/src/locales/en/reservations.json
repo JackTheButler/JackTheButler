@@ -43,6 +43,8 @@
     "guestNotAvailable": "Guest information not available",
     "bookingInfo": "Booking Info",
     "bookedOn": "Booked On",
-    "source": "Source"
+    "source": "Source",
+    "backToReservations": "Back to Reservations",
+    "backToReservation": "Back to Reservation"
   }
 }

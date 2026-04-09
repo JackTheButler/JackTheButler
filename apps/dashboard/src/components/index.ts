@@ -6,6 +6,7 @@ export { PageHeader } from './layout/PageHeader';
 // Data display
 export { StatsBar, StatsCard, StatsGrid, StatsColumn } from './shared/StatsCard';
 export { EmptyState } from './shared/EmptyState';
+export { DetailHeader } from './shared/DetailHeader';
 export { DataTable } from './DataTable';
 export type { Column, DataTableProps, SearchConfig } from './DataTable';
 export { ExpandableSearch } from './shared/ExpandableSearch';

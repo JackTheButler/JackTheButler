@@ -43,6 +43,8 @@
     "guestNotAvailable": "अतिथि जानकारी उपलब्ध नहीं",
     "bookingInfo": "बुकिंग जानकारी",
     "bookedOn": "बुक किया गया",
-    "source": "स्रोत"
+    "source": "स्रोत",
+    "backToReservations": "आरक्षणों पर वापस जाएं",
+    "backToReservation": "आरक्षण पर वापस जाएं"
   }
 }
