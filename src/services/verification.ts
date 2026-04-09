@@ -161,8 +161,6 @@ export async function lookupReservationByConfirmation(
       const normalized = await pmsAdapter.getReservationByConfirmation(confirmationNumber);
 
       if (!normalized) {
-        // PMS responded but reservation does not exist — authoritative not found
-        log.debug({ confirmationNumber }, 'verification: PMS returned not found');
         return null;
       }
 
@@ -174,8 +172,6 @@ export async function lookupReservationByConfirmation(
       // PMS unavailable (network error, timeout, etc.) — fall back to local
       log.warn({ err, confirmationNumber }, 'verification: PMS lookup failed, falling back to local DB');
     }
-  } else {
-    log.debug({ confirmationNumber }, 'verification: no PMS configured, using local DB');
   }
 
   // Local fallback
@@ -211,7 +207,6 @@ export async function lookupReservationsByEmail(
       const normalizedList = await pmsAdapter.searchReservations({ guestEmail: normalizedEmail });
 
       if (normalizedList.length === 0) {
-        log.debug({ email: normalizedEmail }, 'verification: PMS returned no reservations for email');
         return [];
       }
 
@@ -226,8 +221,6 @@ export async function lookupReservationsByEmail(
     } catch (err) {
       log.warn({ err, email: normalizedEmail }, 'verification: PMS lookup by email failed, falling back to local DB');
     }
-  } else {
-    log.debug({ email: normalizedEmail }, 'verification: no PMS configured, using local DB');
   }
 
   // Local fallback — find guest by email, then their reservations

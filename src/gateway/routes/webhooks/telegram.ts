@@ -95,6 +95,11 @@ async function processUpdateAsync(update: TelegramUpdate): Promise<void> {
     return;
   }
 
+  if (update.message.text?.trim() === '/start') {
+    log.debug({ updateId: update.update_id }, 'Ignoring /start command');
+    return;
+  }
+
   await handleIncomingMessage(update.message);
 }
 
