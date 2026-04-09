@@ -108,7 +108,7 @@ export class GuestContextService {
       return this.emptyContext();
     }
 
-    return this.buildContext(guest, conversationId);
+    return this.buildContext(guest, conversationId, conversation.reservationId ?? undefined);
   }
 
   /**
@@ -173,9 +173,15 @@ export class GuestContextService {
   /**
    * Build full guest context
    */
-  private async buildContext(guest: Guest, conversationId?: string): Promise<GuestContext> {
-    // Get active reservation
-    let reservation = await this.findActiveReservation(guest.id);
+  private async buildContext(guest: Guest, conversationId?: string, reservationId?: string): Promise<GuestContext> {
+    // Use pinned reservation from conversation if available, otherwise find active one
+    let reservation: Reservation | null = null;
+    if (reservationId) {
+      const [pinned] = await db.select().from(reservations).where(eq(reservations.id, reservationId)).limit(1);
+      reservation = pinned ?? null;
+    } else {
+      reservation = await this.findActiveReservation(guest.id);
+    }
 
     // Refresh from PMS if stale
     if (reservation) {

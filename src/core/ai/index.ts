@@ -146,10 +146,11 @@ export function getResponder(): Responder {
       knowledgeResults?: KnowledgeSearchResult[],
       memories?: GuestMemory[],
       classification?: ClassificationResult,
-      verificationState?: import('@/services/verification.js').VerificationState
+      verificationState?: import('@/services/verification.js').VerificationState,
+      history?: Array<{ role: 'user' | 'assistant'; content: string }>
     ): Promise<Response> {
       const responder = await getResponderAsync();
-      return responder.generate(conversation, message, guestContext, knowledgeResults, memories, classification, verificationState);
+      return responder.generate(conversation, message, guestContext, knowledgeResults, memories, classification, verificationState, history);
     },
   };
 }
@@ -174,8 +175,9 @@ export const defaultResponder: Responder = {
     knowledgeResults?: KnowledgeSearchResult[],
     memories?: GuestMemory[],
     classification?: ClassificationResult,
-    verificationState?: import('@/services/verification.js').VerificationState
+    verificationState?: import('@/services/verification.js').VerificationState,
+    history?: Array<{ role: 'user' | 'assistant'; content: string }>
   ): Promise<Response> {
-    return getResponder().generate(conversation, message, guestContext, knowledgeResults, memories, classification, verificationState);
+    return getResponder().generate(conversation, message, guestContext, knowledgeResults, memories, classification, verificationState, history);
   },
 };

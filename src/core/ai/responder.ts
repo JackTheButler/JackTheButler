@@ -217,6 +217,9 @@ export class AIResponder implements Responder {
     const channelActions = message.metadata?.channelActions as ChannelActionsMetadata | undefined;
     const messages = this.buildPromptMessages(promptMessage, resolvedClassification, knowledgeContext, history ?? [], guestContext, hotelProfile, channelActions, propertyLanguage, memories, verificationState);
 
+    const promptPreview = messages.map((m) => `[${m.role.toUpperCase()}]\n${m.content}`).join('\n\n---\n\n');
+    log.info(`\n\n=== AI PROMPT (conversation: ${conversation.id}) ===\n\n${promptPreview}\n\n===================================================\n`);
+
     // 6. Generate response
     const response = await this.provider.complete({
       messages,
