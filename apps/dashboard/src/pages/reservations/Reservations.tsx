@@ -8,7 +8,6 @@ import {
   LogOut,
   Home,
   Users,
-  ChevronRight,
   Crown,
 } from 'lucide-react';
 import { api } from '@/lib/api';
@@ -144,14 +143,6 @@ export function ReservationsPage() {
         <Badge variant={reservationStatusVariants[reservation.status]} className="capitalize">
           {reservation.status.replace('_', ' ')}
         </Badge>
-      ),
-    },
-    {
-      key: 'actions',
-      header: '',
-      className: 'w-10',
-      render: () => (
-        <ChevronRight className="w-5 h-5 text-muted-foreground rtl:rotate-180" />
       ),
     },
   ];

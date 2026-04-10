@@ -13,7 +13,6 @@ import {
   Crown,
   Star,
   UserPlus,
-  ChevronRight,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDate, formatCurrency } from '@/lib/formatters';
@@ -38,6 +37,8 @@ export function GuestsPage() {
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [error, setError] = useState<string | null>(null);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   useEffect(() => {
     if (canManageGuests) {
@@ -61,13 +62,15 @@ export function GuestsPage() {
   const { data, isLoading } = useFilteredQuery<{ guests: Guest[]; total: number }>({
     queryKey: 'guests',
     endpoint: '/guests',
-    params: { search: searchQuery, limit: 50 },
+    params: { search: searchQuery, limit: pageSize, offset: (page - 1) * pageSize },
   });
 
   const guests = data?.guests || [];
+  const total = data?.total ?? 0;
 
   const handleSearch = () => {
     setSearchQuery(search);
+    setPage(1);
   };
 
   const columns: Column<Guest>[] = [
@@ -153,15 +156,10 @@ export function GuestsPage() {
     {
       key: 'lastStayDate',
       header: t('guests.lastStay'),
+      className: 'min-w-[140px]',
       render: (guest) => (
         <span className="text-muted-foreground text-sm">{formatDate(guest.lastStayDate)}</span>
       ),
-    },
-    {
-      key: 'actions',
-      header: '',
-      className: 'w-10',
-      render: () => <ChevronRight className="w-4 h-4 text-muted-foreground rtl:rotate-180" />,
     },
   ];
 
@@ -193,11 +191,18 @@ export function GuestsPage() {
           value: search,
           onChange: setSearch,
           onSearch: handleSearch,
-          onClear: () => setSearchQuery(''),
+          onClear: () => { setSearchQuery(''); setPage(1); },
           placeholder: t('guests.searchGuests'),
         }}
         loading={isLoading}
         onRowClick={(guest) => navigate(`/guests/${guest.id}`)}
+        pagination={{
+          page,
+          pageSize,
+          total,
+          onPageChange: setPage,
+          onPageSizeChange: (size) => { setPageSize(size); setPage(1); },
+        }}
         emptyState={
           <EmptyState
             icon={Users}

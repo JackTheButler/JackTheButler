@@ -1,4 +1,4 @@
-import { useQuery, UseQueryOptions } from '@tanstack/react-query';
+import { useQuery, keepPreviousData, UseQueryOptions } from '@tanstack/react-query';
 import { api } from '@/lib/api';
 import { buildUrl } from '@/lib/query';
 
@@ -41,6 +41,7 @@ export function useFilteredQuery<TData>({
   return useQuery<TData>({
     queryKey: fullQueryKey,
     queryFn: () => api.get<TData>(buildUrl(endpoint, params)),
+    placeholderData: keepPreviousData,
     refetchInterval,
     ...options,
   });

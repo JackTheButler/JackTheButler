@@ -296,7 +296,8 @@ export function DataTable<T>({
       </div>
 
       {/* Real table — scrolls horizontally; thead is invisible but holds column widths */}
-      <div ref={scrollRef} className="overflow-x-auto">
+      {/* -mt-10 matches h-10 on the hidden thead so there is no gap before JS runs */}
+      <div ref={scrollRef} className="overflow-x-auto -mt-10">
         <Table>
           <thead ref={realTheadRef} className="invisible">
             <tr>
