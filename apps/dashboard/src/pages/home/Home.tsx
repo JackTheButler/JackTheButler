@@ -3,6 +3,7 @@ import { Bot, MessageSquare, Cpu, Puzzle, Book, Brain } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { useQueryClient } from '@tanstack/react-query';
 import { PageContainer, PageHeader, StatsColumn, ActionItems, DemoDataCard } from '@/components';
+import type { StatItemProps } from '@/components';
 import { AnalyticsCards } from '@/components/home/AnalyticsCards';
 import { ActivityTicker } from '@/components/home/ActivityTicker';
 import { useSystemStatus } from '@/hooks/useSystemStatus';
@@ -34,7 +35,7 @@ export function HomePage() {
     }
   }
 
-  const stats = [
+  const stats: StatItemProps[] = [
     {
       label: t('home.aiProvider'),
       value: providers?.completion ?? t('common.none'),

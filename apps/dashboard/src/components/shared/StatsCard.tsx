@@ -25,7 +25,7 @@ const progressColors = {
   default: 'bg-primary',
 };
 
-interface StatItemProps {
+export interface StatItemProps {
   label: string;
   value: number | string;
   icon: LucideIcon;

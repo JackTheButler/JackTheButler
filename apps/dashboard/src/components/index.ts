@@ -5,6 +5,7 @@ export { PageHeader } from './layout/PageHeader';
 
 // Data display
 export { StatsBar, StatsCard, StatsGrid, StatsColumn } from './shared/StatsCard';
+export type { StatItemProps } from './shared/StatsCard';
 export { EmptyState } from './shared/EmptyState';
 export { DetailHeader } from './shared/DetailHeader';
 export { DataTable } from './DataTable';
