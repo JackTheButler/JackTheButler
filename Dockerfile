@@ -72,8 +72,8 @@ ARG VERSION=dev
 
 WORKDIR /app
 
-# Install build dependencies for better-sqlite3 and runtime deps for ONNX
-RUN apt-get update && apt-get install -y python3 make g++ procps && rm -rf /var/lib/apt/lists/*
+# Install runtime deps (procps for health check)
+RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm for production deps
 RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
@@ -84,9 +84,12 @@ COPY --from=backend-builder /app/packages ./packages
 COPY apps/dashboard/package.json ./apps/dashboard/
 COPY apps/webchat/package.json ./apps/webchat/
 
-# Install production dependencies only and build native modules
+# Install production dependencies only
 # --ignore-scripts prevents prepare scripts from running tsc (devDeps not available in prod)
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts && npm rebuild better-sqlite3
+RUN pnpm install --prod --frozen-lockfile --ignore-scripts
+
+# Copy pre-built better-sqlite3 native binary from base (same platform, already compiled)
+COPY --from=base /app/node_modules/better-sqlite3/build ./node_modules/better-sqlite3/build
 
 # Copy @jack workspace packages from builder (workspace symlinks are not reliable in prod stage)
 COPY --from=backend-builder /app/node_modules/@jack ./node_modules/@jack
