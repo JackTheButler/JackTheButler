@@ -3,11 +3,9 @@
 # Run: docker run -d -p 3000:3000 -v jack-data:/app/data jack
 
 # ===================
-# Build Stage
+# Base: install all deps (shared by both builders)
 # ===================
-FROM node:22-slim AS builder
-
-ARG VERSION=dev
+FROM node:22-slim AS base
 
 WORKDIR /app
 
@@ -27,21 +25,37 @@ COPY apps/webchat/package.json ./apps/webchat/
 # Install all dependencies
 RUN pnpm install --frozen-lockfile && npm rebuild better-sqlite3
 
-# Copy remaining source (packages/ already copied above)
+# ===================
+# Shared: build @jack/shared (required by backend, plugins, and dashboard)
+# ===================
+FROM base AS shared-builder
+
+RUN pnpm --filter @jack/shared build
+
+# ===================
+# Backend: plugins + TypeScript (runs in parallel with frontend-builder)
+# ===================
+FROM shared-builder AS backend-builder
+
+ARG VERSION=dev
+
 COPY tsconfig.json ./
 COPY src ./src
 COPY migrations ./migrations
-COPY apps/dashboard ./apps/dashboard
-COPY apps/webchat ./apps/webchat
-
-# Build shared package first (required by backend, plugins, and dashboard)
-RUN pnpm --filter @jack/shared build
 
 # Build all plugin packages
 RUN pnpm --filter '@jack-plugins/*' build
 
 # Build backend TypeScript
 RUN pnpm build
+
+# ===================
+# Frontend: dashboard + webchat (runs in parallel with backend-builder)
+# ===================
+FROM shared-builder AS frontend-builder
+
+COPY apps/dashboard ./apps/dashboard
+COPY apps/webchat ./apps/webchat
 
 # Build dashboard
 RUN pnpm --filter @jack/dashboard build
@@ -64,9 +78,9 @@ RUN apt-get update && apt-get install -y python3 make g++ procps && rm -rf /var/
 # Install pnpm for production deps
 RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 
-# Copy workspace manifests — packages/ from builder includes package.json + built dist/
+# Copy workspace manifests — packages/ from backend-builder includes package.json + built dist/
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
-COPY --from=builder /app/packages ./packages
+COPY --from=backend-builder /app/packages ./packages
 COPY apps/dashboard/package.json ./apps/dashboard/
 COPY apps/webchat/package.json ./apps/webchat/
 
@@ -75,19 +89,19 @@ COPY apps/webchat/package.json ./apps/webchat/
 RUN pnpm install --prod --frozen-lockfile --ignore-scripts && npm rebuild better-sqlite3
 
 # Copy @jack workspace packages from builder (workspace symlinks are not reliable in prod stage)
-COPY --from=builder /app/node_modules/@jack ./node_modules/@jack
+COPY --from=backend-builder /app/node_modules/@jack ./node_modules/@jack
 
 # Copy built backend
-COPY --from=builder /app/dist ./dist
+COPY --from=backend-builder /app/dist ./dist
 
 # Copy migrations folder
-COPY --from=builder /app/migrations ./migrations
+COPY --from=backend-builder /app/migrations ./migrations
 
 # Copy built dashboard
-COPY --from=builder /app/apps/dashboard/dist ./dashboard
+COPY --from=frontend-builder /app/apps/dashboard/dist ./dashboard
 
 # Copy built webchat widget
-COPY --from=builder /app/apps/webchat/dist ./widget
+COPY --from=frontend-builder /app/apps/webchat/dist ./widget
 
 # Create data directory
 RUN mkdir -p /app/data
