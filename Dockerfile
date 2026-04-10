@@ -15,7 +15,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 
 # Copy workspace manifests for dependency install
 # packages/ is copied whole so new plugins don't require Dockerfile changes
@@ -62,7 +62,7 @@ WORKDIR /app
 RUN apt-get update && apt-get install -y python3 make g++ procps && rm -rf /var/lib/apt/lists/*
 
 # Install pnpm for production deps
-RUN corepack enable && corepack prepare pnpm@latest --activate
+RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
 
 # Copy workspace manifests — packages/ from builder includes package.json + built dist/
 COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
