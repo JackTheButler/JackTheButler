@@ -1,14 +1,24 @@
 import * as React from 'react';
+import { ChevronLeft, ChevronRight } from 'lucide-react';
 import { Card } from '@/components/ui/card';
 import {
   Table,
   TableBody,
   TableCell,
+  TableFooter,
   TableHead,
   TableHeader,
   TableRow,
 } from '@/components/ui/table';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Button } from '@/components/ui/button';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
 import { ExpandableSearch } from './shared/ExpandableSearch';
 import { cn } from '@/lib/utils';
 
@@ -27,6 +37,15 @@ export interface SearchConfig {
   placeholder?: string;
 }
 
+export interface PaginationConfig {
+  page: number;
+  pageSize: number;
+  total: number;
+  pageSizeOptions?: number[];
+  onPageChange: (page: number) => void;
+  onPageSizeChange?: (pageSize: number) => void;
+}
+
 export interface DataTableProps<T> {
   data: T[];
   columns: Column<T>[];
@@ -39,6 +58,7 @@ export interface DataTableProps<T> {
   skeletonRows?: number;
   onRowClick?: (row: T) => void;
   rowClassName?: (row: T) => string | undefined;
+  pagination?: PaginationConfig;
 }
 
 function FilterBar({ filters, search }: { filters?: React.ReactNode; search?: SearchConfig }) {
@@ -61,6 +81,84 @@ function FilterBar({ filters, search }: { filters?: React.ReactNode; search?: Se
         />
       )}
     </div>
+  );
+}
+
+const DEFAULT_PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
+
+function TablePager({ pagination, columnCount }: { pagination: PaginationConfig; columnCount: number }) {
+  const { page, pageSize, total, pageSizeOptions = DEFAULT_PAGE_SIZE_OPTIONS, onPageChange, onPageSizeChange } = pagination;
+  const totalPages = Math.max(1, Math.ceil(total / pageSize));
+  const [inputValue, setInputValue] = React.useState(String(page));
+
+  React.useEffect(() => { setInputValue(String(page)); }, [page]);
+
+  const commit = () => {
+    const n = parseInt(inputValue, 10);
+    if (!isNaN(n) && n >= 1 && n <= totalPages) {
+      onPageChange(n);
+    } else {
+      setInputValue(String(page));
+    }
+  };
+
+  return (
+    <TableFooter>
+      <TableRow className="hover:bg-transparent">
+        <TableCell colSpan={columnCount} className="px-4 py-2">
+          <div className="flex items-center justify-between">
+            {onPageSizeChange ? (
+              <div className="flex items-center gap-2">
+                <span className="text-sm text-muted-foreground">Rows per page</span>
+                <Select
+                  value={String(pageSize)}
+                  onValueChange={(v) => onPageSizeChange(Number(v))}
+                >
+                  <SelectTrigger className="h-8 w-[70px] text-sm">
+                    <SelectValue />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {pageSizeOptions.map((size) => (
+                      <SelectItem key={size} value={String(size)}>
+                        {size}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            ) : (
+              <span className="text-sm text-muted-foreground">{total.toLocaleString()} total</span>
+            )}
+            <div className="inline-flex items-center rounded-md border overflow-hidden">
+              <button
+                className="h-8 w-8 flex items-center justify-center border-r text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground disabled:pointer-events-none disabled:opacity-40"
+                onClick={() => onPageChange(page - 1)}
+                disabled={page <= 1}
+              >
+                <ChevronLeft className="h-4 w-4" />
+              </button>
+              <div className="flex items-center gap-1.5 px-3">
+                <input
+                  className="w-8 h-6 text-center text-sm tabular-nums bg-muted rounded focus:outline-none focus:ring-1 focus:ring-ring"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onBlur={commit}
+                  onKeyDown={(e) => { if (e.key === 'Enter') commit(); if (e.key === 'Escape') setInputValue(String(page)); }}
+                />
+                <span className="text-sm text-muted-foreground">/ {totalPages}</span>
+              </div>
+              <button
+                className="h-8 w-8 flex items-center justify-center border-l text-muted-foreground transition-colors hover:bg-primary hover:text-primary-foreground disabled:pointer-events-none disabled:opacity-40"
+                onClick={() => onPageChange(page + 1)}
+                disabled={page >= totalPages}
+              >
+                <ChevronRight className="h-4 w-4" />
+              </button>
+            </div>
+          </div>
+        </TableCell>
+      </TableRow>
+    </TableFooter>
   );
 }
 
@@ -110,6 +208,7 @@ export function DataTable<T>({
   skeletonRows = 5,
   onRowClick,
   rowClassName,
+  pagination,
 }: DataTableProps<T>) {
   if (loading) {
     return (
@@ -159,6 +258,7 @@ export function DataTable<T>({
             </TableRow>
           ))}
         </TableBody>
+        {pagination && <TablePager pagination={pagination} columnCount={columns.length} />}
       </Table>
     </Card>
   );

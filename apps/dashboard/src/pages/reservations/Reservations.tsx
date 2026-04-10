@@ -38,6 +38,9 @@ export function ReservationsPage() {
   const [search, setSearch] = useState('');
   const [searchQuery, setSearchQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState<ReservationStatus | 'all'>('all');
+  const handleStatusChange = (value: ReservationStatus | 'all') => { setStatusFilter(value); setPage(1); };
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
 
   // Fetch today's stats
   const { data: todayData } = useQuery({
@@ -50,14 +53,16 @@ export function ReservationsPage() {
   const { data, isLoading } = useFilteredQuery<{ reservations: Reservation[]; total: number }>({
     queryKey: 'reservations',
     endpoint: '/reservations',
-    params: { search: searchQuery, status: statusFilter, limit: 50 },
+    params: { search: searchQuery, status: statusFilter, limit: pageSize, offset: (page - 1) * pageSize },
   });
 
   const handleSearch = () => {
     setSearchQuery(search);
+    setPage(1);
   };
 
   const reservations = data?.reservations || [];
+  const total = data?.total ?? 0;
   const today = todayData;
   const reservationStatusFilters = getReservationStatusFilters(t);
 
@@ -172,18 +177,25 @@ export function ReservationsPage() {
           <FilterTabs
             options={reservationStatusFilters}
             value={statusFilter}
-            onChange={setStatusFilter}
+            onChange={handleStatusChange}
           />
         }
         search={{
           value: search,
           onChange: setSearch,
           onSearch: handleSearch,
-          onClear: () => setSearchQuery(''),
+          onClear: () => { setSearchQuery(''); setPage(1); },
           placeholder: t('reservations.searchReservations'),
         }}
         loading={isLoading}
         onRowClick={(reservation) => navigate(`/reservations/${reservation.id}`)}
+        pagination={{
+          page,
+          pageSize,
+          total,
+          onPageChange: setPage,
+          onPageSizeChange: (size) => { setPageSize(size); setPage(1); },
+        }}
         emptyState={
           <EmptyState
             icon={Calendar}
