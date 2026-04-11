@@ -105,6 +105,9 @@ export function KnowledgeBasePage() {
   const [filterSource, setFilterSource] = useState<string>(() => {
     return searchParams.get('source') || '';
   });
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(50);
+  const [total, setTotal] = useState(0);
   const [editingEntry, setEditingEntry] = useState<KnowledgeEntry | null>(null);
   const [isAddingNew, setIsAddingNew] = useState(false);
   const [saving, setSaving] = useState(false);
@@ -142,11 +145,14 @@ export function KnowledgeBasePage() {
       if (filterCategory) params.set('category', filterCategory);
       if (searchQuery) params.set('search', searchQuery);
       if (filterSource) params.set('source', filterSource);
+      params.set('limit', String(pageSize));
+      params.set('offset', String((page - 1) * pageSize));
 
       const data = await api.get<{ entries: KnowledgeEntry[]; total: number }>(
         `/knowledge?${params.toString()}`
       );
       setEntries(data.entries);
+      setTotal(data.total);
       setError(null);
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to load entries');
@@ -191,9 +197,10 @@ export function KnowledgeBasePage() {
   useEffect(() => {
     fetchEntries();
     fetchCategories();
-  }, [filterCategory, filterSource, searchQuery]);
+  }, [filterCategory, filterSource, searchQuery, page, pageSize]);
 
   const handleSearch = () => {
+    setPage(1);
     setSearchQuery(search);
   };
 
@@ -336,6 +343,7 @@ export function KnowledgeBasePage() {
     {
       key: 'category',
       header: t('knowledge.category'),
+      className: 'min-w-[130px]',
       render: (entry) => (
         <Badge>
           {entry.category.replace(/_/g, ' ')}
@@ -495,11 +503,11 @@ export function KnowledgeBasePage() {
           {/* Progress Stepper */}
           {askStep !== 'idle' && (
             <div className="mt-4 p-4 bg-muted/30 rounded-lg">
-              <div className="flex items-center justify-between mb-4">
+              <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between mb-4 gap-0 sm:gap-0">
                 {/* Step 1: Searching */}
                 <div className="flex items-center gap-2">
                   <div className={cn(
-                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all',
+                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all shrink-0',
                     askStep === 'searching' && 'bg-primary text-primary-foreground animate-pulse',
                     askStep !== 'searching' && 'bg-primary text-primary-foreground'
                   )}>
@@ -518,17 +526,19 @@ export function KnowledgeBasePage() {
                 </div>
 
                 {/* Connector */}
-                <div className="flex-1 h-0.5 mx-3 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
-                    style={{ width: askStep !== 'searching' ? '100%' : '0%' }}
-                  />
+                <div className="flex lg:flex-1 ms-3.5 lg:ms-0 lg:mx-3">
+                  <div className="w-0.5 h-5 lg:w-full lg:h-0.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="w-full bg-primary rounded-full transition-all duration-700 ease-out"
+                      style={{ height: askStep !== 'searching' ? '100%' : '0%' }}
+                    />
+                  </div>
                 </div>
 
                 {/* Step 2: Found */}
                 <div className="flex items-center gap-2">
                   <div className={cn(
-                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all',
+                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all shrink-0',
                     askStep === 'searching' && 'bg-muted text-muted-foreground',
                     askStep === 'found' && 'bg-primary text-primary-foreground animate-pulse',
                     (askStep === 'generating' || askStep === 'complete') && 'bg-primary text-primary-foreground'
@@ -550,17 +560,19 @@ export function KnowledgeBasePage() {
                 </div>
 
                 {/* Connector */}
-                <div className="flex-1 h-0.5 mx-3 bg-muted rounded-full overflow-hidden">
-                  <div
-                    className="h-full bg-primary rounded-full transition-all duration-700 ease-out"
-                    style={{ width: (askStep === 'generating' || askStep === 'complete') ? '100%' : '0%' }}
-                  />
+                <div className="flex lg:flex-1 ms-3.5 lg:ms-0 lg:mx-3">
+                  <div className="w-0.5 h-5 lg:w-full lg:h-0.5 bg-muted rounded-full overflow-hidden">
+                    <div
+                      className="w-full bg-primary rounded-full transition-all duration-700 ease-out"
+                      style={{ height: (askStep === 'generating' || askStep === 'complete') ? '100%' : '0%' }}
+                    />
+                  </div>
                 </div>
 
                 {/* Step 3: Generating */}
                 <div className="flex items-center gap-2">
                   <div className={cn(
-                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all',
+                    'w-7 h-7 rounded-full flex items-center justify-center text-xs font-medium transition-all shrink-0',
                     askStep === 'generating' && 'bg-primary text-primary-foreground animate-pulse',
                     askStep === 'complete' && 'bg-primary text-primary-foreground',
                     (askStep === 'searching' || askStep === 'found') && 'bg-muted text-muted-foreground'
@@ -756,9 +768,9 @@ export function KnowledgeBasePage() {
             <FilterTabs
               options={sourceOptions}
               value={filterSource}
-              onChange={setFilterSource}
+              onChange={(v) => { setFilterSource(v); setPage(1); }}
             />
-            <Select value={filterCategory || '_all'} onValueChange={(v) => setFilterCategory(v === '_all' ? '' : v)}>
+            <Select value={filterCategory || '_all'} onValueChange={(v) => { setFilterCategory(v === '_all' ? '' : v); setPage(1); }}>
               <SelectTrigger className="w-[140px] h-8 text-sm focus:ring-0 focus:ring-offset-0">
                 <SelectValue />
               </SelectTrigger>
@@ -776,10 +788,17 @@ export function KnowledgeBasePage() {
           value: search,
           onChange: setSearch,
           onSearch: handleSearch,
-          onClear: () => setSearchQuery(''),
+          onClear: () => { setSearchQuery(''); setPage(1); },
           placeholder: t('knowledge.searchEntries'),
         }}
         loading={loading}
+        pagination={{
+          page,
+          pageSize,
+          total,
+          onPageChange: setPage,
+          onPageSizeChange: (size) => { setPageSize(size); setPage(1); },
+        }}
         emptyState={
           <EmptyState
             icon={Book}

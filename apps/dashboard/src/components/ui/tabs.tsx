@@ -21,8 +21,8 @@ export function Tabs<T extends string>({
   className,
 }: TabsProps<T>) {
   return (
-    <div className={cn('border-b', className)}>
-      <nav className="flex gap-6">
+    <div className={cn('border-b overflow-x-auto scrollbar-hide', className)}>
+      <nav className="flex gap-6 min-w-max">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -30,7 +30,7 @@ export function Tabs<T extends string>({
               key={tab.id}
               onClick={() => onChange(tab.id as T)}
               className={cn(
-                'flex items-center gap-2 pb-3 border-b-2 text-sm font-medium transition-colors',
+                'flex items-center gap-2 pb-3 border-b-2 text-sm font-medium transition-colors whitespace-nowrap',
                 value === tab.id
                   ? 'border-foreground text-foreground'
                   : 'border-transparent text-muted-foreground hover:text-foreground'

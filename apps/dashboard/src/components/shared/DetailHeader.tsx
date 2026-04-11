@@ -34,7 +34,7 @@ export function DetailHeader({ backTo, backLabel, icon, title, subtitle, action,
       <div className="flex items-start justify-between gap-4">
         <div className="flex items-start gap-4">
           {icon && (
-            <div className="p-3 rounded-xl bg-foreground/5 shrink-0">
+            <div className="hidden sm:block p-3 rounded-xl bg-foreground/5 shrink-0">
               {icon}
             </div>
           )}

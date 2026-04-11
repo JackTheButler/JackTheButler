@@ -296,7 +296,7 @@ export function Layout() {
       "M61.1113 132.223C72.1569 132.223 81.1113 141.177 81.1113 152.223V163.333C81.1113 174.379 72.1569 183.333 61.1113 183.333H50C38.9543 183.333 30 174.379 30 163.333V152.223C30 141.177 38.9543 132.223 50 132.223H61.1113Z",
     ];
     return (
-      <div className="min-h-screen bg-muted aurora-layout flex flex-col items-center justify-center gap-4">
+      <div className="min-h-[100dvh] bg-muted aurora-layout flex flex-col items-center justify-center gap-4">
         <svg width="80" height="80" viewBox="0 0 520 520" fill="none" xmlns="http://www.w3.org/2000/svg">
           <defs>
             <linearGradient id="aurora-logo" x1="0" y1="0" x2="520" y2="520" gradientUnits="userSpaceOnUse">
@@ -418,7 +418,7 @@ export function Layout() {
   };
 
   return (
-    <div className="h-screen bg-background aurora-layout flex overflow-hidden relative">
+    <div className="h-[100dvh] bg-background aurora-layout flex overflow-hidden relative">
       {/* Mobile backdrop */}
       {mobileMenuOpen && (
         <div
@@ -430,7 +430,7 @@ export function Layout() {
       {/* Sidebar */}
       <aside
         className={cn(
-          'glass-noise relative overflow-hidden border-e border-gray-400/20 bg-white/60 backdrop-blur-lg dark:bg-black/30 flex flex-col h-screen flex-shrink-0 transition-all duration-200',
+          'glass-noise relative overflow-hidden border-e border-gray-400/20 bg-white sm:bg-white/60 backdrop-blur-lg dark:bg-black sm:dark:bg-black/30 flex flex-col h-[100dvh] flex-shrink-0 transition-all duration-200',
           // Mobile: fixed overlay
           'fixed sm:relative z-50 sm:z-auto',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0',
@@ -451,7 +451,7 @@ export function Layout() {
         </div>
 
         {/* Navigation */}
-        <nav ref={navRef} className="flex-1 py-4 overflow-y-auto relative">
+        <nav ref={navRef} className="flex-1 py-4 overflow-y-auto scrollbar-hide relative">
           {/* Sliding indicator */}
           <div
             className={cn(
@@ -726,7 +726,7 @@ export function Layout() {
       </button>
 
       {/* Main content */}
-      <div className="flex-1 flex flex-col min-w-0 h-screen">
+      <div className="flex-1 flex flex-col min-w-0 h-[100dvh]">
         <PageActionsProvider>
           <HeaderBar
             navSections={filteredNavSections}
@@ -737,7 +737,7 @@ export function Layout() {
           />
           <EmailVerificationBanner />
           {/* Page content */}
-          <main className="flex-1 overflow-auto">
+          <main className="flex-1 overflow-auto scrollbar-hide">
             <Outlet />
           </main>
         </PageActionsProvider>

@@ -115,7 +115,7 @@ function TablePager({ pagination }: { pagination: PaginationConfig }) {
     <div className={cn('sticky bottom-0 z-10 border-t px-4 py-2 flex items-center justify-between bg-white dark:bg-zinc-950', !stuck && 'rounded-b-2xl')}>
       {onPageSizeChange ? (
         <div className="flex items-center gap-2">
-          <span className="text-sm text-muted-foreground">Rows per page</span>
+          <span className="hidden sm:inline text-sm text-muted-foreground">Rows per page</span>
           <Select value={String(pageSize)} onValueChange={(v) => onPageSizeChange(Number(v))}>
             <SelectTrigger className="h-8 w-[70px] text-sm">
               <SelectValue />

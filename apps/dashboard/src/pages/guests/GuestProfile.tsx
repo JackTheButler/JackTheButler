@@ -1,7 +1,8 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useParams, useNavigate, useLocation, Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import { PageContainer, EmptyState, DetailHeader } from '@/components';
+import { usePageActions } from '@/contexts/PageActionsContext';
 import { DataTable, type Column } from '@/components/DataTable';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
@@ -109,6 +110,7 @@ export function GuestProfilePage() {
   const backLabel = (location.state as { fromLabel?: string } | null)?.fromLabel ?? t('guestProfile.backToGuests');
   const { can } = usePermissions();
   const canManageGuests = can(PERMISSIONS.GUESTS_MANAGE);
+  const { setActions } = usePageActions();
   const [guest, setGuest] = useState<GuestWithCounts | null>(null);
   const [reservations, setReservations] = useState<ReservationSummary[]>([]);
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -277,7 +279,7 @@ export function GuestProfilePage() {
     fetchMemories();
   }, [id]);
 
-  const handleSave = async () => {
+  const handleSave = useCallback(async () => {
     if (!id) return;
     setSaving(true);
     setError(null);
@@ -304,7 +306,55 @@ export function GuestProfilePage() {
     } finally {
       setSaving(false);
     }
-  };
+  }, [id, formData, t]);
+
+  useEffect(() => {
+    if (!canManageGuests) return;
+    if (editing) {
+      setActions([
+        {
+          id: 'cancel-edit',
+          label: t('common.cancel'),
+          variant: 'outline',
+          onClick: () => {
+            if (guest) {
+              setFormData({
+                firstName: guest.firstName,
+                lastName: guest.lastName,
+                email: guest.email || '',
+                phone: guest.phone || '',
+                language: guest.language,
+                vipStatus: guest.vipStatus || 'none',
+                loyaltyTier: guest.loyaltyTier || 'none',
+                preferences: guest.preferences.join('\n'),
+                tags: guest.tags.join(', '),
+                notes: guest.notes || '',
+              });
+            }
+            setEditing(false);
+          },
+        },
+        {
+          id: 'save-guest',
+          label: t('common.save'),
+          icon: Save,
+          onClick: handleSave,
+          loading: saving,
+          disabled: saving,
+        },
+      ]);
+    } else {
+      setActions([
+        {
+          id: 'edit-guest',
+          label: t('common.edit'),
+          icon: Pencil,
+          onClick: () => { setEditing(true); setActiveTab('overview'); },
+        },
+      ]);
+    }
+    return () => setActions([]);
+  }, [setActions, editing, saving, canManageGuests, handleSave, guest, t]);
 
   if (loading) {
     return (
@@ -360,7 +410,7 @@ export function GuestProfilePage() {
           </span>
         }
         subtitle={
-          <div className="flex items-center gap-4 text-sm">
+          <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-sm">
             {guest.email && (
               <span className="flex items-center gap-1">
                 <Mail className="w-4 h-4" />
@@ -379,24 +429,6 @@ export function GuestProfilePage() {
             </span>
           </div>
         }
-        actions={canManageGuests ? (
-          editing ? (
-            <>
-              <Button variant="outline" onClick={() => setEditing(false)}>
-                {t('common.cancel')}
-              </Button>
-              <Button onClick={handleSave} disabled={saving}>
-                {saving ? <Spinner size="sm" className="me-2" /> : <Save className="w-4 h-4 me-2" />}
-                {t('common.save')}
-              </Button>
-            </>
-          ) : (
-            <Button variant="outline" onClick={() => { setEditing(true); setActiveTab('overview'); }}>
-              <Pencil className="w-4 h-4 me-2" />
-              {t('common.edit')}
-            </Button>
-          )
-        ) : undefined}
       />
 
       {/* Tabs */}

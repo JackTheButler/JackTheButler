@@ -256,12 +256,15 @@ export function SettingsPage() {
               </div>
 
               {profileLoading ? (
-                <div className="space-y-4">
-                  <div className="h-10 bg-muted animate-pulse rounded" />
-                  <div className="h-10 bg-muted animate-pulse rounded" />
-                  <div className="h-10 bg-muted animate-pulse rounded" />
-                </div>
+                <Card className="p-6">
+                  <div className="space-y-4">
+                    <div className="h-10 bg-muted animate-pulse rounded" />
+                    <div className="h-10 bg-muted animate-pulse rounded" />
+                    <div className="h-10 bg-muted animate-pulse rounded" />
+                  </div>
+                </Card>
               ) : (
+                <Card className="p-6">
                 <div className="space-y-6">
                   {/* Basic Info */}
                   <div className="space-y-4">
@@ -457,6 +460,7 @@ export function SettingsPage() {
                     </div>
                   )}
                 </div>
+                </Card>
               )}
             </div>
           )}
@@ -481,14 +485,12 @@ export function SettingsPage() {
                 <p className="text-sm text-muted-foreground">{t('settings.quickSetup.description')}</p>
               </div>
 
-              <div className="divide-y divide-border">
-                <div className="pb-6">
-                  <ActionItems showAlways borderless />
-                </div>
-                <div className="pt-6">
-                  <DemoDataCard showAlways borderless />
-                </div>
-              </div>
+              <Card className="p-6">
+                <ActionItems showAlways borderless />
+              </Card>
+              <Card className="p-6">
+                <DemoDataCard showAlways borderless />
+              </Card>
             </div>
           )}
 
