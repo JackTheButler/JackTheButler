@@ -435,7 +435,7 @@ export function Layout() {
           'fixed sm:relative z-50 sm:z-auto',
           mobileMenuOpen ? 'translate-x-0' : '-translate-x-full sm:translate-x-0',
           // Width based on collapsed state
-          effectiveCollapsed ? 'w-56 sm:w-16' : 'w-56'
+          effectiveCollapsed ? 'w-full sm:w-16' : 'w-full sm:w-56'
         )}
       >
         {/* Logo */}
@@ -448,6 +448,13 @@ export function Layout() {
           ) : (
             <img src="/logo.svg" alt={t('layout.butler')} className="w-6 h-6 mx-auto dark:invert" />
           )}
+          <button
+            onClick={() => setMobileMenuOpen(false)}
+            className="sm:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
+            aria-label="Close menu"
+          >
+            <X size={20} />
+          </button>
         </div>
 
         {/* Navigation */}
