@@ -217,26 +217,28 @@ export function AnalyticsCards() {
   const cards: CardConfig[] = CARD_CONFIGS.map((c) => ({ ...c, label: labelMap[c.key] }));
 
   return (
-    <Card className="overflow-x-auto scrollbar-hide">
+    <Card>
       {/* Header row */}
-      <div className="flex items-center justify-between px-4 pt-3 pb-2 border-b border-border/50">
-        <div className="flex items-center gap-1">
-          {PRESET_VALUES.map((value) => (
-            <button
-              key={value}
-              onClick={() => setPreset(value)}
-              className={cn(
-                'text-[11px] font-medium px-2 py-0.5 rounded-full transition-colors',
-                preset === value
-                  ? 'bg-primary text-primary-foreground'
-                  : 'text-muted-foreground hover:text-foreground hover:bg-muted'
-              )}
-            >
-              {t(`home.analytics.presets.${value}`)}
-            </button>
-          ))}
+      <div className="overflow-x-auto scrollbar-hide border-b border-border/50">
+        <div className="flex items-center justify-between px-4 pt-3 pb-2 min-w-max">
+          <div className="flex items-center gap-1">
+            {PRESET_VALUES.map((value) => (
+              <button
+                key={value}
+                onClick={() => setPreset(value)}
+                className={cn(
+                  'text-[11px] font-medium px-2 py-0.5 rounded-full transition-colors whitespace-nowrap',
+                  preset === value
+                    ? 'bg-primary text-primary-foreground'
+                    : 'text-muted-foreground hover:text-foreground hover:bg-muted'
+                )}
+              >
+                {t(`home.analytics.presets.${value}`)}
+              </button>
+            ))}
+          </div>
+          <span className="text-xs text-muted-foreground whitespace-nowrap ps-4">{rangeLabel}</span>
         </div>
-        <span className="text-xs text-muted-foreground">{rangeLabel}</span>
       </div>
 
       {/* Error banner */}
@@ -247,7 +249,8 @@ export function AnalyticsCards() {
       )}
 
       {/* Metric items */}
-      <div className="flex divide-x min-w-full">
+      <div className="overflow-x-auto scrollbar-hide">
+      <div className="flex divide-x min-w-max">
         {cards.map((card) => (
           <AnalyticItem
             key={card.key}
@@ -256,6 +259,7 @@ export function AnalyticsCards() {
             isLoading={isLoading}
           />
         ))}
+      </div>
       </div>
     </Card>
   );

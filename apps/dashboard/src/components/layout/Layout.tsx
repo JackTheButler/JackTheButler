@@ -780,7 +780,7 @@ function HeaderBar({
         {/* Mobile menu toggle */}
         <button
           onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-          className="sm:hidden p-2 -ml-2 text-muted-foreground hover:text-foreground transition-colors"
+          className="sm:hidden p-2 text-muted-foreground hover:text-foreground transition-colors"
           aria-label={mobileMenuOpen ? 'Close menu' : 'Open menu'}
         >
           {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
