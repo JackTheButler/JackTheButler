@@ -77,6 +77,7 @@ export function GuestsPage() {
     {
       key: 'name',
       header: t('common.name'),
+      className: 'min-w-[140px]',
       render: (guest) => (
         <div>
           <Link

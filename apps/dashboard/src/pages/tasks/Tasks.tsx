@@ -12,8 +12,8 @@ import {
 import { useFilteredQuery } from '@/hooks/useFilteredQuery';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
 import type { Task, TaskStatus } from '@/types/api';
-import { PageContainer, EmptyState } from '@/components';
-import { DataTable, Column } from '@/components/DataTable';
+import { PageContainer, EmptyState, DataTable } from '@/components';
+import type { Column } from '@/components/DataTable';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
@@ -36,23 +36,17 @@ export function TasksPage() {
 
   const claimMutation = useMutation({
     mutationFn: (taskId: string) => api.post(`/tasks/${taskId}/claim`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   });
 
   const completeMutation = useMutation({
     mutationFn: (taskId: string) => api.post(`/tasks/${taskId}/complete`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   });
 
   const reopenMutation = useMutation({
     mutationFn: (taskId: string) => api.post(`/tasks/${taskId}/reopen`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks'] });
-    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['tasks'] }),
   });
 
   const tasks = data?.tasks || [];
@@ -62,6 +56,7 @@ export function TasksPage() {
     {
       key: 'priority',
       header: '',
+      className: 'w-10',
       render: (task) => (
         <Badge variant={priorityVariants[task.priority]} className="capitalize">
           {task.priority}
@@ -78,6 +73,7 @@ export function TasksPage() {
     {
       key: 'roomNumber',
       header: t('common.room'),
+      className: 'min-w-[96px]',
       render: (task) => (
         <span className="text-sm text-muted-foreground">{task.roomNumber || '-'}</span>
       ),
@@ -85,7 +81,6 @@ export function TasksPage() {
     {
       key: 'description',
       header: t('tasks.task'),
-      className: 'max-w-md',
       render: (task) => {
         const isLong = task.description.length > 50;
         return (
@@ -112,51 +107,48 @@ export function TasksPage() {
     {
       key: 'assignedName',
       header: t('tasks.assigned'),
+      className: 'min-w-[128px]',
       render: (task) => (
         <span className="text-sm text-muted-foreground">{task.assignedName || '-'}</span>
       ),
     },
-    ...(canManageTasks
-      ? [
-          {
-            key: 'status',
-            header: t('tasks.action'),
-            className: 'w-36',
-            render: (task: Task) => (
-              <div onClick={(e) => e.stopPropagation()}>
-                {task.status === 'pending' && (
-                  <Button
-                    size="xs"
-                    onClick={() => claimMutation.mutate(task.id)}
-                    loading={claimMutation.isPending}
-                  >
-                    {t('tasks.claim')}
-                  </Button>
-                )}
-                {task.status === 'in_progress' && (
-                  <Button
-                    size="xs"
-                    onClick={() => completeMutation.mutate(task.id)}
-                    loading={completeMutation.isPending}
-                  >
-                    {t('tasks.complete')}
-                  </Button>
-                )}
-                {(task.status === 'completed' || task.status === 'cancelled') && (
-                  <Button
-                    variant="outline"
-                    size="xs"
-                    onClick={() => reopenMutation.mutate(task.id)}
-                    loading={reopenMutation.isPending}
-                  >
-                    {t('tasks.reopen')}
-                  </Button>
-                )}
-              </div>
-            ),
-          },
-        ]
-      : []),
+    {
+      key: 'status',
+      header: t('common.status'),
+      className: 'min-w-[140px]',
+      render: (task) => (
+        <Badge variant={taskStatusVariants[task.status]} className="capitalize">
+          {t(`tasks.statuses.${task.status}`)}
+        </Badge>
+      ),
+    },
+    {
+      key: 'action',
+      header: '',
+      className: 'min-w-[128px]',
+      render: (task) => {
+        if (!canManageTasks) return null;
+        return (
+          <div onClick={(e) => e.stopPropagation()}>
+            {task.status === 'pending' && (
+              <Button size="xs" onClick={() => claimMutation.mutate(task.id)} loading={claimMutation.isPending}>
+                {t('tasks.claim')}
+              </Button>
+            )}
+            {task.status === 'in_progress' && (
+              <Button size="xs" onClick={() => completeMutation.mutate(task.id)} loading={completeMutation.isPending}>
+                {t('tasks.complete')}
+              </Button>
+            )}
+            {(task.status === 'completed' || task.status === 'cancelled') && (
+              <Button variant="outline" size="xs" onClick={() => reopenMutation.mutate(task.id)} loading={reopenMutation.isPending}>
+                {t('tasks.reopen')}
+              </Button>
+            )}
+          </div>
+        );
+      },
+    },
   ];
 
   return (
@@ -165,6 +157,7 @@ export function TasksPage() {
         data={tasks}
         columns={columns}
         keyExtractor={(task) => task.id}
+        loading={isLoading}
         filters={
           <FilterTabs
             options={taskStatusFilters}
@@ -172,8 +165,9 @@ export function TasksPage() {
             onChange={setStatusFilter}
           />
         }
-        loading={isLoading}
-        rowClassName={(task) => task.status === 'pending' ? 'bg-warning hover:bg-warning/80' : undefined}
+        rowClassName={(task) =>
+          task.status === 'pending' ? 'bg-warning hover:bg-warning/80' : undefined
+        }
         emptyState={
           <EmptyState
             icon={ListTodo}
@@ -183,7 +177,6 @@ export function TasksPage() {
         }
       />
 
-      {/* Task Details Dialog */}
       <DialogRoot open={!!selectedTask} onOpenChange={(open) => !open && setSelectedTask(null)}>
         <DialogContent title={t('tasks.details')} className="max-w-lg">
           {selectedTask && (
