@@ -22,18 +22,9 @@ import {
 } from '@/lib/config';
 import { useFilteredQuery } from '@/hooks/useFilteredQuery';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
-import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
-import {
-  Table,
-  TableBody,
-  TableCell,
-  TableHead,
-  TableHeader,
-  TableRow,
-} from '@/components/ui/table';
 import {
   DropdownMenu,
   DropdownMenuTrigger,
@@ -43,8 +34,8 @@ import {
 import { Tooltip } from '@/components/ui/tooltip';
 import { DialogRoot, DialogContent } from '@/components/ui/dialog';
 import { FilterTabs } from '@/components/ui/filter-tabs';
-import { PageContainer, StatsBar, EmptyState, ChannelIcon } from '@/components';
-import { ApprovalTableSkeleton } from '@/components';
+import { PageContainer, StatsBar, EmptyState, ChannelIcon, DataTable } from '@/components';
+import type { Column } from '@/components/DataTable';
 
 type ApprovalItemType = 'response' | 'task' | 'offer';
 
@@ -312,6 +303,129 @@ export function ApprovalsPage() {
     offer: t('approvals.offer'),
   };
 
+  const columns: Column<ApprovalItem>[] = [
+    {
+      key: 'type',
+      header: '',
+      className: 'w-12',
+      render: (item) => {
+        const Icon = typeIcons[item.type] || MessageSquare;
+        return (
+          <Tooltip content={typeLabels[item.type]}>
+            <Icon className="w-4 h-4 text-muted-foreground" />
+          </Tooltip>
+        );
+      },
+    },
+    {
+      key: 'priority',
+      header: '',
+      className: 'w-12',
+      render: (item) => {
+        const actionData = parseActionData(item.actionData);
+        return actionData.priority ? (
+          <Badge variant={priorityVariants[actionData.priority as string]} className="capitalize">
+            {actionData.priority}
+          </Badge>
+        ) : null;
+      },
+    },
+    {
+      key: 'guest',
+      header: t('common.guest'),
+      className: 'min-w-[140px]',
+      render: (item) => {
+        const actionData = parseActionData(item.actionData);
+        return (
+          <div className="text-sm">
+            <div className="font-medium">{item.guestName || <span className="text-muted-foreground italic">{t('common.unknown')}</span>}</div>
+            <div className="flex items-center gap-1.5 mt-0.5">
+              {item.conversationChannel && <ChannelIcon channel={item.conversationChannel} />}
+              {(item.roomNumber || actionData.roomNumber) && (
+                <span className="text-xs text-muted-foreground">
+                  {t('common.room')} {item.roomNumber || actionData.roomNumber}
+                </span>
+              )}
+            </div>
+          </div>
+        );
+      },
+    },
+    {
+      key: 'preview',
+      header: t('common.preview'),
+      render: (item) => {
+        const actionData = parseActionData(item.actionData);
+        const preview = getPreviewText(item, actionData);
+        return <span className="text-sm text-muted-foreground truncate block">{preview || '-'}</span>;
+      },
+    },
+    {
+      key: 'time',
+      header: t('common.time'),
+      className: 'min-w-[100px]',
+      render: (item) => (
+        <span className="text-sm text-muted-foreground">{formatTimeAgo(item.createdAt, t)}</span>
+      ),
+    },
+    {
+      key: 'status',
+      header: t('common.status'),
+      className: 'min-w-[100px]',
+      render: (item) => {
+        if (item.status === 'pending' && canManageApprovals) {
+          return (
+            <div onClick={(e) => e.stopPropagation()}>
+              <DropdownMenu>
+                <DropdownMenuTrigger>
+                  <button className="p-1.5 rounded hover:bg-muted text-muted-foreground">
+                    <MoreHorizontal className="w-4 h-4" />
+                  </button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent>
+                  <DropdownMenuItem
+                    onClick={() => handleApprove(item.id)}
+                    disabled={approvingId === item.id}
+                  >
+                    {approvingId === item.id ? t('common.approving') : t('common.approve')}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem
+                    onClick={() => {
+                      setExpandedId(item.id);
+                      setRejectFormId(item.id);
+                    }}
+                  >
+                    {t('common.reject')}
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            </div>
+          );
+        }
+        if (item.status !== 'pending') {
+          return (
+            <Tooltip
+              content={
+                (item.staffName || item.decidedAt || item.rejectionReason)
+                  ? `${item.staffName ? `By ${item.staffName}` : ''}${item.decidedAt ? ` • ${formatTimeAgo(item.decidedAt, t)}` : ''}${item.rejectionReason ? ` • ${item.rejectionReason}` : ''}`
+                  : null
+              }
+            >
+              <Badge variant={approvalStatusVariants[item.status]} className="capitalize">
+                {item.status}
+              </Badge>
+            </Tooltip>
+          );
+        }
+        return (
+          <Badge variant="warning" className="capitalize">
+            {item.status}
+          </Badge>
+        );
+      },
+    },
+  ];
+
   return (
     <PageContainer>
       <StatsBar
@@ -322,179 +436,55 @@ export function ApprovalsPage() {
         ]}
       />
 
-      <Card>
-        <div className="px-4 py-2 border-b flex items-center justify-between gap-4">
-          <div className="overflow-x-auto flex-1 scrollbar-hide">
-            <div className="min-w-fit">
-              <FilterTabs
-                options={approvalStatusFilters}
-                value={filterStatus}
-                onChange={setFilterStatus}
-              />
-            </div>
-          </div>
-        </div>
-
-        {isLoading ? (
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="px-4 w-12"></TableHead>
-                <TableHead className="px-4 w-12"></TableHead>
-                <TableHead className="px-4 min-w-[140px]">{t('common.guest')}</TableHead>
-                <TableHead className="px-4">{t('common.preview')}</TableHead>
-                <TableHead className="px-4 min-w-[100px]">{t('common.time')}</TableHead>
-                <TableHead className="px-4 min-w-[100px]">{t('common.status')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              <ApprovalTableSkeleton count={5} />
-            </TableBody>
-          </Table>
-        ) : error ? (
-          <EmptyState
-            icon={AlertCircle}
-            title={t('approvals.failedToLoad')}
-            description={t('approvals.tryAgainLater')}
+      <DataTable
+        data={error ? [] : items}
+        columns={columns}
+        keyExtractor={(item) => item.id}
+        loading={isLoading}
+        filters={
+          <FilterTabs
+            options={approvalStatusFilters}
+            value={filterStatus}
+            onChange={setFilterStatus}
           />
-        ) : items.length === 0 ? (
-          <EmptyState
-            icon={CheckCircle2}
-            title={filterStatus === 'pending' ? t('approvals.noPending') : t('approvals.noItems')}
-            description={filterStatus === 'pending' ? t('approvals.allCaughtUp') : t('common.tryChangingFilters')}
-          />
-        ) : (
-          <Table>
-            <TableHeader>
-              <TableRow className="bg-muted/50 hover:bg-muted/50">
-                <TableHead className="px-4 w-12"></TableHead>
-                <TableHead className="px-4 w-12"></TableHead>
-                <TableHead className="px-4 min-w-[140px]">{t('common.guest')}</TableHead>
-                <TableHead className="px-4">{t('common.preview')}</TableHead>
-                <TableHead className="px-4 min-w-[100px]">{t('common.time')}</TableHead>
-                <TableHead className="px-4 min-w-[100px]">{t('common.status')}</TableHead>
-              </TableRow>
-            </TableHeader>
-            <TableBody>
-              {items.map((item) => {
-                const actionData = parseActionData(item.actionData);
-                const Icon = typeIcons[item.type] || MessageSquare;
-                const isExpanded = expandedId === item.id;
-                const preview = getPreviewText(item, actionData);
-
-                return (
-                  <>
-                    <TableRow
-                      key={item.id}
-                      className={cn(
-                        'cursor-pointer',
-                        isExpanded && 'bg-muted/30',
-                        item.status === 'pending' && !isExpanded && 'bg-warning hover:bg-warning/80'
-                      )}
-                      onClick={() => setExpandedId(isExpanded ? null : item.id)}
-                    >
-                      <TableCell className="px-4">
-                        <Tooltip content={typeLabels[item.type]}>
-                          <Icon className="w-4 h-4 text-muted-foreground" />
-                        </Tooltip>
-                      </TableCell>
-                      <TableCell className="px-4">
-                        {actionData.priority && (
-                          <Badge variant={priorityVariants[actionData.priority as string]} className="capitalize">
-                            {actionData.priority}
-                          </Badge>
-                        )}
-                      </TableCell>
-                      <TableCell className="px-4">
-                        <div className="text-sm">
-                          <div className="font-medium">{item.guestName || <span className="text-muted-foreground italic">{t('common.unknown')}</span>}</div>
-                          <div className="flex items-center gap-1.5 mt-0.5">
-                            {item.conversationChannel && (
-                              <ChannelIcon channel={item.conversationChannel} />
-                            )}
-                            {(item.roomNumber || actionData.roomNumber) && (
-                              <span className="text-xs text-muted-foreground">
-                                {t('common.room')} {item.roomNumber || actionData.roomNumber}
-                              </span>
-                            )}
-                          </div>
-                        </div>
-                      </TableCell>
-                      <TableCell className="px-4 max-w-xs">
-                        <span className="text-sm text-muted-foreground truncate block">
-                          {preview || '-'}
-                        </span>
-                      </TableCell>
-                      <TableCell className="px-4">
-                        <span className="text-sm text-muted-foreground">{formatTimeAgo(item.createdAt, t)}</span>
-                      </TableCell>
-                      <TableCell className="px-4">
-                        {item.status === 'pending' && canManageApprovals ? (
-                          <div onClick={(e) => e.stopPropagation()}>
-                            <DropdownMenu>
-                              <DropdownMenuTrigger>
-                                <button className="p-1.5 rounded hover:bg-muted text-muted-foreground">
-                                  <MoreHorizontal className="w-4 h-4" />
-                                </button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent>
-                                <DropdownMenuItem
-                                  onClick={() => handleApprove(item.id)}
-                                  disabled={approvingId === item.id}
-                                >
-                                  {approvingId === item.id ? t('common.approving') : t('common.approve')}
-                                </DropdownMenuItem>
-                                <DropdownMenuItem
-                                  onClick={() => {
-                                    setExpandedId(item.id);
-                                    setRejectFormId(item.id);
-                                  }}
-                                >
-                                  {t('common.reject')}
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </div>
-                        ) : item.status !== 'pending' ? (
-                          <Tooltip
-                            content={
-                              (item.staffName || item.decidedAt || item.rejectionReason)
-                                ? `${item.staffName ? `By ${item.staffName}` : ''}${item.decidedAt ? ` • ${formatTimeAgo(item.decidedAt, t)}` : ''}${item.rejectionReason ? ` • ${item.rejectionReason}` : ''}`
-                                : null
-                            }
-                          >
-                            <Badge variant={approvalStatusVariants[item.status]} className="capitalize">
-                              {item.status}
-                            </Badge>
-                          </Tooltip>
-                        ) : (
-                          <Badge variant="warning" className="capitalize">
-                            {item.status}
-                          </Badge>
-                        )}
-                      </TableCell>
-                    </TableRow>
-                    {isExpanded && (
-                      <TableRow key={`${item.id}-expanded`}>
-                        <TableCell colSpan={6} className="p-0 bg-muted/50">
-                          <ExpandedRow
-                            item={item}
-                            actionData={actionData}
-                            onReject={(reason) => handleReject(item.id, reason)}
-                            isRejecting={rejectingId === item.id}
-                            showRejectForm={rejectFormId === item.id}
-                            setShowRejectForm={(show) => setRejectFormId(show ? item.id : null)}
-                          />
-                        </TableCell>
-                      </TableRow>
-                    )}
-                  </>
-                );
-              })}
-            </TableBody>
-          </Table>
-        )}
-      </Card>
+        }
+        emptyState={
+          error ? (
+            <EmptyState
+              icon={AlertCircle}
+              title={t('approvals.failedToLoad')}
+              description={t('approvals.tryAgainLater')}
+            />
+          ) : (
+            <EmptyState
+              icon={CheckCircle2}
+              title={filterStatus === 'pending' ? t('approvals.noPending') : t('approvals.noItems')}
+              description={filterStatus === 'pending' ? t('approvals.allCaughtUp') : t('common.tryChangingFilters')}
+            />
+          )
+        }
+        onRowClick={(item) => setExpandedId(expandedId === item.id ? null : item.id)}
+        rowClassName={(item) =>
+          cn(
+            expandedId === item.id && 'bg-muted/30',
+            item.status === 'pending' && expandedId !== item.id && 'bg-warning hover:bg-warning/80'
+          ) || undefined
+        }
+        expandedContent={(item) => {
+          if (expandedId !== item.id) return null;
+          const actionData = parseActionData(item.actionData);
+          return (
+            <ExpandedRow
+              item={item}
+              actionData={actionData}
+              onReject={(reason) => handleReject(item.id, reason)}
+              isRejecting={rejectingId === item.id}
+              showRejectForm={rejectFormId === item.id}
+              setShowRejectForm={(show) => setRejectFormId(show ? item.id : null)}
+            />
+          );
+        }}
+      />
     </PageContainer>
   );
 }

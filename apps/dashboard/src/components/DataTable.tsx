@@ -19,7 +19,7 @@ import {
 import { ExpandableSearch } from './shared/ExpandableSearch';
 import { cn } from '@/lib/utils';
 
-const TABLE_CARD_CLASS = 'relative rounded-2xl border border-white/50 bg-white/60 backdrop-blur-lg text-card-foreground shadow-lg shadow-black/[0.1] dark:bg-black/30 dark:border-white/10 dark:shadow-black/[0.4] glass-noise';
+const TABLE_CARD_CLASS = 'relative rounded-2xl overflow-clip border border-white/50 bg-white/60 backdrop-blur-lg text-card-foreground shadow-lg shadow-black/[0.1] dark:bg-black/30 dark:border-white/10 dark:shadow-black/[0.4] glass-noise';
 
 export interface Column<T> {
   key: string;
@@ -58,6 +58,8 @@ export interface DataTableProps<T> {
   onRowClick?: (row: T) => void;
   rowClassName?: (row: T) => string | undefined;
   pagination?: PaginationConfig;
+  /** Return content to render in an expanded row below the given row, or null/undefined to hide */
+  expandedContent?: (row: T) => React.ReactNode;
 }
 
 function FilterBar({ filters, search }: { filters?: React.ReactNode; search?: SearchConfig }) {
@@ -202,6 +204,7 @@ export function DataTable<T>({
   onRowClick,
   rowClassName,
   pagination,
+  expandedContent,
 }: DataTableProps<T>) {
   const scrollRef       = React.useRef<HTMLDivElement>(null);
   const stickyScrollRef = React.useRef<HTMLDivElement>(null);
@@ -309,21 +312,32 @@ export function DataTable<T>({
             </tr>
           </thead>
           <TableBody>
-            {data.map((row) => (
-              <TableRow
-                key={keyExtractor(row)}
-                className={cn(onRowClick && 'cursor-pointer', rowClassName?.(row))}
-                onClick={() => onRowClick?.(row)}
-              >
-                {columns.map((column) => (
-                  <TableCell key={column.key} className={cn('px-4', column.className)}>
-                    {column.render
-                      ? column.render(row)
-                      : (row as Record<string, unknown>)[column.key] as React.ReactNode}
-                  </TableCell>
-                ))}
-              </TableRow>
-            ))}
+            {data.map((row) => {
+              const expanded = expandedContent?.(row);
+              return (
+                <React.Fragment key={keyExtractor(row)}>
+                  <TableRow
+                    className={cn(onRowClick && 'cursor-pointer', rowClassName?.(row))}
+                    onClick={() => onRowClick?.(row)}
+                  >
+                    {columns.map((column) => (
+                      <TableCell key={column.key} className={cn('px-4', column.className)}>
+                        {column.render
+                          ? column.render(row)
+                          : (row as Record<string, unknown>)[column.key] as React.ReactNode}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                  {expanded != null && (
+                    <TableRow>
+                      <TableCell colSpan={columns.length} className="p-0 bg-muted/50">
+                        {expanded}
+                      </TableCell>
+                    </TableRow>
+                  )}
+                </React.Fragment>
+              );
+            })}
           </TableBody>
         </Table>
       </div>
