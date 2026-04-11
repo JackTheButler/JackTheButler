@@ -248,7 +248,7 @@ export function DataTable<T>({
       ro.disconnect();
       mo?.disconnect();
     };
-  }, [columnKeys]);
+  }, [columnKeys, loading]);
 
   if (loading) {
     return (
