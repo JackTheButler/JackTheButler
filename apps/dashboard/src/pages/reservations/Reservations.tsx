@@ -154,8 +154,8 @@ export function ReservationsPage() {
           items={[
             { label: t('reservations.arrivals'), value: today.arrivals.count, icon: LogIn, variant: 'success', subtitle: today.arrivals.pending > 0 ? `${today.arrivals.pending} ${t('reservations.pending')}` : undefined },
             { label: t('reservations.departures'), value: today.departures.count, icon: LogOut, variant: 'warning', subtitle: today.departures.late > 0 ? `${today.departures.late} ${t('reservations.late')}` : undefined },
-            { label: t('reservations.inHouse'), value: today.inHouse, icon: Home },
-            { label: t('reservations.occupancy'), value: `${today.occupancyRate}%`, icon: Users },
+            { label: t('reservations.inHouse'), value: today.inHouse, icon: Home, variant: 'default' },
+            { label: t('reservations.occupancy'), value: `${today.occupancyRate}%`, icon: Users, variant: 'info' },
           ]}
         />
       )}

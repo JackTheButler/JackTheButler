@@ -5,31 +5,34 @@ import { Card } from '@/components/ui/card';
 import { AppIcon } from '@/components/apps/AppIcon';
 
 const variants = {
-  success: 'text-muted-foreground bg-muted',
-  warning: 'text-muted-foreground bg-muted',
-  error: 'text-muted-foreground bg-muted',
-  default: 'text-muted-foreground bg-muted',
+  default:  'bg-gradient-to-br from-violet-400/30 via-purple-500/20 to-indigo-500/30 text-violet-600 dark:text-violet-300',
+  info:     'bg-gradient-to-br from-blue-400/30 via-sky-400/20 to-cyan-500/30 text-blue-600 dark:text-blue-300',
+  success:  'bg-gradient-to-br from-emerald-400/30 via-green-400/20 to-teal-500/30 text-emerald-600 dark:text-emerald-300',
+  warning:  'bg-gradient-to-br from-amber-400/35 via-yellow-400/25 to-orange-500/35 text-amber-600 dark:text-amber-300',
+  error:    'bg-gradient-to-br from-rose-400/30 via-red-400/20 to-pink-500/30 text-rose-600 dark:text-rose-300',
 };
 
 const dotColors = {
+  default: 'bg-violet-500',
+  info:    'bg-blue-500',
   success: 'bg-emerald-500',
   warning: 'bg-amber-400',
-  error: 'bg-red-500',
-  default: 'bg-muted-foreground',
+  error:   'bg-red-500',
 };
 
 const progressColors = {
+  default: 'bg-violet-500',
+  info:    'bg-blue-500',
   success: 'bg-emerald-500',
   warning: 'bg-amber-400',
-  error: 'bg-red-500',
-  default: 'bg-primary',
+  error:   'bg-red-500',
 };
 
 export interface StatItemProps {
   label: string;
   value: number | string;
   icon: LucideIcon;
-  variant?: keyof typeof variants;
+  variant?: 'default' | 'info' | 'success' | 'warning' | 'error';
   subtitle?: string;
   /** When provided (0–1), renders a small progress bar below the row */
   progress?: number;

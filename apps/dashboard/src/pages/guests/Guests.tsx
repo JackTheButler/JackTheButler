@@ -179,7 +179,7 @@ export function GuestsPage() {
             { label: t('guests.totalGuests'), value: stats.total, icon: Users, variant: 'default' },
             { label: t('guests.vipGuests'), value: stats.vip, icon: Crown, variant: 'warning' },
             { label: t('guests.repeatGuests'), value: stats.repeatGuests, icon: Star, variant: 'success' },
-            { label: t('guests.newThisMonth'), value: stats.newThisMonth, icon: UserPlus, variant: 'default' },
+            { label: t('guests.newThisMonth'), value: stats.newThisMonth, icon: UserPlus, variant: 'info' },
           ]}
         />
       )}

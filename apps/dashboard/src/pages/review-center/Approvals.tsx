@@ -430,9 +430,9 @@ export function ApprovalsPage() {
     <PageContainer>
       <StatsBar
         items={[
-          { label: t('approvals.pending'), value: stats.pending, icon: Clock },
-          { label: t('approvals.approvedToday'), value: stats.approvedToday, icon: CheckCircle2 },
-          { label: t('approvals.rejectedToday'), value: stats.rejectedToday, icon: XCircle },
+          { label: t('approvals.pending'), value: stats.pending, icon: Clock, variant: 'warning' },
+          { label: t('approvals.approvedToday'), value: stats.approvedToday, icon: CheckCircle2, variant: 'success' },
+          { label: t('approvals.rejectedToday'), value: stats.rejectedToday, icon: XCircle, variant: 'error' },
         ]}
       />
 
