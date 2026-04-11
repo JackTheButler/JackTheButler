@@ -1,4 +1,5 @@
 import * as React from 'react';
+import * as ReactDOM from 'react-dom';
 import { X } from 'lucide-react';
 import { cn } from '@/lib/utils';
 
@@ -38,7 +39,7 @@ export function Dialog({ open, onOpenChange, children }: DialogProps) {
 export function DialogContent({ children, className, title }: DialogContentProps) {
   const dialogContext = React.useContext(DialogContext);
 
-  return (
+  return ReactDOM.createPortal(
     <div className="fixed inset-0 z-50 flex items-center justify-center">
       <div
         className="fixed inset-0 bg-black/50"
@@ -64,7 +65,8 @@ export function DialogContent({ children, className, title }: DialogContentProps
         )}
         {children}
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }
 
