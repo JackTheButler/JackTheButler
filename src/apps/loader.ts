@@ -83,11 +83,12 @@ export class AppLoader {
     const manifests: AnyAppManifest[] = [];
 
     // Scan node_modules/@jackthebutler/ — works for both workspace packages and npm installs
-    const pluginsDir = resolve(process.cwd(), 'node_modules/@jack-plugins');
+    const pluginsDir = resolve(process.cwd(), 'node_modules/@jackthebutler');
     try {
       const entries = await readdir(pluginsDir, { withFileTypes: true });
       for (const entry of entries) {
         if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
+        if (entry.name === 'shared') continue;
         const pluginPath = `@jackthebutler/${entry.name}`;
         try {
           const plugin = await import(pluginPath) as { manifest?: AnyAppManifest };
@@ -101,7 +102,7 @@ export class AppLoader {
         }
       }
     } catch (err) {
-      log.warn({ err }, 'Could not read @jack-plugins directory — no plugins loaded');
+      log.warn({ err }, 'Could not read @jackthebutler directory — no plugins loaded');
     }
 
     const pluginCount = manifests.length;
