@@ -4,7 +4,7 @@
  * In-memory PMS adapter for testing and development.
  * Can be seeded with test data.
  *
- * @module @jack-plugins/pms-mock
+ * @module @jackthebutler/pms-mock
  */
 
 import type {
@@ -17,7 +17,7 @@ import type {
   PMSEventType,
   PMSAppManifest,
   PluginContext,
-} from '@jack/shared';
+} from '@jackthebutler/shared';
 
 /** Mirrors configSchema fields 1:1 — used by the scheduler, not the adapter itself */
 export interface MockPMSConfig {

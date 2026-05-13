@@ -21,7 +21,7 @@ import { guestService } from '@/services/guest.js';
 import { createLogger } from '@/utils/logger.js';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
-import type { NormalizedReservation } from '@jack/shared';
+import type { NormalizedReservation } from '@jackthebutler/shared';
 import type { Guest, Reservation } from '@/db/schema.js';
 
 const log = createLogger('services:verification');

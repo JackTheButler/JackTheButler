@@ -1,5 +1,5 @@
 {
-  "name": "@jack-plugins/channel-twilio",
+  "name": "@jackthebutler/channel-twilio",
   "version": "1.0.0",
   "description": "Twilio SMS channel for Jack The Butler",
   "type": "module",
@@ -11,12 +11,16 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@jack/shared": "workspace:*",
+    "@jackthebutler/shared": "workspace:*",
     "twilio": "^5.12.0"
   },
   "devDependencies": {

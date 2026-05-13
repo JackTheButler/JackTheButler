@@ -1,5 +1,5 @@
 {
-  "name": "@jack-plugins/ai-anthropic",
+  "name": "@jackthebutler/ai-anthropic",
   "version": "1.0.0",
   "description": "Anthropic Claude AI provider for Jack The Butler",
   "type": "module",
@@ -11,13 +11,17 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
     "@anthropic-ai/sdk": "^0.71.2",
-    "@jack/shared": "workspace:*"
+    "@jackthebutler/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

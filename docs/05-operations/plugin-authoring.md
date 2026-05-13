@@ -22,10 +22,10 @@ A plugin is an npm package that exports a `manifest` object. Jack's loader impor
 ### The only import you need
 
 ```ts
-import type { ... } from '@jack/shared';
+import type { ... } from '@jackthebutler/shared';
 ```
 
-`@jack/shared` is the complete public interface. **Never import from Jack's `src/` internals.** If you need something that isn't in `@jack/shared`, open an issue.
+`@jackthebutler/shared` is the complete public interface. **Never import from Jack's `src/` internals.** If you need something that isn't in `@jackthebutler/shared`, open an issue.
 
 ### Plugin categories
 
@@ -57,10 +57,10 @@ cp packages/plugin-starter/src/pms-example.ts packages/pms-yourpms/src/index.ts
 
 Then:
 1. Create `package.json` and `tsconfig.json` in your package directory (see templates below)
-2. Update `package.json` — set `name` to `@jack-plugins/pms-yourpms`
+2. Update `package.json` — set `name` to `@jackthebutler/pms-yourpms`
 3. Replace the starter class with your real implementation
 4. Update the `manifest` id, name, and configSchema
-5. Add to root `package.json` as `"@jack-plugins/pms-yourpms": "workspace:*"` and run `pnpm install`
+5. Add to root `package.json` as `"@jackthebutler/pms-yourpms": "workspace:*"` and run `pnpm install`
 
 ---
 
@@ -78,7 +78,7 @@ packages/pms-yourpms/
 
 ```json
 {
-  "name": "@jack-plugins/pms-yourpms",
+  "name": "@jackthebutler/pms-yourpms",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -94,7 +94,7 @@ packages/pms-yourpms/
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@jack/shared": "^1.0.0"
+    "@jackthebutler/shared": "^1.0.0"
   },
   "devDependencies": {
     "typescript": "^5.7.2"
@@ -120,7 +120,7 @@ Add any PMS SDK (e.g. `axios`, `yourpms-sdk`) to `dependencies` here.
 }
 ```
 
-**Outside the monorepo** (standalone package, `@jack/shared` installed from npm):
+**Outside the monorepo** (standalone package, `@jackthebutler/shared` installed from npm):
 ```json
 {
   "compilerOptions": {
@@ -151,9 +151,9 @@ export const manifest: PMSAppManifest = { ... };
 export default { manifest };
 ```
 
-Jack's loader auto-discovers all `@jack-plugins/*` packages and does:
+Jack's loader auto-discovers all `@jackthebutler/*` packages and does:
 ```ts
-const plugin = await import('@jack-plugins/pms-yourpms');
+const plugin = await import('@jackthebutler/pms-yourpms');
 registry.register(plugin.manifest);
 ```
 
@@ -208,7 +208,7 @@ export const manifest: PMSAppManifest = {
 };
 
 // ❌ Wrong — never import or call createAppLogger
-import { createAppLogger } from '@jack/core/instrumentation'; // doesn't exist publicly
+import { createAppLogger } from '@jackthebutler/core/instrumentation'; // doesn't exist publicly
 ```
 
 ---
@@ -339,7 +339,7 @@ export const manifest: PMSAppManifest = {
 Implement `AIProvider` and `BaseProvider`:
 
 ```ts
-import type { AIProvider, AIAppManifest, AppLogger, BaseProvider, PluginContext } from '@jack/shared';
+import type { AIProvider, AIAppManifest, AppLogger, BaseProvider, PluginContext } from '@jackthebutler/shared';
 
 class YourAIProvider implements AIProvider, BaseProvider {
   readonly appLog: AppLogger;
@@ -381,8 +381,8 @@ Implement `BaseProvider`. `ChannelAdapter` is satisfied **structurally** — you
 import type {
   ChannelAppManifest, AppLogger, BaseProvider, ConnectionTestResult, PluginContext,
   OutboundMessage, SendResult, InboundMessage,
-} from '@jack/shared';
-import { withLogContext } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext } from '@jackthebutler/shared';
 
 class YourChannelAdapter implements BaseProvider {
   readonly id = 'channel-yourprovider';
@@ -416,20 +416,20 @@ export const manifest: ChannelAppManifest = {
 
 ## Registering Your Plugin
 
-Jack auto-discovers every `@jack-plugins/*` package in `node_modules`. No config file to edit — installing the package is enough.
+Jack auto-discovers every `@jackthebutler/*` package in `node_modules`. No config file to edit — installing the package is enough.
 
 **Workspace package** (inside the monorepo):
 
 Add to the root `package.json` dependencies and run `pnpm install`:
 
 ```json
-"@jack-plugins/pms-yourpms": "workspace:*"
+"@jackthebutler/pms-yourpms": "workspace:*"
 ```
 
 **Published npm package**:
 
 ```bash
-npm install @jack-plugins/pms-yourpms
+npm install @jackthebutler/pms-yourpms
 ```
 
 Then restart Jack. Your plugin will appear in the dashboard under **Engine → Apps**.
@@ -440,7 +440,7 @@ Then restart Jack. Your plugin will appear in the dashboard under **Engine → A
 
 Before shipping, run through these checks:
 
-- [ ] `pnpm --filter @jack-plugins/pms-yourpms build` — package builds without errors
+- [ ] `pnpm --filter @jackthebutler/pms-yourpms build` — package builds without errors
 - [ ] `pnpm typecheck` — full repo typecheck passes
 - [ ] `pnpm test` — no regressions
 - [ ] A typed config interface is defined and matches `configSchema` fields 1:1
@@ -464,4 +464,4 @@ npm publish --access public
 
 Update `package.json` with `"publishConfig": { "access": "public" }` to make this the default.
 
-Community plugins published under `@jack-plugins/` scope are listed in the plugin registry at [jackthebutler.com/plugins](https://jackthebutler.com/plugins).
+Community plugins published under `@jackthebutler/` scope are listed in the plugin registry at [jackthebutler.com/plugins](https://jackthebutler.com/plugins).

@@ -44,20 +44,20 @@ jack/
 │   ├── utils/            # Shared utilities
 │   └── types/            # TypeScript type definitions
 ├── packages/             # Plugin packages (each is a standalone npm package)
-│   ├── shared/           # @jack/shared — public types for plugin authors
+│   ├── shared/           # @jackthebutler/shared — public types for plugin authors
 │   ├── plugin-starter/   # Copy-paste starter examples (pms/ai/channel)
-│   ├── ai-anthropic/     # @jack-plugins/ai-anthropic
-│   ├── ai-openai/        # @jack-plugins/ai-openai
-│   ├── ai-ollama/        # @jack-plugins/ai-ollama
-│   ├── channel-whatsapp/ # @jack-plugins/channel-whatsapp
-│   ├── channel-twilio/   # @jack-plugins/channel-twilio (SMS)
-│   ├── channel-smtp/     # @jack-plugins/channel-smtp
-│   ├── channel-mailgun/  # @jack-plugins/channel-mailgun
-│   ├── channel-sendgrid/ # @jack-plugins/channel-sendgrid
-│   ├── channel-gmail/    # @jack-plugins/channel-gmail
-│   ├── pms-mock/         # @jack-plugins/pms-mock
-│   ├── pms-mews/         # @jack-plugins/pms-mews
-│   └── pms-cloudbeds/    # @jack-plugins/pms-cloudbeds
+│   ├── ai-anthropic/     # @jackthebutler/ai-anthropic
+│   ├── ai-openai/        # @jackthebutler/ai-openai
+│   ├── ai-ollama/        # @jackthebutler/ai-ollama
+│   ├── channel-whatsapp/ # @jackthebutler/channel-whatsapp
+│   ├── channel-twilio/   # @jackthebutler/channel-twilio (SMS)
+│   ├── channel-smtp/     # @jackthebutler/channel-smtp
+│   ├── channel-mailgun/  # @jackthebutler/channel-mailgun
+│   ├── channel-sendgrid/ # @jackthebutler/channel-sendgrid
+│   ├── channel-gmail/    # @jackthebutler/channel-gmail
+│   ├── pms-mock/         # @jackthebutler/pms-mock
+│   ├── pms-mews/         # @jackthebutler/pms-mews
+│   └── pms-cloudbeds/    # @jackthebutler/pms-cloudbeds
 ├── apps/
 │   ├── dashboard/        # Staff web dashboard (React)
 │   │   └── src/

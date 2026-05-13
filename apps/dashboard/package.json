@@ -1,6 +1,7 @@
 {
-  "name": "@jack/dashboard",
+  "name": "@jackthebutler/dashboard",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -9,7 +10,7 @@
     "preview": "vite preview"
   },
   "dependencies": {
-    "@jack/shared": "workspace:*",
+    "@jackthebutler/shared": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-label": "^2.1.8",
     "@radix-ui/react-popover": "^1.1.15",

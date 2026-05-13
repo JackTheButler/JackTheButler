@@ -5,10 +5,10 @@
  *
  * Steps:
  * 1. Copy packages/plugin-starter to packages/ai-yourprovider/
- * 2. Update package.json name to @jack-plugins/ai-yourprovider
+ * 2. Update package.json name to @jackthebutler/ai-yourprovider
  * 3. Replace StarterAIProvider with your real implementation
  * 4. Update the manifest: id, name, description, configSchema, capabilities
- * 5. Add to root package.json as `"@jack-plugins/ai-yourprovider": "workspace:*"` and run: pnpm install && pnpm typecheck
+ * 5. Add to root package.json as `"@jackthebutler/ai-yourprovider": "workspace:*"` and run: pnpm install && pnpm typecheck
  */
 
 import type {
@@ -22,8 +22,8 @@ import type {
   EmbeddingRequest,
   EmbeddingResponse,
   PluginContext,
-} from '@jack/shared';
-import { withLogContext } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext } from '@jackthebutler/shared';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 

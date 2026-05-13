@@ -4,14 +4,14 @@
  * This is a fully annotated example PMS plugin. Copy this package, rename it,
  * and replace the implementation with your actual PMS integration.
  *
- * The only import you need is @jack/shared — never import from Jack's core.
+ * The only import you need is @jackthebutler/shared — never import from Jack's core.
  *
  * Steps to create your own plugin:
  * 1. Copy this package to packages/pms-yourpms/ (or a separate repo)
  * 2. Update package.json: name, description, add any SDK dependencies
  * 3. Replace StarterAdapter with your real implementation
  * 4. Update the manifest: id, name, description, configSchema
- * 5. Add to root package.json as `"@jack-plugins/pms-yourpms": "workspace:*"` and run: pnpm install
+ * 5. Add to root package.json as `"@jackthebutler/pms-yourpms": "workspace:*"` and run: pnpm install
  * 6. Run: pnpm typecheck
  */
 
@@ -32,7 +32,7 @@ import type {
   // Logging — received via PluginContext, never imported directly
   AppLogger,
   PluginContext,
-} from '@jack/shared';
+} from '@jackthebutler/shared';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 
@@ -250,6 +250,6 @@ export const manifest: PMSAppManifest = {
 
 /**
  * Default export — convenience for manual imports.
- * Jack's loader calls: const { manifest } = await import('@jack-plugins/your-plugin')
+ * Jack's loader calls: const { manifest } = await import('@jackthebutler/your-plugin')
  */
 export default { manifest };

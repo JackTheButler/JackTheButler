@@ -1188,7 +1188,7 @@ Build pipeline (`apps/webchat/`), shadow DOM isolation, CTA element detection (`
 
 ```
 apps/webchat/
-├── package.json          # @jack/webchat, zero runtime deps
+├── package.json          # @jackthebutler/webchat, zero runtime deps
 ├── vite.config.ts        # Vite lib mode → IIFE widget.js
 ├── tsconfig.json         # DOM + ES2022, bundler moduleResolution
 ├── index.html            # Dev harness (simulates hotel page)
@@ -1226,7 +1226,7 @@ All component and style files are created as **stubs** in Phase 4 — functional
 
 #### What's Built
 
-1. Vite workspace package (`@jack/webchat`) with lib mode build → single IIFE `widget.js`
+1. Vite workspace package (`@jackthebutler/webchat`) with lib mode build → single IIFE `widget.js`
 2. Self-executing entry point: reads `data-butler-key` from `<script>` tag (stored for Phase 6 config fetch, unused until then), derives gateway origin from `src` attribute
 3. `ButlerChatWidget` class: shadow DOM host, instant show/hide toggle (animated in Phase 5), lazy WS connection
 4. CTA detection: `querySelectorAll('[data-butler-chat]')` → click handlers, attribute-based preset (`data-butler-chat="bubble"` vs `"custom"`)

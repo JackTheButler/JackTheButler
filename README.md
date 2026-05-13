@@ -184,7 +184,7 @@ pnpm dev
 
 Jack supports community plugins for new AI providers, communication channels, and PMS integrations — without modifying core.
 
-Each plugin is a standalone npm package that exports a `manifest` object. Jack's loader imports it at startup and registers it in the app registry. Plugins are named `{category}-{provider}` and published under the `@jack-plugins/` npm scope.
+Each plugin is a standalone npm package that exports a `manifest` object. Jack's loader imports it at startup and registers it in the app registry. Plugins are named `{category}-{provider}` and published under the `@jackthebutler/` npm scope.
 
 **1. Copy the starter for your category:**
 
@@ -196,7 +196,7 @@ cp packages/plugin-starter/src/pms-example.ts packages/pms-yourpms/src/index.ts
 **2. Add to root `package.json` and install:**
 
 ```json
-"@jack-plugins/pms-yourpms": "workspace:*"
+"@jackthebutler/pms-yourpms": "workspace:*"
 ```
 
 ```bash
@@ -206,7 +206,7 @@ pnpm install   # links the workspace package — auto-discovered on next restart
 **3. Build and verify:**
 
 ```bash
-pnpm --filter @jack-plugins/pms-yourpms build   # compile your plugin
+pnpm --filter @jackthebutler/pms-yourpms build   # compile your plugin
 pnpm typecheck                                   # full repo type check
 pnpm test                                        # run tests
 ```

@@ -18,8 +18,8 @@ import type {
   EmbeddingRequest,
   EmbeddingResponse,
   PluginContext,
-} from '@jack/shared';
-import { withLogContext } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext } from '@jackthebutler/shared';
 
 /**
  * Default Claude model

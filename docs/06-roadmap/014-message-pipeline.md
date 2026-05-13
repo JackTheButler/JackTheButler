@@ -53,7 +53,7 @@ src/
       index.ts          # Orchestrator — stage order + try/catch/finally (replaces message-processor.ts)
 ```
 
-> **Note:** `MessageContext` is an internal kernel type. It does not belong in `@jack/shared` — that package is for plugin authors (AI, channel, PMS adapters) who never interact with the pipeline directly.
+> **Note:** `MessageContext` is an internal kernel type. It does not belong in `@jackthebutler/shared` — that package is for plugin authors (AI, channel, PMS adapters) who never interact with the pipeline directly.
 
 ### How it connects (after Stage 3)
 

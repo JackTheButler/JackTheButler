@@ -15,8 +15,8 @@ import type {
   PluginContext,
   OutboundMessage,
   SendResult,
-} from '@jack/shared';
-import { withLogContext } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext } from '@jackthebutler/shared';
 
 type MailgunClient = ReturnType<InstanceType<typeof Mailgun>['client']>;
 

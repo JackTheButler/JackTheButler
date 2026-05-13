@@ -17,8 +17,8 @@ import type {
   EmbeddingRequest,
   EmbeddingResponse,
   PluginContext,
-} from '@jack/shared';
-import { withLogContext, AppLogError } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext, AppLogError } from '@jackthebutler/shared';
 
 /**
  * Default Ollama models

@@ -7,11 +7,11 @@
 
 import type { PermissionDefinition, PermissionGroup } from './types.js';
 
-// Single source of truth lives in @jack/shared — imported for local use
+// Single source of truth lives in @jackthebutler/shared — imported for local use
 // and re-exported so all existing backend imports continue to work unchanged.
-import { PERMISSIONS, WILDCARD_PERMISSION } from '@jack/shared';
-export { PERMISSIONS, WILDCARD_PERMISSION } from '@jack/shared';
-export type { Permission } from '@jack/shared';
+import { PERMISSIONS, WILDCARD_PERMISSION } from '@jackthebutler/shared';
+export { PERMISSIONS, WILDCARD_PERMISSION } from '@jackthebutler/shared';
+export type { Permission } from '@jackthebutler/shared';
 
 /**
  * Permission definitions with metadata for UI display

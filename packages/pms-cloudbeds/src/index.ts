@@ -15,7 +15,7 @@
  * - getModifiedReservations() may miss some changes (API documented limitation)
  * - No webhook HMAC verification; propertyID validation used as mitigation
  *
- * @module @jack-plugins/pms-cloudbeds
+ * @module @jackthebutler/pms-cloudbeds
  */
 
 import type {
@@ -31,8 +31,8 @@ import type {
   PMSAppManifest,
   AppLogger,
   PluginContext,
-} from '@jack/shared';
-import { AppLogError } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { AppLogError } from '@jackthebutler/shared';
 
 const CLOUDBEDS_API_URL = 'https://api.cloudbeds.com/api/v1.3';
 const DEFAULT_PAGE_SIZE = 100;

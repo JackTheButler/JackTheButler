@@ -150,7 +150,7 @@ export function createApp() {
         status: 'running',
         docs: '/api/v1',
         health: '/health',
-        note: 'Dashboard not available. Build with: pnpm --filter @jack/dashboard build',
+        note: 'Dashboard not available. Build with: pnpm --filter @jackthebutler/dashboard build',
       });
     }
   });

@@ -1,5 +1,5 @@
 {
-  "name": "@jack-plugins/channel-sendgrid",
+  "name": "@jackthebutler/channel-sendgrid",
   "version": "1.0.0",
   "description": "SendGrid email channel for Jack The Butler",
   "type": "module",
@@ -11,12 +11,16 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@jack/shared": "workspace:*",
+    "@jackthebutler/shared": "workspace:*",
     "@sendgrid/mail": "^8.1.6"
   },
   "devDependencies": {

@@ -6,10 +6,10 @@
 
 import type { ChannelType } from './channel.js';
 
-// Single source of truth in @jack/shared — imported for local use and re-exported
+// Single source of truth in @jackthebutler/shared — imported for local use and re-exported
 // so existing imports are unchanged.
-import type { ConversationState } from '@jack/shared';
-export type { ConversationState } from '@jack/shared';
+import type { ConversationState } from '@jackthebutler/shared';
+export type { ConversationState } from '@jackthebutler/shared';
 
 /**
  * Conversation summary for lists

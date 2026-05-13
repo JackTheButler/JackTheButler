@@ -15,9 +15,9 @@ vi.stubGlobal('fetch', mockFetch);
 
 // Import after mocking
 const { MewsPMSAdapter, createMewsPMSAdapter, manifest } = await import(
-  '@jack-plugins/pms-mews'
+  '@jackthebutler/pms-mews'
 );
-type MewsConfig = import('@jack-plugins/pms-mews').MewsConfig;
+type MewsConfig = import('@jackthebutler/pms-mews').MewsConfig;
 
 // ==================
 // Test Helpers

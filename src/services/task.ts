@@ -11,8 +11,8 @@ import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { NotFoundError, ConflictError } from '@/errors/index.js';
 import { events, EventTypes } from '@/events/index.js';
-import type { TaskStatus, TaskPriority } from '@jack/shared';
-export type { TaskStatus, TaskPriority } from '@jack/shared';
+import type { TaskStatus, TaskPriority } from '@jackthebutler/shared';
+export type { TaskStatus, TaskPriority } from '@jackthebutler/shared';
 import { now } from '@/utils/time.js';
 
 const log = createLogger('task');

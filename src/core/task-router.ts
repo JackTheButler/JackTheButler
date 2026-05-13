@@ -18,8 +18,8 @@ const log = createLogger('core:task-router');
 // Types
 // ===================
 
-import type { TaskPriority } from '@jack/shared';
-export type { TaskPriority } from '@jack/shared';
+import type { TaskPriority } from '@jackthebutler/shared';
+export type { TaskPriority } from '@jackthebutler/shared';
 export type TaskSource = 'manual' | 'auto' | 'automation';
 
 /**

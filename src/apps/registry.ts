@@ -19,7 +19,7 @@ import type {
   ConnectionTestResult,
   PluginContext,
 } from './types.js';
-import type { AIProvider, ChannelAdapter, PMSAdapter } from '@jack/shared';
+import type { AIProvider, ChannelAdapter, PMSAdapter } from '@jackthebutler/shared';
 import type { ChannelType } from '@/types/index.js';
 
 const log = createLogger('apps:registry');

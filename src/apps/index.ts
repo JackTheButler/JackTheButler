@@ -3,7 +3,7 @@
  *
  * Registry, loader, and manifest utilities for the app/plugin system.
  * Concrete provider implementations live in packages/ and are discovered
- * at startup from node_modules/@jack-plugins/.
+ * at startup from node_modules/@jackthebutler/.
  *
  * @module apps
  */

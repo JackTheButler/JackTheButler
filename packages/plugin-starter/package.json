@@ -1,5 +1,5 @@
 {
-  "name": "@jack-plugins/plugin-starter",
+  "name": "@jackthebutler/plugin-starter",
   "version": "1.0.0",
   "description": "Starter template for building Jack The Butler plugins",
   "type": "module",
@@ -11,12 +11,16 @@
       "import": "./dist/index.js"
     }
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@jack/shared": "workspace:*"
+    "@jackthebutler/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

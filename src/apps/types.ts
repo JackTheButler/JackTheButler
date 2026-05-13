@@ -1,7 +1,7 @@
 /**
  * App Types
  *
- * All types have moved to @jack/shared.
+ * All types have moved to @jackthebutler/shared.
  * This file exists for backwards-compatible imports within src/.
  *
  * @module apps/types
@@ -23,4 +23,4 @@ export type {
   BaseProvider,
   AppLogger,
   PluginContext,
-} from '@jack/shared';
+} from '@jackthebutler/shared';

@@ -12,9 +12,9 @@ Jack's integrations (AI providers, messaging channels, PMS adapters) are current
 ## Goals
 
 1. **Zero core changes for new integrations** — Adding a new PMS, AI provider, or channel requires no modifications to `src/apps/`, only a new package following the plugin interface
-2. **Stable public interface** — Plugin authors depend only on `@jack/shared`; core internals are never exposed or imported
-3. **Monorepo for official plugins** — Official integrations live as workspace packages (`packages/pms-mews/`), published under `@jack-plugins/` on npm
-4. **Community extensibility** — Anyone can publish a `@jack-plugins/pms-xxx` package; operators install it like any npm dependency
+2. **Stable public interface** — Plugin authors depend only on `@jackthebutler/shared`; core internals are never exposed or imported
+3. **Monorepo for official plugins** — Official integrations live as workspace packages (`packages/pms-mews/`), published under `@jackthebutler/` on npm
+4. **Community extensibility** — Anyone can publish a `@jackthebutler/pms-xxx` package; operators install it like any npm dependency
 5. **No runtime complexity** — Plugins load at startup via `jack.config.ts`; no filesystem scanning, no hot-loading, no sandboxing
 
 ---
@@ -26,15 +26,15 @@ Jack's integrations (AI providers, messaging channels, PMS adapters) are current
 ```
 jack/
 ├── packages/
-│   ├── shared/                  ← @jack/shared — public plugin interface (types only)
-│   ├── pms-mews/                ← @jack-plugins/pms-mews
-│   ├── pms-cloudbeds/           ← @jack-plugins/pms-cloudbeds
-│   ├── ai-anthropic/            ← @jack-plugins/ai-anthropic
-│   ├── ai-openai/               ← @jack-plugins/ai-openai
-│   ├── ai-ollama/               ← @jack-plugins/ai-ollama
-│   ├── channel-whatsapp/        ← @jack-plugins/channel-whatsapp
-│   ├── channel-sms/             ← @jack-plugins/channel-sms
-│   └── channel-email/           ← @jack-plugins/channel-email
+│   ├── shared/                  ← @jackthebutler/shared — public plugin interface (types only)
+│   ├── pms-mews/                ← @jackthebutler/pms-mews
+│   ├── pms-cloudbeds/           ← @jackthebutler/pms-cloudbeds
+│   ├── ai-anthropic/            ← @jackthebutler/ai-anthropic
+│   ├── ai-openai/               ← @jackthebutler/ai-openai
+│   ├── ai-ollama/               ← @jackthebutler/ai-ollama
+│   ├── channel-whatsapp/        ← @jackthebutler/channel-whatsapp
+│   ├── channel-sms/             ← @jackthebutler/channel-sms
+│   └── channel-email/           ← @jackthebutler/channel-email
 │
 ├── src/
 │   ├── core/                    ← Unchanged
@@ -44,7 +44,7 @@ jack/
 │   │   ├── instrumentation.ts   ← Keep (needs DB — never moves to shared)
 │   │   ├── index.ts             ← Simplified (no concrete impl exports)
 │   │   └── tools/               ← Keep (built-in, not plugins)
-│   │   # types.ts DELETED — moved to @jack/shared
+│   │   # types.ts DELETED — moved to @jackthebutler/shared
 │   │   # ai/, channels/, pms/ DELETED — moved to packages/
 │   └── ...
 │
@@ -55,10 +55,10 @@ jack/
 
 ```
 jack.config.ts
-  plugins: ['@jack-plugins/pms-mews', '@jack-plugins/ai-anthropic', ...]
+  plugins: ['@jackthebutler/pms-mews', '@jackthebutler/ai-anthropic', ...]
         ↓
   AppLoader.discoverApps()
-    → await import('@jack-plugins/pms-mews')
+    → await import('@jackthebutler/pms-mews')
     → { manifest } = plugin
     → registry.register(manifest)
         ↓
@@ -77,11 +77,11 @@ jack.config.ts
 
 ### The `PluginContext` Pattern (Critical Design Decision)
 
-`createAppLogger` writes to the database. It lives in `src/apps/instrumentation.ts` and can **never** move to `@jack/shared` (which must be types-only with zero runtime dependencies).
+`createAppLogger` writes to the database. It lives in `src/apps/instrumentation.ts` and can **never** move to `@jackthebutler/shared` (which must be types-only with zero runtime dependencies).
 
 But plugins need an `AppLogger` to satisfy `BaseProvider`. The solution: the registry creates the logger and **injects it** into the plugin factory via a `PluginContext` object.
 
-**`@jack/shared` exports the type:**
+**`@jackthebutler/shared` exports the type:**
 ```ts
 // packages/shared/src/apps.ts
 export interface PluginContext {
@@ -114,7 +114,7 @@ case 'pms': {
 **Plugin receives it in the constructor:**
 ```ts
 // packages/pms-mews/src/index.ts
-import type { PMSAppManifest, PMSAdapter, BaseProvider, AppLogger, PluginContext } from '@jack/shared';
+import type { PMSAppManifest, PMSAdapter, BaseProvider, AppLogger, PluginContext } from '@jackthebutler/shared';
 
 class MewsAdapter implements PMSAdapter, BaseProvider {
   readonly id = 'pms-mews';
@@ -139,7 +139,7 @@ export const manifest: PMSAppManifest = {
 
 ### Plugin Interface Contract
 
-`@jack/shared` is the **only** import a plugin author ever needs. After Phase 1, it exports:
+`@jackthebutler/shared` is the **only** import a plugin author ever needs. After Phase 1, it exports:
 
 ```ts
 // packages/shared/src/index.ts — after Phase 1
@@ -164,7 +164,7 @@ export { PERMISSIONS, WILDCARD_PERMISSION }
 export type { Permission, ConversationState, ChannelType, TaskStatus, TaskPriority, ReservationStatus }
 ```
 
-The core adapter interfaces (`AIProvider`, `PMSAdapter`, `ChannelAdapter`) are **re-exported** from `@jack/shared` in Phase 1 — they stay in `src/core/interfaces/` but become accessible via `@jack/shared` so plugin authors can type their implementations without importing from core.
+The core adapter interfaces (`AIProvider`, `PMSAdapter`, `ChannelAdapter`) are **re-exported** from `@jackthebutler/shared` in Phase 1 — they stay in `src/core/interfaces/` but become accessible via `@jackthebutler/shared` so plugin authors can type their implementations without importing from core.
 
 ---
 
@@ -174,18 +174,18 @@ The core adapter interfaces (`AIProvider`, `PMSAdapter`, `ChannelAdapter`) are *
 
 ```ts
 // jack.config.ts (repo root)
-import type { JackConfig } from '@jack/shared';
+import type { JackConfig } from '@jackthebutler/shared';
 
 export default {
   plugins: [
-    '@jack-plugins/ai-anthropic',
-    '@jack-plugins/ai-openai',
-    '@jack-plugins/ai-ollama',
-    '@jack-plugins/channel-whatsapp',
-    '@jack-plugins/channel-sms',
-    '@jack-plugins/channel-email',
-    '@jack-plugins/pms-mews',
-    '@jack-plugins/pms-cloudbeds',
+    '@jackthebutler/ai-anthropic',
+    '@jackthebutler/ai-openai',
+    '@jackthebutler/ai-ollama',
+    '@jackthebutler/channel-whatsapp',
+    '@jackthebutler/channel-sms',
+    '@jackthebutler/channel-email',
+    '@jackthebutler/pms-mews',
+    '@jackthebutler/pms-cloudbeds',
   ],
 } satisfies JackConfig;
 ```
@@ -220,7 +220,7 @@ type IntegrationSource = 'mews' | 'cloudbeds' | 'opera' | 'apaleo' | 'protel' | 
 
 After Phase 4, open string with well-known constants:
 ```ts
-// AFTER (@jack/shared)
+// AFTER (@jackthebutler/shared)
 export type IntegrationSource = string;
 
 export const IntegrationSources = {
@@ -256,12 +256,12 @@ Each phase ends with a full verification (`pnpm typecheck && pnpm test && pnpm b
 
 ### Phase 1: Shared Interface Package
 
-**Goal:** All plugin-facing types live in `@jack/shared` so a plugin author's only import is `@jack/shared` and they never touch core internals.
+**Goal:** All plugin-facing types live in `@jackthebutler/shared` so a plugin author's only import is `@jackthebutler/shared` and they never touch core internals.
 
 #### Step 1.1 — Create `packages/shared/src/apps.ts`
 
 Create this new file. Copy the **full contents** of `src/apps/types.ts` into it, then make these changes:
-- Remove all imports (the file must have zero imports — `@jack/shared` is types-only)
+- Remove all imports (the file must have zero imports — `@jackthebutler/shared` is types-only)
 - Add `PluginContext` interface after `AppLogger`:
   ```ts
   export interface PluginContext {
@@ -279,9 +279,9 @@ Create this new file. Copy the **full contents** of `src/apps/types.ts` into it,
   // PMSAppManifest
   createAdapter: (config: Record<string, unknown>, context: PluginContext) => PMSAdapter;
   ```
-- The `AIProvider`, `ChannelAdapter`, `PMSAdapter` types referenced in the manifest interfaces are not yet in scope here — use `unknown` as a temporary placeholder or add forward-reference imports from `@jack/shared`'s own files once they exist (see Step 1.2).
+- The `AIProvider`, `ChannelAdapter`, `PMSAdapter` types referenced in the manifest interfaces are not yet in scope here — use `unknown` as a temporary placeholder or add forward-reference imports from `@jackthebutler/shared`'s own files once they exist (see Step 1.2).
 
-#### Step 1.2 — Re-export core adapter interfaces from `@jack/shared`
+#### Step 1.2 — Re-export core adapter interfaces from `@jackthebutler/shared`
 
 Add to `packages/shared/src/index.ts`:
 ```ts
@@ -307,7 +307,7 @@ export type {
 } from '../../src/core/interfaces/pms.js';
 ```
 
-> **Note:** These are path-relative re-exports from `packages/shared/` to `src/core/`. This works in the monorepo during development. In a future npm publish, `@jack/shared` would bundle these types. Using `export type` (type-only) ensures zero runtime impact.
+> **Note:** These are path-relative re-exports from `packages/shared/` to `src/core/`. This works in the monorepo during development. In a future npm publish, `@jackthebutler/shared` would bundle these types. Using `export type` (type-only) ensures zero runtime impact.
 
 Also add to `packages/shared/src/index.ts`:
 ```ts
@@ -328,21 +328,21 @@ Ensure it includes `src/apps.ts` and can resolve the relative re-exports:
   "include": ["src/**/*"]
 }
 ```
-The relative imports to `../../src/core/` work because `tsconfig.json` at the root includes `paths` for `@/`. Verify with `pnpm --filter @jack/shared typecheck`.
+The relative imports to `../../src/core/` work because `tsconfig.json` at the root includes `paths` for `@/`. Verify with `pnpm --filter @jackthebutler/shared typecheck`.
 
 #### Step 1.4 — Update `src/apps/types.ts`
 
-Replace the entire file with re-exports from `@jack/shared`:
+Replace the entire file with re-exports from `@jackthebutler/shared`:
 ```ts
 // src/apps/types.ts
-// All app types have moved to @jack/shared.
+// All app types have moved to @jackthebutler/shared.
 // This file exists only for backwards-compatible imports within src/.
 export type {
   AppCategory, ProviderStatus, ConfigFieldType, ConfigField,
   AppManifest, AIAppManifest, ChannelAppManifest, PMSAppManifest, ToolAppManifest,
   AnyAppManifest, AppInstance, ConnectionTestResult, AppLogger, BaseProvider,
   PluginContext,
-} from '@jack/shared';
+} from '@jackthebutler/shared';
 ```
 All existing `import ... from './types.js'` in `src/apps/` continue to work unchanged. No other files need touching in this step.
 
@@ -352,7 +352,7 @@ In `src/apps/registry.ts`, update the `initialize()` method to import `createApp
 
 ```ts
 import { createAppLogger } from './instrumentation.js';
-import type { PluginContext } from '@jack/shared';
+import type { PluginContext } from '@jackthebutler/shared';
 ```
 
 Update the `switch` in `initialize()`:
@@ -399,7 +399,7 @@ class MewsAdapter implements PMSAdapter {
 }
 
 // After:
-import type { PluginContext, AppLogger } from '@jack/shared';
+import type { PluginContext, AppLogger } from '@jackthebutler/shared';
 
 export const manifest: PMSAppManifest = {
   createAdapter: (config, context) => new MewsAdapter(config as MewsConfig, context),
@@ -435,7 +435,7 @@ After Step 1.6, adapters no longer call `createAppLogger` directly. Remove the i
 #### Verify Phase 1
 
 ```bash
-pnpm --filter @jack/shared build
+pnpm --filter @jackthebutler/shared build
 pnpm typecheck
 pnpm test
 pnpm build
@@ -449,7 +449,7 @@ Expected: all pass. If typecheck fails on a factory signature mismatch, a manife
 
 **Goal:** Core discovers plugins from `jack.config.ts` instead of a hardcoded static `allManifests`. The `allManifests` static registry is deleted.
 
-#### Step 2.1 — Add `JackConfig` to `@jack/shared`
+#### Step 2.1 — Add `JackConfig` to `@jackthebutler/shared`
 
 Add to `packages/shared/src/apps.ts`:
 ```ts
@@ -457,7 +457,7 @@ export interface JackConfig {
   /**
    * List of plugin package names or local paths to load at startup.
    * Each must export a { manifest } object conforming to AnyAppManifest.
-   * Example: '@jack-plugins/pms-mews' or './packages/pms-mews/src/index.js'
+   * Example: '@jackthebutler/pms-mews' or './packages/pms-mews/src/index.js'
    */
   plugins: string[];
 }
@@ -467,22 +467,22 @@ export interface JackConfig {
 
 ```ts
 // jack.config.ts
-import type { JackConfig } from '@jack/shared';
+import type { JackConfig } from '@jackthebutler/shared';
 
 export default {
   plugins: [
     // AI Providers
-    '@jack-plugins/ai-anthropic',
-    '@jack-plugins/ai-openai',
-    '@jack-plugins/ai-ollama',
+    '@jackthebutler/ai-anthropic',
+    '@jackthebutler/ai-openai',
+    '@jackthebutler/ai-ollama',
     // Channels
-    '@jack-plugins/channel-whatsapp',
-    '@jack-plugins/channel-sms',
-    '@jack-plugins/channel-email',
+    '@jackthebutler/channel-whatsapp',
+    '@jackthebutler/channel-sms',
+    '@jackthebutler/channel-email',
     // PMS
-    '@jack-plugins/pms-mock',
-    '@jack-plugins/pms-mews',
-    '@jack-plugins/pms-cloudbeds',
+    '@jackthebutler/pms-mock',
+    '@jackthebutler/pms-mews',
+    '@jackthebutler/pms-cloudbeds',
   ],
 } satisfies JackConfig;
 ```
@@ -552,13 +552,13 @@ pnpm build
 pnpm dev  # start the server — verify apps still load correctly
 ```
 
-At this point `jack.config.ts` exists but the `@jack-plugins/*` packages don't yet — the fallback to `getAllManifests()` kicks in. The app should behave identically to before.
+At this point `jack.config.ts` exists but the `@jackthebutler/*` packages don't yet — the fallback to `getAllManifests()` kicks in. The app should behave identically to before.
 
 ---
 
 ### Phase 3: Extract Integrations to Workspace Packages
 
-**Goal:** Each integration lives in `packages/xxx/` with its own `package.json`, imports only from `@jack/shared`, and has no knowledge of core internals. The `src/apps/ai/`, `src/apps/channels/`, and `src/apps/pms/` directories are deleted.
+**Goal:** Each integration lives in `packages/xxx/` with its own `package.json`, imports only from `@jackthebutler/shared`, and has no knowledge of core internals. The `src/apps/ai/`, `src/apps/channels/`, and `src/apps/pms/` directories are deleted.
 
 Extract in this order. Complete one extraction fully (including verification) before starting the next.
 
@@ -584,7 +584,7 @@ packages/pms-mews/
 **B. `package.json` template:**
 ```json
 {
-  "name": "@jack-plugins/pms-mews",
+  "name": "@jackthebutler/pms-mews",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -600,7 +600,7 @@ packages/pms-mews/
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@jack/shared": "workspace:*"
+    "@jackthebutler/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.2"
@@ -626,8 +626,8 @@ If the adapter has external npm dependencies (e.g. Mews SDK, axios), add them to
 
 **D. `src/index.ts` — copy from `src/apps/pms/providers/mews.ts`:**
 - Remove import of `createAppLogger` (already done in Phase 1)
-- Change any `@/` internal imports to only `@jack/shared` imports
-- Verify the adapter class only uses `AppLogger`, `PluginContext`, and types from `@jack/shared`
+- Change any `@/` internal imports to only `@jackthebutler/shared` imports
+- Verify the adapter class only uses `AppLogger`, `PluginContext`, and types from `@jackthebutler/shared`
 - Export the manifest as a named export AND as default:
   ```ts
   export { manifest };          // named — for explicit imports
@@ -642,7 +642,7 @@ packages:
 ```
 (If already using `packages/*` glob, no change needed — pnpm auto-discovers.)
 
-**F. Update `jack.config.ts`** to point to the new workspace package name (e.g. `@jack-plugins/pms-mews`). Since it's a workspace package, pnpm resolves it locally.
+**F. Update `jack.config.ts`** to point to the new workspace package name (e.g. `@jackthebutler/pms-mews`). Since it's a workspace package, pnpm resolves it locally.
 
 **G. Add to root `tsconfig.json` references array:**
 ```json
@@ -658,7 +658,7 @@ packages:
 **I. Install and verify:**
 ```bash
 pnpm install                              # links the new workspace package
-pnpm --filter @jack-plugins/pms-mews build
+pnpm --filter @jackthebutler/pms-mews build
 pnpm typecheck
 pnpm test
 pnpm build
@@ -728,7 +728,7 @@ default:
   break;
 ```
 
-#### Step 4.3 — Update `@jack/shared` re-exports
+#### Step 4.3 — Update `@jackthebutler/shared` re-exports
 
 Add `IntegrationSources` to the re-export in `packages/shared/src/index.ts`:
 ```ts
@@ -749,14 +749,14 @@ TypeScript should no longer complain about string assignments to `IntegrationSou
 
 ### Phase 5: Community Plugin Documentation
 
-**Goal:** An external developer can build and publish a working `@jack-plugins/xxx` package in under an hour.
+**Goal:** An external developer can build and publish a working `@jackthebutler/xxx` package in under an hour.
 
 #### Step 5.1 — Write `docs/05-operations/plugin-authoring.md`
 
 Cover:
-- Prerequisites: `@jack/shared` installed as a peer dependency
+- Prerequisites: `@jackthebutler/shared` installed as a peer dependency
 - Required exports: `manifest` (named) and `default { manifest }` (default)
-- Manifest interface reference (link to `@jack/shared` types)
+- Manifest interface reference (link to `@jackthebutler/shared` types)
 - `PluginContext` — what it provides, how to use `appLog`
 - The `BaseProvider` contract — why `readonly appLog: AppLogger` is required
 - Instrumentation rules from CLAUDE.md (wrap every outbound call)
@@ -764,12 +764,12 @@ Cover:
 - Verification checklist (from CLAUDE.md After Writing Code section)
 - Full annotated example (a minimal PMS adapter)
 
-#### Step 5.2 — Publish `@jack/shared` to npm
+#### Step 5.2 — Publish `@jackthebutler/shared` to npm
 
 Update `packages/shared/package.json`:
 ```json
 {
-  "name": "@jack/shared",
+  "name": "@jackthebutler/shared",
   "version": "1.0.0",
   "publishConfig": { "access": "public" }
 }
@@ -777,7 +777,7 @@ Update `packages/shared/package.json`:
 
 Add `"prepare": "tsc"` script back (removed during Docker fixes — now safe since `src/` is present at publish time).
 
-Publish: `pnpm --filter @jack/shared publish`.
+Publish: `pnpm --filter @jackthebutler/shared publish`.
 
 #### Step 5.3 — Create plugin starter template
 
@@ -793,7 +793,7 @@ packages/plugin-starter/
 
 #### Verify Phase 5
 
-Clone `plugin-starter` to a temp directory outside the repo, run `pnpm install` (pulling `@jack/shared` from npm), implement the required exports, add it to a local `jack.config.ts`, and verify it loads. This is the acceptance test that the plugin contract is truly self-contained.
+Clone `plugin-starter` to a temp directory outside the repo, run `pnpm install` (pulling `@jackthebutler/shared` from npm), implement the required exports, add it to a local `jack.config.ts`, and verify it loads. This is the acceptance test that the plugin contract is truly self-contained.
 
 ---
 

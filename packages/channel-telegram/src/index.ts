@@ -16,8 +16,8 @@ import type {
   OutboundMessage,
   PluginContext,
   SendResult,
-} from '@jack/shared';
-import { withLogContext, AppLogError } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext, AppLogError } from '@jackthebutler/shared';
 
 const TELEGRAM_API_BASE = 'https://api.telegram.org';
 

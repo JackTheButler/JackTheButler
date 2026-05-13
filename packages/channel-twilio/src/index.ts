@@ -17,8 +17,8 @@ import type {
   OutboundMessage,
   PluginContext,
   SendResult,
-} from '@jack/shared';
-import { withLogContext } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext } from '@jackthebutler/shared';
 
 /**
  * Twilio provider configuration

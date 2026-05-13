@@ -18,7 +18,7 @@ import type {
   InboundMessage,
   OutboundMessage,
   SendResult,
-} from '@jack/shared';
+} from '@jackthebutler/shared';
 import { processMessage } from '@/core/pipeline/index.js';
 import { appConfigService } from '@/apps/config.js';
 import { conversationService } from '@/services/conversation.js';

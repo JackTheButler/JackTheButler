@@ -1,6 +1,7 @@
 {
-  "name": "@jack/webchat",
+  "name": "@jackthebutler/webchat",
   "version": "1.0.0",
+  "private": true,
   "type": "module",
   "scripts": {
     "dev": "vite",

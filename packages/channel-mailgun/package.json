@@ -1,5 +1,5 @@
 {
-  "name": "@jack-plugins/channel-mailgun",
+  "name": "@jackthebutler/channel-mailgun",
   "version": "1.0.0",
   "description": "Mailgun email channel for Jack The Butler",
   "type": "module",
@@ -11,12 +11,16 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@jack/shared": "workspace:*",
+    "@jackthebutler/shared": "workspace:*",
     "mailgun.js": "^12.7.0"
   },
   "devDependencies": {

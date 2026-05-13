@@ -5,7 +5,7 @@
  * Mews uses an RPC-style API where all endpoints are POST with JSON bodies.
  * Auth is via ClientToken + AccessToken sent in every request body.
  *
- * @module @jack-plugins/pms-mews
+ * @module @jackthebutler/pms-mews
  */
 
 import type {
@@ -21,8 +21,8 @@ import type {
   PMSAppManifest,
   AppLogger,
   PluginContext,
-} from '@jack/shared';
-import { withLogContext, AppLogError } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext, AppLogError } from '@jackthebutler/shared';
 import { createHmac, timingSafeEqual } from 'node:crypto';
 
 const MEWS_PRODUCTION_URL = 'https://api.mews.com/api/connector/v1';

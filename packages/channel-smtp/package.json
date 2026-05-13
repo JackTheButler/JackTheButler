@@ -1,5 +1,5 @@
 {
-  "name": "@jack-plugins/channel-smtp",
+  "name": "@jackthebutler/channel-smtp",
   "version": "1.0.0",
   "description": "SMTP email channel for Jack The Butler",
   "type": "module",
@@ -11,12 +11,16 @@
       "types": "./dist/index.d.ts"
     }
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@jack/shared": "workspace:*",
+    "@jackthebutler/shared": "workspace:*",
     "nodemailer": "^7.0.13"
   },
   "devDependencies": {

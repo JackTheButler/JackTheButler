@@ -8,10 +8,10 @@
 
 import { useAuth } from './useAuth';
 
-// Single source of truth lives in @jack/shared — re-exported here so all
+// Single source of truth lives in @jackthebutler/shared — re-exported here so all
 // existing dashboard imports continue to work without any changes.
-export { PERMISSIONS } from '@jack/shared';
-export type { Permission } from '@jack/shared';
+export { PERMISSIONS } from '@jackthebutler/shared';
+export type { Permission } from '@jackthebutler/shared';
 
 /**
  * Permission utilities returned by usePermissions hook

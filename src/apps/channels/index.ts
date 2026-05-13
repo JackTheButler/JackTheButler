@@ -2,7 +2,7 @@
  * Channel Extensions
  *
  * WebChat is a built-in channel that stays in src/.
- * All other channel providers are workspace packages discovered via node_modules/@jack-plugins/.
+ * All other channel providers are workspace packages discovered via node_modules/@jackthebutler/.
  *
  * @module extensions/channels
  */

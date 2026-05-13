@@ -1,5 +1,5 @@
 {
-  "name": "@jack-plugins/pms-mews",
+  "name": "@jackthebutler/pms-mews",
   "version": "1.0.0",
   "type": "module",
   "main": "./dist/index.js",
@@ -10,12 +10,16 @@
       "import": "./dist/index.js"
     }
   },
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
+  "publishConfig": {
+    "access": "public"
+  },
   "dependencies": {
-    "@jack/shared": "workspace:*"
+    "@jackthebutler/shared": "workspace:*"
   },
   "devDependencies": {
     "typescript": "^5.7.2"

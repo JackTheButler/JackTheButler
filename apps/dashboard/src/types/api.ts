@@ -2,7 +2,7 @@
  * Shared API types for the dashboard.
  */
 
-import type { ConversationState, ChannelType, TaskStatus, ReservationStatus } from '@jack/shared';
+import type { ConversationState, ChannelType, TaskStatus, ReservationStatus } from '@jackthebutler/shared';
 
 export type { ConversationState, ChannelType, TaskStatus, ReservationStatus };
 

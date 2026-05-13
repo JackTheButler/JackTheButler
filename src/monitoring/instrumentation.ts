@@ -19,7 +19,7 @@
 import { db, appLogs } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { now } from '@/utils/time.js';
-import { LOG_EXTRA } from '@jack/shared';
+import { LOG_EXTRA } from '@jackthebutler/shared';
 
 const log = createLogger('instrumentation');
 

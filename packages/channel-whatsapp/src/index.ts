@@ -16,8 +16,8 @@ import type {
   OutboundMessage,
   PluginContext,
   SendResult,
-} from '@jack/shared';
-import { withLogContext, AppLogError } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext, AppLogError } from '@jackthebutler/shared';
 
 const GRAPH_API_VERSION = 'v18.0';
 const GRAPH_API_BASE = 'https://graph.facebook.com';

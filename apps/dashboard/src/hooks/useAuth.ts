@@ -1,6 +1,6 @@
 import { create } from 'zustand';
 import { api } from '@/lib/api';
-import { WILDCARD_PERMISSION } from '@jack/shared';
+import { WILDCARD_PERMISSION } from '@jackthebutler/shared';
 
 /**
  * User role information

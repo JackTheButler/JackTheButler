@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi } from 'vitest';
-import type { PluginContext } from '@jack/shared';
+import type { PluginContext } from '@jackthebutler/shared';
 
 const mockContext: PluginContext = { appLog: vi.fn().mockImplementation((_op, _meta, fn) => fn()) };
 

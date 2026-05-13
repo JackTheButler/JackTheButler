@@ -17,46 +17,46 @@ importers:
       '@huggingface/transformers':
         specifier: ^3.4.0
         version: 3.8.1
-      '@jack-plugins/ai-anthropic':
+      '@jackthebutler/ai-anthropic':
         specifier: workspace:*
         version: link:packages/ai-anthropic
-      '@jack-plugins/ai-ollama':
+      '@jackthebutler/ai-ollama':
         specifier: workspace:*
         version: link:packages/ai-ollama
-      '@jack-plugins/ai-openai':
+      '@jackthebutler/ai-openai':
         specifier: workspace:*
         version: link:packages/ai-openai
-      '@jack-plugins/channel-gmail':
+      '@jackthebutler/channel-gmail':
         specifier: workspace:*
         version: link:packages/channel-gmail
-      '@jack-plugins/channel-mailgun':
+      '@jackthebutler/channel-mailgun':
         specifier: workspace:*
         version: link:packages/channel-mailgun
-      '@jack-plugins/channel-sendgrid':
+      '@jackthebutler/channel-sendgrid':
         specifier: workspace:*
         version: link:packages/channel-sendgrid
-      '@jack-plugins/channel-smtp':
+      '@jackthebutler/channel-smtp':
         specifier: workspace:*
         version: link:packages/channel-smtp
-      '@jack-plugins/channel-telegram':
+      '@jackthebutler/channel-telegram':
         specifier: workspace:*
         version: link:packages/channel-telegram
-      '@jack-plugins/channel-twilio':
+      '@jackthebutler/channel-twilio':
         specifier: workspace:*
         version: link:packages/channel-twilio
-      '@jack-plugins/channel-whatsapp':
+      '@jackthebutler/channel-whatsapp':
         specifier: workspace:*
         version: link:packages/channel-whatsapp
-      '@jack-plugins/pms-cloudbeds':
+      '@jackthebutler/pms-cloudbeds':
         specifier: workspace:*
         version: link:packages/pms-cloudbeds
-      '@jack-plugins/pms-mews':
+      '@jackthebutler/pms-mews':
         specifier: workspace:*
         version: link:packages/pms-mews
-      '@jack-plugins/pms-mock':
+      '@jackthebutler/pms-mock':
         specifier: workspace:*
         version: link:packages/pms-mock
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:packages/shared
       '@sendgrid/mail':
@@ -153,7 +153,7 @@ importers:
 
   apps/dashboard:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../../packages/shared
       '@radix-ui/react-dialog':
@@ -293,7 +293,7 @@ importers:
       '@anthropic-ai/sdk':
         specifier: ^0.71.2
         version: 0.71.2(zod@4.3.6)
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -303,7 +303,7 @@ importers:
 
   packages/ai-ollama:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -313,7 +313,7 @@ importers:
 
   packages/ai-openai:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
       openai:
@@ -326,7 +326,7 @@ importers:
 
   packages/channel-gmail:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
       nodemailer:
@@ -342,7 +342,7 @@ importers:
 
   packages/channel-mailgun:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
       mailgun.js:
@@ -355,7 +355,7 @@ importers:
 
   packages/channel-sendgrid:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
       '@sendgrid/mail':
@@ -368,7 +368,7 @@ importers:
 
   packages/channel-smtp:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
       nodemailer:
@@ -384,7 +384,7 @@ importers:
 
   packages/channel-telegram:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -394,7 +394,7 @@ importers:
 
   packages/channel-twilio:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
       twilio:
@@ -407,7 +407,7 @@ importers:
 
   packages/channel-whatsapp:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -417,7 +417,7 @@ importers:
 
   packages/plugin-starter:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -427,7 +427,7 @@ importers:
 
   packages/pms-cloudbeds:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -437,7 +437,7 @@ importers:
 
   packages/pms-mews:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:
@@ -447,7 +447,7 @@ importers:
 
   packages/pms-mock:
     dependencies:
-      '@jack/shared':
+      '@jackthebutler/shared':
         specifier: workspace:*
         version: link:../shared
     devDependencies:

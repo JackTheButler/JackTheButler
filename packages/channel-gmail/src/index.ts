@@ -16,8 +16,8 @@ import type {
   PluginContext,
   OutboundMessage,
   SendResult,
-} from '@jack/shared';
-import { withLogContext } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext } from '@jackthebutler/shared';
 
 const GMAIL_SMTP = { host: 'smtp.gmail.com', port: 587, secure: false };
 

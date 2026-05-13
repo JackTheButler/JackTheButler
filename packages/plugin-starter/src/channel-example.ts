@@ -5,10 +5,10 @@
  *
  * Steps:
  * 1. Copy packages/plugin-starter to packages/channel-yourprovider/
- * 2. Update package.json name to @jack-plugins/channel-yourprovider
+ * 2. Update package.json name to @jackthebutler/channel-yourprovider
  * 3. Replace StarterChannelAdapter with your real implementation
  * 4. Update the manifest: id, name, description, configSchema, features
- * 5. Add to root package.json as `"@jack-plugins/channel-yourprovider": "workspace:*"` and run: pnpm install && pnpm typecheck
+ * 5. Add to root package.json as `"@jackthebutler/channel-yourprovider": "workspace:*"` and run: pnpm install && pnpm typecheck
  */
 
 import type {
@@ -20,8 +20,8 @@ import type {
   OutboundMessage,
   PluginContext,
   SendResult,
-} from '@jack/shared';
-import { withLogContext } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext } from '@jackthebutler/shared';
 
 // ─── Configuration ────────────────────────────────────────────────────────────
 

@@ -75,20 +75,20 @@ export class AppLoader {
   /**
    * Discover and register all available app manifests.
    *
-   * Auto-discovers every package under node_modules/@jack-plugins/ —
+   * Auto-discovers every package under node_modules/@jackthebutler/ —
    * no manual listing required. Installing a package (workspace:* or from npm)
    * is sufficient for it to appear here.
    */
   async discoverApps(categories?: AppCategory[]): Promise<AnyAppManifest[]> {
     const manifests: AnyAppManifest[] = [];
 
-    // Scan node_modules/@jack-plugins/ — works for both workspace packages and npm installs
+    // Scan node_modules/@jackthebutler/ — works for both workspace packages and npm installs
     const pluginsDir = resolve(process.cwd(), 'node_modules/@jack-plugins');
     try {
       const entries = await readdir(pluginsDir, { withFileTypes: true });
       for (const entry of entries) {
         if (!entry.isDirectory() && !entry.isSymbolicLink()) continue;
-        const pluginPath = `@jack-plugins/${entry.name}`;
+        const pluginPath = `@jackthebutler/${entry.name}`;
         try {
           const plugin = await import(pluginPath) as { manifest?: AnyAppManifest };
           if (plugin.manifest) {

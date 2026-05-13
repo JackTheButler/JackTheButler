@@ -11,7 +11,7 @@ import { z } from 'zod';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { appConfigService } from '@/apps/config.js';
-import type { NormalizedGuest, NormalizedReservation, PMSEvent, PMSEventType } from '@jack/shared';
+import type { NormalizedGuest, NormalizedReservation, PMSEvent, PMSEventType } from '@jackthebutler/shared';
 import { validateBody } from '../../middleware/validator.js';
 import { now } from '@/utils/time.js';
 

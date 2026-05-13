@@ -14,7 +14,7 @@ export type {
   EmbeddingRequest,
   EmbeddingResponse,
   AIProvider,
-} from '@jack/shared';
+} from '@jackthebutler/shared';
 
 /** Internal server config for AI providers — not part of the plugin contract */
 export interface AIProviderConfig {
@@ -30,7 +30,7 @@ export interface AIProviderConfig {
 export type AIProviderType = 'claude' | 'openai' | 'ollama';
 
 // Backward compatibility aliases
-export type { AIProvider as LLMProvider } from '@jack/shared';
+export type { AIProvider as LLMProvider } from '@jackthebutler/shared';
 export type { AIProviderConfig as ProviderConfig };
 export type { AIProviderType as ProviderType };
 

@@ -14,8 +14,8 @@ import type {
   PluginContext,
   OutboundMessage,
   SendResult,
-} from '@jack/shared';
-import { withLogContext, AppLogError } from '@jack/shared';
+} from '@jackthebutler/shared';
+import { withLogContext, AppLogError } from '@jackthebutler/shared';
 
 export interface SendGridConfig {
   apiKey: string;
