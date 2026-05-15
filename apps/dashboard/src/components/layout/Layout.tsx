@@ -13,10 +13,8 @@ import {
   Home,
   MessageSquare,
   ClipboardList,
-  ListTodo,
   Puzzle,
   Zap,
-  SlidersHorizontal,
   ChevronUp,
   Power,
   User,
@@ -126,14 +124,6 @@ export function Layout() {
   const { data: taskStats } = useQuery({
     queryKey: ['taskStats'],
     queryFn: () => api.get<{ pending: number; inProgress: number; completed: number; total: number }>('/tasks/stats'),
-    staleTime: Infinity,
-    enabled: isAuthenticated,
-  });
-
-  // Fetch approval stats for badge (initial load - WebSocket pushes updates)
-  const { data: approvalStats } = useQuery({
-    queryKey: ['approvalStats'],
-    queryFn: () => api.get<{ stats: { pending: number } }>('/approvals/stats'),
     staleTime: Infinity,
     enabled: isAuthenticated,
   });
@@ -255,7 +245,7 @@ export function Layout() {
   useEffect(() => {
     const collapsibleSections = [
       { id: 'content', paths: ['/tools/knowledge-base', '/tools/site-scraper'] },
-      { id: 'engine', paths: ['/engine/apps', '/engine/automations', '/engine/autonomy'] },
+      { id: 'engine', paths: ['/engine/apps', '/engine/automations'] },
     ];
 
     const newExpandedState: Record<string, boolean> = {};
@@ -356,7 +346,6 @@ export function Layout() {
   };
 
   const pendingTasks = taskStats?.pending || undefined;
-  const pendingApprovals = approvalStats?.stats?.pending || undefined;
   const escalatedConversations = conversationStats?.escalated || undefined;
 
   const navSections: NavSection[] = [
@@ -365,7 +354,6 @@ export function Layout() {
         { path: '/', label: t('nav.home'), icon: <Home size={20} /> },
         { path: '/inbox', label: t('nav.inbox'), icon: <MessageSquare size={20} />, badge: escalatedConversations, permission: PERMISSIONS.CONVERSATIONS_VIEW },
         { path: '/tasks', label: t('nav.tasks'), icon: <ClipboardList size={20} />, badge: pendingTasks, permission: PERMISSIONS.TASKS_VIEW },
-        { path: '/review-center', label: t('nav.approvals'), icon: <ListTodo size={20} />, badge: pendingApprovals, permission: PERMISSIONS.APPROVALS_VIEW },
       ],
     },
     {
@@ -395,7 +383,6 @@ export function Layout() {
       items: [
         { path: '/engine/apps', label: t('nav.apps'), icon: <Puzzle size={20} />, permission: PERMISSIONS.SETTINGS_VIEW },
         { path: '/engine/automations', label: t('nav.automations'), icon: <Zap size={20} />, permission: PERMISSIONS.AUTOMATIONS_VIEW },
-        { path: '/engine/autonomy', label: t('nav.autonomy'), icon: <SlidersHorizontal size={20} />, permission: PERMISSIONS.SETTINGS_VIEW },
       ],
     },
   ];

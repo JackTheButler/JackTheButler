@@ -31,10 +31,6 @@ Database schema for Jack The Butler.
      │ messages │◄─────────│ tasks │───► staff
      └──────────┘          └───────┘
 
-┌─────────────────┐
-│ approval_queue  │───► guests, conversations, staff
-└─────────────────┘
-
 ┌────────────────┐     ┌──────────────────────┐
 │ knowledge_base │◄────│ knowledge_embeddings │
 └────────────────┘     └──────────────────────┘
@@ -311,24 +307,6 @@ Event log for app provider activity.
 ---
 
 ## Supporting Tables
-
-### approval_queue
-
-Staff approval workflow for AI actions (autonomy L1 mode).
-
-| Column | Type | Notes |
-|--------|------|-------|
-| id | text PK | UUID |
-| type | text | `response`, `task`, `offer` |
-| action_type | text | `respondToGuest`, `createHousekeepingTask`, etc. |
-| action_data | text (JSON) | Proposed action details |
-| conversation_id | text FK | → conversations |
-| guest_id | text FK | → guests |
-| status | text | `pending`, `approved`, `rejected` |
-| decided_at | text | ISO datetime |
-| decided_by | text FK | → staff |
-| rejection_reason | text | Optional |
-| created_at | text | ISO datetime |
 
 ### response_cache
 

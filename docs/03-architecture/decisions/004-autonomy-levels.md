@@ -2,7 +2,7 @@
 
 ## Status
 
-Accepted
+Superseded — removed (2026-05). The L1/L2 autonomy system and approval queue were removed during the pipeline migration. Confidence-based escalation now lives in `src/core/conversation/escalation.ts`; no approval queue or per-action autonomy configuration is in use.
 
 ## Context
 

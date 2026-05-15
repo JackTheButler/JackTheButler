@@ -17,26 +17,5 @@
       "completed": "Завершено",
       "cancelled": "Отменено"
     }
-  },
-  "approvals": {
-    "pending": "Ожидает",
-    "approvedToday": "Одобрено сегодня",
-    "rejectedToday": "Отклонено сегодня",
-    "response": "Ответ",
-    "task": "Задача",
-    "offer": "Предложение",
-    "proposedResponse": "Предложенный ответ",
-    "taskDetails": "Детали задачи",
-    "proposedOffer": "Предложенное предложение",
-    "confident": "уверенность",
-    "viewConversation": "Смотреть диалог",
-    "conversation": "Диалог",
-    "jack": "Джек",
-    "rejectionReason": "Причина отклонения...",
-    "failedToLoad": "Ошибка загрузки элементов",
-    "tryAgainLater": "Попробуйте позже",
-    "noPending": "Нет ожидающих проверок",
-    "noItems": "Элементы не найдены",
-    "allCaughtUp": "Всё обработано!"
   }
 }

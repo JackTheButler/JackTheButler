@@ -1,6 +1,6 @@
 # Use Case: Engine Configuration
 
-Staff configure Jack's apps, autonomy, and automation rules.
+Staff configure Jack's apps and automation rules.
 
 ---
 
@@ -106,6 +106,8 @@ Apps are the external services Jack connects to — AI providers (Anthropic, Ope
 ---
 
 ## Autonomy Settings
+
+> **Status: Superseded — removed.** The Autonomy Settings page, approval queue, and per-action L1/L2 configuration were removed in May 2026. Confidence-based escalation continues to operate via `src/core/conversation/escalation.ts`. Section retained for historical context.
 
 ### Summary
 

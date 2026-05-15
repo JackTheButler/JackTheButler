@@ -62,8 +62,6 @@ Business logic, independent of transport and external services.
 | `task-router.ts` | Routes tasks to departments and staff |
 | `escalation-engine.ts` | Escalation rules and triggers |
 | `conversation-fsm.ts` | Conversation state machine (new → active → resolved) |
-| `autonomy.ts` | AI autonomy levels (L0–L2) |
-| `approval-queue.ts` | Staff approval workflow for AI actions |
 | `guest-context.ts` | Builds guest context for AI from profile, reservation, history |
 | `interfaces/` | Abstract interfaces for AI, channel, and PMS adapters |
 
@@ -118,7 +116,6 @@ Central entry point for all external requests.
 | `knowledge.ts` | `/api/v1/knowledge` | Knowledge base CRUD |
 | `apps.ts` | `/api/v1/apps` | App configuration |
 | `automation.ts` | `/api/v1/automation` | Automation rules |
-| `autonomy.ts` | `/api/v1/autonomy` | Autonomy level & approval queue |
 | `system.ts` | `/api/v1/system` | System info & settings |
 | `setup.ts` | `/api/v1/setup` | Setup wizard (no auth, protected after completion) |
 | `health.ts` | `/health` | Health check |

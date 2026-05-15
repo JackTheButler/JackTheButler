@@ -21,7 +21,7 @@ Use a **typed event emitter** (wrapping Node.js `EventEmitter`) for all async in
 - `src/events/` defines a `TypedEventEmitter` with typed event payloads
 - `src/types/events.ts` defines all event types and their payloads
 
-**Emitters:** Core message processor, approval queue, conversation service, task service, automation actions — emit events after state changes.
+**Emitters:** Core message processor, conversation service, task service, automation actions — emit events after state changes.
 
 **Subscribers:** WebSocket bridge (pushes to dashboard), automation event subscriber (triggers event-based rules).
 

@@ -19,9 +19,7 @@ import { AppEditPage } from '@/pages/engine/apps/AppEdit';
 import { AutomationsPage } from '@/pages/engine/automations/Automations';
 import { AutomationEditPage } from '@/pages/engine/automations/AutomationEdit';
 import { AutomationGeneratePage } from '@/pages/engine/automations/AutomationGenerate';
-import { AutonomyPage } from '@/pages/engine/autonomy/Autonomy';
 import { SettingsPage } from '@/pages/settings/Settings';
-import { ApprovalsPage } from '@/pages/review-center/Approvals';
 import { SiteScraperPage } from '@/pages/tools/SiteScraper';
 import { KnowledgeBasePage } from '@/pages/tools/KnowledgeBase';
 import { GuestsPage, GuestProfilePage, GuestFormPage } from '@/pages/guests';
@@ -49,10 +47,8 @@ export function App() {
           <Route path="/engine/automations" element={<ProtectedRoute permission={PERMISSIONS.AUTOMATIONS_VIEW}><AutomationsPage /></ProtectedRoute>} />
           <Route path="/engine/automations/generate" element={<ProtectedRoute permission={PERMISSIONS.AUTOMATIONS_MANAGE}><AutomationGeneratePage /></ProtectedRoute>} />
           <Route path="/engine/automations/:ruleId" element={<ProtectedRoute permission={PERMISSIONS.AUTOMATIONS_VIEW}><AutomationEditPage /></ProtectedRoute>} />
-          <Route path="/engine/autonomy" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><AutonomyPage /></ProtectedRoute>} />
           <Route path="/settings/:tab?" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><SettingsPage /></ProtectedRoute>} />
           <Route path="/engine" element={<Navigate to="/settings" replace />} />
-          <Route path="/review-center" element={<ProtectedRoute permission={PERMISSIONS.APPROVALS_VIEW}><ApprovalsPage /></ProtectedRoute>} />
           <Route path="/guests" element={<ProtectedRoute permission={PERMISSIONS.GUESTS_VIEW}><GuestsPage /></ProtectedRoute>} />
           <Route path="/guests/new" element={<ProtectedRoute permission={PERMISSIONS.GUESTS_MANAGE}><GuestFormPage /></ProtectedRoute>} />
           <Route path="/guests/:id" element={<ProtectedRoute permission={PERMISSIONS.GUESTS_VIEW}><GuestProfilePage /></ProtectedRoute>} />

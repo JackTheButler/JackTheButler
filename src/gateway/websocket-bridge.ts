@@ -15,7 +15,6 @@ import type { ActivityItem } from './routes/activities.js';
 import { broadcast } from './websocket.js';
 import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
-import { getApprovalQueue } from '@/core/approval/queue.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('websocket-bridge');
@@ -73,24 +72,6 @@ export function setupWebSocketBridge() {
 
   events.on(EventTypes.MESSAGE_RECEIVED, broadcastNewMessage);
   events.on(EventTypes.MESSAGE_SENT, broadcastNewMessage);
-
-  // ─────────────────────────────────────────────────────────────
-  // Approval Events
-  // ─────────────────────────────────────────────────────────────
-
-  const broadcastApprovalStats = async () => {
-    try {
-      const queue = getApprovalQueue();
-      const stats = await queue.getStats();
-      broadcast({ type: 'stats:approvals', payload: stats });
-    } catch (error) {
-      log.error({ error }, 'Failed to broadcast approval stats');
-    }
-  };
-
-  events.on(EventTypes.APPROVAL_QUEUED, broadcastApprovalStats);
-  events.on(EventTypes.APPROVAL_DECIDED, broadcastApprovalStats);
-  events.on(EventTypes.APPROVAL_EXECUTED, broadcastApprovalStats);
 
   // ─────────────────────────────────────────────────────────────
   // Model Download Events

@@ -11,7 +11,6 @@ The Task Router:
 2. Determines if a task should be created
 3. Routes to appropriate department
 4. Sets priority based on intent definition
-5. Checks autonomy settings for approval requirements
 
 ---
 
@@ -89,13 +88,7 @@ interface RoutingDecision {
             │ Yes
             v
 ┌─────────────────────────┐
-│   Check autonomy level  │
-└───────────┬─────────────┘
-            │
-            v
-┌─────────────────────────┐
-│   L1: Queue approval    │
-│   L2: Auto-create task  │
+│   Create task           │
 └─────────────────────────┘
 ```
 
@@ -114,5 +107,4 @@ Routing considers guest context:
 ## Related
 
 - [Intent Taxonomy](intent-taxonomy.md) — Intent definitions
-- [Autonomy](autonomy.md) — Approval requirements
 - [REST API](../api/rest-api.md) — Task endpoints

@@ -282,7 +282,7 @@ describe('Roles API', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          permissions: [...viewerRole.permissions, PERMISSIONS.APPROVALS_VIEW],
+          permissions: [...viewerRole.permissions, PERMISSIONS.TASKS_MANAGE],
         }),
       });
 

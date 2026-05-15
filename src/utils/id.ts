@@ -23,7 +23,6 @@ export const ID_PREFIXES = {
   alog: 'alog',
   app: 'app',
   appLog: 'aplog',
-  approval: 'apv',
   // Phase 20: Automation
   action: 'act',
   notification: 'notif',

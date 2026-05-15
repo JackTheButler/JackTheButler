@@ -145,7 +145,6 @@ seedRoutes.post('/reset', requirePermission(PERMISSIONS.ADMIN_MANAGE), async (c)
     const tableNames = [
       'messages',
       'tasks',
-      'approval_queue',
       'webchat_sessions',
       'conversations',
       'reservations',

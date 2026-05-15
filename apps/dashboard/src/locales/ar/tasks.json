@@ -17,26 +17,5 @@
       "completed": "مكتمل",
       "cancelled": "ملغي"
     }
-  },
-  "approvals": {
-    "pending": "قيد الانتظار",
-    "approvedToday": "تمت الموافقة اليوم",
-    "rejectedToday": "تم الرفض اليوم",
-    "response": "رد",
-    "task": "مهمة",
-    "offer": "عرض",
-    "proposedResponse": "الرد المقترح",
-    "taskDetails": "تفاصيل المهمة",
-    "proposedOffer": "العرض المقترح",
-    "confident": "ثقة",
-    "viewConversation": "عرض المحادثة",
-    "conversation": "المحادثة",
-    "jack": "جاك",
-    "rejectionReason": "سبب الرفض...",
-    "failedToLoad": "فشل تحميل العناصر",
-    "tryAgainLater": "يرجى المحاولة لاحقاً",
-    "noPending": "لا توجد مراجعات معلقة",
-    "noItems": "لم يتم العثور على عناصر",
-    "allCaughtUp": "كل شيء محدث!"
   }
 }

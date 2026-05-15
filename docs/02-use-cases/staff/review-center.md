@@ -1,5 +1,7 @@
 # Use Case: Review Center
 
+> **Status: Superseded — removed.** The Review Center and its underlying approval queue were removed in May 2026. The dashboard page, API routes (`/api/v1/approvals`), DB table (`approval_queue`), and permissions (`approvals:view`, `approvals:manage`) no longer exist. Content below is retained for historical context only.
+
 Staff review and approval of AI-proposed actions.
 
 ---

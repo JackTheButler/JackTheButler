@@ -99,7 +99,7 @@ No external services are required beyond the AI provider APIs and messaging plat
 | Component | Directory | Responsibility |
 |-----------|-----------|---------------|
 | Gateway | `src/gateway/` | HTTP/WebSocket entry point, routing, middleware |
-| Core | `src/core/` | Business logic: message processing, task routing, escalation, autonomy |
+| Core | `src/core/` | Business logic: message processing, task routing, escalation |
 | AI Engine | `src/ai/` | Response generation, intent classification, knowledge retrieval |
 | App System | `src/apps/` | Provider registry, manifests, adapter lifecycle |
 | Automation | `src/automation/` | Time/event triggers, action chains, retries |
@@ -126,10 +126,7 @@ WhatsApp webhook
         → Generate personalized response
       → TaskRouter: create task if service request detected
       → EscalationEngine: escalate if needed
-      → Check autonomy level
-        → L2: send response directly via channel adapter
-        → L1: queue for staff approval
-        → L0: escalate to staff
+      → Send response via channel adapter (or escalate to staff)
       → Save outbound message
       → WebSocket: notify dashboard
 ```

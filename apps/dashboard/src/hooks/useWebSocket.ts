@@ -22,11 +22,6 @@ export function useWebSocket() {
           // Also refresh task list if on Tasks page
           queryClient.invalidateQueries({ queryKey: ['tasks'] });
           break;
-        case 'stats:approvals':
-          queryClient.setQueryData(['approvalStats'], { stats: message.payload });
-          // Also refresh approvals list if on Approvals page
-          queryClient.invalidateQueries({ queryKey: ['approvals'] });
-          break;
         case 'stats:conversations':
           queryClient.setQueryData(['conversationStats'], message.payload);
           // Also refresh conversations list if on Inbox page

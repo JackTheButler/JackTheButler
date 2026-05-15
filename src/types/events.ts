@@ -34,11 +34,6 @@ export const EventTypes = {
   GUEST_CREATED: 'guest.created',
   GUEST_UPDATED: 'guest.updated',
 
-  // Approval events
-  APPROVAL_QUEUED: 'approval.queued',
-  APPROVAL_DECIDED: 'approval.decided',
-  APPROVAL_EXECUTED: 'approval.executed',
-
   // Model events
   MODEL_DOWNLOAD_PROGRESS: 'model.download.progress',
 
@@ -178,45 +173,6 @@ export interface TaskCompletedEvent extends BaseEvent {
 }
 
 /**
- * Approval queued event
- */
-export interface ApprovalQueuedEvent extends BaseEvent {
-  type: typeof EventTypes.APPROVAL_QUEUED;
-  payload: {
-    id: string;
-    type: string;
-    actionType: string;
-    conversationId?: string | undefined;
-    guestId?: string | undefined;
-  };
-}
-
-/**
- * Approval decided event
- */
-export interface ApprovalDecidedEvent extends BaseEvent {
-  type: typeof EventTypes.APPROVAL_DECIDED;
-  payload: {
-    id: string;
-    status: 'approved' | 'rejected';
-    staffId: string;
-    reason?: string | undefined;
-  };
-}
-
-/**
- * Approval executed event
- */
-export interface ApprovalExecutedEvent extends BaseEvent {
-  type: typeof EventTypes.APPROVAL_EXECUTED;
-  payload: {
-    id: string;
-    actionType: string;
-    actionData: Record<string, unknown>;
-  };
-}
-
-/**
  * Model download progress event
  */
 export interface ModelDownloadProgressEvent extends BaseEvent {
@@ -341,9 +297,6 @@ export type AppEvent =
   | TaskCreatedEvent
   | TaskAssignedEvent
   | TaskCompletedEvent
-  | ApprovalQueuedEvent
-  | ApprovalDecidedEvent
-  | ApprovalExecutedEvent
   | ModelDownloadProgressEvent
   | ReservationCreatedEvent
   | ReservationUpdatedEvent

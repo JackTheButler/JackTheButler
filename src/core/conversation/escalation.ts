@@ -14,7 +14,6 @@ import { db } from '@/db/index.js';
 import { messages, conversations, guests, reservations } from '@/db/schema.js';
 import type { Guest } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
-import { getAutonomyEngine } from '../approval/autonomy.js';
 
 const log = createLogger('core:escalation');
 
@@ -44,20 +43,6 @@ const DEFAULT_CONFIG: EscalationConfig = {
   repetitionWindow: 5,
   repetitionThreshold: 0.7,
 };
-
-/**
- * Get confidence threshold from autonomy settings
- */
-function getConfidenceThresholdFromAutonomy(): number {
-  try {
-    const autonomyEngine = getAutonomyEngine();
-    const settings = autonomyEngine.getSettings();
-    // Use the approval threshold from autonomy settings
-    return settings.confidenceThresholds.approval;
-  } catch {
-    return DEFAULT_CONFIG.confidenceThreshold;
-  }
-}
 
 /**
  * Patterns that indicate guest wants to speak to a human
@@ -137,9 +122,8 @@ export class EscalationManager {
       };
     }
 
-    // 1. Check low confidence (use autonomy threshold if available)
-    const confidenceThreshold = getConfidenceThresholdFromAutonomy() || this.config.confidenceThreshold;
-    if (classificationConfidence < confidenceThreshold) {
+    // 1. Check low confidence
+    if (classificationConfidence < this.config.confidenceThreshold) {
       reasons.push(`Low AI confidence (${(classificationConfidence * 100).toFixed(0)}%)`);
     }
 

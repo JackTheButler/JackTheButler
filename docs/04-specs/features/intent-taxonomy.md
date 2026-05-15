@@ -112,7 +112,6 @@ interface ClassificationResult {
 | Threshold | Value | Action |
 |-----------|-------|--------|
 | Task creation | ≥ 0.6 | Create task if `requiresAction` |
-| Auto-approval | ≥ 0.7 | Allow auto-execute (per autonomy settings) |
 | Urgent flag | < 0.5 | Flag for staff review |
 
 ---
@@ -120,4 +119,3 @@ interface ClassificationResult {
 ## Related
 
 - [Task Routing](task-routing.md) — Task creation from intents
-- [Autonomy](autonomy.md) — Auto-execute thresholds

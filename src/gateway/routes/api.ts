@@ -12,7 +12,6 @@ import { tasksRouter } from './tasks.js';
 import { adminRouter } from './admin.js';
 import { appRoutes } from './apps.js';
 import { automationRoutes } from './automation.js';
-import { autonomySettingsRoutes, approvalsRoutes } from './autonomy.js';
 import { hotelProfileRoutes } from './hotel-profile.js';
 import { authSettingsRoutes } from './auth-settings.js';
 import { knowledgeRoutes } from './knowledge.js';
@@ -51,17 +50,11 @@ api.route('/apps', appRoutes);
 // Automation management routes
 api.route('/automation', automationRoutes);
 
-// Autonomy settings routes
-api.route('/settings/autonomy', autonomySettingsRoutes);
-
 // Hotel profile settings routes
 api.route('/settings/hotel', hotelProfileRoutes);
 
 // Auth settings routes
 api.route('/settings/auth', authSettingsRoutes);
-
-// Approval queue routes
-api.route('/approvals', approvalsRoutes);
 
 // Knowledge base routes
 api.route('/knowledge', knowledgeRoutes);

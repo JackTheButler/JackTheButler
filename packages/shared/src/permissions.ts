@@ -22,10 +22,6 @@ export const PERMISSIONS = {
   TASKS_VIEW: 'tasks:view',
   TASKS_MANAGE: 'tasks:manage',
 
-  // Approvals
-  APPROVALS_VIEW: 'approvals:view',
-  APPROVALS_MANAGE: 'approvals:manage',
-
   // Knowledge
   KNOWLEDGE_VIEW: 'knowledge:view',
   KNOWLEDGE_MANAGE: 'knowledge:manage',

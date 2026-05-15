@@ -189,14 +189,7 @@ Sends message via the conversation's channel (WhatsApp, SMS, Email).
 
 ## Autonomy & Approvals
 
-| Method | Path | Description |
-|--------|------|-------------|
-| GET | `/settings/autonomy` | Get autonomy settings |
-| PUT | `/settings/autonomy` | Update autonomy settings |
-| GET | `/approvals` | List pending approvals |
-| GET | `/approvals/:id` | Get approval item |
-| POST | `/approvals/:id/approve` | Approve action |
-| POST | `/approvals/:id/reject` | Reject action |
+> **Superseded — removed.** Autonomy settings and the approval queue were removed in May 2026. `/settings/autonomy` and `/approvals/*` endpoints no longer exist.
 
 ---
 

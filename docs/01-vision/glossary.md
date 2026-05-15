@@ -123,12 +123,6 @@ A specific piece of information extracted from a message. Examples: room number,
 ### Skill
 A defined capability Jack can execute, potentially involving multiple steps and system integrations.
 
-### Autonomy Level
-A configurable setting that controls how much Jack can do without staff approval. Higher levels allow more autonomous actions.
-
-### Review Center
-The staff-facing queue where actions that exceed Jack's current autonomy level await approval or rejection before being executed.
-
 ### Knowledge Base
 The stored collection of hotel-specific information (policies, FAQs, amenities, procedures) used by RAG to ground AI responses in accurate, property-specific content.
 

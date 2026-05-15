@@ -17,26 +17,5 @@
       "completed": "Completed",
       "cancelled": "Cancelled"
     }
-  },
-  "approvals": {
-    "pending": "Pending",
-    "approvedToday": "Approved Today",
-    "rejectedToday": "Rejected Today",
-    "response": "Response",
-    "task": "Task",
-    "offer": "Offer",
-    "proposedResponse": "Proposed Response",
-    "taskDetails": "Task Details",
-    "proposedOffer": "Proposed Offer",
-    "confident": "confident",
-    "viewConversation": "View conversation",
-    "conversation": "Conversation",
-    "jack": "Jack",
-    "rejectionReason": "Rejection reason...",
-    "failedToLoad": "Failed to load items",
-    "tryAgainLater": "Please try again later",
-    "noPending": "No pending reviews",
-    "noItems": "No items found",
-    "allCaughtUp": "All caught up!"
   }
 }

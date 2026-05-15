@@ -17,26 +17,5 @@
       "completed": "पूर्ण",
       "cancelled": "रद्द"
     }
-  },
-  "approvals": {
-    "pending": "लंबित",
-    "approvedToday": "आज स्वीकृत",
-    "rejectedToday": "आज अस्वीकृत",
-    "response": "प्रतिक्रिया",
-    "task": "कार्य",
-    "offer": "प्रस्ताव",
-    "proposedResponse": "प्रस्तावित प्रतिक्रिया",
-    "taskDetails": "कार्य विवरण",
-    "proposedOffer": "प्रस्तावित प्रस्ताव",
-    "confident": "विश्वास",
-    "viewConversation": "वार्तालाप देखें",
-    "conversation": "वार्तालाप",
-    "jack": "जैक",
-    "rejectionReason": "अस्वीकृति का कारण...",
-    "failedToLoad": "आइटम लोड करने में विफल",
-    "tryAgainLater": "कृपया बाद में पुनः प्रयास करें",
-    "noPending": "कोई लंबित समीक्षा नहीं",
-    "noItems": "कोई आइटम नहीं मिला",
-    "allCaughtUp": "सब अपडेट है!"
   }
 }

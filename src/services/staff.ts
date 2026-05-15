@@ -5,7 +5,7 @@
  */
 
 import { eq, and, desc, sql, or, like } from 'drizzle-orm';
-import { db, staff, roles, conversations, tasks, approvalQueue } from '@/db/index.js';
+import { db, staff, roles, conversations, tasks } from '@/db/index.js';
 import type { Staff } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -418,12 +418,7 @@ export class StaffService {
       .from(tasks)
       .where(eq(tasks.assignedTo, id));
 
-    const [approvalCount] = await db
-      .select({ count: sql<number>`count(*)`.as('count') })
-      .from(approvalQueue)
-      .where(eq(approvalQueue.decidedBy, id));
-
-    return (convCount?.count || 0) + (taskCount?.count || 0) + (approvalCount?.count || 0);
+    return (convCount?.count || 0) + (taskCount?.count || 0);
   }
 
   /**

@@ -29,7 +29,7 @@ Technical specifications for Jack The Butler.
 | [Intent Taxonomy](features/intent-taxonomy.md) | Message classification | Implemented |
 | [Conversation FSM](features/conversation-fsm.md) | State machine | Implemented |
 | [Task Routing](features/task-routing.md) | Department routing | Implemented |
-| [Autonomy](features/autonomy.md) | L1/L2 approval flow | Implemented |
+| [Autonomy](features/autonomy.md) | L1/L2 approval flow | Superseded — removed |
 | [Knowledge Base](features/knowledge-base.md) | RAG and embeddings | Implemented |
 | [Automation](features/automation.md) | Triggers and actions | Implemented |
 | [Guest Memory](features/guest-memory.md) | Preferences and history | Planned |

@@ -73,20 +73,6 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     group: 'tasks',
   },
 
-  // Approvals
-  {
-    key: PERMISSIONS.APPROVALS_VIEW,
-    label: 'View Approvals',
-    description: 'View pending approval requests',
-    group: 'approvals',
-  },
-  {
-    key: PERMISSIONS.APPROVALS_MANAGE,
-    label: 'Manage Approvals',
-    description: 'Approve or reject pending requests',
-    group: 'approvals',
-  },
-
   // Knowledge
   {
     key: PERMISSIONS.KNOWLEDGE_VIEW,
@@ -175,11 +161,6 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     key: 'tasks',
     label: 'Tasks',
     permissions: PERMISSION_DEFINITIONS.filter((p) => p.group === 'tasks'),
-  },
-  {
-    key: 'approvals',
-    label: 'Approvals',
-    permissions: PERMISSION_DEFINITIONS.filter((p) => p.group === 'approvals'),
   },
   {
     key: 'knowledge',

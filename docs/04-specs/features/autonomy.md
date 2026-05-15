@@ -1,5 +1,7 @@
 # Autonomy Levels
 
+> **Status: Superseded — removed.** The L1/L2 autonomy system and approval queue were removed in May 2026 as part of the pipeline migration. The `approval_queue` table, `src/core/approval/` modules, autonomy settings UI, and `/api/v1/approvals` + `/api/v1/settings/autonomy` routes no longer exist. Content below is retained for historical context only.
+
 Configurable autonomy for hotel AI operations.
 
 ---
