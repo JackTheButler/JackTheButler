@@ -60,97 +60,9 @@
           "placeholder": "邮箱中的6位验证码"
         }
       }
-    },
-    "extendStay": {
-      "name": "延长住宿",
-      "triggerHint": "guest wants to extend their stay or change checkout date",
-      "fields": {
-        "newCheckoutDate": {
-          "label": "新退房日期"
-        },
-        "notes": {
-          "label": "特殊要求",
-          "placeholder": "选填"
-        }
-      }
-    },
-    "requestService": {
-      "name": "请求服务",
-      "triggerHint": "guest wants housekeeping, towels, pillows, amenities, or maintenance",
-      "fields": {
-        "serviceType": {
-          "label": "服务类型",
-          "options": {
-            "housekeeping": "客房清洁",
-            "extra-towels": "额外毛巾",
-            "extra-pillows": "额外枕头",
-            "amenities": "洗漱用品",
-            "maintenance": "维修",
-            "other": "其他"
-          }
-        },
-        "details": {
-          "label": "详情",
-          "placeholder": "具体说明"
-        },
-        "urgency": {
-          "label": "紧急程度",
-          "options": {
-            "normal": "普通",
-            "urgent": "紧急"
-          }
-        }
-      }
-    },
-    "orderRoomService": {
-      "name": "订购客房服务",
-      "triggerHint": "guest wants to order food or beverages to their room",
-      "fields": {
-        "items": {
-          "label": "您想点什么？",
-          "placeholder": "例如 凯撒沙拉、总会三明治、气泡水"
-        },
-        "specialInstructions": {
-          "label": "特殊说明",
-          "placeholder": "过敏、偏好等"
-        }
-      }
-    },
-    "bookSpa": {
-      "name": "预约水疗",
-      "triggerHint": "guest wants to book a spa treatment or massage",
-      "fields": {
-        "treatment": {
-          "label": "项目",
-          "options": {
-            "massage": "按摩",
-            "facial": "面部护理",
-            "body-wrap": "身体裹敷",
-            "manicure-pedicure": "美甲美足",
-            "other": "其他"
-          }
-        },
-        "preferredDate": {
-          "label": "首选日期"
-        },
-        "preferredTime": {
-          "label": "首选时间",
-          "options": {
-            "morning": "上午",
-            "midday": "中午",
-            "afternoon": "下午",
-            "evening": "晚上"
-          }
-        },
-        "notes": {
-          "label": "备注",
-          "placeholder": "偏好或要求"
-        }
-      }
     }
   },
   "messages": {
-    "actionDisabled": "此操作目前不可用。",
     "sessionExpired": "会话已过期。请刷新页面。",
     "unknownAction": "未知操作。",
     "verificationRequired": "请先验证您的预订。",
@@ -176,23 +88,6 @@
     "invalidCode": "验证码无效。",
     "noReservationFoundGeneric": "未找到预订。",
     "verifiedWelcome": "预订已验证！欢迎，{{firstName}}。有什么可以帮您的吗？",
-    "missingCheckoutDate": "需要新的退房日期。",
-    "noReservationLinked": "此会话未关联预订。",
-    "extendStaySuccess": "收到！您延长住宿至{{date}}的请求已提交。前台将尽快确认。",
-    "extendStayNotes": " 我们已记录：\"{{notes}}\"。",
-    "extendStayAnythingElse": " 还有什么需要帮助的吗？",
-    "missingServiceType": "请选择服务类型。",
-    "serviceRequestSuccess": "您的{{service}}请求已提交{{urgency}}。我们的团队将尽快处理。",
-    "serviceRequestUrgent": "（紧急）",
-    "serviceRequestDetails": " 我们已记录：\"{{details}}\"。",
-    "serviceRequestAnythingElse": " 还需要什么吗？",
-    "missingOrderItems": "请告诉我们您想点什么。",
-    "roomServiceSuccess": "您的客房服务订单已提交！我们将尽快送至您的房间。",
-    "roomServiceInstructions": " 特殊说明已记录：\"{{instructions}}\"。",
-    "roomServiceAnythingElse": " 还需要什么吗？",
-    "missingSpaFields": "请填写项目、日期和时间。",
-    "spaBookingSuccess": "您的{{treatment}}已申请，时间为{{date}}（{{time}}）。水疗团队将尽快确认。",
-    "spaBookingNotes": " 备注：\"{{notes}}\"。",
-    "spaBookingAnythingElse": " 还需要什么吗？"
+    "noReservationLinked": "此会话未关联预订。"
   }
 }

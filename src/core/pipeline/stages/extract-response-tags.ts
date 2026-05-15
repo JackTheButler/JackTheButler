@@ -7,7 +7,7 @@
  * Why post-LLM tag extraction:
  *   - The system prompt instructs the AI to end its reply with
  *     `[ACTION:action-id]` when the guest wants a webchat-triggered form
- *     (e.g. "request-service"), and with
+ *     (e.g. "verify-reservation"), and with
  *     `[QUICK_REPLIES:a|b|c]` to suggest 2-4 clickable reply options.
  *   - The webchat client reads `metadata.suggestedAction` and
  *     `metadata.quickReplies` to render the corresponding UI.

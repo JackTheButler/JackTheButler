@@ -463,7 +463,7 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
  * The responder owns the prompt — we just pass the data.
  */
 async function buildChannelActions(verificationStatus?: string) {
-  const actions = await webchatActionService.getEnabledActions();
+  const actions = webchatActionService.getActions();
   return {
     actions: actions.map((a) => ({
       id: a.id,

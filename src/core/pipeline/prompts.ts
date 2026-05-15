@@ -264,7 +264,7 @@ export async function responderPrompt(
 
     systemContent += '\n\nCRITICAL — You MUST end your response with [ACTION:action-id] when the guest wants one of the actions above.';
     systemContent += '\nThe [ACTION:...] tag is what triggers the form — without it, nothing happens. Never describe pulling up a form without the tag.';
-    systemContent += '\nExample: "I\'ll get that sorted! [ACTION:request-service]"';
+    systemContent += '\nExample: "I can help with that — let\'s verify your booking first. [ACTION:verify-reservation]"';
     systemContent += '\nDo NOT include [ACTION:...] if no action is needed.';
   }
 

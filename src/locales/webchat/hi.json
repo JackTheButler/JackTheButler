@@ -60,97 +60,9 @@
           "placeholder": "आपके ईमेल से 6-अंकीय कोड"
         }
       }
-    },
-    "extendStay": {
-      "name": "अपना प्रवास बढ़ाएं",
-      "triggerHint": "guest wants to extend their stay or change checkout date",
-      "fields": {
-        "newCheckoutDate": {
-          "label": "नई चेकआउट तिथि"
-        },
-        "notes": {
-          "label": "विशेष अनुरोध",
-          "placeholder": "वैकल्पिक"
-        }
-      }
-    },
-    "requestService": {
-      "name": "सेवा का अनुरोध करें",
-      "triggerHint": "guest wants housekeeping, towels, pillows, amenities, or maintenance",
-      "fields": {
-        "serviceType": {
-          "label": "सेवा का प्रकार",
-          "options": {
-            "housekeeping": "हाउसकीपिंग",
-            "extra-towels": "अतिरिक्त तौलिए",
-            "extra-pillows": "अतिरिक्त तकिए",
-            "amenities": "सुविधाएं",
-            "maintenance": "रखरखाव",
-            "other": "अन्य"
-          }
-        },
-        "details": {
-          "label": "विवरण",
-          "placeholder": "कोई विशिष्ट विवरण"
-        },
-        "urgency": {
-          "label": "तात्कालिकता",
-          "options": {
-            "normal": "सामान्य",
-            "urgent": "तत्काल"
-          }
-        }
-      }
-    },
-    "orderRoomService": {
-      "name": "रूम सर्विस ऑर्डर करें",
-      "triggerHint": "guest wants to order food or beverages to their room",
-      "fields": {
-        "items": {
-          "label": "आप क्या ऑर्डर करना चाहेंगे?",
-          "placeholder": "जैसे सीज़र सलाद, क्लब सैंडविच, स्पार्कलिंग वॉटर"
-        },
-        "specialInstructions": {
-          "label": "विशेष निर्देश",
-          "placeholder": "एलर्जी, प्राथमिकताएं, आदि।"
-        }
-      }
-    },
-    "bookSpa": {
-      "name": "स्पा उपचार बुक करें",
-      "triggerHint": "guest wants to book a spa treatment or massage",
-      "fields": {
-        "treatment": {
-          "label": "उपचार",
-          "options": {
-            "massage": "मालिश",
-            "facial": "फेशियल",
-            "body-wrap": "बॉडी रैप",
-            "manicure-pedicure": "मैनीक्योर और पेडीक्योर",
-            "other": "अन्य"
-          }
-        },
-        "preferredDate": {
-          "label": "पसंदीदा तिथि"
-        },
-        "preferredTime": {
-          "label": "पसंदीदा समय",
-          "options": {
-            "morning": "सुबह",
-            "midday": "दोपहर",
-            "afternoon": "दोपहर बाद",
-            "evening": "शाम"
-          }
-        },
-        "notes": {
-          "label": "नोट्स",
-          "placeholder": "कोई प्राथमिकता या अनुरोध"
-        }
-      }
     }
   },
   "messages": {
-    "actionDisabled": "यह कार्रवाई वर्तमान में उपलब्ध नहीं है।",
     "sessionExpired": "सत्र समाप्त हो गया। कृपया पेज रिफ्रेश करें।",
     "unknownAction": "अज्ञात कार्रवाई।",
     "verificationRequired": "कृपया पहले अपनी बुकिंग सत्यापित करें।",
@@ -176,23 +88,6 @@
     "invalidCode": "अमान्य सत्यापन कोड।",
     "noReservationFoundGeneric": "कोई आरक्षण नहीं मिला।",
     "verifiedWelcome": "बुकिंग सत्यापित! स्वागत है, {{firstName}}। आपके प्रवास में मैं कैसे मदद कर सकता हूँ?",
-    "missingCheckoutDate": "नई चेकआउट तिथि आवश्यक है।",
-    "noReservationLinked": "इस सत्र से कोई आरक्षण जुड़ा नहीं है।",
-    "extendStaySuccess": "समझ गया! {{date}} तक बढ़ाने का आपका अनुरोध भेज दिया गया है। हमारा फ्रंट डेस्क जल्द ही पुष्टि करेगा।",
-    "extendStayNotes": " हमने नोट किया: \"{{notes}}\"।",
-    "extendStayAnythingElse": " क्या कुछ और है जिसमें मैं मदद कर सकता हूँ?",
-    "missingServiceType": "कृपया एक सेवा प्रकार चुनें।",
-    "serviceRequestSuccess": "आपका {{service}} अनुरोध भेज दिया गया है{{urgency}}। हमारी टीम जल्द ही इसका ध्यान रखेगी।",
-    "serviceRequestUrgent": " तत्काल के रूप में",
-    "serviceRequestDetails": " हमने नोट किया: \"{{details}}\"।",
-    "serviceRequestAnythingElse": " कुछ और?",
-    "missingOrderItems": "कृपया बताएं कि आप क्या ऑर्डर करना चाहेंगे।",
-    "roomServiceSuccess": "आपका रूम सर्विस ऑर्डर दे दिया गया है! हम इसे जल्द ही आपके कमरे में पहुंचा देंगे।",
-    "roomServiceInstructions": " विशेष निर्देश नोट किए गए: \"{{instructions}}\"।",
-    "roomServiceAnythingElse": " कुछ और?",
-    "missingSpaFields": "कृपया उपचार, तिथि और समय भरें।",
-    "spaBookingSuccess": "आपका {{treatment}} {{date}} ({{time}}) के लिए अनुरोधित किया गया है। हमारी स्पा टीम जल्द ही उपलब्धता की पुष्टि करेगी।",
-    "spaBookingNotes": " नोट्स: \"{{notes}}\"।",
-    "spaBookingAnythingElse": " कुछ और?"
+    "noReservationLinked": "इस सत्र से कोई आरक्षण जुड़ा नहीं है।"
   }
 }

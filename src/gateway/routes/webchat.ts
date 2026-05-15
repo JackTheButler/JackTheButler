@@ -144,9 +144,9 @@ webchatRouter.get('/config', async (c) => {
  * Returns action definitions for the widget.
  * No session required — widget needs this on first load.
  */
-webchatRouter.get('/actions', async (c) => {
+webchatRouter.get('/actions', (c) => {
   const locale = resolveLocale(c.req.query('locale') ?? undefined);
-  const actions = await webchatActionService.getEnabledActions(locale);
+  const actions = webchatActionService.getActions(locale);
   return c.json({ actions });
 });
 

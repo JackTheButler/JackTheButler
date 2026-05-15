@@ -60,97 +60,9 @@
           "placeholder": "6-digit code from your email"
         }
       }
-    },
-    "extendStay": {
-      "name": "Extend Your Stay",
-      "triggerHint": "guest wants to extend their stay or change checkout date",
-      "fields": {
-        "newCheckoutDate": {
-          "label": "New Checkout Date"
-        },
-        "notes": {
-          "label": "Special Requests",
-          "placeholder": "Optional"
-        }
-      }
-    },
-    "requestService": {
-      "name": "Request a Service",
-      "triggerHint": "guest wants housekeeping, towels, pillows, amenities, or maintenance",
-      "fields": {
-        "serviceType": {
-          "label": "Service Type",
-          "options": {
-            "housekeeping": "Housekeeping",
-            "extra-towels": "Extra Towels",
-            "extra-pillows": "Extra Pillows",
-            "amenities": "Amenities",
-            "maintenance": "Maintenance",
-            "other": "Other"
-          }
-        },
-        "details": {
-          "label": "Details",
-          "placeholder": "Any specific details"
-        },
-        "urgency": {
-          "label": "Urgency",
-          "options": {
-            "normal": "Normal",
-            "urgent": "Urgent"
-          }
-        }
-      }
-    },
-    "orderRoomService": {
-      "name": "Order Room Service",
-      "triggerHint": "guest wants to order food or beverages to their room",
-      "fields": {
-        "items": {
-          "label": "What would you like to order?",
-          "placeholder": "e.g. Caesar salad, club sandwich, sparkling water"
-        },
-        "specialInstructions": {
-          "label": "Special Instructions",
-          "placeholder": "Allergies, preferences, etc."
-        }
-      }
-    },
-    "bookSpa": {
-      "name": "Book Spa Treatment",
-      "triggerHint": "guest wants to book a spa treatment or massage",
-      "fields": {
-        "treatment": {
-          "label": "Treatment",
-          "options": {
-            "massage": "Massage",
-            "facial": "Facial",
-            "body-wrap": "Body Wrap",
-            "manicure-pedicure": "Manicure & Pedicure",
-            "other": "Other"
-          }
-        },
-        "preferredDate": {
-          "label": "Preferred Date"
-        },
-        "preferredTime": {
-          "label": "Preferred Time",
-          "options": {
-            "morning": "Morning",
-            "midday": "Midday",
-            "afternoon": "Afternoon",
-            "evening": "Evening"
-          }
-        },
-        "notes": {
-          "label": "Notes",
-          "placeholder": "Any preferences or requests"
-        }
-      }
     }
   },
   "messages": {
-    "actionDisabled": "This action is not currently available.",
     "sessionExpired": "Session expired. Please refresh the page.",
     "unknownAction": "Unknown action.",
     "verificationRequired": "Please verify your booking first.",
@@ -176,23 +88,6 @@
     "invalidCode": "Invalid verification code.",
     "noReservationFoundGeneric": "No reservation found.",
     "verifiedWelcome": "Booking verified! Welcome, {{firstName}}. How can I help you with your stay?",
-    "missingCheckoutDate": "New checkout date is required.",
-    "noReservationLinked": "No reservation linked to this session.",
-    "extendStaySuccess": "Got it! Your request to extend until {{date}} has been submitted. Our front desk team will confirm shortly.",
-    "extendStayNotes": " We've noted: \"{{notes}}\".",
-    "extendStayAnythingElse": " Is there anything else I can help with?",
-    "missingServiceType": "Please select a service type.",
-    "serviceRequestSuccess": "Your {{service}} request has been submitted{{urgency}}. Our team will take care of it shortly.",
-    "serviceRequestUrgent": " as urgent",
-    "serviceRequestDetails": " We've noted: \"{{details}}\".",
-    "serviceRequestAnythingElse": " Anything else?",
-    "missingOrderItems": "Please tell us what you'd like to order.",
-    "roomServiceSuccess": "Your room service order has been placed! We'll have it delivered to your room shortly.",
-    "roomServiceInstructions": " Special instructions noted: \"{{instructions}}\".",
-    "roomServiceAnythingElse": " Anything else?",
-    "missingSpaFields": "Please fill in treatment, date, and time.",
-    "spaBookingSuccess": "Your {{treatment}} has been requested for {{date}} ({{time}}). Our spa team will confirm availability shortly.",
-    "spaBookingNotes": " Notes: \"{{notes}}\".",
-    "spaBookingAnythingElse": " Anything else?"
+    "noReservationLinked": "No reservation linked to this session."
   }
 }
