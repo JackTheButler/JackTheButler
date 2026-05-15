@@ -5,6 +5,7 @@
 import { describe, it, expect, vi } from 'vitest';
 import { searchKnowledge } from '@/core/pipeline/stages/search-knowledge.js';
 import { createContext } from '@/core/pipeline/context.js';
+import { stubDomain } from '../../../_helpers/stub-domain.js';
 import type { InboundMessage } from '@/types/index.js';
 import type { KnowledgeSearchResult } from '@/core/ai/knowledge/index.js';
 
@@ -53,7 +54,7 @@ vi.mock('@/ai/knowledge/index.js', () => ({
 
 describe('searchKnowledge', () => {
   it('sets ctx.knowledgeResults when queryEmbedding is available', async () => {
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.queryEmbedding = new Array(1536).fill(0.1);
 
     await searchKnowledge(ctx);
@@ -63,7 +64,7 @@ describe('searchKnowledge', () => {
   });
 
   it('skips gracefully when ctx.queryEmbedding is not set', async () => {
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     // no queryEmbedding
 
     await searchKnowledge(ctx);
@@ -72,7 +73,7 @@ describe('searchKnowledge', () => {
   });
 
   it('leaves ctx.knowledgeResults undefined when queryEmbedding is missing', async () => {
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     // no queryEmbedding set
     await searchKnowledge(ctx);
     expect(ctx.knowledgeResults).toBeUndefined();

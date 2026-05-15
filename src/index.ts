@@ -12,7 +12,6 @@ import { app, setupWebSocket } from '@/gateway/index.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/scheduler/index.js';
 import { appConfigService } from '@/apps/config.js';
-import { resetResponder } from '@/core/ai/index.js';
 import { getAutomationEngine } from '@/core/automation/index.js';
 import { subscribeAutomationToEvents } from '@/core/automation/event-subscriber.js';
 import { subscribeActivityLogToEvents } from '@/services/activity-log.js';
@@ -46,11 +45,11 @@ async function main(): Promise<void> {
   }
   startupLog.info('Database health check passed');
 
-  // Load enabled extensions from database
+  // Load enabled extensions from database. The new pipeline's
+  // `aiProvider` adapter calls `getActiveAIProvider()` on every request,
+  // so loading apps is enough — no responder cache to reset.
   try {
     await appConfigService.loadEnabledApps();
-    // Reset responder cache so it picks up the newly loaded AI provider
-    resetResponder();
   } catch (error) {
     startupLog.error({ error }, 'Failed to load apps from database');
   }

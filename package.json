@@ -66,6 +66,7 @@
   ],
   "dependencies": {
     "@jackthebutler/shared": "workspace:*",
+    "@jackthebutler/pipeline": "workspace:*",
     "@jackthebutler/ai-anthropic": "workspace:*",
     "@jackthebutler/ai-openai": "workspace:*",
     "@jackthebutler/ai-ollama": "workspace:*",

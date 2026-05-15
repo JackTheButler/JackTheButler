@@ -152,7 +152,11 @@ export class OllamaProvider implements AIProvider, BaseProvider {
       const data = await response.json() as OllamaChatResponse;
       const text = data.message.content.trim();
       const onCompleteContext = request.onComplete?.(text) ?? {};
-      return withLogContext(data, { promptTokens: data.prompt_eval_count, completionTokens: data.eval_count, ...onCompleteContext });
+      return withLogContext(data, {
+        promptTokens: data.prompt_eval_count,
+        completionTokens: data.eval_count,
+        ...onCompleteContext,
+      });
     });
 
     return {

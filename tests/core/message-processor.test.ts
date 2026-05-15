@@ -4,6 +4,7 @@
 
 import { describe, it, expect } from 'vitest';
 import { processMessage } from '@/core/pipeline/index.js';
+import { stubDomain } from '../_helpers/stub-domain.js';
 import { db, conversations, messages } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import type { InboundMessage } from '@/types/index.js';
@@ -21,7 +22,7 @@ describe('processMessage', () => {
       timestamp: new Date(),
     };
 
-    const response = await processMessage(inbound);
+    const response = await processMessage(inbound, stubDomain);
 
     expect(response.content).toBe('Echo: Hello, I need help');
     expect(response.contentType).toBe('text');
@@ -42,7 +43,7 @@ describe('processMessage', () => {
       timestamp: new Date(),
     };
 
-    const response = await processMessage(inbound);
+    const response = await processMessage(inbound, stubDomain);
 
     const savedMessages = await db
       .select()
@@ -85,8 +86,8 @@ describe('processMessage', () => {
       timestamp: new Date(),
     };
 
-    const response1 = await processMessage(inbound1);
-    const response2 = await processMessage(inbound2);
+    const response1 = await processMessage(inbound1, stubDomain);
+    const response2 = await processMessage(inbound2, stubDomain);
 
     expect(response1.conversationId).toBe(response2.conversationId);
 
@@ -112,7 +113,7 @@ describe('processMessage', () => {
       timestamp: new Date(),
     };
 
-    const response = await processMessage(inbound);
+    const response = await processMessage(inbound, stubDomain);
 
     const [conv] = await db
       .select()

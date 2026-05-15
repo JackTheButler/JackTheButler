@@ -1,57 +1,59 @@
 /**
- * Check Verification Stage
+ * checkVerification — Butler-side hospitality stage.
  *
- * Handles in-conversation guest identity verification for channels that lack
- * a UI form (Telegram, WhatsApp without phone match, etc.).
+ * Handles in-conversation guest identity verification for channels that
+ * lack a UI form (Telegram, WhatsApp without a phone match, etc.). Runs
+ * only when the classifier matched `verification.provide_credentials`.
  *
- * Runs only when the intent is `verification.provide_credentials`.
- * Extracts credentials from free text, merges with any previously stored
- * partial state, and attempts PMS lookup when both fields are present.
+ * Flow:
+ *   1. Load any partial state from `conversation.metadata.verification`.
+ *   2. Bail if attempts are already at the cap.
+ *   3. LLM-extract `lastName` + `confirmationNumber` from the current
+ *      message (and recent history, for cases where credentials span
+ *      multiple turns).
+ *   4. When both are present, look up the reservation. On success: link
+ *      guest + reservation to the conversation, set `ctx.entity` and
+ *      `ctx.verification` for the responder. On failure: bump attempts.
+ *   5. Persist the merged state back to `conversation.metadata`.
  *
- * Partial state and attempt count are persisted in conversation.metadata.verification.
- * ctx.verification is set so the AI responder knows what to say.
+ * Hospitality-coupled (uses `verifyByConfirmationAndLastName`). When other
+ * verticals appear, generalize the credential shape via a domain hook.
+ *
+ * @module core/pipeline/stages/check-verification
  */
 
-import { getAppRegistry } from '@/apps/index.js';
 import { conversationService } from '@/services/conversation.js';
-import { guestContextService } from '@/core/conversation/guest-context.js';
 import {
   verifyByConfirmationAndLastName,
   MAX_VERIFICATION_ATTEMPTS,
   type VerificationState,
 } from '@/services/verification.js';
-import { createLogger } from '@/utils/logger.js';
-import type { LLMProvider } from '@/core/ai/types.js';
-import type { MessageContext } from '../context.js';
+import type {
+  AIProvider,
+  Message,
+  Stage,
+} from '@jackthebutler/pipeline';
+import type { ButlerContext } from '../index.js';
 
-const log = createLogger('core:pipeline');
+const EXTRACTION_SYSTEM_PROMPT =
+  'Extract hotel guest verification credentials from the conversation below.\n' +
+  'Return JSON only: { "lastName": "...", "confirmationNumber": "..." }\n' +
+  'Omit any field that is not clearly present in the conversation.';
 
-// ─── Credential extraction ────────────────────────────────────────────────────
-
-/**
- * Use a utility AI call to extract last name and/or confirmation number
- * from a free-text message. Returns only the fields that are clearly present.
- */
 async function extractCredentials(
   message: string,
-  provider: LLMProvider,
-  history?: Array<{ role: 'user' | 'assistant'; content: string }>,
+  ai: AIProvider,
+  history: readonly Message[] | undefined,
 ): Promise<{ lastName?: string; confirmationNumber?: string }> {
   try {
-    let extracted: { lastName?: string; confirmationNumber?: string } = {};
+    const historyMessages = (history ?? []).map((m) => ({
+      role: m.role,
+      content: m.content,
+    }));
 
-    const historyMessages: Array<{ role: 'user' | 'assistant' | 'system'; content: string }> =
-      history && history.length > 0 ? history : [];
-
-    const response = await provider.complete({
+    const response = await ai.complete({
       messages: [
-        {
-          role: 'system',
-          content:
-            'Extract hotel guest verification credentials from the conversation below.\n' +
-            'Return JSON only: { "lastName": "...", "confirmationNumber": "..." }\n' +
-            'Omit any field that is not clearly present in the conversation.',
-        },
+        { role: 'system', content: EXTRACTION_SYSTEM_PROMPT },
         ...historyMessages,
         { role: 'user', content: message },
       ],
@@ -59,117 +61,105 @@ async function extractCredentials(
       temperature: 0,
       modelTier: 'utility',
       purpose: 'credential_extraction',
-      onComplete: (content) => {
-        log.info({ rawContent: content }, 'checkVerification: raw AI extraction response');
-        const match = content.match(/\{[\s\S]*\}/);
-        if (!match) {
-          log.warn({ rawContent: content }, 'checkVerification: no JSON found in extraction response');
-        } else {
-          try {
-            extracted = JSON.parse(match[0]) as { lastName?: string; confirmationNumber?: string };
-            log.info({ extracted }, 'checkVerification: parsed extracted credentials');
-          } catch (err) {
-            log.warn({ err, matched: match[0] }, 'checkVerification: JSON parse failed');
-          }
-        }
+      // Attach the extracted credentials to the AI call's telemetry row.
+      // PII gets stored in app_logs — acceptable here because the staff
+      // dashboard already has access to identity data and this row is
+      // gated behind the `health:view` permission.
+      logFields: (raw) => {
+        const parsed = parseExtraction(raw);
         return {
-          lastName: extracted.lastName,
-          confirmationNumber: extracted.confirmationNumber,
+          extractedLastName: parsed.lastName ?? null,
+          extractedConfirmation: parsed.confirmationNumber ?? null,
         };
       },
     });
 
-    // Fallback parse if onComplete didn't fire (some providers skip it)
-    if (!extracted.lastName && !extracted.confirmationNumber) {
-      const match = response.content.match(/\{[\s\S]*\}/);
-      if (match) {
-        try {
-          extracted = JSON.parse(match[0]) as { lastName?: string; confirmationNumber?: string };
-        } catch {
-          log.warn({ rawContent: response.content }, 'Credential extraction: failed to parse JSON');
-        }
-      }
-    }
-
-    return extracted;
-  } catch (err) {
-    log.warn({ err }, 'Credential extraction failed');
+    return parseExtraction(response.content);
+  } catch {
     return {};
   }
 }
 
-// ─── Stage ───────────────────────────────────────────────────────────────────
-
-export async function checkVerification(ctx: MessageContext): Promise<void> {
-  log.debug(
-    { intent: ctx.classification?.intent, conversationId: ctx.conversation?.id },
-    'checkVerification: entered'
-  );
-
-  if (ctx.classification?.intent !== 'verification.provide_credentials') {
-    log.debug({ intent: ctx.classification?.intent }, 'checkVerification: skipped — intent is not verification.provide_credentials');
-    return;
+function parseExtraction(
+  raw: string,
+): { lastName?: string; confirmationNumber?: string } {
+  const match = raw.match(/\{[\s\S]*\}/);
+  if (!match) return {};
+  try {
+    return JSON.parse(match[0]) as { lastName?: string; confirmationNumber?: string };
+  } catch {
+    return {};
   }
+}
+
+export const checkVerification: Stage<ButlerContext> = async (ctx, env) => {
+  if (ctx.classification?.intent !== 'verification.provide_credentials') return;
   if (!ctx.conversation) return;
 
-  const provider = getAppRegistry().getActiveAIProvider();
-  if (!provider) return;
-
-  // Load previously stored partial state from conversation metadata
-  const meta = JSON.parse(ctx.conversation.metadata || '{}') as { verification?: VerificationState };
+  // `conversation.metadata` arrives as an object from the adapter —
+  // JSON serialization vs. parsing lives in the ConversationProvider.
+  const meta = (ctx.conversation.metadata ?? {}) as {
+    verification?: VerificationState;
+  };
   const stored = meta.verification ?? { attempts: 0 };
-  log.debug({ stored }, 'checkVerification: loaded stored state');
 
-  // Bail out early if already at max attempts
   if (stored.attempts >= MAX_VERIFICATION_ATTEMPTS) {
     ctx.verification = { attempts: stored.attempts };
     return;
   }
 
-  // Extract credentials from the current message
-  const text = ctx.translatedContent ?? ctx.inbound.content;
-  const extracted = await extractCredentials(text, provider, ctx.conversationHistory);
+  const text = ctx.inboundTranslation ?? ctx.inbound.content;
+  const extracted = await extractCredentials(text, env.services.ai, ctx.history);
 
-  // Merge extracted fields with previously stored partial state
   const merged: VerificationState = { attempts: stored.attempts };
   const mergedLastName = extracted.lastName ?? stored.lastName;
   const mergedConfirmation = extracted.confirmationNumber ?? stored.confirmationNumber;
   if (mergedLastName) merged.lastName = mergedLastName;
   if (mergedConfirmation) merged.confirmationNumber = mergedConfirmation;
 
-  log.debug({ merged, stored }, 'Verification state after merge');
-
-  // Attempt full verification only when both fields are present
   if (merged.lastName && merged.confirmationNumber) {
-    const result = await verifyByConfirmationAndLastName(merged.confirmationNumber, merged.lastName);
+    const result = await verifyByConfirmationAndLastName(
+      merged.confirmationNumber,
+      merged.lastName,
+    );
 
     if (result.ok) {
-      // Success — link guest + reservation to conversation, load context
       await conversationService.update(ctx.conversation.id, {
         guestId: result.guest.id,
         reservationId: result.reservation.id,
         metadata: { verification: null },
       });
-      ctx.guestContext = await guestContextService.getContextByConversation(ctx.conversation.id);
+
+      // Surface the just-verified entity to downstream stages so the
+      // responder has the guest's profile available on this same turn.
+      ctx.entity = await env.services.entities.findById(result.guest.id);
       ctx.verification = { attempts: merged.attempts };
 
-      log.info(
-        { conversationId: ctx.conversation.id, guestId: result.guest.id, reservationId: result.reservation.id },
-        'Guest verified via conversation'
+      env.services.logger.info(
+        {
+          conversationId: ctx.conversation.id,
+          guestId: result.guest.id,
+          reservationId: result.reservation.id,
+        },
+        'Guest verified via conversation',
       );
       return;
     }
 
-    // Failed — increment attempts
     merged.attempts += 1;
     merged.failed = true;
-    log.info(
-      { conversationId: ctx.conversation.id, reason: result.reason, attempts: merged.attempts },
-      'Verification attempt failed'
+    env.services.logger.info(
+      {
+        conversationId: ctx.conversation.id,
+        reason: result.reason,
+        attempts: merged.attempts,
+      },
+      'Verification attempt failed',
     );
   }
 
-  // Save partial or failed state back to conversation metadata
-  await conversationService.update(ctx.conversation.id, { metadata: { verification: merged } });
+  await conversationService.update(ctx.conversation.id, {
+    metadata: { verification: merged },
+  });
   ctx.verification = merged;
-}
+};

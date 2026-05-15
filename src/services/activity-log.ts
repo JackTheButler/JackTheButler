@@ -67,7 +67,8 @@ export function subscribeActivityLogToEvents(): void {
       writeActivityLog(event.channel, 'message.saved', 'success', event.conversationId, undefined, undefined, {
         messageId: event.messageId,
         contentType: event.contentType,
-        contentLength: event.content?.length ?? 0,
+        ...(event.detectedLanguage ? { detectedLanguage: event.detectedLanguage } : {}),
+        message: event.content,
       });
     } catch (err) {
       log.warn({ err }, 'Activity log write failed');
@@ -79,7 +80,7 @@ export function subscribeActivityLogToEvents(): void {
       writeActivityLog(event.channel, 'message.sent', 'success', event.conversationId, undefined, undefined, {
         messageId: event.messageId,
         senderType: event.senderType,
-        contentLength: event.content?.length ?? 0,
+        message: event.content,
       });
     } catch (err) {
       log.warn({ err }, 'Activity log write failed');

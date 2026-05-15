@@ -8,9 +8,22 @@
  */
 
 import { createLogger } from '@/utils/logger.js';
-import { getIntentDefinition, type IntentDefinition } from '@/core/ai/intent/intent-definitions.js';
-import type { ClassificationResult } from '@/core/ai/intent/index.js';
+import { getIntentDefinition, type IntentDefinition } from '@/core/pipeline/intents.js';
 import { getAutonomyEngine, mapTaskTypeToActionType, type GuestContext as AutonomyContext } from './approval/autonomy.js';
+
+/**
+ * The router's view of an intent classification. The legacy
+ * `IntentClassifier.ClassificationResult` is gone, and the package's
+ * `ClassificationResult` only carries `{intent, confidence, reasoning}`;
+ * `requiresAction` lives on `intent.metadata.requiresAction` in the new
+ * shape. Callers compose this small struct from those two sources when
+ * invoking the router.
+ */
+interface ClassificationResult {
+  intent: string;
+  confidence: number;
+  requiresAction: boolean;
+}
 
 const log = createLogger('core:task-router');
 

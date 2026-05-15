@@ -101,12 +101,12 @@ describe('AIResponder', () => {
     ];
 
     it('should NOT call the embedding provider when knowledgeResults are provided', async () => {
-      await responder.generate(testConversation, testInbound, undefined, precomputedResults);
+      await responder.generate(testConversation, testInbound, undefined, undefined, precomputedResults);
       expect(provider.embed).not.toHaveBeenCalled();
     });
 
     it('should use the provided knowledge results in the response', async () => {
-      const result = await responder.generate(testConversation, testInbound, undefined, precomputedResults);
+      const result = await responder.generate(testConversation, testInbound, undefined, undefined, precomputedResults);
       expect(result.content).toBeDefined();
       // Knowledge context should be reflected in metadata
       const knowledgeContext = result.metadata?.knowledgeContext as Array<{ id: string }> | undefined;
@@ -144,7 +144,7 @@ describe('AIResponder', () => {
     ];
 
     it('includes memory block in system prompt when memories are provided', async () => {
-      await responder.generate(testConversation, testInbound, undefined, [], mockMemories);
+      await responder.generate(testConversation, testInbound, undefined, undefined, [], mockMemories);
 
       // Find the generation call by looking for the one whose system message contains
       // the butler prompt marker — robust regardless of how many complete() calls are made.
@@ -159,7 +159,7 @@ describe('AIResponder', () => {
     });
 
     it('omits memory block when memories is empty', async () => {
-      await responder.generate(testConversation, testInbound, undefined, [], []);
+      await responder.generate(testConversation, testInbound, undefined, undefined, [], []);
 
       const calls = vi.mocked(provider.complete).mock.calls;
       const generationCall = calls
@@ -170,7 +170,7 @@ describe('AIResponder', () => {
     });
 
     it('omits memory block when memories is undefined (anonymous guest / first-time guest)', async () => {
-      await responder.generate(testConversation, testInbound, undefined, [], undefined);
+      await responder.generate(testConversation, testInbound, undefined, undefined, [], undefined);
 
       const calls = vi.mocked(provider.complete).mock.calls;
       const generationCall = calls

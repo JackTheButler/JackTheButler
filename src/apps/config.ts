@@ -21,7 +21,6 @@ import {
   type AppCategory,
 } from '@/apps/index.js';
 import type { ConnectionTestResult } from '@/apps/types.js';
-import { resetResponder } from '@/core/ai/index.js';
 import { now } from '@/utils/time.js';
 
 const log = createLogger('service:app-config');
@@ -378,12 +377,6 @@ export class AppConfigService {
       } catch {
         // Extension might not be in registry
       }
-      // Reset responder cache when disabling an AI provider
-      // so the next request picks up the new active provider
-      if (manifest.category === 'ai') {
-        resetResponder();
-        log.info({ extensionId }, 'Responder cache reset after disabling AI provider');
-      }
     }
 
     return {
@@ -661,12 +654,6 @@ export class AppConfigService {
         log.info({ extensionId }, 'Extension activated');
       }
 
-      // Reset responder cache if AI extension was activated
-      // so it picks up the new provider
-      if (manifest.category === 'ai') {
-        resetResponder();
-        log.info({ extensionId }, 'Responder cache reset for AI provider change');
-      }
     } catch (error) {
       const message = error instanceof Error ? error.message : String(error);
       log.error({ extensionId, error: message }, 'Failed to activate extension');

@@ -7,6 +7,7 @@ import { recallMemories } from '@/core/pipeline/stages/recall-memories.js';
 import { computeEmbedding } from '@/core/pipeline/stages/compute-embedding.js';
 import { searchKnowledge } from '@/core/pipeline/stages/search-knowledge.js';
 import { createContext } from '@/core/pipeline/context.js';
+import { stubDomain } from '../../../_helpers/stub-domain.js';
 import type { InboundMessage } from '@/types/index.js';
 import type { GuestMemory } from '@/db/schema.js';
 import type { GuestContext } from '@/core/conversation/guest-context.js';
@@ -74,7 +75,7 @@ describe('recallMemories', () => {
     const { memoryService } = await import('@/services/memory.js');
     vi.mocked(memoryService.recall).mockResolvedValue([mockMemory]);
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.guestContext = makeGuestContext('gst-001');
     ctx.queryEmbedding = [0.1, 0.2, 0.3, 0.4];
 
@@ -89,7 +90,7 @@ describe('recallMemories', () => {
     const { memoryService } = await import('@/services/memory.js');
     vi.mocked(memoryService.recall).mockResolvedValue([mockMemory]);
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.guestContext = makeGuestContext('gst-001');
     // no queryEmbedding
 
@@ -101,7 +102,7 @@ describe('recallMemories', () => {
   it('skips when no guestContext is set', async () => {
     const { memoryService } = await import('@/services/memory.js');
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.queryEmbedding = [0.1, 0.2];
     // no ctx.guestContext
 
@@ -114,7 +115,7 @@ describe('recallMemories', () => {
   it('skips when guestContext has no guest (anonymous conversation)', async () => {
     const { memoryService } = await import('@/services/memory.js');
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.guestContext = { guest: null, reservation: null };
     ctx.queryEmbedding = [0.1, 0.2];
 
@@ -128,7 +129,7 @@ describe('recallMemories', () => {
     const { memoryService } = await import('@/services/memory.js');
     vi.mocked(memoryService.recall).mockResolvedValue([]);
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.guestContext = makeGuestContext('gst-001');
     ctx.queryEmbedding = [0.1, 0.2];
 
@@ -141,7 +142,7 @@ describe('recallMemories', () => {
     const { memoryService } = await import('@/services/memory.js');
     vi.mocked(memoryService.recall).mockRejectedValue(new Error('DB error'));
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.guestContext = makeGuestContext('gst-001');
     ctx.queryEmbedding = [0.1, 0.2];
 
@@ -164,7 +165,7 @@ describe('embedding provider called exactly once across pipeline stages', () => 
     } as ReturnType<typeof getAppRegistry>);
     vi.mocked(memoryService.recall).mockResolvedValue([]);
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.guestContext = makeGuestContext('gst-001');
 
     await computeEmbedding(ctx);

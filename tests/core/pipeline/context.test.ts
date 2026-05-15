@@ -4,6 +4,7 @@
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { createContext, runPipeline } from '@/core/pipeline/context.js';
+import { stubDomain } from '../../_helpers/stub-domain.js';
 import type { MessageContext } from '@/core/pipeline/context.js';
 import type { InboundMessage } from '@/types/index.js';
 
@@ -24,7 +25,7 @@ const testInbound: InboundMessage = {
 describe('createContext', () => {
   it('sets inbound and startTime', () => {
     const before = Date.now();
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     const after = Date.now();
 
     expect(ctx.inbound).toBe(testInbound);
@@ -33,7 +34,7 @@ describe('createContext', () => {
   });
 
   it('starts with no other fields set', () => {
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     expect(ctx.guest).toBeUndefined();
     expect(ctx.conversation).toBeUndefined();
     expect(ctx.done).toBeUndefined();
@@ -45,7 +46,7 @@ describe('runPipeline', () => {
   beforeEach(() => { mockDebug.mockClear(); });
 
   it('logs stage name and durationMs for each stage', async () => {
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     async function stageOne(_c: MessageContext) {}
     async function stageTwo(_c: MessageContext) {}
 
@@ -57,7 +58,7 @@ describe('runPipeline', () => {
   });
 
   it('does not log for skipped stages when ctx.done is set', async () => {
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     async function first(c: MessageContext) { c.done = true; }
     async function second(_c: MessageContext) {}
 
@@ -75,14 +76,14 @@ describe('runPipeline', () => {
       async (_ctx: MessageContext) => { order.push(3); },
     ];
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     await runPipeline(ctx, stages);
 
     expect(order).toEqual([1, 2, 3]);
   });
 
   it('stages can read and write ctx', async () => {
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     await runPipeline(ctx, [
       async (c) => { c.detectedLanguage = 'fr'; },
       async (c) => { c.propertyLanguage = c.detectedLanguage === 'fr' ? 'en' : 'fr'; },
@@ -94,7 +95,7 @@ describe('runPipeline', () => {
 
   it('stops early when ctx.done is set', async () => {
     const ran = vi.fn();
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
 
     await runPipeline(ctx, [
       async (c) => { c.done = true; },
@@ -106,7 +107,7 @@ describe('runPipeline', () => {
 
   it('does not run any stages if ctx.done is already true', async () => {
     const ran = vi.fn();
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.done = true;
 
     await runPipeline(ctx, [
@@ -117,7 +118,7 @@ describe('runPipeline', () => {
   });
 
   it('propagates errors from stages', async () => {
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     const boom = new Error('stage exploded');
 
     await expect(
@@ -129,7 +130,7 @@ describe('runPipeline', () => {
 
   it('does not run subsequent stages after an error', async () => {
     const ran = vi.fn();
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
 
     await expect(
       runPipeline(ctx, [
@@ -142,7 +143,7 @@ describe('runPipeline', () => {
   });
 
   it('handles an empty stage list', async () => {
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     await expect(runPipeline(ctx, [])).resolves.toBeUndefined();
   });
 });

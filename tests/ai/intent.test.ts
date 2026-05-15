@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { IntentClassifier } from '@/core/ai/intent/index.js';
+import { IntentClassifier } from '@/core/ai/intent-classifier.js';
 import { IntentTaxonomy, getIntentDefinition, getIntentNames } from '@/core/ai/intent/taxonomy.js';
 import type { LLMProvider, CompletionResponse } from '@/core/ai/types.js';
 

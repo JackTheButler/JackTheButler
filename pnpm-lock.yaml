@@ -47,6 +47,9 @@ importers:
       '@jackthebutler/channel-whatsapp':
         specifier: workspace:*
         version: link:packages/channel-whatsapp
+      '@jackthebutler/pipeline':
+        specifier: workspace:*
+        version: link:packages/pipeline
       '@jackthebutler/pms-cloudbeds':
         specifier: workspace:*
         version: link:packages/pms-cloudbeds
@@ -414,6 +417,15 @@ importers:
       typescript:
         specifier: ^5.7.2
         version: 5.9.3
+
+  packages/pipeline:
+    devDependencies:
+      typescript:
+        specifier: ^5.7.2
+        version: 5.9.3
+      vitest:
+        specifier: ^2.1.0
+        version: 2.1.9(@types/node@22.19.7)(lightningcss@1.30.2)
 
   packages/plugin-starter:
     dependencies:

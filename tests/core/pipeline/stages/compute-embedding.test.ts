@@ -5,6 +5,7 @@
 import { describe, it, expect, vi, beforeEach } from 'vitest';
 import { computeEmbedding } from '@/core/pipeline/stages/compute-embedding.js';
 import { createContext } from '@/core/pipeline/context.js';
+import { stubDomain } from '../../../_helpers/stub-domain.js';
 import type { InboundMessage } from '@/types/index.js';
 
 const testInbound: InboundMessage = {
@@ -37,7 +38,7 @@ describe('computeEmbedding', () => {
       }),
     } as never);
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     await computeEmbedding(ctx);
 
     expect(ctx.queryEmbedding).toEqual(mockEmbedding);
@@ -49,7 +50,7 @@ describe('computeEmbedding', () => {
       getEmbeddingProvider: () => undefined,
     } as never);
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     await computeEmbedding(ctx);
 
     expect(ctx.queryEmbedding).toBeUndefined();
@@ -62,7 +63,7 @@ describe('computeEmbedding', () => {
       getEmbeddingProvider: () => ({ name: 'mock', embed: embedFn, complete: vi.fn() }),
     } as never);
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     ctx.translatedContent = 'What time is checkout? (translated)';
     await computeEmbedding(ctx);
 
@@ -79,7 +80,7 @@ describe('computeEmbedding', () => {
       }),
     } as never);
 
-    const ctx = createContext(testInbound);
+    const ctx = createContext(testInbound, stubDomain);
     await expect(computeEmbedding(ctx)).resolves.toBeUndefined();
     expect(ctx.queryEmbedding).toBeUndefined();
   });

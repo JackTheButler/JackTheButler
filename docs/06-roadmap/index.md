@@ -19,6 +19,7 @@ Future features and improvements planned for Jack The Butler.
 | [PMS Adapter: Cloudbeds](./012-pms-cloudbeds.md) | Planned | High | Cloudbeds PMS adapter — Phase 2 of PMS provider rollout with OAuth 2.0 and HTTP webhooks |
 | [Plugin System](./013-plugin-system.md) | Planned | Medium | Decouple integrations from core into independently versioned npm packages loadable via jack.config.ts |
 | [Guest Memory](./014-guest-memory.md) | Planned | High | Persistent per-guest memory extracted from conversations, semantically recalled and injected into AI context for personalised service |
+| [Pipeline Domain Extraction](./016-pipeline-domain-extraction.md) | Planned | High | Extract the hospitality-specific concepts from the message pipeline behind a DomainAdapter interface so the same pipeline can power AI assistants for other verticals (trading, handyman, car dealer, etc.) |
 
 ## How to Propose Features
 

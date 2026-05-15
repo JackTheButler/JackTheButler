@@ -1,7 +1,13 @@
 /**
  * AI Types
  *
- * Re-exports core AI provider interfaces and adds responder types.
+ * Re-exports the public AI provider contract from `@jackthebutler/shared`
+ * (used by plugins) plus a small `AIProviderConfig` shape Butler uses
+ * internally for stored provider settings.
+ *
+ * The legacy `Responder` / `Response` interfaces previously here have
+ * been retired along with the legacy pipeline; the new pipeline owns its
+ * own response shape inside `@jackthebutler/pipeline`.
  */
 
 export type {
@@ -33,51 +39,3 @@ export type AIProviderType = 'claude' | 'openai' | 'ollama';
 export type { AIProvider as LLMProvider } from '@jackthebutler/shared';
 export type { AIProviderConfig as ProviderConfig };
 export type { AIProviderType as ProviderType };
-
-// ===================
-// Responder Types
-// ===================
-
-import type { Conversation, GuestMemory } from '@/db/schema.js';
-import type { InboundMessage } from '@/types/message.js';
-import type { GuestContext } from '@/core/conversation/guest-context.js';
-import type { KnowledgeSearchResult } from './knowledge/index.js';
-import type { ClassificationResult } from './intent/index.js';
-import type { VerificationState } from '@/services/verification.js';
-
-/**
- * Response from the responder
- */
-export interface Response {
-  content: string;
-  confidence: number;
-  intent?: string | undefined;
-  entities?: unknown[] | undefined;
-  metadata?: Record<string, unknown> | undefined;
-}
-
-/**
- * Responder interface
- */
-export interface Responder {
-  /**
-   * Generate a response for a message.
-   * @param conversation - The conversation context
-   * @param message - The inbound message to respond to
-   * @param guestContext - Optional guest context with profile and reservation info
-   * @param knowledgeResults - Pre-computed knowledge search results from the pipeline.
-   *   When provided, the responder uses them directly and skips its internal knowledge search.
-   * @param memories - Pre-recalled guest memories from the pipeline.
-   *   When provided, injected into the system prompt after the guest profile block.
-   */
-  generate(
-    conversation: Conversation,
-    message: InboundMessage,
-    guestContext?: GuestContext,
-    knowledgeResults?: KnowledgeSearchResult[],
-    memories?: GuestMemory[],
-    classification?: ClassificationResult,
-    verificationState?: VerificationState,
-    history?: Array<{ role: 'user' | 'assistant'; content: string }>
-  ): Promise<Response>;
-}
