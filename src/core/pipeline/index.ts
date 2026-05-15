@@ -52,6 +52,7 @@ import { extractResponseTags } from './stages/extract-response-tags.js';
 import { emitMessageReceived } from './stages/emit-message-received.js';
 import { emitMessageSent } from './stages/emit-message-sent.js';
 import { writeProcessorOutcome, buildOutcomeDetails } from './stages/write-processor-outcome.js';
+import { routeTask } from './stages/route-task.js';
 
 /**
  * Butler-specific extensions to `MessageContext`.
@@ -66,6 +67,18 @@ export interface ButlerContext extends MessageContext {
    * to phrase its reply (success / partial / failed / max-attempts).
    */
   verification?: VerificationState;
+
+  /**
+   * True when `routeTask` created a task on this turn for the classified
+   * intent. Surfaced on the `processor.outcome` activity-log row for
+   * run-to-task correlation in the dashboard.
+   */
+  taskCreated?: boolean;
+
+  /**
+   * Id of the task row inserted by `routeTask`, if any.
+   */
+  taskId?: string;
 }
 
 // The pipeline is cached by `systemLanguage`. Every `processMessage` reads
@@ -85,6 +98,8 @@ let cached: { pipeline: Pipeline<ButlerContext>; lang: string } | null = null;
 //     react without waiting for the full pipeline to finish.
 //   - `checkVerification` after `classifyIntent` — hospitality identity
 //     verification (last name + confirmation number lookup).
+//   - `routeTask` after `checkVerification` — creates a row in `tasks`
+//     when the classified intent calls for staff action.
 //   - `extractResponseTags` after `generateResponse` — pulls `[ACTION:...]`
 //     and `[QUICK_REPLIES:...]` tags out of `aiResponse.content` into
 //     `aiResponse.metadata` for the webchat UI; runs before translation so
@@ -105,6 +120,7 @@ const stages: readonly Stage<ButlerContext>[] = [
   emitMessageReceived,
   classifyIntent,
   checkVerification,
+  routeTask,
   computeEmbedding,
   loadKnowledge,
   loadMemories,

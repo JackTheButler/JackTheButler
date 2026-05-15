@@ -401,18 +401,12 @@ export const tasks = sqliteTable(
     // Details
     roomNumber: text('room_number'),
     description: text('description').notNull(),
-    // Items as JSON array
-    items: text('items'),
     // Priority: urgent, high, standard, low
     priority: text('priority').notNull().default('standard'),
 
     // Status: pending, assigned, in_progress, completed, cancelled
     status: text('status').notNull().default('pending'),
     assignedTo: text('assigned_to').references(() => staff.id),
-
-    // External reference
-    externalId: text('external_id'),
-    externalSystem: text('external_system'),
 
     // Timing
     dueAt: text('due_at'),

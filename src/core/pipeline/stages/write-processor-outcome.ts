@@ -48,6 +48,7 @@ export function buildOutcomeDetails(ctx: ButlerContext): Record<string, unknown>
     ...(suggestedAction ? { suggestedAction } : {}),
     hasQuickReplies: Boolean(quickReplies),
     ...(ctx.outbound?.content !== undefined ? { responseLength: ctx.outbound.content.length } : {}),
+    ...(ctx.taskCreated ? { taskCreated: true, taskId: ctx.taskId } : {}),
     knowledge: (ctx.knowledgeHits ?? []).map((k) => ({
       title: k.title,
       similarity: k.similarity,

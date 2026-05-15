@@ -28,7 +28,6 @@ const createBodySchema = z.object({
   department: z.string(),
   roomNumber: z.string().optional(),
   description: z.string().min(1),
-  items: z.array(z.string()).optional(),
   priority: z.enum(['urgent', 'high', 'standard', 'low']).default('standard'),
   dueAt: z.string().optional(),
 });

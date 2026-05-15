@@ -29,7 +29,6 @@ export interface CreateTaskInput {
   department: string;
   roomNumber?: string | undefined;
   description: string;
-  items?: string[] | undefined;
   priority?: TaskPriority | undefined;
   dueAt?: string | undefined;
 }
@@ -85,7 +84,6 @@ export class TaskService {
       department: input.department,
       roomNumber: input.roomNumber ?? null,
       description: input.description,
-      items: input.items ? JSON.stringify(input.items) : null,
       priority: input.priority ?? 'standard',
       status: 'pending',
       dueAt: input.dueAt ?? null,
