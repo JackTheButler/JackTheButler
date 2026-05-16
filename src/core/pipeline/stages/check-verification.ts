@@ -32,7 +32,7 @@ import type {
   AIProvider,
   Message,
   Stage,
-} from '@jackthebutler/pipeline';
+} from '@thebutler/pipeline';
 import type { ButlerContext } from '../index.js';
 
 const EXTRACTION_SYSTEM_PROMPT =

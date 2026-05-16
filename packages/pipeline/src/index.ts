@@ -1,4 +1,4 @@
-// Public surface of @jackthebutler/pipeline.
+// Public surface of @thebutler/pipeline.
 //
 // types/   — data shapes
 // services/ — provider contracts (what the consumer implements)

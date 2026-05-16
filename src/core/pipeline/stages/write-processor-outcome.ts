@@ -20,7 +20,7 @@
  */
 
 import { writeActivityLog } from '@/services/activity-log.js';
-import type { Stage } from '@jackthebutler/pipeline';
+import type { Stage } from '@thebutler/pipeline';
 import type { ButlerContext } from '../index.js';
 
 /**

@@ -23,7 +23,7 @@
  * @module core/pipeline/stages/extract-response-tags
  */
 
-import type { Stage } from '@jackthebutler/pipeline';
+import type { Stage } from '@thebutler/pipeline';
 import type { ButlerContext } from '../index.js';
 
 const ACTION_TAG_RE = /\[ACTION:([a-z0-9-]+)\]\s*$/;

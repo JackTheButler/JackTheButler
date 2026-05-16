@@ -47,9 +47,6 @@ importers:
       '@jackthebutler/channel-whatsapp':
         specifier: workspace:*
         version: link:packages/channel-whatsapp
-      '@jackthebutler/pipeline':
-        specifier: workspace:*
-        version: link:packages/pipeline
       '@jackthebutler/pms-cloudbeds':
         specifier: workspace:*
         version: link:packages/pms-cloudbeds
@@ -65,6 +62,9 @@ importers:
       '@sendgrid/mail':
         specifier: ^8.1.6
         version: 8.1.6
+      '@thebutler/pipeline':
+        specifier: workspace:*
+        version: link:packages/pipeline
       bcrypt:
         specifier: ^6.0.0
         version: 6.0.0

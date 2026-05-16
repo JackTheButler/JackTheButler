@@ -1,4 +1,4 @@
-# @jackthebutler/pipeline
+# @thebutler/pipeline
 
 Domain-agnostic message-processing pipeline for AI assistants. Used by Jack The Butler for hospitality; designed to be reused for other verticals (trading, handyman, car dealer, …) without changes to the pipeline code itself.
 
@@ -17,7 +17,7 @@ This is a workspace package. Add as a dependency:
 ```jsonc
 {
   "dependencies": {
-    "@jackthebutler/pipeline": "workspace:*"
+    "@thebutler/pipeline": "workspace:*"
   }
 }
 ```
@@ -25,7 +25,7 @@ This is a workspace package. Add as a dependency:
 ## Quick start
 
 ```typescript
-import { createPipeline } from '@jackthebutler/pipeline';
+import { createPipeline } from '@thebutler/pipeline';
 
 const pipeline = createPipeline({
   intents: new MyIntentProvider(),         // domain catalog
@@ -104,7 +104,7 @@ import {
   createPipeline,
   defaultStages,
   saveInboundMessage,
-} from '@jackthebutler/pipeline';
+} from '@thebutler/pipeline';
 
 // 1. Replace entirely
 createPipeline({
@@ -205,7 +205,7 @@ import {
   saveInboundMessage, classifyIntent, computeEmbedding, searchKnowledge,
   recallMemories, generateResponse, translateOutbound, saveOutboundMessage,
   defaultStages,
-} from '@jackthebutler/pipeline';
+} from '@thebutler/pipeline';
 ```
 
 ## Architecture in one diagram
@@ -220,7 +220,7 @@ import {
 │             │                └──────────────┬───────────────┘   │
 │             ▼                               │                    │
 │  ┌────────────────────────────────────────────────────────────┐ │
-│  │  @jackthebutler/pipeline                                   │ │
+│  │  @thebutler/pipeline                                   │ │
 │  │  createPipeline({ intents, prompts, services }).process()  │ │
 │  │                                                             │ │
 │  │     ┌──────────────────────────────────────────────┐       │ │

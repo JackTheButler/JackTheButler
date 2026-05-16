@@ -1,7 +1,7 @@
 /**
  * Translation utilities — property language settings + outbound staff-reply
  * translation. The pipeline runs language detection and translation as
- * stages inside `@jackthebutler/pipeline`; the only external consumer of
+ * stages inside `@thebutler/pipeline`; the only external consumer of
  * `translate()` is the staff-reply endpoint at
  * `gateway/routes/conversations.ts` which translates staff messages into
  * the guest's language before sending.

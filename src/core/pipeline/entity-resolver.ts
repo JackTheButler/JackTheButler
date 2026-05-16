@@ -20,7 +20,7 @@
 import { guestService, normalizePhone } from '@/services/guest.js';
 import { guestContextService, type GuestContext } from '@/core/conversation/guest-context.js';
 import { createLogger } from '@/utils/logger.js';
-import type { Entity, EntityProvider } from '@jackthebutler/pipeline';
+import type { Entity, EntityProvider } from '@thebutler/pipeline';
 
 const log = createLogger('pipeline:entity-resolver');
 

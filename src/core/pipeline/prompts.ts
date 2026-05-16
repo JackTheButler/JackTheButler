@@ -22,7 +22,7 @@ import {
   type VerificationState,
 } from '@/services/verification.js';
 import type { HospitalityEntity } from './entity-resolver.js';
-import type { Env, Intent } from '@jackthebutler/pipeline';
+import type { Env, Intent } from '@thebutler/pipeline';
 import type { ButlerContext } from './index.js';
 
 // ─── Persona ────────────────────────────────────────────────────

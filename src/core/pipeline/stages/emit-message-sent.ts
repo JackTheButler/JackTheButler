@@ -13,7 +13,7 @@
  */
 
 import { events, EventTypes } from '@/events/index.js';
-import type { Stage } from '@jackthebutler/pipeline';
+import type { Stage } from '@thebutler/pipeline';
 import type { ChannelType } from '@jackthebutler/shared';
 import type { ButlerContext } from '../index.js';
 

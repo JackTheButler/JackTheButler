@@ -204,7 +204,7 @@ export class PipelineError<TCtx extends MessageContext = MessageContext> extends
  *
  * @example
  * // Override the stage list:
- * import { defaultStages, myCustomStage } from '@jackthebutler/pipeline';
+ * import { defaultStages, myCustomStage } from '@thebutler/pipeline';
  * const pipeline = createPipeline({
  *   // ...
  *   stages: [...defaultStages, myCustomStage],

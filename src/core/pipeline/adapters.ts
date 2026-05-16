@@ -1,5 +1,5 @@
 /**
- * Provider adapters for @jackthebutler/pipeline.
+ * Provider adapters for @thebutler/pipeline.
  *
  * Every adapter is a **stub** that throws on call — the file exists so the
  * pipeline scaffold (`./index.ts`) compiles. Real implementations get filled
@@ -16,7 +16,7 @@ import type {
   Logger,
   MemoryProvider,
   PromptProvider,
-} from '@jackthebutler/pipeline';
+} from '@thebutler/pipeline';
 import type { ButlerContext } from './index.js';
 import {
   classifierPrompt,
@@ -29,7 +29,7 @@ import { memoryService } from '@/services/memory.js';
 import { KnowledgeService } from '@/core/ai/knowledge/index.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { conversationService } from '@/services/conversation.js';
-import type { Conversation as PkgConversation } from '@jackthebutler/pipeline';
+import type { Conversation as PkgConversation } from '@thebutler/pipeline';
 import type { Conversation as ButlerConversation } from '@/db/schema.js';
 import type { ChannelType } from '@jackthebutler/shared';
 

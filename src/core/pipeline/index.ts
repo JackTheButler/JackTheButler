@@ -1,5 +1,5 @@
 /**
- * Message processing pipeline — Butler's wrapper around @jackthebutler/pipeline.
+ * Message processing pipeline — Butler's wrapper around @thebutler/pipeline.
  *
  * Constructs the package's pipeline once at module load using Butler-side
  * adapters (in `./adapters.ts`), and exposes `processMessage(inbound, domain)`
@@ -31,7 +31,7 @@ import {
   type Stage,
   type InboundMessage as PkgInboundMessage,
   type OutboundMessage as PkgOutboundMessage,
-} from '@jackthebutler/pipeline';
+} from '@thebutler/pipeline';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
 import type { VerificationState } from '@/services/verification.js';
 import { getPropertyLanguage } from '@/utils/translation.js';

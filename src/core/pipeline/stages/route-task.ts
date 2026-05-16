@@ -21,7 +21,7 @@
  */
 
 import { taskService, type TaskType } from '@/services/task.js';
-import type { Stage } from '@jackthebutler/pipeline';
+import type { Stage } from '@thebutler/pipeline';
 import type { TaskPriority } from '@jackthebutler/shared';
 import type { ButlerContext } from '../index.js';
 import type { HospitalityEntity } from '../entity-resolver.js';

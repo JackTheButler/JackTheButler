@@ -7,7 +7,7 @@
  *
  * The legacy `Responder` / `Response` interfaces previously here have
  * been retired along with the legacy pipeline; the new pipeline owns its
- * own response shape inside `@jackthebutler/pipeline`.
+ * own response shape inside `@thebutler/pipeline`.
  */
 
 export type {

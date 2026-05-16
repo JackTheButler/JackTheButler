@@ -16,7 +16,7 @@
  * @module core/pipeline/intents
  */
 
-import type { Intent, IntentProvider } from '@jackthebutler/pipeline';
+import type { Intent, IntentProvider } from '@thebutler/pipeline';
 
 /**
  * Intent definition with metadata
