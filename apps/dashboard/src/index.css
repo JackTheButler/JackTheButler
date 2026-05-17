@@ -1,0 +1,55 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --surface: 250 249 245;
+    --panel: 255 255 255;
+    --ink: 31 30 29;
+    --muted: 107 104 98;
+    --line: 232 229 221;
+    --accent: 31 30 29;
+    --accent-soft: 236 234 228;
+    --on-accent: 255 255 255;
+    --staff: 59 66 82;
+    --staff-soft: 230 232 236;
+  }
+
+  .dark {
+    --surface: 26 25 23;
+    --panel: 35 34 30;
+    --ink: 236 234 228;
+    --muted: 156 152 142;
+    --line: 56 54 47;
+    --accent: 232 230 223;
+    --accent-soft: 60 58 52;
+    --on-accent: 26 25 23;
+    --staff: 124 134 156;
+    --staff-soft: 44 48 58;
+  }
+
+  html,
+  body,
+  #root {
+    height: 100%;
+  }
+  body {
+    @apply bg-surface text-ink antialiased;
+  }
+}
+
+/* Theme-change circular reveal (View Transitions API).
+   Disable the default cross-fade; the new theme is clipped open from the
+   toggle button by the animation in src/lib/theme.ts. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
+}

@@ -1,0 +1,53 @@
+# Dependencies
+node_modules/
+.pnpm-store/
+
+# Build output
+dist/
+apps/*/dist/
+packages/*/dist/
+.astro/
+*.tsbuildinfo
+
+# Tests / coverage
+coverage/
+
+# Secrets & credentials — never commit
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.cert
+*.crt
+*.keystore
+id_rsa*
+id_ed25519*
+*.secret
+secrets.json
+credentials.json
+serviceAccount*.json
+gha-creds-*.json
+.npmrc.local
+
+# Local data / databases
+*.sqlite
+*.sqlite3
+*.db
+data/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Editor / OS
+.DS_Store
+Thumbs.db
+.idea/
+*.swp
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

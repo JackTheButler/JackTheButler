@@ -1,0 +1,17 @@
+{
+  "name": "@janetheoperator/landing",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview"
+  },
+  "dependencies": {
+    "@lucide/astro": "^0.563.0",
+    "@tailwindcss/vite": "^4.1.18",
+    "astro": "^5.17.1",
+    "tailwindcss": "^4.1.18"
+  }
+}
