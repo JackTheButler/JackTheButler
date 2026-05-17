@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { IconRail } from '@/components/IconRail';
+import { Sidebar } from '@/components/Sidebar';
 import { conversations } from '@/mock/fixtures';
 import { ConversationList } from './ConversationList';
 import { Thread } from './Thread';
@@ -11,7 +11,7 @@ export function InboxPage() {
 
   return (
     <div className="flex h-full">
-      <IconRail active="inbox" />
+      <Sidebar active="inbox" />
       <ConversationList items={conversations} activeId={activeId} onSelect={setActiveId} />
       <Thread convo={convo} />
       <ContextPanel convo={convo} />

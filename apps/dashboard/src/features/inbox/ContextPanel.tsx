@@ -1,6 +1,8 @@
 import type { ReactNode } from 'react';
 import { Mail, Hash, MessageSquare } from 'lucide-react';
 import type { Conversation } from '@/mock/fixtures';
+import { useContextPanel } from '@/lib/contextPanel';
+import { useIsWide } from '@/lib/useMediaQuery';
 import { channelLabel } from './channel';
 
 function Row({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
@@ -14,9 +16,17 @@ function Row({ icon, label, value }: { icon: ReactNode; label: string; value: st
 }
 
 export function ContextPanel({ convo }: { convo: Conversation }) {
+  const { open } = useContextPanel();
+  const isWide = useIsWide();
+  const shown = isWide || open; // always shown on wide screens
   return (
-    <aside className="w-72 shrink-0 overflow-y-auto border-l border-line bg-panel px-4 py-4">
-      <div className="flex items-center gap-3">
+    <aside
+      className={`shrink-0 overflow-hidden bg-panel transition-[width] duration-200 ease-out ${
+        shown ? 'w-72 border-l border-line' : 'w-0'
+      }`}
+    >
+      <div className="h-full w-72 overflow-y-auto px-4 py-4">
+        <div className="flex items-center gap-3">
         <div className="grid h-10 w-10 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent">
           {convo.customer.slice(0, 2).toUpperCase()}
         </div>
@@ -48,6 +58,7 @@ export function ContextPanel({ convo }: { convo: Conversation }) {
               </span>
             </div>
           ))}
+        </div>
         </div>
       </div>
     </aside>

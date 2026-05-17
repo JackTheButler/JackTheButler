@@ -1,5 +1,7 @@
-import { Bot, User, Send } from 'lucide-react';
+import { Bot, User, Send, ChevronRight } from 'lucide-react';
 import type { Conversation, Message } from '@/mock/fixtures';
+import { useContextPanel } from '@/lib/contextPanel';
+import { useIsWide } from '@/lib/useMediaQuery';
 import { ChannelIcon, channelLabel } from './channel';
 
 function HandoffPill({ mode }: { mode: Conversation['mode'] }) {
@@ -58,18 +60,39 @@ function Bubble({ msg }: { msg: Message }) {
 
 export function Thread({ convo }: { convo: Conversation }) {
   const aiHandling = convo.mode === 'ai';
+  const { open: panelOpen, toggle: togglePanel } = useContextPanel();
+  const isWide = useIsWide();
   return (
     <section className="flex flex-1 flex-col bg-panel">
       <header className="flex items-center justify-between border-b border-line px-5 py-3">
-        <div>
-          <div className="flex items-center gap-2 text-sm font-semibold">
+        {isWide ? (
+          <div className="flex items-center gap-2 px-0 py-1 text-sm font-semibold">
             {convo.customer}
             <span className="text-muted">·</span>
             <span className="inline-flex items-center gap-1 text-xs font-normal text-muted">
               <ChannelIcon channel={convo.channel} /> {channelLabel(convo.channel)} {convo.ref}
             </span>
           </div>
-        </div>
+        ) : (
+          <button
+            onClick={togglePanel}
+            aria-expanded={panelOpen}
+            title={panelOpen ? 'Hide customer details' : 'Show customer details'}
+            className="group -mx-2 flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-semibold transition-colors hover:bg-surface"
+          >
+            {convo.customer}
+            <span className="text-muted">·</span>
+            <span className="inline-flex items-center gap-1 text-xs font-normal text-muted">
+              <ChannelIcon channel={convo.channel} /> {channelLabel(convo.channel)} {convo.ref}
+            </span>
+            <ChevronRight
+              size={14}
+              className={`text-muted opacity-0 transition-all group-hover:opacity-100 ${
+                panelOpen ? 'rotate-90' : ''
+              }`}
+            />
+          </button>
+        )}
         <HandoffPill mode={convo.mode} />
       </header>
 
