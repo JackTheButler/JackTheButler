@@ -1,9 +1,31 @@
 {
   "name": "@thebutler/pipeline",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Domain-agnostic message-processing pipeline for AI assistants. Used by Jack The Butler for hospitality; designed to be reused for other verticals.",
   "author": "The Butler LLC",
   "license": "Elastic-2.0",
+  "homepage": "https://github.com/JackTheButler/JackTheButler/tree/main/packages/pipeline#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JackTheButler/JackTheButler.git",
+    "directory": "packages/pipeline"
+  },
+  "bugs": {
+    "url": "https://github.com/JackTheButler/JackTheButler/issues"
+  },
+  "keywords": [
+    "ai",
+    "pipeline",
+    "llm",
+    "chatbot",
+    "conversational-ai",
+    "message-processing",
+    "rag",
+    "assistant"
+  ],
+  "engines": {
+    "node": ">=22"
+  },
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",

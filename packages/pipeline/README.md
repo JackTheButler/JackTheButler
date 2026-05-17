@@ -10,25 +10,62 @@ The package provides:
 
 You provide the **what** (your domain's intents, prompts, entity model) and the **how** (your AI provider, storage, logger). The package provides the **flow**.
 
+## Requirements
+
+- **Node.js ≥ 22**
+- **ESM only.** This package ships as an ES module (no CommonJS build). Use it from an ESM project (`"type": "module"`) or a bundler/TS setup that consumes ESM. `require('@thebutler/pipeline')` will not work.
+- **TypeScript types are bundled** — no separate `@types` package needed.
+
 ## Install
 
-This is a workspace package. Add as a dependency:
+```bash
+npm install @thebutler/pipeline
+# or: pnpm add @thebutler/pipeline
+# or: yarn add @thebutler/pipeline
+```
 
-```jsonc
-{
-  "dependencies": {
-    "@thebutler/pipeline": "workspace:*"
+## Stability
+
+This package is pre-1.0 (`0.x`). Per semver, **breaking changes can land in any minor release** (`0.1 → 0.2`). Pin a version you control (`"@thebutler/pipeline": "0.1.0"` or `"~0.1.0"`) and upgrade deliberately until a `1.0.0` stable API is published.
+
+## Quick start
+
+First, implement the contracts (full list below). The smallest one is `IntentProvider` — here it is in full so you can see the shape of a real implementation:
+
+```typescript
+import type { IntentProvider, Intent } from '@thebutler/pipeline';
+
+const INTENTS: Intent[] = [
+  {
+    name: 'request.support',
+    description: 'User is asking for help or has a problem',
+    examples: ['my order is broken', 'I need help', 'this is not working'],
+    metadata: { priority: 'high' }, // opaque to the pipeline; your stages read it
+  },
+  {
+    name: 'smalltalk',
+    description: 'Greetings and chit-chat',
+    examples: ['hello', 'how are you'],
+  },
+];
+
+class MyIntentProvider implements IntentProvider {
+  list(): readonly Intent[] {
+    return INTENTS;
+  }
+  get(name: string): Intent | null {
+    return INTENTS.find((i) => i.name === name) ?? null;
   }
 }
 ```
 
-## Quick start
+The other contracts (`PromptProvider`, `EntityProvider`, `AIProvider`, `ConversationProvider`, `Logger`) follow the same pattern — a small class implementing a typed interface. Then wire them into the pipeline:
 
 ```typescript
 import { createPipeline } from '@thebutler/pipeline';
 
 const pipeline = createPipeline({
-  intents: new MyIntentProvider(),         // domain catalog
+  intents: new MyIntentProvider(),         // domain catalog (shown above)
   prompts: new MyPromptProvider(),         // domain prompts
   services: {
     entities:     new MyEntityProvider(),
@@ -71,8 +108,8 @@ The pipeline depends on **6 required + 2 optional** contracts.
 
 | Contract | When you need it |
 |---|---|
-| `KnowledgeProvider` | If you want RAG. Adds `searchKnowledge` to the pipeline. |
-| `MemoryProvider` | If you want long-term per-user memory. Adds `recallMemories`. |
+| `KnowledgeProvider` | If you want RAG. Adds `loadKnowledge` to the pipeline. |
+| `MemoryProvider` | If you want long-term per-user memory. Adds `loadMemories`. |
 
 Optional services that are missing cause their dependent stages to silently no-op, so you can opt into features incrementally.
 
@@ -88,8 +125,8 @@ Optional services that are missing cause their dependent stages to silently no-o
 5.  saveInboundMessage        — persist what they said
 6.  classifyIntent            — match the intent from the catalog
 7.  computeEmbedding          — embed for retrieval (skip if no KB+memory)
-8.  searchKnowledge           — RAG search (skip if no KB)
-9.  recallMemories            — memory recall (skip if no memory)
+8.  loadKnowledge             — RAG search (skip if no KB)
+9.  loadMemories              — memory recall (skip if no memory)
 10. generateResponse          — LLM call with full context
 11. translateOutbound         — translate back (skip if same)
 12. saveOutboundMessage       — persist response; build OutboundMessage
@@ -202,8 +239,8 @@ import {
 
   // Reference stages
   resolveConversation, detectLanguage, translateInbound, loadHistory,
-  saveInboundMessage, classifyIntent, computeEmbedding, searchKnowledge,
-  recallMemories, generateResponse, translateOutbound, saveOutboundMessage,
+  saveInboundMessage, classifyIntent, computeEmbedding, loadKnowledge,
+  loadMemories, generateResponse, translateOutbound, saveOutboundMessage,
   defaultStages,
 } from '@thebutler/pipeline';
 ```
@@ -239,6 +276,11 @@ import {
 - Activity-log telemetry provider
 - Memory-extraction reference stage
 
+## Links
+
+- Source: https://github.com/JackTheButler/JackTheButler/tree/main/packages/pipeline
+- Issues: https://github.com/JackTheButler/JackTheButler/issues
+
 ## License
 
-MIT (same as the parent project).
+[Elastic License 2.0](./LICENSE.txt) — same as the parent project. Source-available: you may use, copy, modify, and distribute it, but you may **not** offer it to third parties as a hosted/managed service exposing its substantial functionality, and you may not remove licensing notices. See `LICENSE.txt` for the full terms.
