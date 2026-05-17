@@ -5,8 +5,12 @@ function initialCollapsed(): boolean {
 }
 
 interface SidebarState {
+  /** Desktop: collapsed icon-rail vs expanded. Persisted. */
   collapsed: boolean;
   toggle: () => void;
+  /** Mobile: off-canvas drawer open state. Not persisted. */
+  mobileOpen: boolean;
+  setMobileOpen: (open: boolean) => void;
 }
 
 export const useSidebar = create<SidebarState>((set, get) => ({
@@ -16,4 +20,6 @@ export const useSidebar = create<SidebarState>((set, get) => ({
     localStorage.setItem('sidebar', next ? 'collapsed' : 'expanded');
     set({ collapsed: next });
   },
+  mobileOpen: false,
+  setMobileOpen: (open) => set({ mobileOpen: open }),
 }));

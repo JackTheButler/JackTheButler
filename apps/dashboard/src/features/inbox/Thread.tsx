@@ -1,31 +1,21 @@
-import { Bot, User, Send, ChevronRight } from 'lucide-react';
+import { Bot, User, Send, ChevronRight, ChevronLeft } from 'lucide-react';
 import type { Conversation, Message } from '@/mock/fixtures';
-import { useContextPanel } from '@/lib/contextPanel';
 import { useIsWide } from '@/lib/useMediaQuery';
 import { ChannelIcon, channelLabel } from './channel';
 
-function HandoffPill({ mode }: { mode: Conversation['mode'] }) {
+/** Non-interactive at-a-glance status (header). The action lives at the composer. */
+function StatusBadge({ mode }: { mode: Conversation['mode'] }) {
   if (mode === 'ai') {
     return (
-      <div className="flex items-center gap-2">
-        <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-3 py-1 text-xs font-semibold text-accent">
-          <Bot size={14} /> AI handling
-        </span>
-        <button className="rounded-lg bg-accent px-3 py-1.5 text-xs font-semibold text-on-accent transition-opacity hover:opacity-90">
-          Take over
-        </button>
-      </div>
+      <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">
+        <Bot size={13} /> AI
+      </span>
     );
   }
   return (
-    <div className="flex items-center gap-2">
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-3 py-1 text-xs font-semibold text-ink ring-1 ring-line">
-        <User size={14} /> You're handling
-      </span>
-      <button className="rounded-lg px-3 py-1.5 text-xs font-semibold text-accent ring-1 ring-accent/40 transition-colors hover:bg-accent-soft">
-        Hand back to AI
-      </button>
-    </div>
+    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-ink ring-1 ring-line">
+      <User size={13} /> Human
+    </span>
   );
 }
 
@@ -33,7 +23,7 @@ function Bubble({ msg }: { msg: Message }) {
   if (msg.author === 'customer') {
     return (
       <div className="flex justify-start">
-        <div className="max-w-[68%] rounded-xl rounded-tl-sm bg-surface px-3.5 py-2.5 text-sm ring-1 ring-line">
+        <div className="max-w-[88%] rounded-xl rounded-tl-sm bg-surface px-3.5 py-2.5 text-sm ring-1 ring-line sm:max-w-[78%] md:max-w-[68%]">
           {msg.content}
           <div className="mt-1 text-[10px] text-muted">{msg.time}</div>
         </div>
@@ -44,7 +34,7 @@ function Bubble({ msg }: { msg: Message }) {
   return (
     <div className="flex justify-end">
       <div
-        className={`max-w-[68%] rounded-xl rounded-tr-sm px-3.5 py-2.5 text-sm ${
+        className={`max-w-[88%] rounded-xl rounded-tr-sm px-3.5 py-2.5 text-sm sm:max-w-[78%] md:max-w-[68%] ${
           isAi ? 'bg-accent text-on-accent' : 'bg-staff text-white'
         }`}
       >
@@ -58,70 +48,122 @@ function Bubble({ msg }: { msg: Message }) {
   );
 }
 
-export function Thread({ convo }: { convo: Conversation }) {
+export function Thread({
+  convo,
+  mobileActive = false,
+  onBack,
+  onOpenProfile,
+}: {
+  convo: Conversation;
+  mobileActive?: boolean;
+  onBack?: () => void;
+  onOpenProfile?: () => void;
+}) {
   const aiHandling = convo.mode === 'ai';
-  const { open: panelOpen, toggle: togglePanel } = useContextPanel();
   const isWide = useIsWide();
   return (
-    <section className="flex flex-1 flex-col bg-panel">
-      <header className="flex items-center justify-between border-b border-line px-5 py-3">
+    <section
+      className={`fixed inset-0 z-40 flex min-w-0 flex-col bg-panel transition-transform duration-300 ease-out md:static md:inset-auto md:z-auto md:flex-1 md:translate-x-0 md:transition-none ${
+        mobileActive ? 'translate-x-0' : 'translate-x-full pointer-events-none md:pointer-events-auto'
+      }`}
+    >
+      <header className="flex items-center gap-2 border-b border-line px-3 py-3 md:px-5">
+        <button
+          onClick={onBack}
+          aria-label="Back to conversations"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-muted hover:bg-surface hover:text-ink md:hidden"
+        >
+          <ChevronLeft size={20} />
+        </button>
         {isWide ? (
-          <div className="flex items-center gap-2 px-0 py-1 text-sm font-semibold">
-            {convo.customer}
-            <span className="text-muted">·</span>
-            <span className="inline-flex items-center gap-1 text-xs font-normal text-muted">
-              <ChannelIcon channel={convo.channel} /> {channelLabel(convo.channel)} {convo.ref}
+          <div className="flex min-w-0 flex-1 flex-col">
+            <span className="truncate text-sm font-semibold">{convo.customer}</span>
+            <span className="flex min-w-0 items-center gap-1 text-xs text-muted">
+              <ChannelIcon channel={convo.channel} />
+              <span className="truncate">
+                {channelLabel(convo.channel)} · {convo.ref}
+              </span>
             </span>
           </div>
         ) : (
           <button
-            onClick={togglePanel}
-            aria-expanded={panelOpen}
-            title={panelOpen ? 'Hide customer details' : 'Show customer details'}
-            className="group -mx-2 flex items-center gap-2 rounded-lg px-2 py-1 text-sm font-semibold transition-colors hover:bg-surface"
+            onClick={onOpenProfile}
+            title="Show customer details"
+            className="group -mx-2 flex min-w-0 items-center gap-2 rounded-lg px-2 py-1 text-left transition-colors hover:bg-surface"
           >
-            {convo.customer}
-            <span className="text-muted">·</span>
-            <span className="inline-flex items-center gap-1 text-xs font-normal text-muted">
-              <ChannelIcon channel={convo.channel} /> {channelLabel(convo.channel)} {convo.ref}
+            <span className="flex min-w-0 flex-col">
+              <span className="truncate text-sm font-semibold">{convo.customer}</span>
+              <span className="flex min-w-0 items-center gap-1 text-xs font-normal text-muted">
+                <ChannelIcon channel={convo.channel} />
+                <span className="truncate">
+                  {channelLabel(convo.channel)} · {convo.ref}
+                </span>
+              </span>
             </span>
             <ChevronRight
               size={14}
-              className={`text-muted opacity-0 transition-all group-hover:opacity-100 ${
-                panelOpen ? 'rotate-90' : ''
-              }`}
+              className="shrink-0 text-muted opacity-0 transition-opacity group-hover:opacity-100"
             />
           </button>
         )}
-        <HandoffPill mode={convo.mode} />
+        <div className="ml-auto shrink-0">
+          <StatusBadge mode={convo.mode} />
+        </div>
       </header>
 
-      <div className="flex flex-1 flex-col gap-3 overflow-y-auto px-5 py-5">
+      <div
+        className={`flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4 md:px-5 md:py-5 ${
+          aiHandling ? '' : 'bg-staff-soft/40'
+        }`}
+      >
         {convo.messages.map((m) => (
           <Bubble key={m.id} msg={m} />
         ))}
       </div>
 
-      <footer className="border-t border-line px-5 py-4">
-        <div
-          className={`flex items-center gap-2 rounded-xl border px-3 py-2.5 ${
-            aiHandling ? 'border-line bg-surface' : 'border-accent/30 bg-panel'
-          }`}
-        >
-          <input
-            disabled={aiHandling}
-            placeholder={
-              aiHandling ? 'AI is handling — take over to reply' : 'Type a reply…'
-            }
-            className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted disabled:cursor-not-allowed"
-          />
-          <button
-            disabled={aiHandling}
-            className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-on-accent disabled:opacity-40"
-          >
-            <Send size={15} />
-          </button>
-        </div>
+      <footer className="border-t border-line px-3 py-3 md:px-5 md:py-4">
+        {aiHandling ? (
+          <div className="flex flex-col gap-2.5 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
+            <span className="inline-flex items-center gap-2 text-sm">
+              <Bot size={16} className="shrink-0 text-accent" />
+              <span className="font-medium text-ink">Jane AI is handling this chat.</span>
+            </span>
+            <button className="shrink-0 self-start rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-on-accent transition-opacity hover:opacity-90 sm:self-auto">
+              Take over to reply
+            </button>
+          </div>
+        ) : (
+          <div className="overflow-hidden rounded-xl border border-staff/30">
+            {/* narrow status bar, attached to the input below */}
+            <div className="flex items-center justify-between gap-2 bg-staff-soft px-3 py-1.5">
+              <span className="inline-flex min-w-0 items-center gap-2 text-xs">
+                <span className="relative flex h-2 w-2 shrink-0">
+                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-staff opacity-60" />
+                  <span className="relative inline-flex h-2 w-2 rounded-full bg-staff" />
+                </span>
+                <span className="truncate font-semibold text-staff">
+                  You're handling<span className="hidden sm:inline"> this chat</span>
+                </span>
+              </span>
+              <button
+                aria-label="Hand back to AI"
+                className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-staff transition-colors hover:underline"
+              >
+                <Bot size={12} />
+                Hand <span className="hidden sm:inline">back </span>to AI
+              </button>
+            </div>
+            <div className="flex items-center gap-2 bg-panel px-3 py-2.5">
+              <input
+                placeholder="Type a reply…"
+                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
+              />
+              <button className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-on-accent">
+                <Send size={15} />
+              </button>
+            </div>
+          </div>
+        )}
       </footer>
     </section>
   );
