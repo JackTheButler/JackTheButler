@@ -65,13 +65,13 @@ The other contracts (`PromptProvider`, `EntityProvider`, `AIProvider`, `Conversa
 import { createPipeline } from '@thebutler/pipeline';
 
 const pipeline = createPipeline({
-  intents: new MyIntentProvider(),         // domain catalog (shown above)
-  prompts: new MyPromptProvider(),         // domain prompts
+  intents: new MyIntentProvider(), // domain catalog (shown above)
+  prompts: new MyPromptProvider(), // domain prompts
   services: {
-    entities:     new MyEntityProvider(),
-    ai:           new MyAIProvider(),
+    entities: new MyEntityProvider(),
+    ai: new MyAIProvider(),
     conversation: new MyConversationProvider(),
-    logger:       pino(),
+    logger: pino(),
     // knowledge:   new MyKnowledgeProvider(),   // optional
     // memory:      new MyMemoryProvider(),      // optional
   },
@@ -95,21 +95,21 @@ The pipeline depends on **6 required + 2 optional** contracts.
 
 ### Required
 
-| Contract | Methods | What it does |
-|---|---|---|
-| `IntentProvider` | `list()`, `get(name)` | Returns the catalog of intents your classifier can pick from. |
-| `PromptProvider` | `classifier(intents)`, `responder(input)`, `detector()`, `translator(from, to)` | Returns the 4 system prompts your domain uses. |
-| `EntityProvider` | `resolve(inbound)`, `findById(id)` | Resolves the "user" for an inbound message. |
-| `AIProvider` | `complete(req)`, `embed(req)` | Wraps your LLM provider (Anthropic, OpenAI, Bedrock, Ollama, …). |
-| `ConversationProvider` | `findOrCreate`, `findById`, `addMessage`, `getRecentMessages` | Conversation persistence. |
-| `Logger` | `debug`, `info`, `warn`, `error` | Pino-style structured logging. |
+| Contract               | Methods                                                                         | What it does                                                     |
+| ---------------------- | ------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| `IntentProvider`       | `list()`, `get(name)`                                                           | Returns the catalog of intents your classifier can pick from.    |
+| `PromptProvider`       | `classifier(intents)`, `responder(input)`, `detector()`, `translator(from, to)` | Returns the 4 system prompts your domain uses.                   |
+| `EntityProvider`       | `resolve(inbound)`, `findById(id)`                                              | Resolves the "user" for an inbound message.                      |
+| `AIProvider`           | `complete(req)`, `embed(req)`                                                   | Wraps your LLM provider (Anthropic, OpenAI, Bedrock, Ollama, …). |
+| `ConversationProvider` | `findOrCreate`, `findById`, `addMessage`, `getRecentMessages`                   | Conversation persistence.                                        |
+| `Logger`               | `debug`, `info`, `warn`, `error`                                                | Pino-style structured logging.                                   |
 
 ### Optional
 
-| Contract | When you need it |
-|---|---|
-| `KnowledgeProvider` | If you want RAG. Adds `loadKnowledge` to the pipeline. |
-| `MemoryProvider` | If you want long-term per-user memory. Adds `loadMemories`. |
+| Contract            | When you need it                                            |
+| ------------------- | ----------------------------------------------------------- |
+| `KnowledgeProvider` | If you want RAG. Adds `loadKnowledge` to the pipeline.      |
+| `MemoryProvider`    | If you want long-term per-user memory. Adds `loadMemories`. |
 
 Optional services that are missing cause their dependent stages to silently no-op, so you can opt into features incrementally.
 
@@ -137,11 +137,7 @@ Every conditional stage no-ops cleanly when its inputs/services are missing, so 
 ## Customizing stages
 
 ```typescript
-import {
-  createPipeline,
-  defaultStages,
-  saveInboundMessage,
-} from '@thebutler/pipeline';
+import { createPipeline, defaultStages, saveInboundMessage } from '@thebutler/pipeline';
 
 // 1. Replace entirely
 createPipeline({
@@ -164,19 +160,111 @@ createPipeline({
 // 4. Insert a stage at a specific position
 createPipeline({
   /* ... */
-  stages: [
-    ...defaultStages.slice(0, 4),
-    myCustomStage,
-    ...defaultStages.slice(4),
-  ],
+  stages: [...defaultStages.slice(0, 4), myCustomStage, ...defaultStages.slice(4)],
 });
 ```
 
-A custom stage is just `async (ctx, env) => { … }`. Read/write `ctx`, optionally short-circuit by setting `ctx.done = true`.
+### Writing a custom stage
+
+A stage is a typed async function: `(ctx, env) => Promise<void>`. It reads
+and mutates the shared `ctx`, uses `env` for services/config, and returns
+nothing. Use the exported `Stage` type for full type-safety:
+
+```typescript
+import type { Stage } from '@thebutler/pipeline';
+
+// Example 1 — a guard that short-circuits empty messages before any LLM call.
+export const rejectEmpty: Stage = async (ctx, env) => {
+  if (ctx.inbound.content.trim() !== '') return;
+
+  env.services.logger.warn({ id: ctx.inbound.id }, 'empty message, skipping');
+
+  ctx.outbound = {
+    id: ctx.inbound.id,
+    conversationId: ctx.conversation?.id ?? 'unknown',
+    content: 'Sorry, I received an empty message — could you resend?',
+    createdAt: new Date(),
+  };
+  ctx.done = true; // skip all remaining stages; process() returns ctx.outbound
+};
+
+// Example 2 — telemetry after the response is generated. Read-only on ctx.
+export const logLatency: Stage = async (ctx, env) => {
+  if (!ctx.aiResponse) return; // nothing generated (e.g. earlier short-circuit)
+  env.services.logger.info(
+    { ms: Date.now() - ctx.startTime, intent: ctx.classification?.intent },
+    'pipeline completed'
+  );
+};
+```
+
+Place either one anywhere using the composition patterns above —
+`[...defaultStages, logLatency]` to append, or slice it into a specific
+position.
+
+**Short-circuiting:** `ctx.done` is checked at the top of the stage loop, so
+setting `ctx.done = true` lets the current stage finish, then skips all
+remaining stages. `pipeline.process()` resolves to the final context with
+`ctx.outbound` populated — so a short-circuiting stage **must** set
+`ctx.outbound` first, or `process()` throws `Pipeline finished without
+producing an outbound message` (wrapped in a `PipelineError`).
+
+**Domain-specific context:** to carry extra working state, extend
+`MessageContext` and type your stages as `Stage<MyCtx>`. All added fields
+must be optional (the pipeline starts from a bare `{ inbound, startTime }`):
+
+```typescript
+import type { MessageContext, Stage } from '@thebutler/pipeline';
+
+interface MyCtx extends MessageContext {
+  riskScore?: number;
+}
+
+const scoreRisk: Stage<MyCtx> = async (ctx, env) => {
+  ctx.riskScore = computeRisk(ctx.inbound.content);
+};
+```
+
+### What's on `ctx` (MessageContext)
+
+Populated top-to-bottom as the pipeline runs — a field is only set once its
+producing stage has executed, so check for `undefined` if your stage runs
+before that point.
+
+| Field                 | Type                       | Set by / when                                            |
+| --------------------- | -------------------------- | -------------------------------------------------------- |
+| `inbound`             | `InboundMessage`           | input — always present                                   |
+| `startTime`           | `number`                   | input — ms epoch at run start (for duration metrics)     |
+| `conversation`        | `Conversation?`            | `resolveConversation`                                    |
+| `entity`              | `Entity \| null?`          | `resolveConversation` (`null` if channel can't identify) |
+| `inboundLanguage`     | `string?`                  | `detectLanguage` (BCP-47)                                |
+| `inboundTranslation`  | `string?`                  | `translateInbound` (only if language ≠ systemLanguage)   |
+| `history`             | `readonly Message[]?`      | `loadHistory`                                            |
+| `savedInboundId`      | `string?`                  | `saveInboundMessage` (DB-side id; ≠ `inbound.id`)        |
+| `classification`      | `ClassificationResult?`    | `classifyIntent`                                         |
+| `inboundEmbedding`    | `readonly number[]?`       | `computeEmbedding`                                       |
+| `knowledgeHits`       | `readonly KnowledgeHit[]?` | `loadKnowledge`                                          |
+| `memoryHits`          | `readonly MemoryHit[]?`    | `loadMemories`                                           |
+| `aiResponse`          | `AIResponse?`              | `generateResponse`                                       |
+| `outboundTranslation` | `string?`                  | `translateOutbound`                                      |
+| `outbound`            | `OutboundMessage?`         | `saveOutboundMessage` — the return value of `process()`  |
+| `done`                | `boolean?`                 | any stage — set `true` to short-circuit                  |
+
+### What's in `env`
+
+Captured at `createPipeline` and passed unchanged to every stage:
+
+| Field                | Type             | What it is                                                                              |
+| -------------------- | ---------------- | --------------------------------------------------------------------------------------- |
+| `env.intents`        | `IntentProvider` | your intent catalog                                                                     |
+| `env.prompts`        | `PromptProvider` | your domain prompts                                                                     |
+| `env.services`       | `Services`       | `entities`, `ai`, `conversation`, `logger` (required); `knowledge`, `memory` (optional) |
+| `env.systemLanguage` | `string`         | BCP-47 system language (defaults to `'en'`)                                             |
 
 ## Error handling
 
 `pipeline.process()` throws when:
+
 - A stage throws an unhandled error
 - The pipeline completes without producing an outbound message
 
@@ -211,36 +299,67 @@ For a single-language deployment, the translation stages no-op (when detected la
 import {
   // Pipeline core
   createPipeline,
-  type Pipeline, type PipelineConfig, type Env, type Services,
-  type Stage, type MessageContext,
+  type Pipeline,
+  type PipelineConfig,
+  type Env,
+  type Services,
+  type Stage,
+  type MessageContext,
 
   // Wire types
-  type InboundMessage, type OutboundMessage, type Conversation, type Message,
+  type InboundMessage,
+  type OutboundMessage,
+  type Conversation,
+  type Message,
 
   // Domain types
-  type Entity, type Intent, type ResponderInput,
+  type Entity,
+  type Intent,
+  type ResponderInput,
 
   // AI types
-  type AIModelTier, type AICompletionMessage, type AICompletionRequest,
-  type AICompletionResult, type AIEmbeddingRequest, type AIEmbeddingResult,
+  type AIModelTier,
+  type AICompletionMessage,
+  type AICompletionRequest,
+  type AICompletionResult,
+  type AIEmbeddingRequest,
+  type AIEmbeddingResult,
 
   // Service contracts
-  type EntityProvider, type IntentProvider, type PromptProvider,
-  type AIProvider, type ConversationProvider, type Logger,
-  type KnowledgeProvider, type MemoryProvider,
+  type EntityProvider,
+  type IntentProvider,
+  type PromptProvider,
+  type AIProvider,
+  type ConversationProvider,
+  type Logger,
+  type KnowledgeProvider,
+  type MemoryProvider,
 
   // Service-related data shapes
   type LogFields,
-  type KnowledgeHit, type KnowledgeSearchOptions,
-  type MemoryHit, type NewMemory, type MemoryRecallOptions,
+  type KnowledgeHit,
+  type KnowledgeSearchOptions,
+  type MemoryHit,
+  type NewMemory,
+  type MemoryRecallOptions,
 
   // Inference results
-  type ClassificationResult, type AIResponse,
+  type ClassificationResult,
+  type AIResponse,
 
   // Reference stages
-  resolveConversation, detectLanguage, translateInbound, loadHistory,
-  saveInboundMessage, classifyIntent, computeEmbedding, loadKnowledge,
-  loadMemories, generateResponse, translateOutbound, saveOutboundMessage,
+  resolveConversation,
+  detectLanguage,
+  translateInbound,
+  loadHistory,
+  saveInboundMessage,
+  classifyIntent,
+  computeEmbedding,
+  loadKnowledge,
+  loadMemories,
+  generateResponse,
+  translateOutbound,
+  saveOutboundMessage,
   defaultStages,
 } from '@thebutler/pipeline';
 ```
@@ -248,24 +367,24 @@ import {
 ## Architecture in one diagram
 
 ```
-┌─────────────────────────────────────────────────────────────────┐
+┌──────────────────────────────────────────────────────────────────┐
 │                     YOUR APP                                     │
-│  ┌──────────────────────┐    ┌──────────────────────────────┐   │
+│  ┌──────────────────────┐    ┌───────────────────────────────┐   │
 │  │ Your channel handler │    │  Your service implementations │   │
 │  │ (webhook, websocket) │    │  EntityProvider, AIProvider,  │   │
 │  └──────────┬───────────┘    │  ConversationProvider, …      │   │
-│             │                └──────────────┬───────────────┘   │
+│             │                └──────────────┬────────────────┘   │
 │             ▼                               │                    │
-│  ┌────────────────────────────────────────────────────────────┐ │
-│  │  @thebutler/pipeline                                   │ │
-│  │  createPipeline({ intents, prompts, services }).process()  │ │
+│  ┌─────────────────────────────────────────────────────────────┐ │
+│  │  @thebutler/pipeline                                        │ │
+│  │  createPipeline({ intents, prompts, services }).process()   │ │
 │  │                                                             │ │
-│  │     ┌──────────────────────────────────────────────┐       │ │
-│  │     │ Stage 1 → Stage 2 → … → Stage 12             │       │ │
-│  │     │  (calls your services via the contracts)     │       │ │
-│  │     └──────────────────────────────────────────────┘       │ │
-│  └────────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────────┘
+│  │     ┌──────────────────────────────────────────────┐        │ │
+│  │     │ Stage 1 → Stage 2 → … → Stage 12             │        │ │
+│  │     │  (calls your services via the contracts)     │        │ │
+│  │     └──────────────────────────────────────────────┘        │ │
+│  └─────────────────────────────────────────────────────────────┘ │
+└──────────────────────────────────────────────────────────────────┘
 ```
 
 ## Roadmap (not in V1)
