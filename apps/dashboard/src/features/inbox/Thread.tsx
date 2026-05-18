@@ -11,7 +11,7 @@ function Bubble({ msg }: { msg: Message }) {
   if (msg.author === 'customer') {
     return (
       <div className="flex justify-start">
-        <div className="max-w-[88%] rounded-xl rounded-tl-sm bg-surface px-3.5 py-2.5 text-sm ring-1 ring-line sm:max-w-[78%] md:max-w-[68%]">
+        <div className="max-w-[min(95%,600px)] rounded-xl rounded-tl-sm bg-surface px-3.5 py-2.5 text-sm ring-1 ring-line">
           {msg.content}
           <div className="mt-1 text-[10px] text-muted">{msg.time}</div>
         </div>
@@ -23,7 +23,7 @@ function Bubble({ msg }: { msg: Message }) {
     <div className="flex justify-end">
       <div
         className={cn(
-          'max-w-[88%] rounded-xl rounded-tr-sm px-3.5 py-2.5 text-sm sm:max-w-[78%] md:max-w-[68%]',
+          'max-w-[min(95%,600px)] rounded-xl rounded-tr-sm px-3.5 py-2.5 text-sm',
           isAi ? 'bg-accent text-on-accent' : 'bg-staff text-white',
         )}
       >

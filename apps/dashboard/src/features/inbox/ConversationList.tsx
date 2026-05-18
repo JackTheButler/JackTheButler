@@ -2,7 +2,23 @@ import { useState } from 'react';
 import type { Conversation } from '@/mock/fixtures';
 import { Badge, SegmentedControl, cn } from '@/components/ui';
 
-const FILTERS = ['All', 'AI', 'Mine', 'Unassigned'] as const;
+const FILTERS = ['Open', 'All', 'Human', 'AI', 'Resolved'] as const;
+type Filter = (typeof FILTERS)[number];
+
+function matchesFilter(c: Conversation, filter: Filter): boolean {
+  switch (filter) {
+    case 'Open':
+      return c.status === 'needs_reply';
+    case 'All':
+      return true;
+    case 'Human':
+      return c.mode === 'human' && c.status !== 'resolved';
+    case 'AI':
+      return c.mode === 'ai' && c.status !== 'resolved';
+    case 'Resolved':
+      return c.status === 'resolved';
+  }
+}
 
 export function ConversationList({
   items,
@@ -13,7 +29,8 @@ export function ConversationList({
   activeId: string;
   onSelect: (id: string) => void;
 }) {
-  const [filter, setFilter] = useState<(typeof FILTERS)[number]>('All');
+  const [filter, setFilter] = useState<Filter>('Open');
+  const visible = items.filter((c) => matchesFilter(c, filter));
 
   return (
     <aside className="flex w-full shrink-0 flex-col border-r border-line bg-panel md:w-80">
@@ -28,7 +45,10 @@ export function ConversationList({
         />
       </div>
       <div className="flex-1 overflow-y-auto">
-        {items.map((c) => {
+        {visible.length === 0 && (
+          <p className="px-4 py-12 text-center text-sm text-muted">No conversations here.</p>
+        )}
+        {visible.map((c) => {
           const on = c.id === activeId;
           return (
             <button

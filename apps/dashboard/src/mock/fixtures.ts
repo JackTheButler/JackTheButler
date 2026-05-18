@@ -2,6 +2,7 @@
 
 export type Channel = 'webchat' | 'telegram' | 'whatsapp';
 export type Mode = 'ai' | 'human';
+export type Status = 'needs_reply' | 'resolved';
 export type Author = 'customer' | 'ai' | 'staff';
 
 export interface Message {
@@ -17,6 +18,7 @@ export interface Conversation {
   customer: string;
   channel: Channel;
   mode: Mode;
+  status: Status;
   snippet: string;
   time: string;
   unread: boolean;
@@ -32,6 +34,7 @@ export const conversations: Conversation[] = [
     customer: 'Acme Co.',
     channel: 'whatsapp',
     mode: 'ai',
+    status: 'needs_reply',
     snippet: "Hi, my order hasn't arrived yet…",
     time: '2m',
     unread: true,
@@ -53,6 +56,7 @@ export const conversations: Conversation[] = [
     customer: 'Bob Mertens',
     channel: 'telegram',
     mode: 'human',
+    status: 'needs_reply',
     snippet: 'Thanks, that worked!',
     time: '1h',
     unread: false,
@@ -70,6 +74,7 @@ export const conversations: Conversation[] = [
     customer: 'Lia Park',
     channel: 'webchat',
     mode: 'ai',
+    status: 'needs_reply',
     snippet: 'Do you offer annual billing?',
     time: '3h',
     unread: false,
@@ -86,6 +91,7 @@ export const conversations: Conversation[] = [
     customer: 'Sam Okafor',
     channel: 'webchat',
     mode: 'ai',
+    status: 'resolved',
     snippet: 'How do I export my data?',
     time: 'Yesterday',
     unread: false,

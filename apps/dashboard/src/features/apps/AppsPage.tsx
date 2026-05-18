@@ -1,8 +1,10 @@
 import { useMemo, useState } from 'react';
 import { Search } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
-import { Badge, Button, Input } from '@/components/ui';
+import { Badge, Button, Input, SegmentedControl } from '@/components/ui';
 import { apps, appCategories, type AppEntry, type AppStatus } from '@/mock/apps';
+
+const CATEGORY_FILTERS = ['All', ...appCategories] as const;
 
 const STATUS: Record<AppStatus, { label: string; tone: 'accent' | 'muted' }> = {
   active: { label: 'Connected', tone: 'accent' },
@@ -44,17 +46,21 @@ function AppCard({ app }: { app: AppEntry }) {
 
 export function AppsPage() {
   const [query, setQuery] = useState('');
+  const [activeCategory, setActiveCategory] =
+    useState<(typeof CATEGORY_FILTERS)[number]>('All');
 
   const filtered = useMemo(() => {
     const q = query.trim().toLowerCase();
-    if (!q) return apps;
-    return apps.filter(
-      (a) =>
+    return apps.filter((a) => {
+      if (activeCategory !== 'All' && a.category !== activeCategory) return false;
+      if (!q) return true;
+      return (
         a.name.toLowerCase().includes(q) ||
         a.vendor.toLowerCase().includes(q) ||
-        a.description.toLowerCase().includes(q),
-    );
-  }, [query]);
+        a.description.toLowerCase().includes(q)
+      );
+    });
+  }, [query, activeCategory]);
 
   return (
     <PageShell>
@@ -80,6 +86,14 @@ export function AppsPage() {
           </div>
         </header>
 
+        <SegmentedControl
+          aria-label="Filter apps by category"
+          options={CATEGORY_FILTERS}
+          value={activeCategory}
+          onChange={setActiveCategory}
+          className="-mx-4 mt-6 px-4 md:-mx-8 md:px-8"
+        />
+
         <div className="mt-8 space-y-8">
           {appCategories.map((category) => {
             const inCategory = filtered.filter((a) => a.category === category);
@@ -99,9 +113,7 @@ export function AppsPage() {
           })}
 
           {filtered.length === 0 && (
-            <p className="py-16 text-center text-sm text-muted">
-              No apps match “{query}”.
-            </p>
+            <p className="py-16 text-center text-sm text-muted">No apps match your filters.</p>
           )}
         </div>
       </div>
