@@ -1,5 +1,4 @@
 import { useState } from 'react';
-import { Sidebar } from '@/components/Sidebar';
 import { conversations } from '@/mock/fixtures';
 import { ConversationList } from './ConversationList';
 import { Thread } from './Thread';
@@ -19,8 +18,7 @@ export function InboxPage() {
   const convo = conversations.find((c) => c.id === activeId) ?? conversations[0];
 
   return (
-    <div className="flex h-full pt-14 md:pt-0">
-      <Sidebar active="inbox" />
+    <>
       <ConversationList
         items={conversations}
         activeId={activeId}
@@ -40,6 +38,6 @@ export function InboxPage() {
         mobileShow={mobileView === 'profile'}
         onBack={() => setMobileView('thread')}
       />
-    </div>
+    </>
   );
 }

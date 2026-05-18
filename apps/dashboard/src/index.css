@@ -39,6 +39,17 @@
   }
 }
 
+@layer utilities {
+  /* Horizontal scroll without a visible scrollbar (filter rows, tab strips). */
+  .no-scrollbar {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  .no-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+}
+
 /* Theme-change circular reveal (View Transitions API).
    Disable the default cross-fade; the new theme is clipped open from the
    toggle button by the animation in src/lib/theme.ts. */

@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Conversation } from '@/mock/fixtures';
-import { ChannelIcon } from './channel';
+import { Badge, SegmentedControl } from '@/components/ui';
 
 const FILTERS = ['All', 'AI', 'Mine', 'Unassigned'] as const;
 
@@ -18,20 +18,14 @@ export function ConversationList({
   return (
     <aside className="flex w-full shrink-0 flex-col border-r border-line bg-panel md:w-80">
       <div className="border-b border-line px-3 py-3 md:px-4">
-        <h1 className="text-sm font-semibold">Conversations</h1>
-        <div className="mt-3 flex gap-1">
-          {FILTERS.map((f) => (
-            <button
-              key={f}
-              onClick={() => setFilter(f)}
-              className={`rounded-lg px-2.5 py-1 text-xs font-medium transition-colors ${
-                f === filter ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-surface'
-              }`}
-            >
-              {f}
-            </button>
-          ))}
-        </div>
+        <h1 className="text-sm font-semibold">Inbox</h1>
+        <SegmentedControl
+          aria-label="Filter conversations"
+          options={FILTERS}
+          value={filter}
+          onChange={setFilter}
+          className="mt-3"
+        />
       </div>
       <div className="flex-1 overflow-y-auto">
         {items.map((c) => {
@@ -51,19 +45,10 @@ export function ConversationList({
                   }`}
                 />
                 <span className="flex-1 truncate text-sm font-semibold">{c.customer}</span>
-                <span className="text-xs text-muted">{c.time}</span>
+                {c.mode === 'human' && <Badge tone="staff">Human</Badge>}
+                <span className="shrink-0 text-xs text-muted">{c.time}</span>
               </div>
               <p className="line-clamp-1 pl-4 text-xs text-muted">{c.snippet}</p>
-              <div className="flex items-center gap-2 pl-4 pt-0.5">
-                <ChannelIcon channel={c.channel} />
-                <span className="text-[11px] text-muted">{c.ref}</span>
-                <span className="ml-auto" />
-                {c.mode === 'human' && (
-                  <span className="rounded-md bg-staff-soft px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-staff">
-                    Human
-                  </span>
-                )}
-              </div>
             </button>
           );
         })}

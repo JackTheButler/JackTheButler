@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import { Mail, Hash, MessageSquare, ChevronLeft } from 'lucide-react';
 import type { Conversation } from '@/mock/fixtures';
+import { IconButton } from '@/components/ui';
 import { channelLabel } from './channel';
 
 function Row({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
@@ -84,13 +85,9 @@ export function ContextPanel({
         }`}
       >
         <header className="flex items-center gap-2 border-b border-line px-3 py-3">
-          <button
-            onClick={onBack}
-            aria-label="Back to conversation"
-            className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-muted hover:bg-surface hover:text-ink"
-          >
+          <IconButton onClick={onBack} aria-label="Back to conversation">
             <ChevronLeft size={20} />
-          </button>
+          </IconButton>
           <span className="text-sm font-semibold">Customer details</span>
         </header>
         <div className="flex-1 overflow-y-auto">

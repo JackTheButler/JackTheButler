@@ -1,21 +1,22 @@
 import { Bot, User, Send, ChevronRight, ChevronLeft } from 'lucide-react';
 import type { Conversation, Message } from '@/mock/fixtures';
 import { useIsWide } from '@/lib/useMediaQuery';
+import { Badge, Button, IconButton } from '@/components/ui';
 import { ChannelIcon, channelLabel } from './channel';
 
 /** Non-interactive at-a-glance status (header). The action lives at the composer. */
 function StatusBadge({ mode }: { mode: Conversation['mode'] }) {
   if (mode === 'ai') {
     return (
-      <span className="inline-flex items-center gap-1.5 rounded-full bg-accent-soft px-2.5 py-1 text-xs font-semibold text-accent">
+      <Badge tone="accent" shape="pill">
         <Bot size={13} /> AI
-      </span>
+      </Badge>
     );
   }
   return (
-    <span className="inline-flex items-center gap-1.5 rounded-full bg-surface px-2.5 py-1 text-xs font-semibold text-ink ring-1 ring-line">
+    <Badge tone="staff" shape="pill">
       <User size={13} /> Human
-    </span>
+    </Badge>
   );
 }
 
@@ -68,13 +69,9 @@ export function Thread({
       }`}
     >
       <header className="flex items-center gap-2 border-b border-line px-3 py-3 md:px-5">
-        <button
-          onClick={onBack}
-          aria-label="Back to conversations"
-          className="grid h-9 w-9 shrink-0 place-items-center rounded-xl text-muted hover:bg-surface hover:text-ink md:hidden"
-        >
+        <IconButton onClick={onBack} aria-label="Back to conversations" className="md:hidden">
           <ChevronLeft size={20} />
-        </button>
+        </IconButton>
         {isWide ? (
           <div className="flex min-w-0 flex-1 flex-col">
             <span className="truncate text-sm font-semibold">{convo.customer}</span>
@@ -128,9 +125,7 @@ export function Thread({
               <Bot size={16} className="shrink-0 text-accent" />
               <span className="font-medium text-ink">Jane AI is handling this chat.</span>
             </span>
-            <button className="shrink-0 self-start rounded-lg bg-accent px-3.5 py-2 text-xs font-semibold text-on-accent transition-opacity hover:opacity-90 sm:self-auto">
-              Take over to reply
-            </button>
+            <Button className="shrink-0 self-start sm:self-auto">Take over to reply</Button>
           </div>
         ) : (
           <div className="overflow-hidden rounded-xl border border-staff/30">

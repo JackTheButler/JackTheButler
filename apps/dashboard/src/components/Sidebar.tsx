@@ -10,14 +10,17 @@ import {
   Menu,
   X,
 } from 'lucide-react';
+import { useCallback, useLayoutEffect, useRef, useState } from 'react';
+import { NavLink, useLocation } from 'react-router-dom';
 import { useTheme } from '@/lib/theme';
 import { useSidebar } from '@/lib/sidebar';
+import { IconButton } from '@/components/ui';
 
 const NAV = [
-  { key: 'inbox', label: 'Inbox', icon: Inbox },
-  { key: 'kb', label: 'Knowledge', icon: BookOpen },
-  { key: 'apps', label: 'Apps', icon: Blocks },
-  { key: 'settings', label: 'Settings', icon: Settings },
+  { to: '/', label: 'Inbox', icon: Inbox, end: true },
+  { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
+  { to: '/apps', label: 'Apps', icon: Blocks },
+  { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
 function Brand({ collapsed }: { collapsed: boolean }) {
@@ -31,33 +34,94 @@ function Brand({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-function NavList({
-  collapsed,
-  active,
-  onNavigate,
-}: {
-  collapsed: boolean;
-  active: string;
-  onNavigate?: () => void;
-}) {
+function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
+  const { pathname } = useLocation();
+  const containerRef = useRef<HTMLDivElement | null>(null);
+  const refs = useRef<(HTMLAnchorElement | null)[]>([]);
+  const [indicator, setIndicator] = useState<{ top: number; left: number; w: number; h: number } | null>(
+    null,
+  );
+  // Slide only for navigation; snap-track during resize/collapse so the
+  // indicator grows in sync with the sidebar instead of lagging behind it.
+  const [slide, setSlide] = useState(false);
+  const mounted = useRef(false);
+
+  const activeIndex = NAV.findIndex(({ to, end }) =>
+    end ? pathname === to : pathname === to || pathname.startsWith(to + '/'),
+  );
+  const activeRef = useRef(activeIndex);
+  activeRef.current = activeIndex;
+
+  const measure = useCallback(() => {
+    const el = refs.current[activeRef.current];
+    setIndicator(
+      el ? { top: el.offsetTop, left: el.offsetLeft, w: el.offsetWidth, h: el.offsetHeight } : null,
+    );
+  }, []);
+
+  // Navigation: animate the slide between items.
+  useLayoutEffect(() => {
+    if (!mounted.current) return; // first position handled below (no flash)
+    setSlide(true);
+    measure();
+  }, [activeIndex, measure]);
+
+  // Initial position + live tracking while the sidebar width animates or the
+  // window resizes — these snap (no transition) so there is no lag.
+  useLayoutEffect(() => {
+    measure();
+    const id = requestAnimationFrame(() => {
+      mounted.current = true;
+    });
+    const ro = new ResizeObserver(() => {
+      setSlide(false);
+      measure();
+    });
+    if (containerRef.current) ro.observe(containerRef.current);
+    return () => {
+      cancelAnimationFrame(id);
+      ro.disconnect();
+    };
+  }, [measure]);
+
   return (
-    <div className="flex flex-1 flex-col gap-1">
-      {NAV.map(({ key, label, icon: Icon }) => {
-        const on = key === active;
-        return (
-          <button
-            key={key}
-            onClick={onNavigate}
-            title={collapsed ? label : undefined}
-            className={`group flex h-11 items-center rounded-xl transition-colors ${
+    <div ref={containerRef} className="relative flex flex-1 flex-col gap-1">
+      {indicator && (
+        <span
+          aria-hidden
+          className={`absolute rounded-xl bg-accent-soft ${
+            slide ? 'transition-[top,left,width,height] duration-200 ease-out' : ''
+          }`}
+          style={{
+            top: indicator.top,
+            left: indicator.left,
+            width: indicator.w,
+            height: indicator.h,
+          }}
+        />
+      )}
+      {NAV.map(({ to, label, icon: Icon, end }, i) => (
+        <NavLink
+          key={to}
+          to={to}
+          end={end}
+          ref={(el) => {
+            refs.current[i] = el;
+          }}
+          onClick={onNavigate}
+          title={collapsed ? label : undefined}
+          className={({ isActive }) =>
+            `group relative z-10 flex h-11 items-center rounded-xl transition-colors ${
               collapsed ? 'w-11 justify-center' : 'w-full gap-3 px-3'
-            } ${on ? 'bg-accent-soft text-accent' : 'text-muted hover:bg-surface hover:text-ink'}`}
-          >
-            <Icon size={20} strokeWidth={2} className="shrink-0" />
-            {!collapsed && <span className="text-sm font-medium">{label}</span>}
-          </button>
-        );
-      })}
+            } ${
+              isActive ? 'text-accent' : 'text-muted hover:bg-surface hover:text-ink'
+            }`
+          }
+        >
+          <Icon size={20} strokeWidth={2} className="shrink-0" />
+          {!collapsed && <span className="text-sm font-medium">{label}</span>}
+        </NavLink>
+      ))}
     </div>
   );
 }
@@ -104,7 +168,7 @@ function AccountChip({ collapsed }: { collapsed: boolean }) {
   );
 }
 
-function DesktopSidebar({ active }: { active: string }) {
+function DesktopSidebar() {
   const { collapsed, toggle: toggleSidebar } = useSidebar();
   return (
     <nav
@@ -124,14 +188,14 @@ function DesktopSidebar({ active }: { active: string }) {
       <div className="mb-6">
         <Brand collapsed={collapsed} />
       </div>
-      <NavList collapsed={collapsed} active={active} />
+      <NavList collapsed={collapsed} />
       <ThemeButton collapsed={collapsed} />
       <AccountChip collapsed={collapsed} />
     </nav>
   );
 }
 
-function MobileSidebar({ active }: { active: string }) {
+function MobileSidebar() {
   const { mobileOpen, setMobileOpen } = useSidebar();
   const close = () => setMobileOpen(false);
   return (
@@ -139,13 +203,9 @@ function MobileSidebar({ active }: { active: string }) {
       {/* Slim top bar with hamburger */}
       <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-panel px-3">
         <Brand collapsed={false} />
-        <button
-          onClick={() => setMobileOpen(true)}
-          aria-label="Open menu"
-          className="grid h-9 w-9 place-items-center rounded-xl text-muted hover:bg-surface hover:text-ink"
-        >
+        <IconButton onClick={() => setMobileOpen(true)} aria-label="Open menu">
           <Menu size={20} />
-        </button>
+        </IconButton>
       </header>
 
       {/* Backdrop */}
@@ -166,16 +226,12 @@ function MobileSidebar({ active }: { active: string }) {
             land directly over the navbar's logo + hamburger. */}
         <div className="flex h-14 shrink-0 items-center justify-between px-3">
           <Brand collapsed={false} />
-          <button
-            onClick={close}
-            aria-label="Close menu"
-            className="grid h-9 w-9 place-items-center rounded-xl text-muted hover:bg-surface hover:text-ink"
-          >
+          <IconButton onClick={close} aria-label="Close menu">
             <X size={20} />
-          </button>
+          </IconButton>
         </div>
         <div className="flex flex-1 flex-col px-3 py-4">
-          <NavList collapsed={false} active={active} onNavigate={close} />
+          <NavList collapsed={false} onNavigate={close} />
           <ThemeButton collapsed={false} />
           <AccountChip collapsed={false} />
         </div>
@@ -184,12 +240,12 @@ function MobileSidebar({ active }: { active: string }) {
   );
 }
 
-export function Sidebar({ active = 'inbox' }: { active?: string }) {
+export function Sidebar() {
   // Both render; Tailwind responsive classes (CSS) decide which is visible.
   return (
     <>
-      <DesktopSidebar active={active} />
-      <MobileSidebar active={active} />
+      <DesktopSidebar />
+      <MobileSidebar />
     </>
   );
 }
