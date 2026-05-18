@@ -4,8 +4,8 @@ import { InboxPage } from '@/features/inbox/InboxPage';
 import { AppsPage } from '@/features/apps/AppsPage';
 import { KnowledgeBasePage } from '@/features/knowledge/KnowledgeBasePage';
 import { AssistantPage } from '@/features/assistant/AssistantPage';
+import { TeamPage } from '@/features/team/TeamPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
-import { PlaceholderPage } from '@/features/misc/PlaceholderPage';
 
 export function App() {
   return (
@@ -16,7 +16,7 @@ export function App() {
         <Route path="/knowledge" element={<KnowledgeBasePage />} />
         <Route path="/assistant" element={<AssistantPage />} />
         <Route path="/assistant/:section" element={<AssistantPage />} />
-        <Route path="/team" element={<PlaceholderPage title="Team" />} />
+        <Route path="/team" element={<TeamPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/settings/:section" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
