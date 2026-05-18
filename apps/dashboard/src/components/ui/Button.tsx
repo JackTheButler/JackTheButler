@@ -14,6 +14,7 @@ const button = cva(
       size: {
         sm: 'h-8 px-3 text-xs',
         md: 'h-9 px-3.5 text-sm',
+        icon: 'h-9 w-9 shrink-0 rounded-xl',
       },
     },
     defaultVariants: { variant: 'primary', size: 'sm' },

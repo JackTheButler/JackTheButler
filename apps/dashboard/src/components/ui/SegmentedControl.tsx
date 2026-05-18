@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useSlidingIndicator } from '@/lib/useSlidingIndicator';
 import { cn } from './cn';
 
 /** Single-select filter row with a sliding active indicator. Controlled. */
@@ -15,30 +15,26 @@ export function SegmentedControl<T extends string>({
   className?: string;
   'aria-label'?: string;
 }) {
-  const refs = useRef<(HTMLButtonElement | null)[]>([]);
-  const [indicator, setIndicator] = useState<{ left: number; width: number } | null>(null);
-  const [animate, setAnimate] = useState(false);
-
-  useLayoutEffect(() => {
-    const el = refs.current[options.indexOf(value)];
-    if (!el) return;
-    setIndicator({ left: el.offsetLeft, width: el.offsetWidth });
-    // Enable the slide only after the first position is set (no mount flash).
-    const id = requestAnimationFrame(() => setAnimate(true));
-    return () => cancelAnimationFrame(id);
-  }, [value, options]);
+  const { containerRef, itemsRef, rect, transition } = useSlidingIndicator(options.indexOf(value));
 
   return (
     <div className={cn('no-scrollbar overflow-x-auto', className)}>
-      <div role="group" aria-label={ariaLabel} className="relative inline-flex gap-1">
-        {indicator && (
+      <div
+        ref={(el) => {
+          containerRef.current = el;
+        }}
+        role="group"
+        aria-label={ariaLabel}
+        className="relative inline-flex gap-1"
+      >
+        {rect && (
           <span
             aria-hidden
             className={cn(
               'absolute inset-y-0 rounded-lg bg-accent-soft',
-              animate && 'transition-[left,width] duration-200 ease-out',
+              transition && 'transition-[left,width] duration-200 ease-out',
             )}
-            style={{ left: indicator.left, width: indicator.width }}
+            style={{ left: rect.left, width: rect.width }}
           />
         )}
         {options.map((option, i) => {
@@ -47,7 +43,7 @@ export function SegmentedControl<T extends string>({
             <button
               key={option}
               ref={(el) => {
-                refs.current[i] = el;
+                itemsRef.current[i] = el;
               }}
               type="button"
               aria-pressed={active}

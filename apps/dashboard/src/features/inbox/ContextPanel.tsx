@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Mail, Hash, MessageSquare, ChevronLeft } from 'lucide-react';
 import type { Conversation } from '@/mock/fixtures';
-import { IconButton } from '@/components/ui';
+import { Button, cn } from '@/components/ui';
 import { channelLabel } from './channel';
 
 function Row({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
@@ -73,21 +73,23 @@ export function ContextPanel({
       {/* Backdrop — medium range only (mobile is a full-screen takeover) */}
       <div
         onClick={onBack}
-        className={`fixed inset-0 z-40 hidden bg-black/40 transition-opacity duration-300 md:block xl:hidden ${
-          mobileShow ? 'opacity-100' : 'pointer-events-none opacity-0'
-        }`}
+        className={cn(
+          'fixed inset-0 z-40 hidden bg-black/40 transition-opacity duration-300 md:block xl:hidden',
+          mobileShow ? 'opacity-100' : 'pointer-events-none opacity-0',
+        )}
       />
 
       {/* Slide-over from the right: full-width on mobile, a side panel on md+ */}
       <div
-        className={`fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-panel transition-transform duration-300 ease-out md:w-[26rem] md:border-l md:border-line xl:hidden ${
-          mobileShow ? 'translate-x-0' : 'translate-x-full pointer-events-none'
-        }`}
+        className={cn(
+          'fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-panel transition-transform duration-300 ease-out md:w-[26rem] md:border-l md:border-line xl:hidden',
+          mobileShow ? 'translate-x-0' : 'pointer-events-none translate-x-full',
+        )}
       >
         <header className="flex items-center gap-2 border-b border-line px-3 py-3">
-          <IconButton onClick={onBack} aria-label="Back to conversation">
+          <Button variant="ghost" size="icon" onClick={onBack} aria-label="Back to conversation">
             <ChevronLeft size={20} />
-          </IconButton>
+          </Button>
           <span className="text-sm font-semibold">Customer details</span>
         </header>
         <div className="flex-1 overflow-y-auto">
