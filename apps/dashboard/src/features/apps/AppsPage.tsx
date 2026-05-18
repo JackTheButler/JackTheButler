@@ -65,14 +65,22 @@ export function AppsPage() {
   return (
     <PageShell>
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">Apps</h1>
-            <p className="mt-1 text-sm text-muted">
-              Connect channels, AI models, and tools. {apps.length} available.
-            </p>
-          </div>
-          <div className="relative w-full sm:w-64">
+        <header>
+          <h1 className="text-lg font-semibold">Apps</h1>
+          <p className="mt-1 text-sm text-muted">
+            Connect channels, AI models, and tools. {apps.length} available.
+          </p>
+        </header>
+
+        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <SegmentedControl
+            aria-label="Filter apps by category"
+            options={CATEGORY_FILTERS}
+            value={activeCategory}
+            onChange={setActiveCategory}
+            className="-mx-4 px-4 md:mx-0 md:px-0"
+          />
+          <div className="relative w-full sm:w-56">
             <Search
               size={15}
               className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
@@ -84,15 +92,7 @@ export function AppsPage() {
               className="pl-9"
             />
           </div>
-        </header>
-
-        <SegmentedControl
-          aria-label="Filter apps by category"
-          options={CATEGORY_FILTERS}
-          value={activeCategory}
-          onChange={setActiveCategory}
-          className="-mx-4 mt-6 px-4 md:-mx-8 md:px-8"
-        />
+        </div>
 
         <div className="mt-8 space-y-8">
           {appCategories.map((category) => {

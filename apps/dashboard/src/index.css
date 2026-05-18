@@ -50,6 +50,33 @@
   }
 }
 
+/* Dialog enter animations (Radix sets data-state=open on mount). */
+@keyframes fade-in {
+  from {
+    opacity: 0;
+  }
+}
+@keyframes dialog-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+}
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(5px);
+  }
+}
+@media (min-width: 768px) {
+  @keyframes dialog-in {
+    from {
+      opacity: 0;
+      transform: translate(-50%, calc(-50% + 8px)) scale(0.98);
+    }
+  }
+}
+
 /* Theme-change circular reveal (View Transitions API).
    Disable the default cross-fade; the new theme is clipped open from the
    toggle button by the animation in src/lib/theme.ts. */

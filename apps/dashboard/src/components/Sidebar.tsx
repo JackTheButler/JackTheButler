@@ -2,6 +2,8 @@ import {
   Inbox,
   BookOpen,
   Blocks,
+  Bot,
+  Users,
   Settings,
   Sun,
   Moon,
@@ -19,6 +21,8 @@ import { Button, cn } from '@/components/ui';
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
+  { to: '/assistant', label: 'Assistant', icon: Bot },
+  { to: '/team', label: 'Team', icon: Users },
   { to: '/apps', label: 'Apps', icon: Blocks },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
