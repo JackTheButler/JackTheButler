@@ -1,24 +1,11 @@
-import { Bot, User, Send, ChevronRight, ChevronLeft } from 'lucide-react';
+import { useEffect, useState } from 'react';
+import { Bot, User, ChevronRight, ChevronLeft } from 'lucide-react';
 import type { Conversation, Message } from '@/mock/fixtures';
 import { useIsWide } from '@/lib/useMediaQuery';
-import { Badge, Button, IconButton } from '@/components/ui';
+import { IconButton } from '@/components/ui';
 import { ChannelIcon, channelLabel } from './channel';
+import { Composer } from './Composer';
 
-/** Non-interactive at-a-glance status (header). The action lives at the composer. */
-function StatusBadge({ mode }: { mode: Conversation['mode'] }) {
-  if (mode === 'ai') {
-    return (
-      <Badge tone="accent" shape="pill">
-        <Bot size={13} /> AI
-      </Badge>
-    );
-  }
-  return (
-    <Badge tone="staff" shape="pill">
-      <User size={13} /> Human
-    </Badge>
-  );
-}
 
 function Bubble({ msg }: { msg: Message }) {
   if (msg.author === 'customer') {
@@ -60,8 +47,15 @@ export function Thread({
   onBack?: () => void;
   onOpenProfile?: () => void;
 }) {
-  const aiHandling = convo.mode === 'ai';
   const isWide = useIsWide();
+
+  // Local handling state (mock — would set conversation mode server-side).
+  // Reset to the conversation's own mode when switching chats.
+  const [humanControlled, setHumanControlled] = useState(convo.mode === 'human');
+  useEffect(() => {
+    setHumanControlled(convo.mode === 'human');
+  }, [convo.id, convo.mode]);
+
   return (
     <section
       className={`fixed inset-0 z-40 flex min-w-0 flex-col bg-panel transition-transform duration-300 ease-out md:static md:inset-auto md:z-auto md:flex-1 md:translate-x-0 md:transition-none ${
@@ -103,14 +97,11 @@ export function Thread({
             />
           </button>
         )}
-        <div className="ml-auto shrink-0">
-          <StatusBadge mode={convo.mode} />
-        </div>
       </header>
 
       <div
         className={`flex flex-1 flex-col gap-3 overflow-y-auto px-3 py-4 md:px-5 md:py-5 ${
-          aiHandling ? '' : 'bg-staff-soft/40'
+          humanControlled ? 'bg-staff-soft/40' : ''
         }`}
       >
         {convo.messages.map((m) => (
@@ -119,46 +110,11 @@ export function Thread({
       </div>
 
       <footer className="border-t border-line px-3 py-3 md:px-5 md:py-4">
-        {aiHandling ? (
-          <div className="flex flex-col gap-2.5 rounded-xl border border-line bg-surface px-4 py-3 sm:flex-row sm:items-center sm:justify-between sm:gap-3">
-            <span className="inline-flex items-center gap-2 text-sm">
-              <Bot size={16} className="shrink-0 text-accent" />
-              <span className="font-medium text-ink">Jane AI is handling this chat.</span>
-            </span>
-            <Button className="shrink-0 self-start sm:self-auto">Take over to reply</Button>
-          </div>
-        ) : (
-          <div className="overflow-hidden rounded-xl border border-staff/30">
-            {/* narrow status bar, attached to the input below */}
-            <div className="flex items-center justify-between gap-2 bg-staff-soft px-3 py-1.5">
-              <span className="inline-flex min-w-0 items-center gap-2 text-xs">
-                <span className="relative flex h-2 w-2 shrink-0">
-                  <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-staff opacity-60" />
-                  <span className="relative inline-flex h-2 w-2 rounded-full bg-staff" />
-                </span>
-                <span className="truncate font-semibold text-staff">
-                  You're handling<span className="hidden sm:inline"> this chat</span>
-                </span>
-              </span>
-              <button
-                aria-label="Hand back to AI"
-                className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-staff transition-colors hover:underline"
-              >
-                <Bot size={12} />
-                Hand <span className="hidden sm:inline">back </span>to AI
-              </button>
-            </div>
-            <div className="flex items-center gap-2 bg-panel px-3 py-2.5">
-              <input
-                placeholder="Type a reply…"
-                className="flex-1 bg-transparent text-sm outline-none placeholder:text-muted"
-              />
-              <button className="grid h-8 w-8 place-items-center rounded-lg bg-accent text-on-accent">
-                <Send size={15} />
-              </button>
-            </div>
-          </div>
-        )}
+        <Composer
+          human={humanControlled}
+          onTakeOver={() => setHumanControlled(true)}
+          onHandBack={() => setHumanControlled(false)}
+        />
       </footer>
     </section>
   );

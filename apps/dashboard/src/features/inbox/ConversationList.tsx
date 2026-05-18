@@ -24,7 +24,7 @@ export function ConversationList({
           options={FILTERS}
           value={filter}
           onChange={setFilter}
-          className="mt-3"
+          className="-mx-3 mt-3 px-3 md:-mx-4 md:px-4"
         />
       </div>
       <div className="flex-1 overflow-y-auto">
