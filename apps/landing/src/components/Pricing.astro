@@ -1,0 +1,258 @@
+---
+import { Check } from '@lucide/astro';
+import { site } from '../config/site';
+import SectionHeading from './SectionHeading.astro';
+
+// Priced per *resolution* (a conversation Jane actually closes), not per message.
+// Loaded cost ≈ $0.15/resolution. Floor: effective rate never drops below
+// $0.99/resolution on any tier.
+const plans = [
+  {
+    name: 'Starter',
+    price: '$0',
+    period: '/mo',
+    description: 'Try Jane on a single site.',
+    included: '10 resolutions / mo',
+    overage: 'Hard cap, upgrade to go further',
+    features: [
+      '1 webchat widget',
+      'Knowledge base answers',
+      'Community support',
+    ],
+    cta: site.ctaLabel,
+    href: site.ctaHref,
+    featured: false,
+  },
+  {
+    name: 'Growth',
+    price: '$299',
+    period: '/mo',
+    description: 'For teams scaling customer support.',
+    included: '300 resolutions / mo included',
+    overage: 'then $1.19 per resolution',
+    features: [
+      'Unlimited webchat widgets',
+      'Smart escalation to your team',
+      'Analytics dashboard',
+      'Email support',
+    ],
+    cta: site.ctaLabel,
+    href: site.ctaHref,
+    featured: true,
+  },
+  {
+    name: 'Scale',
+    price: '$999',
+    period: '/mo',
+    description: 'For high-volume support teams.',
+    included: '1,000 resolutions / mo included',
+    overage: 'then $1.09 per resolution',
+    features: [
+      'Everything in Growth',
+      'Priority support',
+      'Advanced analytics & exports',
+      'Multi-team workspaces',
+    ],
+    cta: site.ctaLabel,
+    href: site.ctaHref,
+    featured: false,
+  },
+];
+
+// Custom tier: drag-to-size, graduated (marginal) volume pricing.
+// Each band prices only the resolutions that fall within it, so the blended
+// rate glides down smoothly with no threshold cliffs. Hard floor $0.55.
+const CUSTOM_MIN = 1001;
+const CUSTOM_MAX = 50000;
+const CUSTOM_DEFAULT = 10000;
+// `upTo` = inclusive upper bound of the band (null = unbounded top band).
+const CUSTOM_TIERS: { upTo: number | null; rate: number }[] = [
+  { upTo: 5000, rate: 0.99 },
+  { upTo: 15000, rate: 0.85 },
+  { upTo: 50000, rate: 0.69 },
+  { upTo: null, rate: 0.55 },
+];
+---
+
+<section id="pricing" class="border-t border-line bg-panel">
+  <div class="mx-auto max-w-6xl px-6 py-24">
+    <SectionHeading
+      eyebrow="Pricing"
+      title="Pay only when Jane resolves"
+      subtitle="Pricing is per resolution, a conversation Jane actually closes. No charge for messages that go nowhere."
+    />
+
+    <div
+      class="mt-16 grid gap-6 sm:grid-cols-2 lg:grid-cols-3"
+      data-reveal-stagger
+    >
+      {
+        plans.map((plan) => (
+          <div
+            class={`card-hover flex flex-col rounded-2xl border bg-surface p-8 ${
+              plan.featured
+                ? 'border-accent ring-1 ring-accent'
+                : 'border-line'
+            }`}
+          >
+            {plan.featured && (
+              <span class="mb-4 inline-block w-fit rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-ink">
+                Most popular
+              </span>
+            )}
+            <h3 class="text-lg font-semibold text-ink">{plan.name}</h3>
+            <div class="mt-4 flex items-baseline gap-1">
+              <span class="text-4xl font-bold tracking-tight text-ink">
+                {plan.price}
+              </span>
+              <span class="text-sm text-muted">{plan.period}</span>
+            </div>
+            <p class="mt-2 text-sm text-muted">{plan.description}</p>
+
+            <div class="mt-4 rounded-lg bg-panel px-3 py-2">
+              <p class="text-sm font-medium text-ink">{plan.included}</p>
+              <p class="text-xs text-muted">{plan.overage}</p>
+            </div>
+
+            <ul class="mt-6 flex-1 space-y-3">
+              {plan.features.map((feature) => (
+                <li class="flex items-start gap-2 text-sm text-ink">
+                  <Check class="mt-0.5 size-4 shrink-0 text-accent" />
+                  {feature}
+                </li>
+              ))}
+            </ul>
+
+            <a
+              href={plan.href}
+              class={`mt-8 rounded-lg px-4 py-2.5 text-center text-sm font-medium transition-opacity hover:opacity-90 ${
+                plan.featured
+                  ? 'bg-accent text-on-accent'
+                  : 'bg-accent-soft text-ink'
+              }`}
+            >
+              {plan.cta}
+            </a>
+          </div>
+        ))
+      }
+    </div>
+
+    <div
+      class="mt-6 rounded-2xl border border-accent bg-accent p-8 text-on-accent md:p-12"
+      data-reveal
+    >
+      <div class="grid items-center gap-10 lg:grid-cols-2">
+        <div>
+          <h3 class="text-2xl font-bold tracking-tight">Volume</h3>
+          <p class="mt-3 text-on-accent/70">
+            Size your own plan. The more you resolve, the lower your
+            per-resolution rate. Drag to see your blended price.
+          </p>
+          <ul class="mt-6 space-y-3">
+            {
+              [
+                'SSO & advanced security',
+                'Dedicated support & SLA',
+                'Custom integrations',
+                'Onboarding assistance',
+              ].map((feature) => (
+                <li class="flex items-start gap-2 text-sm text-on-accent/90">
+                  <Check class="mt-0.5 size-4 shrink-0 text-on-accent/60" />
+                  {feature}
+                </li>
+              ))
+            }
+          </ul>
+        </div>
+
+        <div class="rounded-xl bg-white/5 p-6">
+          <div class="flex items-end justify-between">
+            <div>
+              <p class="text-sm text-on-accent/60">Resolutions / mo</p>
+              <p
+                id="custom-resolutions"
+                class="text-2xl font-semibold text-on-accent"
+              >
+              </p>
+            </div>
+            <div class="text-right">
+              <p class="text-sm text-on-accent/60">Est. monthly</p>
+              <p id="custom-price" class="text-3xl font-bold text-on-accent"></p>
+              <p id="custom-blended" class="text-xs text-on-accent/70"></p>
+            </div>
+          </div>
+
+          <input
+            id="custom-slider"
+            type="range"
+            min={CUSTOM_MIN}
+            max={CUSTOM_MAX}
+            value={CUSTOM_DEFAULT}
+            step="1"
+            class="mt-6 w-full accent-white"
+            aria-label="Resolutions per month"
+          />
+          <div class="mt-2 flex justify-between text-xs text-on-accent/50">
+            <span>{CUSTOM_MIN.toLocaleString()}</span>
+            <span>{CUSTOM_MAX.toLocaleString()}+</span>
+          </div>
+
+          <a
+            href="/contact"
+            class="mt-6 block rounded-lg bg-panel px-4 py-2.5 text-center text-sm font-medium text-ink transition-opacity hover:opacity-90"
+          >
+            Talk to sales
+          </a>
+        </div>
+      </div>
+    </div>
+
+    <p class="mt-10 text-center text-sm text-muted">
+      A resolution is one conversation Jane closes without human help.
+      Escalated conversations are never charged.
+    </p>
+  </div>
+</section>
+
+<script
+  is:inline
+  define:vars={{ tiers: CUSTOM_TIERS, def: CUSTOM_DEFAULT }}
+>
+  const slider = document.getElementById('custom-slider');
+  const resEl = document.getElementById('custom-resolutions');
+  const priceEl = document.getElementById('custom-price');
+  const blendedEl = document.getElementById('custom-blended');
+
+  const usd = new Intl.NumberFormat('en-US', {
+    style: 'currency',
+    currency: 'USD',
+    maximumFractionDigits: 0,
+  });
+
+  // Graduated cost: each band only prices the resolutions that fall in it.
+  function monthlyCost(count) {
+    let total = 0;
+    let lower = 0; // resolutions already priced by lower bands
+    for (const tier of tiers) {
+      const cap = tier.upTo === null ? count : Math.min(count, tier.upTo);
+      const inBand = cap - lower;
+      if (inBand > 0) total += inBand * tier.rate;
+      lower = cap;
+      if (cap >= count) break;
+    }
+    return total;
+  }
+
+  function render(value) {
+    const count = Number(value);
+    const total = monthlyCost(count);
+    resEl.textContent = count.toLocaleString('en-US');
+    priceEl.textContent = usd.format(Math.round(total)) + ' /mo';
+    blendedEl.textContent =
+      '≈ $' + (total / count).toFixed(2) + ' / resolution';
+  }
+
+  slider.addEventListener('input', (e) => render(e.target.value));
+  render(def);
+</script>

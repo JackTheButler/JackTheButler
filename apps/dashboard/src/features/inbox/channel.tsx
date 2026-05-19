@@ -1,15 +1,16 @@
-import { Globe, Send, Phone } from 'lucide-react';
-import type { Channel } from '@/mock/fixtures';
+import { Globe, Send, Phone, MessageCircle } from 'lucide-react';
 
-const MAP = {
+const MAP: Record<string, { Icon: typeof Globe; label: string }> = {
   webchat: { Icon: Globe, label: 'Webchat' },
   telegram: { Icon: Send, label: 'Telegram' },
   whatsapp: { Icon: Phone, label: 'WhatsApp' },
-} as const;
+};
 
-export function ChannelIcon({ channel, size = 14 }: { channel: Channel; size?: number }) {
-  const { Icon } = MAP[channel];
+const fallback = { Icon: MessageCircle, label: 'Channel' };
+
+export function ChannelIcon({ channel, size = 14 }: { channel: string; size?: number }) {
+  const { Icon } = MAP[channel] ?? fallback;
   return <Icon size={size} className="text-muted" />;
 }
 
-export const channelLabel = (c: Channel) => MAP[c].label;
+export const channelLabel = (c: string) => (MAP[c] ?? fallback).label;

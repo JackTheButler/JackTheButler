@@ -4,6 +4,7 @@
  */
 export * from './staff.js';
 export * from './customers.js';
+export * from './customer_identities.js';
 export * from './conversations.js';
 export * from './messages.js';
 export * from './app_configs.js';

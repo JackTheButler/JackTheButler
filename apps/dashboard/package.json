@@ -11,6 +11,7 @@
   },
   "dependencies": {
     "@janetheoperator/shared": "workspace:*",
+    "@janetheoperator/widget-ui": "workspace:*",
     "@radix-ui/react-dialog": "^1.1.15",
     "@radix-ui/react-dropdown-menu": "^2.1.16",
     "@radix-ui/react-select": "^2.2.6",

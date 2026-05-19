@@ -1,0 +1,33 @@
+---
+import { MessageCircle } from '@lucide/astro';
+import { site, nav } from '../config/site';
+---
+
+<header class="sticky top-0 z-50 border-b border-line/70 bg-surface/80 backdrop-blur">
+  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+    <a href="/" class="flex items-center gap-2 font-semibold text-ink">
+      <MessageCircle class="size-6 text-accent" />
+      {site.name}
+    </a>
+
+    <nav class="hidden items-center gap-8 md:flex">
+      {
+        nav.map((item) => (
+          <a
+            href={item.href}
+            class="text-sm text-muted transition-colors hover:text-ink"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
+
+    <a
+      href={site.ctaHref}
+      class="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90"
+    >
+      {site.ctaLabel}
+    </a>
+  </div>
+</header>

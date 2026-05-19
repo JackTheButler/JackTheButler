@@ -25,3 +25,13 @@ export interface AppModule<C extends AppConfig = AppConfig> {
   validate(config: AppConfig): ValidationResult;
   createInstance(config: C): AppContract;
 }
+
+/**
+ * Channel contract (category `channel`). Inbound is handled by the gateway
+ * calling the conversation ingest; the channel instance is responsible for
+ * **outbound** delivery. `send` is defined now; webchat's real-time
+ * implementation lands in slice 4 (WebSocket).
+ */
+export interface ChannelContract extends AppContract {
+  send(externalId: string, content: string): Promise<void>;
+}

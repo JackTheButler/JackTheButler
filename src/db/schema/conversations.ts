@@ -1,11 +1,14 @@
-import { sqliteTable, text, integer, index } from 'drizzle-orm/sqlite-core';
+import { sqliteTable, text, integer, index, uniqueIndex } from 'drizzle-orm/sqlite-core';
 import { customers } from './customers.js';
 import { staff } from './staff.js';
 
 /**
- * A support thread. `mode` is the human-takeover flag designed in from the
- * start: `ai` (the pipeline may answer — Stage 6) vs `human` (an agent has
- * taken over; AI pauses). No automated transitions exist in Stage 2.
+ * A support thread. `mode` is the human-takeover flag: `ai` (the pipeline
+ * may answer — Stage 6) vs `human` (an agent took over; AI pauses).
+ *
+ * `customerId` is **nullable**: anonymous webchat conversations have no
+ * customer. Resolution/continuity uses `(channel, channelExternalId)` —
+ * the webchat visitor id, WhatsApp phone, Telegram id, etc.
  */
 export const conversations = sqliteTable(
   'conversations',
@@ -13,9 +16,8 @@ export const conversations = sqliteTable(
     id: text('id').primaryKey(),
     ref: integer('ref').notNull().unique(),
     channel: text('channel').notNull().default('webchat'),
-    customerId: text('customer_id')
-      .notNull()
-      .references(() => customers.id),
+    channelExternalId: text('channel_external_id').notNull(),
+    customerId: text('customer_id').references(() => customers.id),
     mode: text('mode', { enum: ['ai', 'human'] })
       .notNull()
       .default('ai'),
@@ -29,6 +31,12 @@ export const conversations = sqliteTable(
   (t) => ({
     lastMessageAtIdx: index('conversations_last_message_at_idx').on(t.lastMessageAt),
     statusIdx: index('conversations_status_idx').on(t.status),
+    // One conversation per identity per channel — the continuous-conversation
+    // invariant, enforced by the DB.
+    channelExternalUnique: uniqueIndex('conversations_channel_external_unique').on(
+      t.channel,
+      t.channelExternalId,
+    ),
   }),
 );
 

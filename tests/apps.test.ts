@@ -9,6 +9,11 @@ const { runMigrations } = await import('../src/db/migrate.js');
 runMigrations();
 const { app } = await import('../src/app.js');
 const { db } = await import('../src/db/client.js');
+const { setAppModules } = await import('../src/modules/apps/registry.js');
+const { stubModule } = await import('./fixtures/stub-app.js');
+
+// Test the generic framework against the stub fixture, not the real registry.
+setAppModules([stubModule]);
 
 const COOKIE = 'jane_session';
 let cookie = '';

@@ -1,8 +1,9 @@
 import type { ReactNode } from 'react';
-import { Mail, Hash, MessageSquare, ChevronLeft } from 'lucide-react';
-import type { Conversation } from '@/mock/fixtures';
+import { AtSign, Hash, MessageSquare, ChevronLeft } from 'lucide-react';
+import type { ConversationDetail } from '@janetheoperator/shared';
 import { Avatar, Button, cn } from '@/components/ui';
 import { channelLabel } from './channel';
+import { customerLabel } from './format';
 
 function Row({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
   return (
@@ -14,39 +15,30 @@ function Row({ icon, label, value }: { icon: ReactNode; label: string; value: st
   );
 }
 
-/** Panel contents, shared by the desktop column and the slide-over overlay. */
-function ContextBody({ convo }: { convo: Conversation }) {
+function ContextBody({ convo }: { convo: ConversationDetail }) {
+  const name = customerLabel(convo.customer?.name);
   return (
     <div className="px-3 py-4 md:px-4">
       <div className="flex items-center gap-3">
-        <Avatar name={convo.customer} size="md" tone="accent" />
+        <Avatar name={name} size="md" tone="accent" />
         <div>
-          <div className="text-sm font-semibold">{convo.customer}</div>
-          <div className="text-xs text-muted">Customer</div>
+          <div className="text-sm font-semibold">{name}</div>
+          <div className="text-xs text-muted">
+            {convo.customer ? 'Customer' : 'Anonymous visitor'}
+          </div>
         </div>
       </div>
 
       <div className="mt-4 border-t border-line pt-3">
-        <Row icon={<Mail size={14} />} label="Email" value={convo.email} />
-        <Row icon={<MessageSquare size={14} />} label="Channel" value={channelLabel(convo.channel)} />
-        <Row icon={<Hash size={14} />} label="Ref" value={convo.ref} />
-      </div>
-
-      <div className="mt-4 border-t border-line pt-3">
-        <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-muted">
-          Knowledge used
-        </h3>
-        <div className="flex flex-col gap-1.5">
-          {convo.kbHits.map((k) => (
-            <div
-              key={k.title}
-              className="flex items-center justify-between rounded-lg bg-surface px-2.5 py-2 text-xs ring-1 ring-line"
-            >
-              <span className="truncate pr-2">{k.title}</span>
-              <span className="shrink-0 font-mono text-[10px] text-accent">{k.score.toFixed(2)}</span>
-            </div>
-          ))}
-        </div>
+        {convo.customer?.contact && (
+          <Row icon={<AtSign size={14} />} label="Contact" value={convo.customer.contact} />
+        )}
+        <Row
+          icon={<MessageSquare size={14} />}
+          label="Channel"
+          value={channelLabel(convo.channel)}
+        />
+        <Row icon={<Hash size={14} />} label="Ref" value={`#${convo.ref}`} />
       </div>
     </div>
   );
@@ -57,18 +49,16 @@ export function ContextPanel({
   mobileShow = false,
   onBack,
 }: {
-  convo: Conversation;
+  convo: ConversationDetail;
   mobileShow?: boolean;
   onBack?: () => void;
 }) {
   return (
     <>
-      {/* ≥ xl only: always-open side column (room exists, no squish) */}
       <aside className="hidden w-72 shrink-0 overflow-y-auto border-l border-line bg-panel xl:block">
         <ContextBody convo={convo} />
       </aside>
 
-      {/* Backdrop — medium range only (mobile is a full-screen takeover) */}
       <div
         onClick={onBack}
         className={cn(
@@ -77,7 +67,6 @@ export function ContextPanel({
         )}
       />
 
-      {/* Slide-over from the right: full-width on mobile, a side panel on md+ */}
       <div
         className={cn(
           'fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-panel transition-transform duration-300 ease-out md:w-[26rem] md:border-l md:border-line xl:hidden',

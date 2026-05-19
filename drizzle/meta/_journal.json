@@ -22,6 +22,20 @@
       "when": 1779181544619,
       "tag": "0002_normal_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1779190248444,
+      "tag": "0003_lowly_shriek",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1779191480596,
+      "tag": "0004_even_lucky_pierre",
+      "breakpoints": true
     }
   ]
 }

@@ -1,0 +1,63 @@
+---
+import { PlugZap, Bot, ShieldCheck } from '@lucide/astro';
+import SectionHeading from './SectionHeading.astro';
+
+const steps = [
+  {
+    step: '01',
+    icon: PlugZap,
+    title: 'Connect your channels',
+    body: 'Drop the webchat widget on your site and point Jane at your help docs and FAQs.',
+  },
+  {
+    step: '02',
+    icon: Bot,
+    title: 'Jane handles conversations',
+    body: 'Customers get instant, accurate answers around the clock, with no queue and no waiting.',
+  },
+  {
+    step: '03',
+    icon: ShieldCheck,
+    title: 'Your team stays in control',
+    body: 'Anything Jane can’t resolve is escalated to a human with full context attached.',
+  },
+];
+---
+
+<section id="how-it-works" class="border-t border-line bg-surface">
+  <div class="mx-auto max-w-6xl px-6 py-24">
+    <SectionHeading
+      eyebrow="How it works"
+      title="Live in three steps"
+      subtitle="No rebuild, no long onboarding. Jane is answering customers the same day."
+    />
+
+    <div class="relative mt-20" data-reveal-stagger>
+      {/* Connecting line (desktop) */}
+      <div
+        aria-hidden="true"
+        class="absolute left-0 right-0 top-8 hidden h-px bg-line md:block"
+      >
+      </div>
+
+      <div class="grid gap-12 md:grid-cols-3 md:gap-10">
+        {
+          steps.map((item) => (
+            <div class="relative">
+              <div class="flex items-center gap-4">
+                <span class="relative z-10 flex size-16 shrink-0 items-center justify-center rounded-2xl border border-line bg-panel text-accent shadow-sm">
+                  <item.icon class="size-7" />
+                </span>
+                <span class="text-5xl font-bold tracking-tight text-line">
+                  {item.step}
+                </span>
+              </div>
+              <h3 class="mt-6 text-lg font-semibold text-ink">{item.title}</h3>
+              <p class="mt-2 text-sm text-muted">{item.body}</p>
+            </div>
+          ))
+        }
+      </div>
+    </div>
+  </div>
+</section>

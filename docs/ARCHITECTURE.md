@@ -65,6 +65,35 @@ Every channel or AI provider is a separate workspace package — never core code
   never stored.
 - The framework code in `modules/apps/` is generic over the contract and does
   **not** grow as apps are added.
+- The registry is **settable** (`setAppModules`) so tests inject a stub
+  fixture (`tests/fixtures/stub-app.ts`) — no fake app ships at runtime.
+- Channels also implement `ChannelContract` (adds `send`); the **public,
+  unauthenticated** widget surface (`/widget/*`, `/widget.js`) is mounted
+  outside `/api/app/*` and every request is **origin-checked** in the
+  service against the app's configured allowlist (inert unless the app is
+  `active`).
+
+## Widget embedding (iframe model)
+
+`/widget.js` (vanilla host-page loader) owns the `visitorId`
+(host-page localStorage) + theme resolution, injects a single iframe
+(`/widget/app/*`, the `apps/widget` bundle = `widget-ui` + runtime), and
+bridges theme/resize via `postMessage`. Because the iframe is **same-origin
+with the API**, the `Origin` header is *our* domain — so the loader passes
+the real embedding origin via `?host=`, which the server validates against
+`allowedDomains`. The `host` param is browser-spoofable, so domain
+allowlisting is **best-effort**; the real security boundary is that webchat
+is anonymous (no authenticated/sensitive data exposed).
+
+## Real-time (event bus)
+
+Services stay transport-agnostic but still drive live delivery via
+`core/events.ts` (a tiny typed in-process bus). `conversations` emits
+`message.created`; the webchat WS gateway (`modules/webchat/gateway.ts`,
+transport layer — not `service.ts`) subscribes and pushes to the connected
+visitor's sockets (`connections.ts` registry). No socket/hono code ever
+enters a `service.ts`. The same bus will feed the agent inbox (slice 5) and
+other channels.
 
 ## Error handling
 

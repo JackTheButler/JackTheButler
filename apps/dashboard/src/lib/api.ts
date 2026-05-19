@@ -5,6 +5,8 @@ export class ApiError extends Error {
   constructor(
     public status: number,
     message: string,
+    /** Structured detail from the API (e.g. per-field validation messages). */
+    public details?: unknown,
   ) {
     super(message);
   }
@@ -18,7 +20,7 @@ async function request<T>(path: string, init?: RequestInit): Promise<T> {
   });
   const text = await res.text();
   const body = text ? JSON.parse(text) : null;
-  if (!res.ok) throw new ApiError(res.status, body?.error ?? res.statusText);
+  if (!res.ok) throw new ApiError(res.status, body?.error ?? res.statusText, body?.details);
   return body as T;
 }
 
@@ -27,6 +29,11 @@ export const api = {
   post: <T>(path: string, data?: unknown) =>
     request<T>(path, {
       method: 'POST',
+      body: data === undefined ? undefined : JSON.stringify(data),
+    }),
+  put: <T>(path: string, data?: unknown) =>
+    request<T>(path, {
+      method: 'PUT',
       body: data === undefined ? undefined : JSON.stringify(data),
     }),
 };

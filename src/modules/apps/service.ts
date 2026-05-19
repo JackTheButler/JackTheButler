@@ -8,7 +8,7 @@ import type { AppConfig, AppModule } from '@janetheoperator/shared/contracts';
 import { db } from '@/db/client.js';
 import { appConfigs, type AppConfigRow } from '@/db/schema/index.js';
 import { AppError } from '@/core/errors.js';
-import { appModules, findModule } from '@/modules/apps/registry.js';
+import { getAppModules, findModule } from '@/modules/apps/registry.js';
 import { encrypt, decrypt } from '@/modules/apps/crypto.js';
 
 /** Transport-agnostic apps framework: registry + encrypted config + lifecycle. */
@@ -52,7 +52,7 @@ function maskConfig(module: AppModule, cfg: AppConfig | null): Record<string, un
 }
 
 export function listApps(): AppSummary[] {
-  return appModules.map((m) => {
+  return getAppModules().map((m) => {
     const row = rowFor(m.manifest.id);
     return {
       id: m.manifest.id,
@@ -86,7 +86,8 @@ export function saveConfig(id: string, incoming: AppConfig): void {
     if (f.secret && incoming[f.key] === MASK) merged[f.key] = existing[f.key];
   }
 
-  if (!module.validate(merged).ok) throw new AppError('invalid_config', 400);
+  const validation = module.validate(merged);
+  if (!validation.ok) throw new AppError('invalid_config', 400, validation.errors);
 
   const blob = encrypt(JSON.stringify(merged));
   db.insert(appConfigs)

@@ -18,8 +18,10 @@ import { useTheme } from '@/lib/theme';
 import { useSidebar } from '@/lib/sidebar';
 import { useSlidingIndicator } from '@/lib/useSlidingIndicator';
 import { useSession, useLogout } from '@/features/auth/useAuth';
+import { useInboxCount } from '@/features/inbox/useConversations';
 import {
   Avatar,
+  Badge,
   Button,
   cn,
   DropdownMenu,
@@ -59,6 +61,7 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/'),
   );
   const { containerRef, itemsRef, rect, transition } = useSlidingIndicator(activeIndex);
+  const inboxCount = useInboxCount();
 
   return (
     <div
@@ -77,29 +80,42 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
           style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
         />
       )}
-      {NAV.map(({ to, label, icon: Icon, end }, i) => (
-        <NavLink
-          key={to}
-          to={to}
-          end={end}
-          ref={(el) => {
-            itemsRef.current[i] = el;
-          }}
-          onClick={onNavigate}
-          title={collapsed ? label : undefined}
-          className={({ isActive }) =>
-            cn(
-              'group relative z-10 transition-colors',
-              ROW,
-              rowWidth(collapsed),
-              isActive ? 'text-accent' : 'text-muted hover:bg-surface hover:text-ink',
-            )
-          }
-        >
-          <Icon size={20} strokeWidth={2} className="shrink-0" />
-          {!collapsed && <span className="text-sm font-medium">{label}</span>}
-        </NavLink>
-      ))}
+      {NAV.map(({ to, label, icon: Icon, end }, i) => {
+        const badge = to === '/' ? inboxCount : 0;
+        return (
+          <NavLink
+            key={to}
+            to={to}
+            end={end}
+            ref={(el) => {
+              itemsRef.current[i] = el;
+            }}
+            onClick={onNavigate}
+            title={collapsed ? label : undefined}
+            className={({ isActive }) =>
+              cn(
+                'group relative z-10 transition-colors',
+                ROW,
+                rowWidth(collapsed),
+                isActive ? 'text-accent' : 'text-muted hover:bg-surface hover:text-ink',
+              )
+            }
+          >
+            <span className="relative shrink-0">
+              <Icon size={20} strokeWidth={2} />
+              {collapsed && badge > 0 && (
+                <span className="absolute -right-1 -top-1 h-2 w-2 rounded-full bg-accent" />
+              )}
+            </span>
+            {!collapsed && <span className="text-sm font-medium">{label}</span>}
+            {!collapsed && badge > 0 && (
+              <Badge tone="accent" className="ml-auto">
+                {badge}
+              </Badge>
+            )}
+          </NavLink>
+        );
+      })}
     </div>
   );
 }

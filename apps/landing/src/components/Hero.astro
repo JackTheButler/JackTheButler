@@ -1,0 +1,253 @@
+---
+import { ArrowRight, Sparkles, Check } from '@lucide/astro';
+import { site } from '../config/site';
+import claudeIcon from '../icons/claude.svg?raw';
+import openaiIcon from '../icons/openai.svg?raw';
+import ollamaIcon from '../icons/ollama.svg?raw';
+import whatsappIcon from '../icons/whatsapp.svg?raw';
+import telegramIcon from '../icons/telegram.svg?raw';
+import messengerIcon from '../icons/messenger.svg?raw';
+import wechatIcon from '../icons/wechat.svg?raw';
+import mailgunIcon from '../icons/mailgun.svg?raw';
+import sendgridIcon from '../icons/sendgrid.svg?raw';
+
+const poweredBy = [
+  { label: 'Claude', svg: claudeIcon },
+  { label: 'OpenAI', svg: openaiIcon },
+  { label: 'Ollama', svg: ollamaIcon },
+  { label: 'WhatsApp', svg: whatsappIcon },
+  { label: 'Telegram', svg: telegramIcon },
+  { label: 'Messenger', svg: messengerIcon },
+  { label: 'WeChat', svg: wechatIcon },
+  { label: 'Mailgun', svg: mailgunIcon },
+  { label: 'SendGrid', svg: sendgridIcon },
+];
+
+// Repeat enough times that one group always overflows the viewport, so the
+// loop never shows a blank gap. The track holds two identical groups and
+// animates by exactly -50% (one group) for a seamless, continuous loop.
+const group = [...poweredBy, ...poweredBy, ...poweredBy, ...poweredBy];
+---
+
+<section class="relative overflow-hidden">
+  {/* Stripe-style skewed gradient backdrop */}
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute inset-x-0 -top-48 -z-10 h-[42rem] -skew-y-6 origin-top-left"
+    style="background: linear-gradient(115deg, #4a2f23 0%, #8a4f3a 28%, #b06a4a 52%, #cf9a68 70%, #ead9c2 100%);"
+  >
+  </div>
+  <div
+    aria-hidden="true"
+    class="pointer-events-none absolute inset-x-0 top-[20rem] -z-10 h-64 bg-gradient-to-b from-transparent to-surface"
+  >
+  </div>
+
+  <div class="mx-auto max-w-6xl px-6 pt-20 pb-24 md:pt-28 md:pb-32">
+    <div class="grid items-center gap-16 lg:grid-cols-2">
+      {/* Copy */}
+      <div>
+        <span
+          class="inline-flex items-center gap-1.5 rounded-full bg-white/15 px-3 py-1 text-xs font-medium text-white ring-1 ring-white/25 backdrop-blur"
+        >
+          <Sparkles class="size-3.5" />
+          AI support, on autopilot
+        </span>
+
+        <h1
+          class="mt-6 text-4xl font-bold leading-[1.05] tracking-tight text-white md:text-6xl"
+        >
+          Support that
+          <span
+            class="bg-gradient-to-r from-white to-amber-100 bg-clip-text text-transparent"
+          >
+            resolves itself
+          </span>
+        </h1>
+
+        <p class="mt-6 max-w-md text-lg text-white/90">
+          {site.description}
+        </p>
+
+        <div class="mt-10 flex flex-wrap items-center gap-4">
+          <a
+            href={site.ctaHref}
+            class="inline-flex items-center gap-2 rounded-lg bg-panel px-6 py-3 text-sm font-semibold text-ink shadow-lg shadow-black/20 transition-transform hover:-translate-y-0.5"
+          >
+            {site.ctaLabel}
+            <ArrowRight class="size-4" />
+          </a>
+        </div>
+      </div>
+
+      {/* Product preview */}
+      <div class="relative">
+        <div
+          class="rounded-2xl border border-white/20 bg-panel p-5 shadow-2xl shadow-black/25"
+        >
+          <div class="flex items-center gap-2 border-b border-line pb-3">
+            <span class="size-3 rounded-full bg-red-400"></span>
+            <span class="size-3 rounded-full bg-amber-400"></span>
+            <span class="size-3 rounded-full bg-green-400"></span>
+            <span class="ml-2 text-xs font-medium text-muted">
+              Webchat · live
+            </span>
+          </div>
+
+          <div class="space-y-4 py-5">
+            <div class="flex justify-end">
+              <p
+                class="max-w-[75%] rounded-2xl rounded-br-sm bg-accent-soft px-4 py-2 text-sm text-ink"
+              >
+                Hey, I was double-charged this month. Can you help?
+              </p>
+            </div>
+
+            <div class="flex justify-start">
+              <p
+                class="max-w-[80%] rounded-2xl rounded-bl-sm bg-accent px-4 py-2 text-sm text-on-accent"
+              >
+                I see the duplicate charge from May 14. I've refunded it and
+                it'll land in 3 to 5 days. Anything else?
+              </p>
+            </div>
+
+            <div class="flex items-center gap-2 pl-1">
+              <span
+                class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700"
+              >
+                <Check class="size-3" />
+                Resolved by Jane
+              </span>
+              <span class="text-xs text-muted">in 4s · no human needed</span>
+            </div>
+          </div>
+        </div>
+
+        {/* floating stat card */}
+        <div
+          class="absolute -bottom-12 -left-6 hidden rounded-xl border border-line bg-panel px-5 py-3 shadow-xl sm:block"
+        >
+          <p class="text-2xl font-bold text-ink">92%</p>
+          <p class="text-xs text-muted">resolved without a human</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  {/* Full-width "powered by" marquee */}
+  <div class="border-t border-line/60 pb-12 pt-10">
+    <p class="mb-6 text-center text-xs font-semibold tracking-widest text-muted">
+      POWERED BY
+    </p>
+    <div class="marquee">
+      <div class="marquee__track text-ink/70 [&_svg]:h-11 [&_svg]:w-auto">
+        <div class="marquee__group" aria-hidden="false">
+          {
+            group.map((item) => (
+              <div class="marquee__item">
+                <span class="marquee__icon" set:html={item.svg} />
+                <span class="marquee__label">{item.label}</span>
+              </div>
+            ))
+          }
+        </div>
+        <div class="marquee__group" aria-hidden="true">
+          {
+            group.map((item) => (
+              <div class="marquee__item">
+                <span class="marquee__icon" set:html={item.svg} />
+                <span class="marquee__label">{item.label}</span>
+              </div>
+            ))
+          }
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+  .marquee {
+    overflow: hidden;
+    -webkit-mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 10%,
+      black 85%,
+      transparent
+    );
+    mask-image: linear-gradient(
+      to right,
+      transparent,
+      black 10%,
+      black 85%,
+      transparent
+    );
+  }
+
+  .marquee__track {
+    display: flex;
+    width: max-content;
+    align-items: center;
+    animation: hero-marquee 160s linear infinite;
+  }
+
+  .marquee:hover .marquee__track {
+    animation-play-state: paused;
+  }
+
+  .marquee__group {
+    display: flex;
+    flex: none;
+    align-items: center;
+    gap: 5.5rem;
+    /* trailing space so the seam between the two groups matches the
+       internal spacing — keeps the loop perfectly even */
+    padding-right: 5.5rem;
+  }
+
+  .marquee__item {
+    display: inline-flex;
+    flex: none;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.625rem;
+  }
+
+  .marquee__icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .marquee__label {
+    font-size: 0.875rem;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+  }
+
+  /* Two identical groups; shifting by exactly one group (-50%) is seamless. */
+  @keyframes hero-marquee {
+    from {
+      transform: translateX(0);
+    }
+    to {
+      transform: translateX(-50%);
+    }
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .marquee__track {
+      animation: none;
+    }
+    .marquee__group:nth-child(2) {
+      display: none;
+    }
+    .marquee__group {
+      flex-wrap: wrap;
+      justify-content: center;
+      row-gap: 1.5rem;
+    }
+  }
+</style>

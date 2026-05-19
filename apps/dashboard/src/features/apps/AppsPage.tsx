@@ -1,4 +1,6 @@
 import { useMemo, useState } from 'react';
+import { useNavigate } from 'react-router-dom';
+import type { AppSummary, AppStatus } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import {
@@ -8,103 +10,75 @@ import {
   SearchInput,
   EmptyState,
   SegmentedControl,
-  cn,
 } from '@/components/ui';
-import { apps, appCategories, type AppEntry } from '@/mock/apps';
+import { useApps } from './useApps';
 
-const CATEGORY_FILTERS = ['All', ...appCategories] as const;
+const STATUS: Record<AppStatus, { label: string; tone: 'primary' | 'accent' | 'muted' }> = {
+  active: { label: 'Connected', tone: 'primary' },
+  disabled: { label: 'Disabled', tone: 'accent' },
+  unconfigured: { label: 'Not configured', tone: 'muted' },
+  error: { label: 'Error', tone: 'muted' },
+};
 
-function AppCard({ app }: { app: AppEntry }) {
-  const Icon = app.icon;
-  const isSoon = app.status === 'soon';
-  const cardStyle =
-    app.status === 'error'
-      ? 'border-red-500/40 bg-red-500/[0.03]'
-      : app.status === 'active'
-        ? 'border-accent/20 bg-accent-soft/30'
-        : '';
+function AppCard({ app }: { app: AppSummary }) {
+  const navigate = useNavigate();
+  const s = STATUS[app.status];
+
   return (
-    <div
-      className={cn(
-        'flex flex-col gap-3 rounded-xl border border-line bg-panel p-4',
-        cardStyle,
-      )}
-    >
+    <div className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4">
       <div className="flex items-start gap-3">
-        <Avatar
-          size="md"
-          shape="square"
-          tone={app.status === 'active' ? 'solid' : 'muted'}
-          icon={
-            <Icon size={18} className={app.status === 'active' ? undefined : 'text-ink'} />
-          }
-        />
+        <Avatar size="md" shape="square" tone="muted" name={app.name} />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-semibold">{app.name}</h3>
-          <p className="truncate text-xs text-muted">{app.category}</p>
+          <p className="truncate text-xs capitalize text-muted">{app.category}</p>
         </div>
+        <Badge tone={s.tone} className={app.status === 'error' ? 'text-red-600' : undefined}>
+          {s.label}
+        </Badge>
       </div>
-      <p className="line-clamp-2 text-xs text-muted">{app.description}</p>
-      <div className="mt-auto flex items-center justify-between gap-2">
+      <div className="mt-auto">
         <Button
-          disabled={isSoon}
-          variant={
-            app.status === 'error'
-              ? 'destructive'
-              : app.status === 'active'
-                ? 'primary'
-                : 'outline'
-          }
+          variant="outline"
+          size="sm"
+          className="w-full"
+          onClick={() => navigate(`/apps/${app.id}`)}
         >
-          {app.status === 'error'
-            ? 'Fix'
-            : app.status === 'active'
-              ? 'Manage'
-              : isSoon
-                ? 'Coming soon'
-                : 'Connect'}
+          Configure
         </Button>
-        {app.status === 'active' && <Badge tone="accent">Connected</Badge>}
-        {app.status === 'error' && (
-          <Badge tone="muted" className="text-red-600">
-            Error
-          </Badge>
-        )}
       </div>
     </div>
   );
 }
 
 export function AppsPage() {
-  const [query, setQuery] = useState('');
-  const [activeCategory, setActiveCategory] =
-    useState<(typeof CATEGORY_FILTERS)[number]>('All');
+  const { data, isLoading } = useApps();
+  const apps = data?.apps ?? [];
 
-  const filtered = useMemo(() => {
+  const categories = useMemo(
+    () => ['All', ...new Set(apps.map((a) => a.category))],
+    [apps],
+  );
+  const [query, setQuery] = useState('');
+  const [activeCategory, setActiveCategory] = useState('All');
+
+  const filtered = apps.filter((a) => {
+    if (activeCategory !== 'All' && a.category !== activeCategory) return false;
     const q = query.trim().toLowerCase();
-    return apps.filter((a) => {
-      if (activeCategory !== 'All' && a.category !== activeCategory) return false;
-      if (!q) return true;
-      return (
-        a.name.toLowerCase().includes(q) ||
-        a.vendor.toLowerCase().includes(q) ||
-        a.description.toLowerCase().includes(q)
-      );
-    });
-  }, [query, activeCategory]);
+    return !q || a.name.toLowerCase().includes(q);
+  });
 
   return (
     <PageShell>
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
         <PageHeader
           title="Apps"
-          subtitle={`Connect channels, AI models, and tools. ${apps.length} available.`}
+          subtitle={`Channels and AI providers. ${apps.length} registered.`}
         />
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <SegmentedControl
             aria-label="Filter apps by category"
-            options={CATEGORY_FILTERS}
+            options={categories}
             value={activeCategory}
             onChange={setActiveCategory}
             className="-mx-4 px-4 md:mx-0 md:px-0"
@@ -118,7 +92,9 @@ export function AppsPage() {
         </div>
 
         <div className="mt-6">
-          {filtered.length === 0 ? (
+          {isLoading ? (
+            <EmptyState>Loading…</EmptyState>
+          ) : filtered.length === 0 ? (
             <EmptyState>No apps match your filters.</EmptyState>
           ) : (
             <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">

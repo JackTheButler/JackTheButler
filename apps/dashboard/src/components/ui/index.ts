@@ -2,6 +2,8 @@ export { cn } from './cn';
 export { Button } from './Button';
 export { Badge } from './Badge';
 export { Input } from './Input';
+export { ColorInput } from './ColorInput';
+export { Toaster, toast } from './toast';
 export { Select, SelectItem } from './Select';
 export { Textarea } from './Textarea';
 export { Avatar } from './Avatar';

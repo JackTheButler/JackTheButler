@@ -1,22 +1,23 @@
 import { useState } from 'react';
-import type { Conversation } from '@/mock/fixtures';
+import type { ConversationSummary } from '@janetheoperator/shared';
 import { Badge, EmptyState, SegmentedControl, cn } from '@/components/ui';
+import { relativeTime, customerLabel } from './format';
 
 const FILTERS = ['Open', 'All', 'Human', 'AI', 'Resolved'] as const;
 type Filter = (typeof FILTERS)[number];
 
-function matchesFilter(c: Conversation, filter: Filter): boolean {
+function matchesFilter(c: ConversationSummary, filter: Filter): boolean {
   switch (filter) {
     case 'Open':
-      return c.status === 'needs_reply';
+      return c.status === 'open';
     case 'All':
       return true;
     case 'Human':
-      return c.mode === 'human' && c.status !== 'resolved';
+      return c.mode === 'human' && c.status === 'open';
     case 'AI':
-      return c.mode === 'ai' && c.status !== 'resolved';
+      return c.mode === 'ai' && c.status === 'open';
     case 'Resolved':
-      return c.status === 'resolved';
+      return c.status === 'closed';
   }
 }
 
@@ -25,8 +26,8 @@ export function ConversationList({
   activeId,
   onSelect,
 }: {
-  items: Conversation[];
-  activeId: string;
+  items: ConversationSummary[];
+  activeId: string | null;
   onSelect: (id: string) => void;
 }) {
   const [filter, setFilter] = useState<Filter>('Open');
@@ -45,9 +46,7 @@ export function ConversationList({
         />
       </div>
       <div className="flex-1 overflow-y-auto">
-        {visible.length === 0 && (
-          <EmptyState>No conversations here.</EmptyState>
-        )}
+        {visible.length === 0 && <EmptyState>No conversations here.</EmptyState>}
         {visible.map((c) => {
           const on = c.id === activeId;
           return (
@@ -63,12 +62,16 @@ export function ConversationList({
                 <span
                   className={cn(
                     'h-2 w-2 shrink-0 rounded-full',
-                    c.unread ? 'bg-accent' : 'bg-transparent',
+                    c.needsReply ? 'bg-accent' : 'bg-transparent',
                   )}
                 />
-                <span className="flex-1 truncate text-sm font-semibold">{c.customer}</span>
+                <span className="flex-1 truncate text-sm font-semibold">
+                  {customerLabel(c.customerName)}
+                </span>
                 {c.mode === 'human' && <Badge tone="staff">Human</Badge>}
-                <span className="shrink-0 text-xs text-muted">{c.time}</span>
+                <span className="shrink-0 text-xs text-muted">
+                  {relativeTime(c.lastMessageAt)}
+                </span>
               </div>
               <p className="line-clamp-1 pl-4 text-xs text-muted">{c.snippet}</p>
             </button>

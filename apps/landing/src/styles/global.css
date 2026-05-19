@@ -1,1 +1,66 @@
 @import 'tailwindcss';
+
+/* Theme tokens mirrored from the dashboard (apps/dashboard/src/index.css).
+   Warm near-monochrome palette; the accent is near-black. */
+@theme {
+  --color-surface: #faf9f5;
+  --color-panel: #ffffff;
+  --color-ink: #1f1e1d;
+  --color-muted: #6b6862;
+  --color-line: #e8e5dd;
+  --color-accent: #1f1e1d;
+  --color-accent-soft: #eceae4;
+  --color-on-accent: #ffffff;
+  --color-staff: #3b4252;
+  --color-staff-soft: #e6e8ec;
+}
+
+/* Scroll-reveal: hidden only when JS is present (no-JS keeps content visible)
+   and motion is allowed. The .is-visible class is added by an observer. */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.7s ease,
+      transform 0.7s ease;
+  }
+  .js [data-reveal].is-visible {
+    opacity: 1;
+    transform: none;
+  }
+  /* Stagger children when the parent opts in */
+  .js [data-reveal-stagger] > * {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s ease;
+  }
+  .js [data-reveal-stagger].is-visible > * {
+    opacity: 1;
+    transform: none;
+  }
+  .js [data-reveal-stagger].is-visible > *:nth-child(2) {
+    transition-delay: 0.08s;
+  }
+  .js [data-reveal-stagger].is-visible > *:nth-child(3) {
+    transition-delay: 0.16s;
+  }
+  .js [data-reveal-stagger].is-visible > *:nth-child(4) {
+    transition-delay: 0.24s;
+  }
+}
+
+/* Shared card affordance: soft lift on hover. */
+.card-hover {
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
+}
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 12px 32px -12px rgb(31 30 29 / 0.18),
+    0 0 0 1px rgb(31 30 29 / 0.04);
+}

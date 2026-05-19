@@ -1,16 +1,16 @@
 ---
-import '../styles/global.css';
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import Features from '../components/Features.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import Pricing from '../components/Pricing.astro';
+import CTA from '../components/CTA.astro';
 ---
 
-<!doctype html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Jane the Operator</title>
-  </head>
-  <body class="flex min-h-screen flex-col items-center justify-center gap-2">
-    <h1 class="text-3xl font-bold">Jane the Operator</h1>
-    <p class="text-sm text-gray-500">Landing page placeholder.</p>
-  </body>
-</html>
+<BaseLayout>
+  <Hero />
+  <Features />
+  <HowItWorks />
+  <Pricing />
+  <CTA />
+</BaseLayout>

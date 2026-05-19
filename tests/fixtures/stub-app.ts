@@ -2,8 +2,10 @@ import type { AppManifest } from '@janetheoperator/shared';
 import type { AppConfig, AppModule } from '@janetheoperator/shared/contracts';
 
 /**
- * Framework test app. Proves the package → manifest → registry → config →
- * instantiate loop end-to-end. Removed once real apps exist.
+ * Test-only stub app. Exercises the generic apps framework (encryption,
+ * masking, status derivation, validation, instantiate) without depending on
+ * a real integration's churn. Replaces the old `packages/app-stub` — never
+ * shipped at runtime; injected via setAppModules() in tests.
  */
 
 interface StubConfig extends AppConfig {
@@ -15,16 +17,15 @@ const manifest: AppManifest = {
   id: 'stub',
   name: 'Stub (framework test)',
   category: 'channel',
-  description: 'Proves the app-connection framework. Not a real integration.',
+  description: 'Test fixture. Not a real integration.',
   configFields: [
     { key: 'apiKey', label: 'API key', type: 'password', required: true, secret: true },
-    { key: 'label', label: 'Label', type: 'text', placeholder: 'optional' },
+    { key: 'label', label: 'Label', type: 'text' },
   ],
 };
 
 export const stubModule: AppModule<StubConfig> = {
   manifest,
-
   validate(config: AppConfig) {
     const apiKey = config.apiKey;
     if (typeof apiKey !== 'string' || apiKey.trim() === '') {
@@ -32,7 +33,6 @@ export const stubModule: AppModule<StubConfig> = {
     }
     return { ok: true };
   },
-
   createInstance(config: StubConfig) {
     return {
       async check() {
