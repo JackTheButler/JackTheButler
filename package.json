@@ -7,10 +7,12 @@
     "dev": "tsx watch --env-file-if-exists=.env src/index.ts",
     "dev:dashboard": "pnpm --filter @janetheoperator/dashboard dev",
     "dev:website": "pnpm --filter @janetheoperator/landing dev",
-    "build": "pnpm --filter @janetheoperator/shared build && tsc && tsc-alias",
+    "build": "pnpm --filter './packages/*' build && tsc && tsc-alias",
     "build:dashboard": "pnpm --filter @janetheoperator/dashboard build",
     "build:website": "pnpm --filter @janetheoperator/landing build",
     "start": "node --env-file-if-exists=.env dist/index.js",
+    "db:generate": "drizzle-kit generate",
+    "db:migrate": "tsx --env-file-if-exists=.env src/db/migrate.ts",
     "lint": "oxlint src/",
     "lint:fix": "oxlint src/ --fix",
     "format": "prettier --write \"src/**/*.ts\" \"tests/**/*.ts\"",
@@ -23,10 +25,16 @@
   "engines": {
     "node": ">=22"
   },
+  "pnpm": {
+    "onlyBuiltDependencies": ["better-sqlite3"]
+  },
   "author": "",
   "license": "UNLICENSED",
   "devDependencies": {
+    "@types/bcryptjs": "^3.0.0",
+    "@types/better-sqlite3": "^7.6.13",
     "@types/node": "^22.10.0",
+    "drizzle-kit": "^0.31.10",
     "oxlint": "^0.15.0",
     "pino-pretty": "^13.1.3",
     "prettier": "^3.4.0",
@@ -36,9 +44,14 @@
     "vitest": "^2.1.0"
   },
   "dependencies": {
-    "@janetheoperator/shared": "workspace:*",
     "@hono/node-server": "^1.19.9",
+    "@janetheoperator/app-stub": "workspace:*",
+    "@janetheoperator/shared": "workspace:*",
+    "bcryptjs": "^3.0.3",
+    "better-sqlite3": "^12.10.0",
+    "drizzle-orm": "^0.45.2",
     "hono": "^4.11.7",
+    "jose": "^6.2.3",
     "pino": "^10.3.0",
     "zod": "^4.3.6"
   }

@@ -1,19 +1,12 @@
 import { serve } from '@hono/node-server';
-import { Hono } from 'hono';
-import { logger } from '@/lib/logger.js';
+import { logger } from '@/core/logger.js';
+import { config } from '@/config.js';
+import { runMigrations } from '@/db/migrate.js';
+import { app } from '@/app.js';
 
-const app = new Hono();
+/** Process entrypoint: apply migrations, then serve the app. */
+runMigrations();
 
-app.get('/health', (c) =>
-  c.json({ status: 'ok', service: 'jane-the-operator', time: new Date().toISOString() }),
-);
-
-app.get('/api/ping', (c) => c.json({ message: 'pong' }));
-
-const port = Number(process.env.PORT ?? 3000);
-
-serve({ fetch: app.fetch, port }, (info) => {
+serve({ fetch: app.fetch, port: config.port }, (info) => {
   logger.info(`API listening on http://localhost:${info.port}`);
 });
-
-export { app };

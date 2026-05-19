@@ -11,12 +11,22 @@ import {
   PanelLeftOpen,
   Menu,
   X,
+  LogOut,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTheme } from '@/lib/theme';
 import { useSidebar } from '@/lib/sidebar';
 import { useSlidingIndicator } from '@/lib/useSlidingIndicator';
-import { Avatar, Button, cn } from '@/components/ui';
+import { useSession, useLogout } from '@/features/auth/useAuth';
+import {
+  Avatar,
+  Button,
+  cn,
+  DropdownMenu,
+  DropdownMenuTrigger,
+  DropdownMenuContent,
+  DropdownMenuItem,
+} from '@/components/ui';
 
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
@@ -115,18 +125,35 @@ function ThemeButton({ collapsed }: { collapsed: boolean }) {
 }
 
 function AccountChip({ collapsed }: { collapsed: boolean }) {
+  const { user } = useSession();
+  const logout = useLogout();
+  const name = user?.name ?? '';
+
   return (
-    <div
-      className={cn('mt-2 flex items-center rounded-xl', rowWidth(collapsed), !collapsed && 'py-2')}
-    >
-      <Avatar name="Arash K." />
-      {!collapsed && (
-        <div className="min-w-0">
-          <div className="truncate text-sm font-medium">Arash K.</div>
-          <div className="truncate text-xs text-muted">Support agent</div>
-        </div>
-      )}
-    </div>
+    <DropdownMenu>
+      <DropdownMenuTrigger
+        className={cn(
+          'mt-2 flex items-center rounded-xl text-left hover:bg-surface',
+          rowWidth(collapsed),
+          !collapsed && 'py-2',
+        )}
+        title={collapsed ? name : undefined}
+      >
+        <Avatar name={name} />
+        {!collapsed && (
+          <div className="min-w-0">
+            <div className="truncate text-sm font-medium">{name}</div>
+            <div className="truncate text-xs text-muted">{user?.email}</div>
+          </div>
+        )}
+      </DropdownMenuTrigger>
+      <DropdownMenuContent align="start">
+        <DropdownMenuItem destructive onSelect={() => logout.mutate(undefined)}>
+          <LogOut size={16} />
+          Log out
+        </DropdownMenuItem>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 }
 

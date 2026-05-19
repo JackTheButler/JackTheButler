@@ -1,6 +1,6 @@
 import { z } from 'zod';
 
-/** Shared types/schemas used by API + dashboard. Expand once the project is defined. */
+/** Shared types/schemas used by API + dashboard. */
 export const HealthResponse = z.object({
   status: z.literal('ok'),
   service: z.string(),
@@ -8,3 +8,6 @@ export const HealthResponse = z.object({
 });
 
 export type HealthResponse = z.infer<typeof HealthResponse>;
+
+export * from './manifest.js';
+export * from './dto.js';

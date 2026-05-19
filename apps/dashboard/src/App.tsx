@@ -1,4 +1,5 @@
 import { Routes, Route, Navigate } from 'react-router-dom';
+import { AuthGate } from '@/features/auth/AuthGate';
 import { AppLayout } from '@/components/AppLayout';
 import { InboxPage } from '@/features/inbox/InboxPage';
 import { AppsPage } from '@/features/apps/AppsPage';
@@ -9,8 +10,9 @@ import { SettingsPage } from '@/features/settings/SettingsPage';
 
 export function App() {
   return (
-    <Routes>
-      <Route element={<AppLayout />}>
+    <AuthGate>
+      <Routes>
+        <Route element={<AppLayout />}>
         <Route path="/" element={<InboxPage />} />
         <Route path="/apps" element={<AppsPage />} />
         <Route path="/knowledge" element={<KnowledgeBasePage />} />
@@ -20,7 +22,8 @@ export function App() {
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/settings/:section" element={<SettingsPage />} />
         <Route path="*" element={<Navigate to="/" replace />} />
-      </Route>
-    </Routes>
+        </Route>
+      </Routes>
+    </AuthGate>
   );
 }

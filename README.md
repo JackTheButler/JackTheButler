@@ -1,6 +1,6 @@
 # Jane the Operator
 
-pnpm monorepo skeleton (structure mirrors the Butler project).
+pnpm monorepo skeleton.
 
 ## Layout
 

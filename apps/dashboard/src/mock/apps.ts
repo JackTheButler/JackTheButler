@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 /**
- * App catalog (manifest-style, mirrors the Butler integration pattern).
+ * App catalog (manifest-style, mirrors the integration pattern).
  *
  * This list is the single source of truth for the Apps page — adding an
  * integration is one entry here, no UI changes. Categories are derived from

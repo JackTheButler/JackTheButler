@@ -1,5 +1,7 @@
 import { describe, it, expect } from 'vitest';
-import { app } from '../src/index.js';
+
+process.env.DB_PATH = ':memory:';
+const { app } = await import('../src/app.js');
 
 describe('API', () => {
   it('GET /health returns ok', async () => {

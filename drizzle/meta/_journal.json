@@ -1,0 +1,27 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1779170932439,
+      "tag": "0000_legal_kree",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1779178063751,
+      "tag": "0001_fair_kang",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1779181544619,
+      "tag": "0002_normal_black_tarantula",
+      "breakpoints": true
+    }
+  ]
+}
