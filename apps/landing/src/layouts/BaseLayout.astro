@@ -11,6 +11,12 @@ interface Props {
 
 const { title, description = site.description } = Astro.props;
 const pageTitle = title ? `${title} · ${site.name}` : site.name;
+
+// Local dev build serves the widget from the running app; production builds
+// point at the CDN. `import.meta.env.PROD` is true in `astro build`.
+const widgetSrc = import.meta.env.PROD
+  ? 'https://cdn.janetheoperator.com/widget.js'
+  : 'http://localhost:5173/widget.js';
 ---
 
 <!doctype html>
@@ -53,6 +59,6 @@ const pageTitle = title ? `${title} · ${site.name}` : site.name;
     </script>
 
     {/* Jane webchat widget (local dev test build) */}
-    <script src="http://localhost:5173/widget.js" data-jane-widget defer is:inline></script>
+    <script src={widgetSrc} data-jane-widget defer is:inline></script>
   </body>
 </html>
