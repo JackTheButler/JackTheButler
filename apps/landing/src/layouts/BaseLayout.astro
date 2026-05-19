@@ -15,7 +15,7 @@ const pageTitle = title ? `${title} · ${site.name}` : site.name;
 // Local dev build serves the widget from the running app; production builds
 // point at the CDN. `import.meta.env.PROD` is true in `astro build`.
 const widgetSrc = import.meta.env.PROD
-  ? 'https://cdn.janetheoperator.com/widget.js'
+  ? 'https://demo.janetheoperator.com/widget.js'
   : 'http://localhost:5173/widget.js';
 ---
 
