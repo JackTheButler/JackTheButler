@@ -5,7 +5,7 @@ const MIN = 500;
 const MAX = 50000;
 const DEFAULT = 8000;
 const RESOLVE_RATE = 0.92; // share Jane closes without a human
-const MINUTES_PER_CONVO = 6; // avg human handle time saved per resolution
+const MINUTES_PER_CONVO = 12; // avg human handle time saved per resolution
 ---
 
 <section class="border-t border-line bg-surface">
@@ -56,6 +56,12 @@ const MINUTES_PER_CONVO = 6; // avg human handle time saved per resolution
           <p class="mt-1 text-sm text-muted">team hours saved / mo</p>
         </div>
       </div>
+
+      <p class="mt-6 text-xs text-muted">
+        Estimate assumes Jane resolves {Math.round(RESOLVE_RATE * 100)}% of
+        conversations and saves ~{MINUTES_PER_CONVO} min of agent time per
+        resolution.
+      </p>
     </div>
   </div>
 </section>

@@ -1,0 +1,64 @@
+---
+import { Sun, Moon } from '@lucide/astro';
+---
+
+<button
+  id="theme-toggle"
+  type="button"
+  aria-label="Toggle dark mode"
+  class="rounded-lg p-2 text-muted transition-colors hover:bg-accent-soft hover:text-ink"
+>
+  <Moon class="size-5 dark:hidden" />
+  <Sun class="hidden size-5 dark:block" />
+</button>
+
+<script is:inline>
+  (function () {
+    var btn = document.getElementById('theme-toggle');
+    if (!btn) return;
+
+    function apply() {
+      var dark = document.documentElement.classList.toggle('dark');
+      try {
+        localStorage.setItem('theme', dark ? 'dark' : 'light');
+      } catch (e) {}
+    }
+
+    btn.addEventListener('click', function () {
+      var reduce = window.matchMedia(
+        '(prefers-reduced-motion: reduce)'
+      ).matches;
+
+      if (!document.startViewTransition || reduce) {
+        apply();
+        return;
+      }
+
+      // Reveal the new theme as a circle growing from the toggle button.
+      var rect = btn.getBoundingClientRect();
+      var x = rect.left + rect.width / 2;
+      var y = rect.top + rect.height / 2;
+      var end = Math.hypot(
+        Math.max(x, window.innerWidth - x),
+        Math.max(y, window.innerHeight - y)
+      );
+
+      var vt = document.startViewTransition(apply);
+      vt.ready.then(function () {
+        document.documentElement.animate(
+          {
+            clipPath: [
+              'circle(0px at ' + x + 'px ' + y + 'px)',
+              'circle(' + end + 'px at ' + x + 'px ' + y + 'px)',
+            ],
+          },
+          {
+            duration: 480,
+            easing: 'ease-in-out',
+            pseudoElement: '::view-transition-new(root)',
+          }
+        );
+      });
+    });
+  })();
+</script>

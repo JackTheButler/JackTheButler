@@ -30,11 +30,32 @@ const widgetSrc = import.meta.env.PROD
     <link rel="shortcut icon" href="/favicon.ico" />
     <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
     <link rel="manifest" href="/site.webmanifest" />
-    <meta name="theme-color" content="#1f1e1d" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#faf9f5"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#1a1917"
+    />
     <title>{pageTitle}</title>
-    {/* Set before paint so reveal elements never flash hidden without JS */}
+    {/* Set theme + js class before paint to avoid any flash. Default is the
+        OS preference; a stored choice overrides it. */}
     <script is:inline>
-      document.documentElement.classList.add('js');
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('js');
+        try {
+          var stored = localStorage.getItem('theme');
+          var dark =
+            stored === 'dark' ||
+            (stored !== 'light' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          root.classList.toggle('dark', dark);
+        } catch (e) {}
+      })();
     </script>
   </head>
   <body class="min-h-screen bg-surface font-sans text-ink antialiased">

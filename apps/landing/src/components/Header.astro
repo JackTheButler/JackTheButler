@@ -1,6 +1,7 @@
 ---
 import { site, nav } from '../config/site';
 import janeLogo from '../icons/jane.svg?raw';
+import ThemeToggle from './ThemeToggle.astro';
 ---
 
 <header class="sticky top-0 z-50 border-b border-line/70 bg-surface/80 backdrop-blur">
@@ -10,7 +11,7 @@ import janeLogo from '../icons/jane.svg?raw';
       class="flex items-center gap-2 font-semibold text-ink [&_svg]:h-7 [&_svg]:w-auto"
     >
       <span class="text-ink" aria-hidden="true" set:html={janeLogo} />
-      {site.name}
+      <span class="hidden sm:inline">{site.name}</span>
     </a>
 
     <nav class="hidden items-center gap-8 md:flex">
@@ -26,11 +27,14 @@ import janeLogo from '../icons/jane.svg?raw';
       }
     </nav>
 
-    <a
-      href={site.ctaHref}
-      class="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90"
-    >
-      {site.ctaLabel}
-    </a>
+    <div class="flex items-center gap-2">
+      <ThemeToggle />
+      <a
+        href={site.ctaHref}
+        class="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90"
+      >
+        {site.ctaLabel}
+      </a>
+    </div>
   </div>
 </header>

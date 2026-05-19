@@ -1,22 +1,91 @@
 @import 'tailwindcss';
 
+/* `dark:` utilities respond to a .dark class on <html> (manual toggle),
+   not just the OS setting. */
+@custom-variant dark (&:where(.dark, .dark *));
+
 /* Theme tokens mirrored from the dashboard (apps/dashboard/src/index.css).
-   Warm near-monochrome palette; the accent is near-black. */
-@theme {
-  --color-surface: #faf9f5;
-  --color-panel: #ffffff;
-  --color-ink: #1f1e1d;
-  --color-muted: #6b6862;
-  --color-line: #e8e5dd;
-  --color-accent: #1f1e1d;
-  --color-accent-soft: #eceae4;
-  --color-on-accent: #ffffff;
-  --color-staff: #3b4252;
-  --color-staff-soft: #e6e8ec;
-  /* Restrained warm accent, drawn from the hero gradient. Used sparingly
-     for focal points (eyebrows, chart, featured tier, active controls). */
+   `inline` keeps the utilities pointing at the CSS vars below so they can
+   be swapped at runtime for dark mode. */
+@theme inline {
+  --color-surface: var(--c-surface);
+  --color-panel: var(--c-panel);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-line: var(--c-line);
+  --color-accent: var(--c-accent);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-on-accent: var(--c-on-accent);
+  --color-staff: var(--c-staff);
+  --color-staff-soft: var(--c-staff-soft);
+  /* Restrained warm accent for focal points; same in both themes. */
   --color-brand: #b0623f;
   --color-brand-soft: #f1e6df;
+}
+
+:root {
+  --c-surface: #faf9f5;
+  --c-panel: #ffffff;
+  --c-ink: #1f1e1d;
+  --c-muted: #6b6862;
+  --c-line: #e8e5dd;
+  --c-accent: #1f1e1d;
+  --c-accent-soft: #eceae4;
+  --c-on-accent: #ffffff;
+  --c-staff: #3b4252;
+  --c-staff-soft: #e6e8ec;
+  /* Hero backdrop, warm light ramp fading into the surface. */
+  --hero-gradient: linear-gradient(
+    115deg,
+    #4a2f23 0%,
+    #8a4f3a 28%,
+    #b06a4a 52%,
+    #cf9a68 70%,
+    #ead9c2 100%
+  );
+  color-scheme: light;
+}
+
+.dark {
+  --c-surface: #1a1917;
+  --c-panel: #23221e;
+  --c-ink: #eceae4;
+  --c-muted: #9c988e;
+  --c-line: #38362f;
+  --c-accent: #e8e6df;
+  --c-accent-soft: #3c3a34;
+  --c-on-accent: #1a1917;
+  --c-staff: #7c869c;
+  --c-staff-soft: #2c303a;
+  /* Darker, warmer ramp that fades into the dark surface. */
+  --hero-gradient: linear-gradient(
+    115deg,
+    #1f130d 0%,
+    #4a2c1f 28%,
+    #6b4231 52%,
+    #5a3a2c 70%,
+    #1a1917 100%
+  );
+  color-scheme: dark;
+}
+
+.hero-bg {
+  background: var(--hero-gradient);
+}
+
+/* Theme-change circular reveal (View Transitions API). Disable the default
+   cross-fade; the new theme is clipped open from the toggle button by the
+   animation in ThemeToggle.astro. */
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+::view-transition-old(root) {
+  z-index: 1;
+}
+::view-transition-new(root) {
+  z-index: 9999;
 }
 
 /* Top scroll-progress bar */
@@ -118,4 +187,9 @@
   box-shadow:
     0 12px 32px -12px rgb(31 30 29 / 0.18),
     0 0 0 1px rgb(31 30 29 / 0.04);
+}
+.dark .card-hover:hover {
+  box-shadow:
+    0 12px 32px -12px rgb(0 0 0 / 0.55),
+    0 0 0 1px rgb(255 255 255 / 0.06);
 }
