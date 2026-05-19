@@ -57,7 +57,7 @@ const features = [
           >
             {/* Copy */}
             <div class="lg:flex-1">
-              <span class="inline-flex items-center gap-2 text-sm font-semibold text-accent">
+              <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand">
                 <feature.icon class="size-4" />
                 {feature.eyebrow}
               </span>
@@ -68,7 +68,7 @@ const features = [
               <ul class="mt-6 space-y-2">
                 {feature.points.map((p) => (
                   <li class="flex items-center gap-2 text-sm text-ink">
-                    <Check class="size-4 shrink-0 text-accent" />
+                    <Check class="size-4 shrink-0 text-brand" />
                     {p}
                   </li>
                 ))}
@@ -152,7 +152,7 @@ const features = [
                             style="height: 8rem"
                           >
                             <div
-                              class="w-full rounded-t bg-accent"
+                              class="w-full rounded-t bg-brand"
                               style={`height: ${h}%`}
                             />
                           </div>

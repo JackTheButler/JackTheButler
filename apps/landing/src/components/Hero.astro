@@ -72,10 +72,12 @@ const group = [...poweredBy, ...poweredBy, ...poweredBy, ...poweredBy];
         <div class="mt-10 flex flex-wrap items-center gap-4">
           <a
             href={site.ctaHref}
-            class="inline-flex items-center gap-2 rounded-lg bg-panel px-6 py-3 text-sm font-semibold text-ink shadow-lg shadow-black/20 transition-transform hover:-translate-y-0.5"
+            class="group inline-flex items-center gap-2 rounded-lg bg-panel px-6 py-3 text-sm font-semibold text-ink shadow-lg shadow-black/20 transition-transform hover:-translate-y-0.5"
           >
             {site.ctaLabel}
-            <ArrowRight class="size-4" />
+            <ArrowRight
+              class="size-4 transition-transform duration-200 group-hover:translate-x-1"
+            />
           </a>
         </div>
       </div>
@@ -94,8 +96,8 @@ const group = [...poweredBy, ...poweredBy, ...poweredBy, ...poweredBy];
             </span>
           </div>
 
-          <div class="space-y-4 py-5">
-            <div class="flex justify-end">
+          <div id="hero-chat" class="min-h-[170px] space-y-4 py-5">
+            <div class="chat-step flex justify-end" data-step="1">
               <p
                 class="max-w-[75%] rounded-2xl rounded-br-sm bg-accent-soft px-4 py-2 text-sm text-ink"
               >
@@ -103,7 +105,18 @@ const group = [...poweredBy, ...poweredBy, ...poweredBy, ...poweredBy];
               </p>
             </div>
 
-            <div class="flex justify-start">
+            <div class="chat-step flex justify-start" data-step="2">
+              <span
+                class="inline-flex items-center gap-1.5 rounded-2xl rounded-bl-sm bg-accent px-4 py-3"
+                aria-label="Jane is typing"
+              >
+                <span class="chat-dot"></span>
+                <span class="chat-dot"></span>
+                <span class="chat-dot"></span>
+              </span>
+            </div>
+
+            <div class="chat-step flex justify-start" data-step="3">
               <p
                 class="max-w-[80%] rounded-2xl rounded-bl-sm bg-accent px-4 py-2 text-sm text-on-accent"
               >
@@ -112,7 +125,7 @@ const group = [...poweredBy, ...poweredBy, ...poweredBy, ...poweredBy];
               </p>
             </div>
 
-            <div class="flex items-center gap-2 pl-1">
+            <div class="chat-step flex items-center gap-2 pl-1" data-step="4">
               <span
                 class="inline-flex items-center gap-1 rounded-full bg-green-50 px-2.5 py-1 text-xs font-medium text-green-700"
               >
@@ -128,7 +141,9 @@ const group = [...poweredBy, ...poweredBy, ...poweredBy, ...poweredBy];
         <div
           class="absolute -bottom-12 -left-6 hidden rounded-xl border border-line bg-panel px-5 py-3 shadow-xl sm:block"
         >
-          <p class="text-2xl font-bold text-ink">92%</p>
+          <p class="text-2xl font-bold text-ink">
+            <span data-countup="92">92</span>%
+          </p>
           <p class="text-xs text-muted">resolved without a human</p>
         </div>
       </div>
@@ -250,4 +265,137 @@ const group = [...poweredBy, ...poweredBy, ...poweredBy, ...poweredBy];
       row-gap: 1.5rem;
     }
   }
+
+  /* Auto-playing chat. Without .chat--play (no JS) it shows a static
+     conversation; the typing bubble is hidden in that fallback. */
+  #hero-chat:not(.chat--play) .chat-step[data-step='2'] {
+    display: none;
+  }
+  /* Non-active steps take no space (no phantom gap); only the entrance
+     animates so swapping the typing bubble for the reply is seamless. */
+  #hero-chat.chat--play .chat-step {
+    display: none;
+  }
+  #hero-chat.chat--play .chat-step.show {
+    display: flex;
+    animation: chat-in 0.35s ease both;
+  }
+  @keyframes chat-in {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+  .chat-dot {
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 9999px;
+    background: rgb(255 255 255 / 0.75);
+    animation: chat-bounce 1s infinite ease-in-out;
+  }
+  .chat-dot:nth-child(2) {
+    animation-delay: 0.15s;
+  }
+  .chat-dot:nth-child(3) {
+    animation-delay: 0.3s;
+  }
+  @keyframes chat-bounce {
+    0%,
+    80%,
+    100% {
+      transform: translateY(0);
+      opacity: 0.5;
+    }
+    40% {
+      transform: translateY(-4px);
+      opacity: 1;
+    }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    #hero-chat.chat--play .chat-step.show {
+      animation: none;
+    }
+    .chat-dot {
+      animation: none;
+    }
+  }
 </style>
+
+<script is:inline>
+  (function () {
+    var chat = document.getElementById('hero-chat');
+    if (!chat) return;
+    var steps = chat.querySelectorAll('.chat-step');
+    var reduce = window.matchMedia(
+      '(prefers-reduced-motion: reduce)'
+    ).matches;
+
+    chat.classList.add('chat--play');
+
+    if (reduce) {
+      steps.forEach(function (s) {
+        if (s.getAttribute('data-step') !== '2') s.classList.add('show');
+      });
+      return;
+    }
+
+    var timers = [];
+    function clearAll() {
+      timers.forEach(clearTimeout);
+      timers = [];
+    }
+    function at(ms, fn) {
+      timers.push(setTimeout(fn, ms));
+    }
+    function show(step, on) {
+      var el = chat.querySelector('.chat-step[data-step="' + step + '"]');
+      if (el) el.classList.toggle('show', on !== false);
+    }
+
+    function cycle() {
+      steps.forEach(function (s) {
+        s.classList.remove('show');
+      });
+      at(400, function () {
+        show(1);
+      });
+      at(1500, function () {
+        show(2);
+      });
+      at(3300, function () {
+        show(2, false);
+        show(3);
+      });
+      at(4300, function () {
+        show(4);
+      });
+      at(8000, cycle);
+    }
+
+    var started = false;
+    function start() {
+      if (started) return;
+      started = true;
+      cycle();
+    }
+    if ('IntersectionObserver' in window) {
+      var io = new IntersectionObserver(
+        function (entries) {
+          if (entries[0].isIntersecting) {
+            start();
+            io.disconnect();
+          }
+        },
+        { threshold: 0.3 }
+      );
+      io.observe(chat);
+    } else {
+      start();
+    }
+  })();
+</script>

@@ -5,7 +5,7 @@ import { site } from '../config/site';
 
 <section class="mx-auto max-w-6xl px-6 py-24">
   <div
-    class="rounded-2xl bg-accent px-8 py-16 text-center md:px-16"
+    class="sheen rounded-2xl bg-accent px-8 py-16 text-center md:px-16"
     data-reveal
   >
     <h2 class="text-3xl font-bold tracking-tight text-on-accent">
@@ -16,10 +16,12 @@ import { site } from '../config/site';
     </p>
     <a
       href={site.ctaHref}
-      class="mt-8 inline-flex items-center gap-2 rounded-lg bg-panel px-6 py-3 text-sm font-medium text-ink transition-opacity hover:opacity-90"
+      class="group mt-8 inline-flex items-center gap-2 rounded-lg bg-panel px-6 py-3 text-sm font-medium text-ink transition-opacity hover:opacity-90"
     >
       {site.ctaLabel}
-      <ArrowRight class="size-4" />
+      <ArrowRight
+        class="size-4 transition-transform duration-200 group-hover:translate-x-1"
+      />
     </a>
   </div>
 </section>

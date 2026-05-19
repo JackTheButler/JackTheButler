@@ -1,6 +1,7 @@
 ---
-import { PlugZap, Bot, ShieldCheck } from '@lucide/astro';
+import { PlugZap, ShieldCheck } from '@lucide/astro';
 import SectionHeading from './SectionHeading.astro';
+import janeLogo from '../icons/jane.svg?raw';
 
 const steps = [
   {
@@ -11,7 +12,7 @@ const steps = [
   },
   {
     step: '02',
-    icon: Bot,
+    jane: true,
     title: 'Jane handles conversations',
     body: 'Customers get instant, accurate answers around the clock, with no queue and no waiting.',
   },
@@ -45,8 +46,12 @@ const steps = [
           steps.map((item) => (
             <div class="relative">
               <div class="flex items-center gap-4">
-                <span class="relative z-10 flex size-16 shrink-0 items-center justify-center rounded-2xl border border-line bg-panel text-accent shadow-sm">
-                  <item.icon class="size-7" />
+                <span class="relative z-10 flex size-16 shrink-0 items-center justify-center rounded-2xl border border-line bg-panel text-brand shadow-sm [&_svg]:size-7">
+                  {item.jane ? (
+                    <span set:html={janeLogo} />
+                  ) : (
+                    <item.icon class="size-7" />
+                  )}
                 </span>
                 <span class="text-5xl font-bold tracking-tight text-line">
                   {item.step}

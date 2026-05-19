@@ -1,0 +1,51 @@
+---
+import SectionHeading from './SectionHeading.astro';
+
+const quotes = [
+  {
+    quote:
+      'Jane handles the bulk of our front line. Our team finally spends its time on the conversations that actually need a human.',
+    name: 'Priya Natarajan',
+    role: 'Head of Support, Northwind',
+  },
+  {
+    quote:
+      'We went live in an afternoon. Resolution rate climbed past 90% in the first month and our response time is basically zero now.',
+    name: 'Marcus Reed',
+    role: 'COO, Forma',
+  },
+  {
+    quote:
+      'The escalation hand-off is the part that sold us. Nothing gets lost, and customers never have to repeat themselves.',
+    name: 'Lena Brandt',
+    role: 'CX Lead, Lumen',
+  },
+];
+---
+
+<section class="border-t border-line bg-surface">
+  <div class="mx-auto max-w-6xl px-6 py-24">
+    <SectionHeading
+      eyebrow="Loved by support teams"
+      title="Results from day one"
+      subtitle="What teams running Jane on their front line have to say."
+    />
+
+    <div
+      class="mt-16 grid gap-6 md:grid-cols-3"
+      data-reveal-stagger
+    >
+      {
+        quotes.map((q) => (
+          <figure class="card-hover flex flex-col rounded-2xl border border-line bg-panel p-8">
+            <blockquote class="flex-1 text-ink">“{q.quote}”</blockquote>
+            <figcaption class="mt-6 border-t border-line pt-4">
+              <p class="font-semibold text-ink">{q.name}</p>
+              <p class="text-sm text-muted">{q.role}</p>
+            </figcaption>
+          </figure>
+        ))
+      }
+    </div>
+  </div>
+</section>

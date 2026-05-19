@@ -91,12 +91,12 @@ const CUSTOM_TIERS: { upTo: number | null; rate: number }[] = [
           <div
             class={`card-hover flex flex-col rounded-2xl border bg-surface p-8 ${
               plan.featured
-                ? 'border-accent ring-1 ring-accent'
+                ? 'border-brand ring-1 ring-brand shadow-xl lg:scale-105 relative z-10'
                 : 'border-line'
             }`}
           >
             {plan.featured && (
-              <span class="mb-4 inline-block w-fit rounded-full bg-accent-soft px-3 py-1 text-xs font-medium text-ink">
+              <span class="mb-4 inline-block w-fit rounded-full bg-brand px-3 py-1 text-xs font-medium text-on-accent">
                 Most popular
               </span>
             )}

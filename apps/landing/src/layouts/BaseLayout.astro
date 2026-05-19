@@ -25,6 +25,12 @@ const widgetSrc = import.meta.env.PROD
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta name="theme-color" content="#1f1e1d" />
     <title>{pageTitle}</title>
     {/* Set before paint so reveal elements never flash hidden without JS */}
     <script is:inline>
@@ -32,6 +38,7 @@ const widgetSrc = import.meta.env.PROD
     </script>
   </head>
   <body class="min-h-screen bg-surface font-sans text-ink antialiased">
+    <div id="scroll-progress" aria-hidden="true"></div>
     <Header />
     <main>
       <slot />
@@ -56,6 +63,70 @@ const widgetSrc = import.meta.env.PROD
         );
         els.forEach((el) => io.observe(el));
       }
+    </script>
+
+    <script is:inline>
+      // Top scroll-progress bar
+      (function () {
+        var bar = document.getElementById('scroll-progress');
+        if (!bar) return;
+        function update() {
+          var h =
+            document.documentElement.scrollHeight - window.innerHeight;
+          var p = h > 0 ? (window.scrollY / h) * 100 : 0;
+          bar.style.width = p + '%';
+        }
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        update();
+      })();
+
+      // Count-up: animate [data-countup] from 0 to its number when in view
+      (function () {
+        var nums = document.querySelectorAll('[data-countup]');
+        if (!nums.length) return;
+        var reduce = window.matchMedia(
+          '(prefers-reduced-motion: reduce)'
+        ).matches;
+
+        function run(el) {
+          var target = parseFloat(el.getAttribute('data-countup'));
+          var dur = 1100;
+          if (reduce || !('requestAnimationFrame' in window)) {
+            el.textContent = String(target);
+            return;
+          }
+          var start = null;
+          function step(ts) {
+            if (start === null) start = ts;
+            var t = Math.min((ts - start) / dur, 1);
+            var eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = String(Math.round(target * eased));
+            if (t < 1) requestAnimationFrame(step);
+            else el.textContent = String(target);
+          }
+          requestAnimationFrame(step);
+        }
+
+        if (!('IntersectionObserver' in window)) {
+          nums.forEach(run);
+          return;
+        }
+        var io = new IntersectionObserver(
+          function (entries) {
+            for (var i = 0; i < entries.length; i++) {
+              if (entries[i].isIntersecting) {
+                run(entries[i].target);
+                io.unobserve(entries[i].target);
+              }
+            }
+          },
+          { threshold: 0.4 }
+        );
+        nums.forEach(function (n) {
+          io.observe(n);
+        });
+      })();
     </script>
 
     {/* Jane webchat widget (local dev test build) */}

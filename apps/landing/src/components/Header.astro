@@ -1,12 +1,15 @@
 ---
-import { MessageCircle } from '@lucide/astro';
 import { site, nav } from '../config/site';
+import janeLogo from '../icons/jane.svg?raw';
 ---
 
 <header class="sticky top-0 z-50 border-b border-line/70 bg-surface/80 backdrop-blur">
   <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
-    <a href="/" class="flex items-center gap-2 font-semibold text-ink">
-      <MessageCircle class="size-6 text-accent" />
+    <a
+      href="/"
+      class="flex items-center gap-2 font-semibold text-ink [&_svg]:h-7 [&_svg]:w-auto"
+    >
+      <span class="text-ink" aria-hidden="true" set:html={janeLogo} />
       {site.name}
     </a>
 

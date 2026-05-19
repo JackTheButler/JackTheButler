@@ -1,0 +1,60 @@
+---
+import { Plus } from '@lucide/astro';
+import SectionHeading from './SectionHeading.astro';
+
+const faqs = [
+  {
+    q: 'What counts as a resolution?',
+    a: 'A resolution is one conversation Jane closes without human help. If a conversation is escalated to your team, it is never charged.',
+  },
+  {
+    q: 'How long does it take to go live?',
+    a: 'Most teams are live the same day. Paste one snippet on your site, point Jane at your help docs, and it starts answering.',
+  },
+  {
+    q: 'What happens when Jane can’t answer?',
+    a: 'Jane escalates to your team with the full transcript and a summary attached, routed to the right place. The customer never repeats themselves.',
+  },
+  {
+    q: 'Which channels are supported?',
+    a: 'Webchat out of the box, plus messaging and email channels like WhatsApp, Telegram, Messenger and more.',
+  },
+  {
+    q: 'Do I need a credit card to start?',
+    a: 'No. The free tier includes 10 resolutions per month so you can try Jane on a real site before paying anything.',
+  },
+];
+---
+
+<section id="faq" class="border-t border-line bg-panel">
+  <div class="mx-auto max-w-3xl px-6 py-24">
+    <SectionHeading
+      eyebrow="FAQ"
+      title="Questions, answered"
+      subtitle="The things teams ask before rolling Jane out."
+    />
+
+    <div class="mt-12 divide-y divide-line border-y border-line" data-reveal>
+      {
+        faqs.map((item) => (
+          <details class="faq group">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-left font-medium text-ink">
+              {item.q}
+              <Plus class="faq-icon size-5 shrink-0 text-brand transition-transform" />
+            </summary>
+            <p class="pb-5 text-sm text-muted">{item.a}</p>
+          </details>
+        ))
+      }
+    </div>
+  </div>
+</section>
+
+<style>
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq[open] .faq-icon {
+    transform: rotate(45deg);
+  }
+</style>

@@ -13,6 +13,61 @@
   --color-on-accent: #ffffff;
   --color-staff: #3b4252;
   --color-staff-soft: #e6e8ec;
+  /* Restrained warm accent, drawn from the hero gradient. Used sparingly
+     for focal points (eyebrows, chart, featured tier, active controls). */
+  --color-brand: #b0623f;
+  --color-brand-soft: #f1e6df;
+}
+
+/* Top scroll-progress bar */
+#scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  z-index: 60;
+  background: var(--color-brand);
+  transition: width 0.1s linear;
+}
+
+/* CTA sheen sweep */
+@keyframes sheen-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
+  }
+  60%,
+  100% {
+    transform: translateX(320%) skewX(-20deg);
+  }
+}
+.sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.sheen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 35%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.12),
+    transparent
+  );
+  transform: translateX(-120%) skewX(-20deg);
+  animation: sheen-sweep 6s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheen::after {
+    animation: none;
+    display: none;
+  }
 }
 
 /* Scroll-reveal: hidden only when JS is present (no-JS keeps content visible)
