@@ -37,9 +37,10 @@ COPY --from=build /app/apps/widget/dist ./apps/widget/dist
 COPY --from=build /app/apps/widget/loader.js ./apps/widget/loader.js
 COPY --from=build /app/apps/dashboard/dist ./apps/dashboard/dist
 
-# SQLite lives on a mounted volume.
+# SQLite lives at DB_PATH (/data/app.db). Persistence comes from the mounted
+# volume — a Railway Volume mounted at /data (or the compose volume locally).
+# No Docker VOLUME directive: Railway rejects it.
 RUN mkdir -p /data
-VOLUME ["/data"]
 EXPOSE 3000
 
 # Migrations run on startup (src/index.ts → runMigrations()).
