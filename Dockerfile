@@ -30,6 +30,10 @@ ENV DB_PATH=/data/app.db
 
 # Only what the server needs at runtime.
 COPY --from=build /app/node_modules ./node_modules
+# Workspace packages: node_modules/@janetheoperator/* are pnpm symlinks into
+# packages/ — the targets must exist or Node throws ERR_MODULE_NOT_FOUND
+# (e.g. @janetheoperator/channel-webchat from the apps registry).
+COPY --from=build /app/packages ./packages
 COPY --from=build /app/package.json ./package.json
 COPY --from=build /app/dist ./dist
 COPY --from=build /app/drizzle ./drizzle
