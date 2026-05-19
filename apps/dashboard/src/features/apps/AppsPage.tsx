@@ -10,6 +10,7 @@ import {
   SearchInput,
   EmptyState,
   SegmentedControl,
+  cn,
 } from '@/components/ui';
 import { useApps } from './useApps';
 
@@ -23,27 +24,44 @@ const STATUS: Record<AppStatus, { label: string; tone: 'primary' | 'accent' | 'm
 function AppCard({ app }: { app: AppSummary }) {
   const navigate = useNavigate();
   const s = STATUS[app.status];
+  const cardStyle =
+    app.status === 'error'
+      ? 'border-red-500/40 bg-red-500/[0.03]'
+      : app.status === 'active'
+        ? 'border-accent/20 bg-accent-soft/30'
+        : 'border-line';
 
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4">
-      <div className="flex items-start gap-3">
-        <Avatar size="md" shape="square" tone="muted" name={app.name} />
+    <div className={cn('relative flex flex-col gap-3 rounded-xl border bg-panel p-4', cardStyle)}>
+      <Badge
+        tone={s.tone}
+        className={cn(
+          'absolute right-0 top-0 rounded-bl-lg rounded-br-none rounded-tl-none rounded-tr-xl',
+          app.status === 'error' && 'text-red-600',
+        )}
+      >
+        {s.label}
+      </Badge>
+      <div className="flex items-start gap-3 pr-24">
+        <Avatar
+          size="md"
+          shape="square"
+          tone={app.status === 'active' ? 'solid' : 'muted'}
+          name={app.name}
+        />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-semibold">{app.name}</h3>
           <p className="truncate text-xs capitalize text-muted">{app.category}</p>
         </div>
-        <Badge tone={s.tone} className={app.status === 'error' ? 'text-red-600' : undefined}>
-          {s.label}
-        </Badge>
       </div>
+      <p className="line-clamp-2 text-xs text-muted">{app.description}</p>
       <div className="mt-auto">
         <Button
-          variant="outline"
+          variant={app.status === 'active' ? 'primary' : 'outline'}
           size="sm"
-          className="w-full"
           onClick={() => navigate(`/apps/${app.id}`)}
         >
-          Configure
+          {app.status === 'active' ? 'Manage' : 'Configure'}
         </Button>
       </div>
     </div>

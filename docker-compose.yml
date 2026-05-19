@@ -1,0 +1,20 @@
+# Easy single-service run. Set JWT_SECRET and APP_CONFIG_KEY in your shell
+# or a .env file (NOT committed) before `docker compose up`.
+services:
+  app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      NODE_ENV: production
+      PORT: '3000'
+      DB_PATH: /data/app.db
+      # Required in production (>= 16 chars each). Provided from the host env.
+      JWT_SECRET: ${JWT_SECRET:?set JWT_SECRET}
+      APP_CONFIG_KEY: ${APP_CONFIG_KEY:?set APP_CONFIG_KEY}
+    volumes:
+      - jane-data:/data
+    restart: unless-stopped
+
+volumes:
+  jane-data:

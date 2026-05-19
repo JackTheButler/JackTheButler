@@ -31,5 +31,23 @@ pnpm test       # vitest
 pnpm check      # lint + typecheck + test
 ```
 
-The project itself is undefined — this is just the scaffold with a test API
-(`/health`, `/api/ping`) and empty dashboard/landing pages.
+## Deploy
+
+One container serves **everything from one origin**: the API, the dashboard
+SPA, the widget loader (`/widget.js`) and bundle (`/widget/app/*`). SQLite
+lives on a mounted volume; migrations run on startup.
+
+```bash
+export JWT_SECRET=$(openssl rand -hex 24)
+export APP_CONFIG_KEY=$(openssl rand -hex 24)
+docker compose up --build        # → http://localhost:3000
+```
+
+- Both secrets are **required in production** (≥ 16 chars) — `config.ts`
+  throws otherwise. Data persists in the `jane-data` volume (`/data/app.db`).
+- The landing site (`apps/landing/`) deploys separately:
+  `pnpm deploy:website` (Cloudflare Pages).
+
+To run the built server without Docker: `pnpm build && pnpm build:widget &&
+pnpm build:dashboard`, then `NODE_ENV=production JWT_SECRET=… APP_CONFIG_KEY=…
+pnpm start`.

@@ -11,6 +11,7 @@
     "build:dashboard": "pnpm --filter @janetheoperator/dashboard build",
     "build:website": "pnpm --filter @janetheoperator/landing build",
     "build:widget": "pnpm --filter @janetheoperator/widget build",
+    "build:all": "pnpm build && pnpm build:widget && pnpm build:dashboard",
     "deploy:website": "pnpm build:website && pnpm dlx wrangler pages deploy apps/landing/dist --project-name=janetheoperator-landing --branch=main --commit-dirty=true",
     "start": "node --env-file-if-exists=.env dist/index.js",
     "db:generate": "drizzle-kit generate",

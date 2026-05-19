@@ -57,6 +57,7 @@ export function listApps(): AppSummary[] {
     return {
       id: m.manifest.id,
       name: m.manifest.name,
+      description: m.manifest.description ?? '',
       category: m.manifest.category,
       enabled: row?.enabled ?? false,
       status: deriveStatus(m, row),

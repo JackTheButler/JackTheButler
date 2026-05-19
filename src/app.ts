@@ -7,6 +7,7 @@ import { conversationRoutes } from '@/modules/conversations/routes.js';
 import { webchatRoutes } from '@/modules/webchat/routes.js';
 import { registerWebchatSocket } from '@/modules/webchat/gateway.js';
 import { registerDashboardSocket } from '@/core/realtime.js';
+import { registerSpa } from '@/core/spa.js';
 import { requireAuth, type AuthEnv } from '@/modules/auth/middleware.js';
 
 /**
@@ -44,5 +45,8 @@ app.get('/api/app/ping', (c) => c.json({ message: 'pong', user: c.get('user') })
 
 app.route('/api/app/apps', appsRoutes);
 app.route('/api/app/conversations', conversationRoutes);
+
+// Last: serve the built dashboard SPA (single-origin production model).
+registerSpa(app);
 
 export { app, injectWebSocket };

@@ -6,6 +6,7 @@ export type AppStatus = 'unconfigured' | 'disabled' | 'active' | 'error';
 export interface AppSummary {
   id: string;
   name: string;
+  description: string;
   category: AppManifest['category'];
   enabled: boolean;
   status: AppStatus;
