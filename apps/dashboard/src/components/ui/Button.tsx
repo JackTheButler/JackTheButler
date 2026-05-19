@@ -10,6 +10,7 @@ const button = cva(
         primary: 'bg-accent text-on-accent hover:opacity-90',
         outline: 'text-ink ring-1 ring-line hover:bg-surface',
         ghost: 'text-muted hover:bg-surface hover:text-ink',
+        destructive: 'bg-red-600 text-white hover:opacity-90',
       },
       size: {
         sm: 'h-8 px-3 text-xs',

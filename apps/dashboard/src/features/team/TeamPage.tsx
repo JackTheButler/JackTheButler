@@ -1,21 +1,24 @@
 import { useMemo, useState } from 'react';
-import { UserPlus, MoreVertical, Shield, User, RefreshCw, Ban, Trash2 } from 'lucide-react';
+import { UserPlus, Shield, User, RefreshCw, Ban, Trash2 } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
+import { PageHeader } from '@/components/PageHeader';
+import { ListRow, RowMenu } from '@/components/ListRow';
 import {
+  Avatar,
   Badge,
   Button,
   Input,
+  Select,
+  SelectItem,
+  Field,
+  EmptyState,
   SegmentedControl,
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogClose,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
-  cn,
 } from '@/components/ui';
 import {
   members,
@@ -28,56 +31,25 @@ import {
   type TeamFilter,
 } from '@/mock/team';
 
-const field =
-  'w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none placeholder:text-muted focus:border-accent/40';
-
 function MemberRow({ member }: { member: Member }) {
   const invited = member.status === 'invited';
   const disabled = member.status === 'disabled';
   return (
-    <div
-      className={cn(
-        'flex items-center gap-3 border-b border-line px-3 py-3 last:border-b-0 md:px-4',
-        disabled && 'opacity-60',
-      )}
-    >
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface text-xs font-semibold text-muted ring-1 ring-line">
-        {member.name.slice(0, 2).toUpperCase()}
-      </div>
-
-      <div className="min-w-0 flex-1">
-        <div className="flex items-center gap-2">
-          <span className="truncate text-sm font-medium">{member.name}</span>
-          {member.you && (
-            <Badge tone="muted" className="shrink-0 normal-case">
-              You
-            </Badge>
-          )}
-          <Badge tone={member.role === 'admin' ? 'accent' : 'muted'} className="shrink-0">
-            {roleLabel[member.role]}
+    <ListRow
+      disabled={disabled}
+      leading={<Avatar name={member.name} />}
+      status={
+        (invited || disabled) && (
+          <Badge tone="muted" className="hidden shrink-0 sm:inline-flex">
+            {invited ? 'Invited' : 'Disabled'}
           </Badge>
-        </div>
-        <p className="mt-0.5 truncate text-xs text-muted">
-          {member.email} · {member.lastActive}
-        </p>
-      </div>
-
-      {(invited || disabled) && (
-        <span className="hidden shrink-0 rounded-md bg-surface px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide text-muted ring-1 ring-line sm:inline">
-          {invited ? 'Invited' : 'Disabled'}
-        </span>
-      )}
-
-      {member.you ? (
-        <span className="grid h-9 w-9 shrink-0" />
-      ) : (
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" aria-label="Member actions">
-              <MoreVertical size={16} />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent>
+        )
+      }
+      trailing={
+        member.you ? (
+          <span className="grid h-9 w-9 shrink-0" />
+        ) : (
+          <RowMenu>
             <DropdownMenuItem>
               {member.role === 'admin' ? <User size={14} /> : <Shield size={14} />}
               Make {member.role === 'admin' ? 'Agent' : 'Admin'}
@@ -94,10 +66,25 @@ function MemberRow({ member }: { member: Member }) {
             <DropdownMenuItem destructive>
               <Trash2 size={14} /> Remove
             </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      )}
-    </div>
+          </RowMenu>
+        )
+      }
+    >
+      <div className="flex items-center gap-2">
+        <span className="truncate text-sm font-medium">{member.name}</span>
+        {member.you && (
+          <Badge tone="muted" className="shrink-0 normal-case">
+            You
+          </Badge>
+        )}
+        <Badge tone={member.role === 'admin' ? 'accent' : 'muted'} className="shrink-0">
+          {roleLabel[member.role]}
+        </Badge>
+      </div>
+      <p className="mt-0.5 truncate text-xs text-muted">
+        {member.email} · {member.lastActive}
+      </p>
+    </ListRow>
   );
 }
 
@@ -112,22 +99,15 @@ function InviteTeammate() {
       </DialogTrigger>
       <DialogContent title="Invite teammate" description="They’ll get an email to set a password.">
         <div className="space-y-3">
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium text-muted">Email</span>
+          <Field label="Email">
             <Input type="email" placeholder="name@company.com" />
-          </label>
-          <label className="block">
-            <span className="mb-1 block text-xs font-medium text-muted">Role</span>
-            <select
-              className={field}
-              value={role}
-              onChange={(e) => setRole(e.target.value as Role)}
-            >
-              <option value="agent">Agent</option>
-              <option value="admin">Admin</option>
-            </select>
-            <span className="mt-1 block text-xs text-muted">{roleHint[role]}</span>
-          </label>
+          </Field>
+          <Field label="Role" hint={roleHint[role]}>
+            <Select value={role} onValueChange={(v) => setRole(v as Role)}>
+              <SelectItem value="agent">Agent</SelectItem>
+              <SelectItem value="admin">Admin</SelectItem>
+            </Select>
+          </Field>
         </div>
         <div className="mt-6 flex justify-end gap-2">
           <DialogClose asChild>
@@ -154,15 +134,11 @@ export function TeamPage() {
   return (
     <PageShell>
       <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">Team</h1>
-            <p className="mt-1 text-sm text-muted">
-              {active} members{pending > 0 && ` · ${pending} pending`}
-            </p>
-          </div>
-          <InviteTeammate />
-        </header>
+        <PageHeader
+          title="Team"
+          subtitle={`${active} members${pending > 0 ? ` · ${pending} pending` : ''}`}
+          action={<InviteTeammate />}
+        />
 
         <SegmentedControl
           aria-label="Filter team"
@@ -174,7 +150,7 @@ export function TeamPage() {
 
         <div className="mt-6 overflow-hidden rounded-xl border border-line bg-panel">
           {visible.length === 0 ? (
-            <p className="px-4 py-16 text-center text-sm text-muted">No one here.</p>
+            <EmptyState>No one here.</EmptyState>
           ) : (
             visible.map((m) => <MemberRow key={m.id} member={m} />)
           )}

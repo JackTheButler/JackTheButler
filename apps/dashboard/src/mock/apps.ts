@@ -23,7 +23,7 @@ import {
  * the data, so new categories appear automatically.
  */
 
-export type AppStatus = 'active' | 'available' | 'soon';
+export type AppStatus = 'active' | 'available' | 'soon' | 'error';
 
 export interface AppEntry {
   id: string;
@@ -120,7 +120,7 @@ export const apps: AppEntry[] = [
     description: 'Index your site into the knowledge base.',
     category: 'Knowledge',
     icon: Globe,
-    status: 'active',
+    status: 'error',
   },
   {
     id: 'notion',

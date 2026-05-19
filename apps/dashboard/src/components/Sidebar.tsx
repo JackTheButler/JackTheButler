@@ -16,7 +16,7 @@ import { NavLink, useLocation } from 'react-router-dom';
 import { useTheme } from '@/lib/theme';
 import { useSidebar } from '@/lib/sidebar';
 import { useSlidingIndicator } from '@/lib/useSlidingIndicator';
-import { Button, cn } from '@/components/ui';
+import { Avatar, Button, cn } from '@/components/ui';
 
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
@@ -119,9 +119,7 @@ function AccountChip({ collapsed }: { collapsed: boolean }) {
     <div
       className={cn('mt-2 flex items-center rounded-xl', rowWidth(collapsed), !collapsed && 'py-2')}
     >
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-full bg-surface text-xs font-semibold text-muted ring-1 ring-line">
-        AK
-      </div>
+      <Avatar name="Arash K." />
       {!collapsed && (
         <div className="min-w-0">
           <div className="truncate text-sm font-medium">Arash K.</div>

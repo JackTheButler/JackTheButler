@@ -1,7 +1,18 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PageShell } from '@/components/PageShell';
-import { Button, Input, SegmentedControl, Switch, cn } from '@/components/ui';
+import { PageHeader } from '@/components/PageHeader';
+import {
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Textarea,
+  Field,
+  Card,
+  SwitchField,
+  SegmentedControl,
+} from '@/components/ui';
 
 const TABS = ['Persona', 'Fallback', 'Boundaries'] as const;
 type Tab = (typeof TABS)[number];
@@ -11,62 +22,17 @@ const SLUG: Record<Tab, string> = {
   Boundaries: 'boundaries',
 };
 
-const field =
-  'w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none placeholder:text-muted focus:border-accent/40';
-
-function Field({ label, hint, children }: { label: string; hint?: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium text-muted">{label}</span>
-      {children}
-      {hint && <span className="mt-1 block text-xs text-muted">{hint}</span>}
-    </label>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-line bg-panel p-5">
-      <h2 className="text-sm font-semibold">{title}</h2>
-      <div className="mt-4 space-y-4">{children}</div>
-    </div>
-  );
-}
-
-function SwitchRow({
-  label,
-  desc,
-  checked,
-  onChange,
-}: {
-  label: string;
-  desc: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-2.5">
-      <div className="min-w-0">
-        <div className="text-sm font-medium">{label}</div>
-        <div className="text-xs text-muted">{desc}</div>
-      </div>
-      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
-    </div>
-  );
-}
-
 function PersonaTab() {
   const [tone, setTone] = useState<'Friendly' | 'Professional' | 'Concise'>('Friendly');
   return (
-    <Section title="Persona & tone">
+    <Card title="Persona & tone">
       <Field label="Assistant name">
         <Input defaultValue="Jane" />
       </Field>
       <Field label="Instructions" hint="How the assistant should behave and what it represents.">
-        <textarea
+        <Textarea
           rows={5}
           defaultValue="You are Jane, the support assistant for Acme Co. Be helpful and accurate. If you are unsure, say so and offer to connect a human."
-          className={cn(field, 'resize-none')}
         />
       </Field>
       <Field label="Tone">
@@ -78,29 +44,28 @@ function PersonaTab() {
         />
       </Field>
       <Field label="Reply language">
-        <select className={field} defaultValue="auto">
-          <option value="auto">Auto-detect from the customer</option>
-          <option value="en">Always English</option>
-          <option value="de">Always German</option>
-          <option value="fr">Always French</option>
-        </select>
+        <Select defaultValue="auto">
+          <SelectItem value="auto">Auto-detect from the customer</SelectItem>
+          <SelectItem value="en">Always English</SelectItem>
+          <SelectItem value="de">Always German</SelectItem>
+          <SelectItem value="fr">Always French</SelectItem>
+        </Select>
       </Field>
       <div className="flex justify-end">
         <Button size="md">Save changes</Button>
       </div>
-    </Section>
+    </Card>
   );
 }
 
 function FallbackTab() {
   const [rules, setRules] = useState({ askHuman: false, lowConfidence: false, sentiment: false });
   return (
-    <Section title="Fallback & escalation">
+    <Card title="Fallback & escalation">
       <Field label="Fallback message" hint="Sent when the assistant has no good answer.">
-        <textarea
+        <Textarea
           rows={3}
           defaultValue="I'm not certain about that — let me get a teammate to help you."
-          className={cn(field, 'resize-none')}
         />
       </Field>
 
@@ -112,34 +77,34 @@ function FallbackTab() {
           Off = conversations stay with the AI until a teammate takes over manually.
         </p>
         <div className="mt-2">
-          <SwitchRow
+          <SwitchField
             label="Customer asks for a human"
             desc="Escalate when the customer explicitly requests a person."
             checked={rules.askHuman}
-            onChange={(v) => setRules((r) => ({ ...r, askHuman: v }))}
+            onCheckedChange={(v) => setRules((r) => ({ ...r, askHuman: v }))}
           />
-          <SwitchRow
+          <SwitchField
             label="Low confidence"
             desc="Escalate when the AI is unsure of its answer."
             checked={rules.lowConfidence}
-            onChange={(v) => setRules((r) => ({ ...r, lowConfidence: v }))}
+            onCheckedChange={(v) => setRules((r) => ({ ...r, lowConfidence: v }))}
           />
           {rules.lowConfidence && (
             <div className="pb-2 pl-1">
               <Field label="Sensitivity">
-                <select className={field} defaultValue="medium">
-                  <option value="low">Low — escalate only when very unsure</option>
-                  <option value="medium">Medium</option>
-                  <option value="high">High — escalate at any doubt</option>
-                </select>
+                <Select defaultValue="medium">
+                  <SelectItem value="low">Low — escalate only when very unsure</SelectItem>
+                  <SelectItem value="medium">Medium</SelectItem>
+                  <SelectItem value="high">High — escalate at any doubt</SelectItem>
+                </Select>
               </Field>
             </div>
           )}
-          <SwitchRow
+          <SwitchField
             label="Negative sentiment"
             desc="Escalate when the customer seems frustrated or upset."
             checked={rules.sentiment}
-            onChange={(v) => setRules((r) => ({ ...r, sentiment: v }))}
+            onCheckedChange={(v) => setRules((r) => ({ ...r, sentiment: v }))}
           />
         </div>
       </div>
@@ -147,26 +112,21 @@ function FallbackTab() {
       <div className="flex justify-end">
         <Button size="md">Save changes</Button>
       </div>
-    </Section>
+    </Card>
   );
 }
 
 function BoundariesTab() {
   return (
-    <Section title="Boundaries">
+    <Card title="Boundaries">
       <Field label="Topics to avoid" hint="The assistant will decline these and offer a human.">
-        <textarea
+        <Textarea
           rows={3}
           placeholder="e.g. legal advice, refunds over $500, anything about competitors"
-          className={cn(field, 'resize-none')}
         />
       </Field>
       <Field label="Never say">
-        <textarea
-          rows={3}
-          placeholder="Phrases or claims the assistant must never make"
-          className={cn(field, 'resize-none')}
-        />
+        <Textarea rows={3} placeholder="Phrases or claims the assistant must never make" />
       </Field>
       <Field label="Max response length">
         <SegmentedControl
@@ -179,7 +139,7 @@ function BoundariesTab() {
       <div className="flex justify-end">
         <Button size="md">Save changes</Button>
       </div>
-    </Section>
+    </Card>
   );
 }
 
@@ -192,10 +152,7 @@ export function AssistantPage() {
   return (
     <PageShell>
       <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
-        <header>
-          <h1 className="text-lg font-semibold">Assistant</h1>
-          <p className="mt-1 text-sm text-muted">Shape how the AI talks and when it hands off.</p>
-        </header>
+        <PageHeader title="Assistant" subtitle="Shape how the AI talks and when it hands off." />
 
         <SegmentedControl
           aria-label="Assistant sections"

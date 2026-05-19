@@ -1,7 +1,17 @@
 import { useState } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { PageShell } from '@/components/PageShell';
-import { Button, Input, SegmentedControl, Switch } from '@/components/ui';
+import { PageHeader } from '@/components/PageHeader';
+import {
+  Button,
+  Input,
+  Select,
+  SelectItem,
+  Field,
+  Card,
+  SwitchField,
+  SegmentedControl,
+} from '@/components/ui';
 
 const TABS = ['Business', 'Your Profile', 'Notifications'] as const;
 type Tab = (typeof TABS)[number];
@@ -12,52 +22,9 @@ const SLUG: Record<Tab, string> = {
   Notifications: 'notifications',
 };
 
-const field =
-  'w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none placeholder:text-muted focus:border-accent/40';
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return (
-    <label className="block">
-      <span className="mb-1 block text-xs font-medium text-muted">{label}</span>
-      {children}
-    </label>
-  );
-}
-
-function Toggle({
-  label,
-  desc,
-  checked,
-  onChange,
-}: {
-  label: string;
-  desc: string;
-  checked: boolean;
-  onChange: (v: boolean) => void;
-}) {
-  return (
-    <div className="flex items-center justify-between gap-4 py-2.5">
-      <div className="min-w-0">
-        <div className="text-sm font-medium">{label}</div>
-        <div className="text-xs text-muted">{desc}</div>
-      </div>
-      <Switch checked={checked} onCheckedChange={onChange} aria-label={label} />
-    </div>
-  );
-}
-
-function Section({ title, children }: { title: string; children: React.ReactNode }) {
-  return (
-    <div className="rounded-xl border border-line bg-panel p-5">
-      <h2 className="text-sm font-semibold">{title}</h2>
-      <div className="mt-4 space-y-4">{children}</div>
-    </div>
-  );
-}
-
 function BusinessTab() {
   return (
-    <Section title="Business profile">
+    <Card title="Business profile">
       <Field label="Company name">
         <Input defaultValue="Acme Co." />
       </Field>
@@ -66,18 +33,18 @@ function BusinessTab() {
       </Field>
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Default language">
-          <select className={field} defaultValue="en">
-            <option value="en">English</option>
-            <option value="de">German</option>
-            <option value="fr">French</option>
-          </select>
+          <Select defaultValue="en">
+            <SelectItem value="en">English</SelectItem>
+            <SelectItem value="de">German</SelectItem>
+            <SelectItem value="fr">French</SelectItem>
+          </Select>
         </Field>
         <Field label="Timezone">
-          <select className={field} defaultValue="cet">
-            <option value="cet">Europe/Berlin (CET)</option>
-            <option value="utc">UTC</option>
-            <option value="pst">America/Los_Angeles</option>
-          </select>
+          <Select defaultValue="cet">
+            <SelectItem value="cet">Europe/Berlin (CET)</SelectItem>
+            <SelectItem value="utc">UTC</SelectItem>
+            <SelectItem value="pst">America/Los_Angeles</SelectItem>
+          </Select>
         </Field>
       </div>
       <Field label="Support hours">
@@ -86,13 +53,13 @@ function BusinessTab() {
       <div className="flex justify-end">
         <Button size="md">Save changes</Button>
       </div>
-    </Section>
+    </Card>
   );
 }
 
 function AccountTab() {
   return (
-    <Section title="Your profile">
+    <Card title="Your profile">
       <div className="grid gap-4 sm:grid-cols-2">
         <Field label="Name">
           <Input defaultValue="Arash K." />
@@ -117,33 +84,33 @@ function AccountTab() {
       <div className="flex justify-end">
         <Button size="md">Save changes</Button>
       </div>
-    </Section>
+    </Card>
   );
 }
 
 function NotificationsTab() {
   const [prefs, setPrefs] = useState({ handoff: true, reply: true, summary: false });
   return (
-    <Section title="Notifications">
-      <Toggle
+    <Card title="Notifications">
+      <SwitchField
         label="Conversation handed to me"
         desc="When a chat is escalated or assigned to you."
         checked={prefs.handoff}
-        onChange={(v) => setPrefs((p) => ({ ...p, handoff: v }))}
+        onCheckedChange={(v) => setPrefs((p) => ({ ...p, handoff: v }))}
       />
-      <Toggle
+      <SwitchField
         label="Customer replied"
         desc="A customer responded in a chat you're handling."
         checked={prefs.reply}
-        onChange={(v) => setPrefs((p) => ({ ...p, reply: v }))}
+        onCheckedChange={(v) => setPrefs((p) => ({ ...p, reply: v }))}
       />
-      <Toggle
+      <SwitchField
         label="Daily summary"
         desc="A morning digest of conversation volume and AI resolution rate."
         checked={prefs.summary}
-        onChange={(v) => setPrefs((p) => ({ ...p, summary: v }))}
+        onCheckedChange={(v) => setPrefs((p) => ({ ...p, summary: v }))}
       />
-    </Section>
+    </Card>
   );
 }
 
@@ -154,10 +121,7 @@ export function SettingsPage() {
   return (
     <PageShell>
       <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
-        <header>
-          <h1 className="text-lg font-semibold">Settings</h1>
-          <p className="mt-1 text-sm text-muted">Manage your workspace and account.</p>
-        </header>
+        <PageHeader title="Settings" subtitle="Manage your workspace and account." />
 
         <SegmentedControl
           aria-label="Settings sections"

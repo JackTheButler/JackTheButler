@@ -1,45 +1,76 @@
 import { useMemo, useState } from 'react';
-import { Search } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
-import { Badge, Button, Input, SegmentedControl } from '@/components/ui';
-import { apps, appCategories, type AppEntry, type AppStatus } from '@/mock/apps';
+import { PageHeader } from '@/components/PageHeader';
+import {
+  Avatar,
+  Badge,
+  Button,
+  SearchInput,
+  EmptyState,
+  SegmentedControl,
+  cn,
+} from '@/components/ui';
+import { apps, appCategories, type AppEntry } from '@/mock/apps';
 
 const CATEGORY_FILTERS = ['All', ...appCategories] as const;
 
-const STATUS: Record<AppStatus, { label: string; tone: 'accent' | 'muted' }> = {
-  active: { label: 'Connected', tone: 'accent' },
-  available: { label: 'Not connected', tone: 'muted' },
-  soon: { label: 'Coming soon', tone: 'muted' },
-};
-
 function AppCard({ app }: { app: AppEntry }) {
   const Icon = app.icon;
-  const status = STATUS[app.status];
   const isSoon = app.status === 'soon';
+  const cardStyle =
+    app.status === 'error'
+      ? 'border-red-500/40 bg-red-500/[0.03]'
+      : app.status === 'active'
+        ? 'border-accent/20 bg-accent-soft/30'
+        : '';
   return (
-    <div className="flex flex-col gap-3 rounded-xl border border-line bg-panel p-4">
+    <div
+      className={cn(
+        'flex flex-col gap-3 rounded-xl border border-line bg-panel p-4',
+        cardStyle,
+      )}
+    >
       <div className="flex items-start gap-3">
-        <div className="grid h-10 w-10 shrink-0 place-items-center rounded-xl bg-surface ring-1 ring-line">
-          <Icon size={18} className="text-ink" />
-        </div>
+        <Avatar
+          size="md"
+          shape="square"
+          tone={app.status === 'active' ? 'solid' : 'muted'}
+          icon={
+            <Icon size={18} className={app.status === 'active' ? undefined : 'text-ink'} />
+          }
+        />
         <div className="min-w-0 flex-1">
-          <div className="flex items-center gap-2">
-            <h3 className="truncate text-sm font-semibold">{app.name}</h3>
-            <Badge tone={status.tone} className="shrink-0">
-              {status.label}
-            </Badge>
-          </div>
-          <p className="truncate text-xs text-muted">{app.vendor}</p>
+          <h3 className="truncate text-sm font-semibold">{app.name}</h3>
+          <p className="truncate text-xs text-muted">{app.category}</p>
         </div>
       </div>
       <p className="line-clamp-2 text-xs text-muted">{app.description}</p>
-      <Button
-        disabled={isSoon}
-        variant={app.status === 'active' ? 'outline' : 'primary'}
-        className="mt-auto self-start"
-      >
-        {app.status === 'active' ? 'Manage' : isSoon ? 'Coming soon' : 'Connect'}
-      </Button>
+      <div className="mt-auto flex items-center justify-between gap-2">
+        <Button
+          disabled={isSoon}
+          variant={
+            app.status === 'error'
+              ? 'destructive'
+              : app.status === 'active'
+                ? 'primary'
+                : 'outline'
+          }
+        >
+          {app.status === 'error'
+            ? 'Fix'
+            : app.status === 'active'
+              ? 'Manage'
+              : isSoon
+                ? 'Coming soon'
+                : 'Connect'}
+        </Button>
+        {app.status === 'active' && <Badge tone="accent">Connected</Badge>}
+        {app.status === 'error' && (
+          <Badge tone="muted" className="text-red-600">
+            Error
+          </Badge>
+        )}
+      </div>
     </div>
   );
 }
@@ -65,12 +96,10 @@ export function AppsPage() {
   return (
     <PageShell>
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
-        <header>
-          <h1 className="text-lg font-semibold">Apps</h1>
-          <p className="mt-1 text-sm text-muted">
-            Connect channels, AI models, and tools. {apps.length} available.
-          </p>
-        </header>
+        <PageHeader
+          title="Apps"
+          subtitle={`Connect channels, AI models, and tools. ${apps.length} available.`}
+        />
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <SegmentedControl
@@ -80,40 +109,23 @@ export function AppsPage() {
             onChange={setActiveCategory}
             className="-mx-4 px-4 md:mx-0 md:px-0"
           />
-          <div className="relative w-full sm:w-56">
-            <Search
-              size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-            />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search apps…"
-              className="pl-9"
-            />
-          </div>
+          <SearchInput
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search apps…"
+            className="w-full sm:w-56"
+          />
         </div>
 
-        <div className="mt-8 space-y-8">
-          {appCategories.map((category) => {
-            const inCategory = filtered.filter((a) => a.category === category);
-            if (inCategory.length === 0) return null;
-            return (
-              <section key={category}>
-                <h2 className="mb-3 text-xs font-semibold uppercase tracking-wide text-muted">
-                  {category}
-                </h2>
-                <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-                  {inCategory.map((app) => (
-                    <AppCard key={app.id} app={app} />
-                  ))}
-                </div>
-              </section>
-            );
-          })}
-
-          {filtered.length === 0 && (
-            <p className="py-16 text-center text-sm text-muted">No apps match your filters.</p>
+        <div className="mt-6">
+          {filtered.length === 0 ? (
+            <EmptyState>No apps match your filters.</EmptyState>
+          ) : (
+            <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+              {filtered.map((app) => (
+                <AppCard key={app.id} app={app} />
+              ))}
+            </div>
           )}
         </div>
       </div>

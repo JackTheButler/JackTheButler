@@ -1,8 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import {
   Plus,
-  Search,
-  MoreVertical,
   RefreshCw,
   Ban,
   Trash2,
@@ -13,18 +11,23 @@ import {
   ChevronDown,
 } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
+import { PageHeader } from '@/components/PageHeader';
+import { ListRow, RowMenu } from '@/components/ListRow';
 import {
+  Avatar,
   Badge,
   Button,
   Input,
+  Select,
+  SelectItem,
+  Textarea,
+  SearchInput,
+  EmptyState,
   SegmentedControl,
   Dialog,
   DialogTrigger,
   DialogContent,
   DialogClose,
-  DropdownMenu,
-  DropdownMenuTrigger,
-  DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuSeparator,
   Collapsible,
@@ -46,68 +49,23 @@ import {
   type SourceStatus,
 } from '@/mock/knowledge';
 
-const STATUS: Record<SourceStatus, { label: string; className: string }> = {
-  ready: { label: 'Ready', className: 'bg-accent-soft text-accent' },
-  indexing: { label: 'Indexing…', className: 'bg-surface text-muted ring-1 ring-line' },
-  queued: { label: 'Queued', className: 'bg-surface text-muted ring-1 ring-line' },
-  failed: { label: 'Failed', className: 'bg-surface text-red-600 ring-1 ring-line' },
-  disabled: { label: 'Disabled', className: 'bg-surface text-muted ring-1 ring-line' },
+const STATUS: Record<
+  SourceStatus,
+  { label: string; tone: 'accent' | 'muted'; extra?: string }
+> = {
+  ready: { label: 'Ready', tone: 'accent' },
+  indexing: { label: 'Indexing…', tone: 'muted' },
+  queued: { label: 'Queued', tone: 'muted' },
+  failed: { label: 'Failed', tone: 'muted', extra: 'text-red-600' },
+  disabled: { label: 'Disabled', tone: 'muted' },
 };
 
 function StatusPill({ status }: { status: SourceStatus }) {
   const s = STATUS[status];
   return (
-    <span
-      className={cn(
-        'hidden shrink-0 rounded-md px-1.5 py-0.5 text-[10px] font-semibold uppercase tracking-wide sm:inline',
-        s.className,
-      )}
-    >
+    <Badge tone={s.tone} className={cn('hidden shrink-0 sm:inline-flex', s.extra)}>
       {s.label}
-    </span>
-  );
-}
-
-function RowShell({
-  icon,
-  disabled,
-  children,
-  status,
-  menu,
-}: {
-  icon: React.ReactNode;
-  disabled: boolean;
-  children: React.ReactNode;
-  status: React.ReactNode;
-  menu: React.ReactNode;
-}) {
-  return (
-    <div
-      className={cn(
-        'flex items-center gap-3 border-b border-line px-3 py-3 last:border-b-0 md:px-4',
-        disabled && 'opacity-60',
-      )}
-    >
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-surface ring-1 ring-line">
-        {icon}
-      </div>
-      <div className="min-w-0 flex-1">{children}</div>
-      {status}
-      {menu}
-    </div>
-  );
-}
-
-function RowMenu({ items }: { items: React.ReactNode }) {
-  return (
-    <DropdownMenu>
-      <DropdownMenuTrigger asChild>
-        <Button variant="ghost" size="icon" aria-label="Actions">
-          <MoreVertical size={16} />
-        </Button>
-      </DropdownMenuTrigger>
-      <DropdownMenuContent>{items}</DropdownMenuContent>
-    </DropdownMenu>
+    </Badge>
   );
 }
 
@@ -115,27 +73,23 @@ function SourceRow({ source }: { source: KnowledgeSource }) {
   const { icon: Icon, label } = sourceMeta[source.type];
   const disabled = source.status === 'disabled';
   return (
-    <RowShell
+    <ListRow
       disabled={disabled}
-      icon={<Icon size={16} className="text-ink" />}
+      leading={<Avatar size="sm" shape="square" icon={<Icon size={16} className="text-ink" />} />}
       status={<StatusPill status={source.status} />}
-      menu={
-        <RowMenu
-          items={
-            <>
-              <DropdownMenuItem>
-                <RefreshCw size={14} /> Re-index
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Ban size={14} /> {disabled ? 'Enable' : 'Disable'}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem destructive>
-                <Trash2 size={14} /> Delete
-              </DropdownMenuItem>
-            </>
-          }
-        />
+      trailing={
+        <RowMenu>
+          <DropdownMenuItem>
+            <RefreshCw size={14} /> Re-index
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Ban size={14} /> {disabled ? 'Enable' : 'Disable'}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem destructive>
+            <Trash2 size={14} /> Delete
+          </DropdownMenuItem>
+        </RowMenu>
       }
     >
       <div className="flex items-center gap-2">
@@ -147,7 +101,7 @@ function SourceRow({ source }: { source: KnowledgeSource }) {
       <p className="mt-0.5 truncate text-xs text-muted">
         {label} · {source.entries} indexed · updated {source.updated}
       </p>
-    </RowShell>
+    </ListRow>
   );
 }
 
@@ -155,27 +109,23 @@ function QaRow({ entry }: { entry: QaEntry }) {
   const Icon = sourceMeta.qa.icon;
   const disabled = entry.status === 'disabled';
   return (
-    <RowShell
+    <ListRow
       disabled={disabled}
-      icon={<Icon size={16} className="text-ink" />}
+      leading={<Avatar size="sm" shape="square" icon={<Icon size={16} className="text-ink" />} />}
       status={<StatusPill status={entry.status} />}
-      menu={
-        <RowMenu
-          items={
-            <>
-              <DropdownMenuItem>
-                <Pencil size={14} /> Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem>
-                <Ban size={14} /> {disabled ? 'Enable' : 'Disable'}
-              </DropdownMenuItem>
-              <DropdownMenuSeparator />
-              <DropdownMenuItem destructive>
-                <Trash2 size={14} /> Delete
-              </DropdownMenuItem>
-            </>
-          }
-        />
+      trailing={
+        <RowMenu>
+          <DropdownMenuItem>
+            <Pencil size={14} /> Edit
+          </DropdownMenuItem>
+          <DropdownMenuItem>
+            <Ban size={14} /> {disabled ? 'Enable' : 'Disable'}
+          </DropdownMenuItem>
+          <DropdownMenuSeparator />
+          <DropdownMenuItem destructive>
+            <Trash2 size={14} /> Delete
+          </DropdownMenuItem>
+        </RowMenu>
       }
     >
       <div className="flex items-center gap-2">
@@ -185,12 +135,9 @@ function QaRow({ entry }: { entry: QaEntry }) {
         </Badge>
       </div>
       <p className="mt-0.5 truncate text-xs text-muted">{entry.answer}</p>
-    </RowShell>
+    </ListRow>
   );
 }
-
-const fieldClass =
-  'w-full rounded-lg border border-line bg-panel px-3 py-2 text-sm outline-none placeholder:text-muted focus:border-accent/40';
 
 function AddKnowledge() {
   const [tab, setTab] = useState<'Manual Q&A' | 'Upload' | 'Crawl'>('Manual Q&A');
@@ -213,11 +160,7 @@ function AddKnowledge() {
           {tab === 'Manual Q&A' && (
             <>
               <Input placeholder="Question — e.g. How do I reset my password?" />
-              <textarea
-                rows={4}
-                placeholder="Answer the assistant should give…"
-                className={cn(fieldClass, 'resize-none')}
-              />
+              <Textarea rows={4} placeholder="Answer the assistant should give…" />
             </>
           )}
 
@@ -233,11 +176,11 @@ function AddKnowledge() {
           {tab === 'Crawl' && (
             <>
               <Input placeholder="https://example.com/help" />
-              <select className={fieldClass}>
-                <option>This page only</option>
-                <option>This section (same path)</option>
-                <option>Whole domain</option>
-              </select>
+              <Select defaultValue="page">
+                <SelectItem value="page">This page only</SelectItem>
+                <SelectItem value="section">This section (same path)</SelectItem>
+                <SelectItem value="domain">Whole domain</SelectItem>
+              </Select>
             </>
           )}
         </div>
@@ -440,15 +383,11 @@ export function KnowledgeBasePage() {
   return (
     <PageShell>
       <div className="mx-auto max-w-4xl px-4 py-8 md:px-8">
-        <header className="flex flex-col gap-3 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h1 className="text-lg font-semibold">Knowledge Base</h1>
-            <p className="mt-1 text-sm text-muted">
-              {qaEntries.length} Q&amp;A pairs · {sources.length} sources
-            </p>
-          </div>
-          <AddKnowledge />
-        </header>
+        <PageHeader
+          title="Knowledge Base"
+          subtitle={`${qaEntries.length} Q&A pairs · ${sources.length} sources`}
+          action={<AddKnowledge />}
+        />
 
         <TestQuery />
 
@@ -460,23 +399,17 @@ export function KnowledgeBasePage() {
             onChange={setFilter}
             className="-mx-4 px-4 md:mx-0 md:px-0"
           />
-          <div className="relative w-full sm:w-56">
-            <Search
-              size={15}
-              className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-muted"
-            />
-            <Input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search knowledge…"
-              className="pl-9"
-            />
-          </div>
+          <SearchInput
+            value={query}
+            onChange={(e) => setQuery(e.target.value)}
+            placeholder="Search knowledge…"
+            className="w-full sm:w-56"
+          />
         </div>
 
         <div className="mt-6 overflow-hidden rounded-xl border border-line bg-panel">
           {empty ? (
-            <p className="px-4 py-16 text-center text-sm text-muted">Nothing here yet.</p>
+            <EmptyState>Nothing here yet.</EmptyState>
           ) : (
             <>
               {qa.map((e) => (

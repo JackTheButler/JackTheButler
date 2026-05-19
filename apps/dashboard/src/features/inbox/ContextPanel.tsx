@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import { Mail, Hash, MessageSquare, ChevronLeft } from 'lucide-react';
 import type { Conversation } from '@/mock/fixtures';
-import { Button, cn } from '@/components/ui';
+import { Avatar, Button, cn } from '@/components/ui';
 import { channelLabel } from './channel';
 
 function Row({ icon, label, value }: { icon: ReactNode; label: string; value: string }) {
@@ -19,9 +19,7 @@ function ContextBody({ convo }: { convo: Conversation }) {
   return (
     <div className="px-3 py-4 md:px-4">
       <div className="flex items-center gap-3">
-        <div className="grid h-10 w-10 place-items-center rounded-full bg-accent-soft text-sm font-semibold text-accent">
-          {convo.customer.slice(0, 2).toUpperCase()}
-        </div>
+        <Avatar name={convo.customer} size="md" tone="accent" />
         <div>
           <div className="text-sm font-semibold">{convo.customer}</div>
           <div className="text-xs text-muted">Customer</div>

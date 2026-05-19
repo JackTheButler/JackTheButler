@@ -1,6 +1,6 @@
 import { useState } from 'react';
 import type { Conversation } from '@/mock/fixtures';
-import { Badge, SegmentedControl, cn } from '@/components/ui';
+import { Badge, EmptyState, SegmentedControl, cn } from '@/components/ui';
 
 const FILTERS = ['Open', 'All', 'Human', 'AI', 'Resolved'] as const;
 type Filter = (typeof FILTERS)[number];
@@ -46,7 +46,7 @@ export function ConversationList({
       </div>
       <div className="flex-1 overflow-y-auto">
         {visible.length === 0 && (
-          <p className="px-4 py-12 text-center text-sm text-muted">No conversations here.</p>
+          <EmptyState>No conversations here.</EmptyState>
         )}
         {visible.map((c) => {
           const on = c.id === activeId;
