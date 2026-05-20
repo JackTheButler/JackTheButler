@@ -48,12 +48,24 @@ export interface GenerationMessage {
   content: string;
 }
 
+/** Hint to the provider about which model tier to use:
+ *  - `'reasoning'` — main model (Anthropic: `completionModel`, e.g. Opus/Sonnet).
+ *    Suitable for response generation.
+ *  - `'utility'` — cheaper/faster model (Anthropic: `utilityModel`, e.g. Haiku).
+ *    Suitable for language detection, translation, classification.
+ *
+ *  Defaults to `'reasoning'`. Providers may map both to the same model if
+ *  they don't need the distinction. */
+export type ModelTier = 'reasoning' | 'utility';
+
 export interface GenerationRequest {
   messages: readonly GenerationMessage[];
   /** Output length cap. Caller picks; provider may clamp. */
   maxTokens?: number;
   /** 0..1+ — lower is more deterministic. Provider-default if omitted. */
   temperature?: number;
+  /** Which model tier the caller prefers; defaults to `'reasoning'`. */
+  modelTier?: ModelTier;
 }
 
 export interface GenerationResult {

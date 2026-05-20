@@ -25,6 +25,10 @@ export const conversations = sqliteTable(
       .notNull()
       .default('open'),
     assignedAgentId: text('assigned_agent_id').references(() => staff.id),
+    /** Last detected customer language for this thread (BCP-47). The detect
+     *  stage writes here so a one-turn detection failure ("ok", "thanks")
+     *  can fall back to the persisted value instead of misrouting. */
+    language: text('language'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
     lastMessageAt: integer('last_message_at', { mode: 'timestamp' }).notNull(),
   },

@@ -18,6 +18,16 @@ export const messages = sqliteTable(
     author: text('author', { enum: ['customer', 'agent', 'ai', 'system'] }).notNull(),
     senderAgentId: text('sender_agent_id').references(() => staff.id),
     content: text('content').notNull(),
+    /** BCP-47 code of `content`. Populated by the pipeline's detect stage
+     *  for inbound and set to the business default for outbound. Null on
+     *  pre-translation-era rows + lifecycle markers. */
+    language: text('language'),
+    /** `content` rendered into the business default language. For inbound:
+     *  produced by translateInbound; null when language matches default
+     *  (nothing to translate). For outbound: null (content is already in
+     *  default lang); the customer-language version lives here only when
+     *  outbound translation ran — see translateOutbound. */
+    translation: text('translation'),
     /** Set on lifecycle markers (e.g. 'reopened'); null for real messages. */
     event: text('event'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),

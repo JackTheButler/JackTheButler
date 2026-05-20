@@ -60,6 +60,13 @@ export interface MessageDTO {
   id: string;
   author: MessageAuthor;
   content: string;
+  /** BCP-47 code of `content`. Null on pre-translation-era rows + lifecycle
+   *  markers. */
+  language: string | null;
+  /** `content` rendered into the business default language (for inbound) or
+   *  the customer's language (for outbound). Null when no translation
+   *  applies (same-language turn) or pre-translation-era. */
+  translation: string | null;
   /** Set on lifecycle markers (e.g. 'reopened'); null for real messages. */
   event: string | null;
   createdAt: number;

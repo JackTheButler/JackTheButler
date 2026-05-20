@@ -112,6 +112,12 @@ async function callAnthropic(
     else turns.push({ role: m.role, content: m.content });
   }
 
+  // Route utility tier (detect / translate) to the cheaper Haiku-class
+  // model the operator picked; everything else (response generation) goes
+  // to the main completion model.
+  const model =
+    request.modelTier === 'utility' ? config.utilityModel : config.completionModel;
+
   let res: Response;
   try {
     res = await fetch(ANTHROPIC_URL, {
@@ -122,7 +128,7 @@ async function callAnthropic(
         'content-type': 'application/json',
       },
       body: JSON.stringify({
-        model: config.completionModel,
+        model,
         max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
         ...(request.temperature !== undefined && { temperature: request.temperature }),
         ...(systemParts.length > 0 && { system: systemParts.join('\n\n') }),

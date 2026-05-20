@@ -133,8 +133,18 @@ const conversationProvider: ConversationProvider = {
     // (we persist the inbound ourselves before dispatching), so map both
     // roles defensively — but assistant is the expected path.
     const author = message.role === 'assistant' ? 'ai' : 'customer';
+    const language = message.language ?? null;
+    const translation = message.translation ?? null;
     db.insert(messages)
-      .values({ id, conversationId, author, content: message.content, createdAt: now })
+      .values({
+        id,
+        conversationId,
+        author,
+        content: message.content,
+        language,
+        translation,
+        createdAt: now,
+      })
       .run();
     db.update(conversations)
       .set({ lastMessageAt: now })
@@ -149,6 +159,8 @@ const conversationProvider: ConversationProvider = {
         id,
         author,
         content: message.content,
+        language,
+        translation,
         event: null,
         createdAt: now.getTime(),
       },
@@ -176,8 +188,15 @@ const conversationProvider: ConversationProvider = {
     return rows.reverse().map(toPipelineMessage);
   },
 
-  async setLanguage() {
-    // Single-language deployment — no-op until we add detectLanguage.
+  async setLanguage(conversationId, language) {
+    // Persists the last detected customer language on the conversation so
+    // a future one-turn detection failure ("ok", "thanks") can fall back
+    // to this value. Called by @thebutler/pipeline's detectLanguage stage
+    // (wired in Phase 2b).
+    db.update(conversations)
+      .set({ language })
+      .where(eq(conversations.id, conversationId))
+      .run();
   },
 };
 
@@ -258,6 +277,10 @@ const aiProvider: AIProvider = {
       ),
       maxTokens: request.maxTokens,
       temperature: request.temperature,
+      // Forward the tier hint so detect/translate (utility) hit Haiku and
+      // generate (reasoning) hits Opus/Sonnet — same routing the AI app
+      // configures via its two model fields.
+      modelTier: request.modelTier,
     });
     recordAppCallResult(AI_APP_ID, { ok: true });
     return { content: result.content, usage: result.usage };

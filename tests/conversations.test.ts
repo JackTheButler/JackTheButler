@@ -76,6 +76,20 @@ describe('conversations — anonymous webchat (no customer)', () => {
     expect(conversations).toHaveLength(2);
     expect(new Set(conversations.map((c: { ref: number }) => c.ref))).toEqual(new Set([1, 2]));
   });
+
+  it('messages carry language + translation fields (null until pipeline detects)', async () => {
+    const { conversations } = await (await authed('/api/app/conversations')).json();
+    const id = conversations[0].id;
+    const detail = await (await authed(`/api/app/conversations/${id}`)).json();
+    const msg = detail.messages.find((m: { author: string }) => m.author === 'customer');
+    expect(msg).toMatchObject({
+      author: 'customer',
+      content: expect.any(String),
+      // Phase 2a: shape is present, populated as null until detect runs.
+      language: null,
+      translation: null,
+    });
+  });
 });
 
 describe('conversations — strong channel resolves a customer', () => {

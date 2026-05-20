@@ -32,6 +32,29 @@ function ms(d: Date): number {
   return d.getTime();
 }
 
+/** Single mapping from DB row → MessageDTO so every read path (getConversation,
+ *  getPublicHistory) and every emit (ingest, reply, pipeline addMessage) stays
+ *  in sync as the message shape evolves. */
+function toMessageDTO(row: {
+  id: string;
+  author: 'customer' | 'agent' | 'ai' | 'system';
+  content: string;
+  language: string | null;
+  translation: string | null;
+  event: string | null;
+  createdAt: Date;
+}): MessageDTO {
+  return {
+    id: row.id,
+    author: row.author,
+    content: row.content,
+    language: row.language,
+    translation: row.translation,
+    event: row.event,
+    createdAt: row.createdAt.getTime(),
+  };
+}
+
 function getOrThrow(id: string): Conversation {
   const c = db.select().from(conversations).where(eq(conversations.id, id)).get();
   if (!c) throw new AppError('conversation_not_found', 404);
@@ -181,6 +204,12 @@ export function ingestInboundMessage(
       id: result.messageId,
       author: 'customer',
       content,
+      // Language + translation are filled in by the pipeline's
+      // enrichInboundMessage stage (Phase 2b). Phase 2a emits null/null
+      // so the dashboard sees the message instantly with no language
+      // info; a later 'message.updated' will patch it.
+      language: null,
+      translation: null,
       event: null,
       createdAt: result.createdAtMs,
     },
@@ -262,15 +291,7 @@ export function getConversation(id: string): ConversationDetail {
     customer: customer
       ? { id: customer.id, name: customer.name, contact: customer.contact }
       : null,
-    messages: msgs.map(
-      (m): MessageDTO => ({
-        id: m.id,
-        author: m.author,
-        content: m.content,
-        event: m.event,
-        createdAt: ms(m.createdAt),
-      }),
-    ),
+    messages: msgs.map(toMessageDTO),
   };
 }
 
@@ -295,15 +316,7 @@ export function getPublicHistory(channel: string, externalId: string): MessageDT
     .orderBy(messages.createdAt)
     .all()
     .filter((m) => m.author !== 'system')
-    .map(
-      (m): MessageDTO => ({
-        id: m.id,
-        author: m.author,
-        content: m.content,
-        event: m.event,
-        createdAt: ms(m.createdAt),
-      }),
-    );
+    .map(toMessageDTO);
 }
 
 export function reply(id: string, agentId: string, content: string): ConversationDetail {
@@ -333,6 +346,9 @@ export function reply(id: string, agentId: string, content: string): Conversatio
       id: messageId,
       author: 'agent',
       content,
+      // Staff reply translation lands in Phase 2e — null here until then.
+      language: null,
+      translation: null,
       event: null,
       createdAt: now.getTime(),
     },
