@@ -33,8 +33,7 @@ const manifest: AppManifest = {
   id: 'ai-anthropic',
   name: 'Anthropic (Claude)',
   category: 'ai',
-  capability: 'generation',
-  description: 'Anthropic Claude — answer generation + utility tasks.',
+  description: 'Generates AI replies using Anthropic\'s Claude models. Also handles language detection and translation.',
   configFields: [
     { key: 'apiKey', label: 'API key', type: 'password', required: true, secret: true },
     {

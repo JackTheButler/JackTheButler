@@ -31,7 +31,6 @@ const manifest: AppManifest = {
   id: 'stub-ai',
   name: 'Stub AI (generation test)',
   category: 'ai',
-  capability: 'generation',
   description: 'Test fixture for the generation pipeline.',
   configFields: [
     { key: 'apiKey', label: 'API key', type: 'password', required: true, secret: true },

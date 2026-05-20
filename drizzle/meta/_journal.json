@@ -71,6 +71,13 @@
       "when": 1779299632004,
       "tag": "0009_add_message_language",
       "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1779303693648,
+      "tag": "0010_add_knowledge_base",
+      "breakpoints": true
     }
   ]
 }

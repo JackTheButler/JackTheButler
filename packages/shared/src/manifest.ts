@@ -3,11 +3,17 @@
  * forms; used by the API to validate. No behavior here (see contracts.ts).
  */
 
-export type AppCategory = 'channel' | 'ai';
-
-/** Capability declared by an `ai` app. The pipeline resolves the active
- *  provider per capability (Stage 6/7). */
-export type AppCapability = 'generation' | 'embedding';
+/**
+ * Top-level app category. Mirrors how operators think about each app's
+ * job, so it doubles as a filter pill in /apps:
+ *  - `channel`   — where customers reach the business (WebChat, future
+ *                  WhatsApp, Telegram, …).
+ *  - `ai`        — the model that generates replies (Anthropic today;
+ *                  future OpenAI chat, Bedrock, …).
+ *  - `embedding` — vector search over the knowledge base (OpenAI
+ *                  Embeddings today; future Voyage, Cohere, …).
+ */
+export type AppCategory = 'channel' | 'ai' | 'embedding';
 
 export type ConfigFieldType = 'text' | 'password' | 'url' | 'number' | 'select';
 
@@ -32,8 +38,6 @@ export interface AppManifest {
   id: string;
   name: string;
   category: AppCategory;
-  /** Only meaningful for `ai` apps; the pipeline matches on this. */
-  capability?: AppCapability;
   description?: string;
   configFields: ConfigField[];
 }

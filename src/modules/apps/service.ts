@@ -8,6 +8,7 @@ import type {
   AppConfig,
   AppContract,
   AppModule,
+  EmbeddingContract,
   GenerationContract,
 } from '@janetheoperator/shared/contracts';
 import { db } from '@/db/client.js';
@@ -67,9 +68,7 @@ export const recordAppCallResult = recordCallResult;
  */
 export function getActiveGenerationInstance(): GenerationContract | null {
   for (const module of getAppModules()) {
-    if (module.manifest.category !== 'ai' || module.manifest.capability !== 'generation') {
-      continue;
-    }
+    if (module.manifest.category !== 'ai') continue;
     const row = rowFor(module.manifest.id);
     if (!row?.enabled) continue;
     const cfg = readConfig(row);
@@ -77,6 +76,27 @@ export function getActiveGenerationInstance(): GenerationContract | null {
     const instance: AppContract = module.createInstance(cfg);
     if ('generate' in instance && typeof (instance as GenerationContract).generate === 'function') {
       return instance as GenerationContract;
+    }
+  }
+  return null;
+}
+
+/**
+ * Symmetric helper for embedding apps (category `embedding`). Returns
+ * the live instance of the active embedding provider (OpenAI Embeddings
+ * today, Voyage later) or null when none is configured + enabled +
+ * connected. The KB pipeline stages (Stage 7) resolve this per-turn.
+ */
+export function getActiveEmbeddingInstance(): EmbeddingContract | null {
+  for (const module of getAppModules()) {
+    if (module.manifest.category !== 'embedding') continue;
+    const row = rowFor(module.manifest.id);
+    if (!row?.enabled) continue;
+    const cfg = readConfig(row);
+    if (!cfg || !module.validate(cfg).ok) continue;
+    const instance: AppContract = module.createInstance(cfg);
+    if ('embed' in instance && typeof (instance as EmbeddingContract).embed === 'function') {
+      return instance as EmbeddingContract;
     }
   }
   return null;

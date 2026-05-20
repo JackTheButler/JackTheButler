@@ -37,7 +37,7 @@ export interface ChannelContract extends AppContract {
 }
 
 /**
- * Generation contract (category `ai`, capability `generation`). Implemented
+ * Generation contract (category `ai`). Implemented
  * by AI app packages (ai-anthropic, …) and consumed by the AI pipeline
  * adapter. Provider-neutral on purpose — the message-shape mirrors the
  * lowest common denominator (system / user / assistant), so any
@@ -81,4 +81,25 @@ export interface GenerationResult {
 
 export interface GenerationContract extends AppContract {
   generate(request: GenerationRequest): Promise<GenerationResult>;
+}
+
+/**
+ * Embedding contract (category `embedding`). Implemented
+ * by embedding AI apps (OpenAI text-embedding-3, Voyage voyage-3, …) and
+ * consumed by the KB pipeline stages (Stage 7). Batch-friendly so a doc
+ * can be re-embedded in one call.
+ */
+export interface EmbeddingRequest {
+  readonly texts: readonly string[];
+}
+
+export interface EmbeddingResult {
+  /** One vector per input text, in the same order. Float32-equivalent
+   *  but JS numbers — providers normalize internally. */
+  readonly vectors: readonly (readonly number[])[];
+  readonly usage?: { inputTokens: number };
+}
+
+export interface EmbeddingContract extends AppContract {
+  embed(request: EmbeddingRequest): Promise<EmbeddingResult>;
 }

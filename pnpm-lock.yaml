@@ -17,6 +17,9 @@ importers:
       '@janetheoperator/ai-anthropic':
         specifier: workspace:*
         version: link:packages/ai-anthropic
+      '@janetheoperator/ai-openai-embedding':
+        specifier: workspace:*
+        version: link:packages/ai-openai-embedding
       '@janetheoperator/channel-webchat':
         specifier: workspace:*
         version: link:packages/channel-webchat
@@ -205,6 +208,16 @@ importers:
         version: 6.4.2(@types/node@22.19.19)(jiti@2.7.0)(lightningcss@1.32.0)(tsx@4.22.1)
 
   packages/ai-anthropic:
+    dependencies:
+      '@janetheoperator/shared':
+        specifier: workspace:*
+        version: link:../shared
+    devDependencies:
+      typescript:
+        specifier: ^5.7.0
+        version: 5.9.3
+
+  packages/ai-openai-embedding:
     dependencies:
       '@janetheoperator/shared':
         specifier: workspace:*
