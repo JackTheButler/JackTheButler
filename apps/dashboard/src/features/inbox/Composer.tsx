@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react';
+import { useEffect, useLayoutEffect, useRef, useState } from 'react';
 import { ChevronsRight, Send, Bot } from 'lucide-react';
 import { cn } from '@/components/ui';
 
@@ -56,24 +56,40 @@ export function Composer({
 
   const onPointerDown = (e: React.PointerEvent) => {
     if (human) return; // knob is the Send button in human state
-    (e.currentTarget as HTMLElement).setPointerCapture(e.pointerId);
     startX.current = e.clientX - x;
     setDragging(true);
   };
-  const onPointerMove = (e: React.PointerEvent) => {
+
+  // Window-level listeners while dragging so a release outside the knob —
+  // including outside the section or the browser window — still resolves
+  // the drag. `setPointerCapture` is unreliable for releases outside the
+  // viewport on some browsers; window listeners always fire.
+  useEffect(() => {
     if (!dragging) return;
-    setX(Math.min(Math.max(0, e.clientX - startX.current), maxX()));
-  };
-  const onPointerUp = () => {
-    if (!dragging) return;
-    setDragging(false);
-    if (x >= maxX() * THRESHOLD) {
-      setX(maxX());
-      onTakeOver();
-    } else {
-      setX(0);
-    }
-  };
+    const onMove = (e: PointerEvent) => {
+      setX(Math.min(Math.max(0, e.clientX - startX.current), maxX()));
+    };
+    const finish = (cancelled: boolean) => {
+      setDragging(false);
+      setX((current) => {
+        if (!cancelled && current >= maxX() * THRESHOLD) {
+          onTakeOver();
+          return maxX();
+        }
+        return 0;
+      });
+    };
+    const onUp = () => finish(false);
+    const onCancel = () => finish(true);
+    window.addEventListener('pointermove', onMove);
+    window.addEventListener('pointerup', onUp);
+    window.addEventListener('pointercancel', onCancel);
+    return () => {
+      window.removeEventListener('pointermove', onMove);
+      window.removeEventListener('pointerup', onUp);
+      window.removeEventListener('pointercancel', onCancel);
+    };
+  }, [dragging, onTakeOver]);
 
   const send = () => {
     const text = draft.trim();
@@ -148,8 +164,6 @@ export function Composer({
           aria-label={human ? 'Send' : 'Slide to take over'}
           onClick={human ? send : undefined}
           onPointerDown={onPointerDown}
-          onPointerMove={onPointerMove}
-          onPointerUp={onPointerUp}
           className={cn(
             'absolute left-1 top-1/2 grid h-8 w-8 touch-none place-items-center rounded-lg bg-accent text-on-accent',
             !dragging && animate && 'transition-transform duration-200 ease-out',
