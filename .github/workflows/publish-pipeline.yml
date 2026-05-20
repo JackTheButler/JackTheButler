@@ -47,6 +47,23 @@ jobs:
       - name: Build
         run: pnpm --filter @thebutler/pipeline build
 
+      - name: Verify build output
+        run: |
+          if [ ! -f packages/pipeline/dist/index.js ] || [ ! -f packages/pipeline/dist/index.d.ts ]; then
+            echo "::error::Build did not produce packages/pipeline/dist/index.{js,d.ts} — refusing to publish." >&2
+            ls -la packages/pipeline/dist/ 2>&1 || true
+            exit 1
+          fi
+
+      - name: Verify tarball will include dist/
+        working-directory: packages/pipeline
+        run: |
+          if ! npm pack --dry-run 2>&1 | grep -q "dist/index.js"; then
+            echo "::error::npm pack --dry-run does not include dist/index.js — refusing to publish." >&2
+            npm pack --dry-run 2>&1
+            exit 1
+          fi
+
       - name: Typecheck
         run: pnpm --filter @thebutler/pipeline typecheck
 
