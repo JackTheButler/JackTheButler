@@ -35,3 +35,32 @@ export interface AppModule<C extends AppConfig = AppConfig> {
 export interface ChannelContract extends AppContract {
   send(externalId: string, content: string): Promise<void>;
 }
+
+/**
+ * Generation contract (category `ai`, capability `generation`). Implemented
+ * by AI app packages (ai-anthropic, …) and consumed by the AI pipeline
+ * adapter. Provider-neutral on purpose — the message-shape mirrors the
+ * lowest common denominator (system / user / assistant), so any
+ * Anthropic/OpenAI/Bedrock impl maps trivially.
+ */
+export interface GenerationMessage {
+  role: 'system' | 'user' | 'assistant';
+  content: string;
+}
+
+export interface GenerationRequest {
+  messages: readonly GenerationMessage[];
+  /** Output length cap. Caller picks; provider may clamp. */
+  maxTokens?: number;
+  /** 0..1+ — lower is more deterministic. Provider-default if omitted. */
+  temperature?: number;
+}
+
+export interface GenerationResult {
+  content: string;
+  usage?: { inputTokens: number; outputTokens: number };
+}
+
+export interface GenerationContract extends AppContract {
+  generate(request: GenerationRequest): Promise<GenerationResult>;
+}

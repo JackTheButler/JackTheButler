@@ -7,20 +7,24 @@ import {
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import {
+  Avatar,
   Badge,
   Button,
   Card,
   ColorInput,
   Field,
   Input,
+  SaveButton,
   Select,
   SelectItem,
   Switch,
   Textarea,
+  cn,
   toast,
 } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { useApp, useSaveAppConfig, useSetAppEnabled } from './useApps';
+import { iconFor } from './icon';
 
 /** Real webchat config — load/save/enable via the apps API (replaces the
  *  slice-1 local mock and the curl steps). */
@@ -48,6 +52,7 @@ export function WebchatConfigPanel() {
 
   const [form, setForm] = useState<Form | null>(null);
   const [previewTheme, setPreviewTheme] = useState<WidgetTheme>('light');
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
   const [open, setOpen] = useState(true);
   const [messages, setMessages] = useState<WidgetMessage[]>(CANNED);
   const [copied, setCopied] = useState(false);
@@ -82,24 +87,25 @@ export function WebchatConfigPanel() {
   const statusLabel = live
     ? 'Active'
     : detail.status === 'error'
-      ? 'Invalid config'
+      ? 'Invalid'
       : detail.status === 'disabled'
-        ? 'Disabled'
+        ? 'Off'
         : 'Not configured';
   const statusTone: 'primary' | 'accent' | 'muted' = live
     ? 'primary'
     : detail.status === 'disabled'
       ? 'accent'
       : 'muted';
+  const statusErrorTone = detail.status === 'error';
   // The toggle only means something once config is saved + valid.
   const configured = detail.status === 'active' || detail.status === 'disabled';
-  const statusText = !detail.enabled
-    ? "Disabled — the widget won't load on any site."
+  const statusDetail = !detail.enabled
+    ? 'Turn on to go live on your allowed domains.'
     : live
-      ? 'Active — live on your allowed domains.'
+      ? 'Your widget is live on allowed domains.'
       : detail.status === 'error'
-        ? 'Enabled, but the configuration is invalid — fix the highlighted fields and Save.'
-        : 'Enabled, but not live yet — Save a valid configuration.';
+        ? 'Fix the highlighted fields and save to go live.'
+        : 'Save valid settings to go live.';
 
   return (
     <PageShell>
@@ -107,19 +113,36 @@ export function WebchatConfigPanel() {
         <PageHeader
           title="WebChat"
           subtitle="Configure the chat widget customers use on your website."
-          action={
-            <Badge
-              tone={statusTone}
-              className={detail.status === 'error' ? 'text-red-600' : undefined}
-            >
-              {statusLabel}
-            </Badge>
+          icon={
+            <Avatar
+              size="md"
+              shape="square"
+              tone={live ? 'solid' : 'muted'}
+              icon={
+                iconFor('webchat') ? (
+                  <img
+                    src={iconFor('webchat')}
+                    alt=""
+                    className={cn('h-5 w-5 object-contain', live && 'invert')}
+                  />
+                ) : undefined
+              }
+              name={iconFor('webchat') ? undefined : 'WebChat'}
+            />
           }
         />
 
         <Card title="Status">
-          <div className="flex items-center justify-between gap-4">
-            <p className="min-w-0 text-sm text-muted">{statusText}</p>
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted">
+              <Badge
+                tone={statusTone}
+                className={statusErrorTone ? 'text-red-600' : undefined}
+              >
+                {statusLabel}
+              </Badge>
+              <span className="min-w-0 break-words">{statusDetail}</span>
+            </p>
             <label className="flex shrink-0 items-center gap-2 text-sm">
               <span className="text-muted">
                 {!configured ? 'Configure first' : detail.enabled ? 'Enabled' : 'Disabled'}
@@ -141,6 +164,7 @@ export function WebchatConfigPanel() {
         </Card>
 
         <div className="grid gap-6 lg:grid-cols-2">
+          <div className="min-w-0 space-y-6">
           <Card title="Widget settings">
             <Field label="Title">
               <Input value={form.title} onChange={(e) => set('title', e.target.value)} />
@@ -166,18 +190,16 @@ export function WebchatConfigPanel() {
                 </Select>
               </Field>
             </div>
-            <div className="grid gap-4 sm:grid-cols-2">
-              <Field label="Default theme">
-                <Select
-                  value={form.themeDefault}
-                  onValueChange={(v) => set('themeDefault', v)}
-                >
-                  <SelectItem value="auto">Auto (visitor’s system)</SelectItem>
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                </Select>
-              </Field>
-            </div>
+            <Field label="Default theme">
+              <Select
+                value={form.themeDefault}
+                onValueChange={(v) => set('themeDefault', v)}
+              >
+                <SelectItem value="auto">Auto (visitor’s system)</SelectItem>
+                <SelectItem value="light">Light</SelectItem>
+                <SelectItem value="dark">Dark</SelectItem>
+              </Select>
+            </Field>
             <Field
               label="Allowed domains"
               hint="Comma/newline separated. Domain, host:port, or full URL (scheme/port ignored), e.g. localhost, example.com."
@@ -206,45 +228,91 @@ export function WebchatConfigPanel() {
                         ))}
                       </ul>
                     ) : (
-                      'Could not save — please check the fields.'
+                      'Could not save. Please check the fields.'
                     )}
                   </div>
                 );
               })()}
             <div className="flex items-center justify-end gap-3">
-              <Button
+              <SaveButton
                 size="md"
-                disabled={saveConfig.isPending}
-                onClick={() =>
+                isPending={saveConfig.isPending}
+                isSuccess={saveConfig.isSuccess}
+                onSave={() =>
                   saveConfig.mutate(form, {
                     onSuccess: () => toast.success('WebChat settings saved'),
                     onError: () =>
-                      toast.error('Could not save — check the highlighted fields'),
+                      toast.error('Could not save. Check the highlighted fields.'),
                   })
                 }
-              >
-                {saveConfig.isPending ? 'Saving…' : saveConfig.isSuccess ? 'Saved' : 'Save'}
-              </Button>
+              />
             </div>
           </Card>
 
-          <div className="space-y-6">
-            <Card title="Live preview">
-              <Field label="Preview theme">
-                <Select
-                  value={previewTheme}
-                  onValueChange={(v) => setPreviewTheme(v as WidgetTheme)}
-                >
-                  <SelectItem value="light">Light</SelectItem>
-                  <SelectItem value="dark">Dark</SelectItem>
-                </Select>
-              </Field>
+          <Card title="Install">
+            <p className="text-sm text-muted">
+              Paste this before <code>&lt;/body&gt;</code> on your site.
+            </p>
+            <pre className="overflow-x-auto rounded-lg border border-line bg-surface p-3 text-xs">
+              {snippet}
+            </pre>
+            <div className="flex justify-end">
+              <Button size="md" onClick={copy}>
+                {copied ? 'Copied' : 'Copy snippet'}
+              </Button>
+            </div>
+            <div className="space-y-1.5 border-t border-line pt-4 text-xs text-muted">
+              <p className="font-medium text-ink">Theme</p>
+              <p>By default the widget matches each visitor’s system light/dark setting.</p>
+              <p>
+                To force one, add{' '}
+                <code className="rounded bg-surface px-1">data-jane-theme="dark"</code> (or{' '}
+                <code className="rounded bg-surface px-1">light</code> /{' '}
+                <code className="rounded bg-surface px-1">auto</code>) to the script tag.
+              </p>
+              <p>
+                If your site has its own theme switch, call{' '}
+                <code className="rounded bg-surface px-1">JaneWidget.setTheme('dark')</code>{' '}
+                from it.
+              </p>
+            </div>
+          </Card>
+          </div>
+
+          <Card title="Live preview" className="min-w-0">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Preview theme">
+                  <Select
+                    value={previewTheme}
+                    onValueChange={(v) => setPreviewTheme(v as WidgetTheme)}
+                  >
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
+                  </Select>
+                </Field>
+                <Field label="Preview device">
+                  <Select
+                    value={previewDevice}
+                    onValueChange={(v) => setPreviewDevice(v as 'desktop' | 'mobile')}
+                  >
+                    <SelectItem value="desktop">Desktop</SelectItem>
+                    <SelectItem value="mobile">Mobile (fullscreen)</SelectItem>
+                  </Select>
+                </Field>
+              </div>
               <div
-                className="relative h-[620px] overflow-hidden rounded-xl border border-line"
-                style={{ background: previewTheme === 'dark' ? '#0c0d0f' : '#fafafa' }}
+                className="relative mx-auto h-[620px] overflow-hidden rounded-xl border border-line"
+                style={{
+                  background: previewTheme === 'dark' ? '#0c0d0f' : '#fafafa',
+                  // Mobile preview narrows the frame so the fullscreen panel
+                  // looks phone-shaped; desktop fills the column.
+                  width: previewDevice === 'mobile' ? 360 : '100%',
+                  maxWidth: '100%',
+                }}
               >
                 <ChatWidget
                   inline
+                  mobile={previewDevice === 'mobile'}
                   theme={previewTheme}
                   config={{
                     title: form.title,
@@ -264,36 +332,6 @@ export function WebchatConfigPanel() {
                 />
               </div>
             </Card>
-
-            <Card title="Install">
-              <p className="text-sm text-muted">
-                Paste this before <code>&lt;/body&gt;</code> on your site.
-              </p>
-              <pre className="overflow-x-auto rounded-lg border border-line bg-surface p-3 text-xs">
-                {snippet}
-              </pre>
-              <div className="flex justify-end">
-                <Button size="md" onClick={copy}>
-                  {copied ? 'Copied' : 'Copy snippet'}
-                </Button>
-              </div>
-              <div className="space-y-1.5 border-t border-line pt-4 text-xs text-muted">
-                <p className="font-medium text-ink">Theme</p>
-                <p>By default the widget matches each visitor’s system light/dark setting.</p>
-                <p>
-                  To force one, add{' '}
-                  <code className="rounded bg-surface px-1">data-jane-theme="dark"</code> (or{' '}
-                  <code className="rounded bg-surface px-1">light</code> /{' '}
-                  <code className="rounded bg-surface px-1">auto</code>) to the script tag.
-                </p>
-                <p>
-                  If your site has its own theme switch, call{' '}
-                  <code className="rounded bg-surface px-1">JaneWidget.setTheme('dark')</code>{' '}
-                  from it.
-                </p>
-              </div>
-            </Card>
-          </div>
         </div>
       </div>
     </PageShell>

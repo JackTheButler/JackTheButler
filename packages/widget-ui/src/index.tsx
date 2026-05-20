@@ -1,4 +1,13 @@
-import { useState, type CSSProperties, type FormEvent } from 'react';
+import {
+  useEffect,
+  useLayoutEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type FormEvent,
+} from 'react';
+import ReactMarkdown, { type Components } from 'react-markdown';
+import remarkGfm from 'remark-gfm';
 
 /**
  * Presentational chat widget. Props in, events out — no network, no theme
@@ -7,6 +16,112 @@ import { useState, type CSSProperties, type FormEvent } from 'react';
  * Shared by the live embed and the dashboard preview, so it stays logic-free
  * and self-styled (no external CSS).
  */
+
+/* ── MarkdownBody ──────────────────────────────────────────────── */
+
+/**
+ * Renders trusted markdown (LLM output) inside a chat bubble. Used for
+ * `author === 'ai'` only — customer/agent content stays plain text so a
+ * stray `**` never gets interpreted as formatting. Self-styled with inline
+ * `components` overrides so it works in both the widget iframe (no
+ * Tailwind, no CSS bundle) and the dashboard inbox (Tailwind theme).
+ *
+ * react-markdown sanitises by default: no raw HTML pass-through, no
+ * scripts, autolinking via remark-gfm.
+ */
+const MD_COMPONENTS: Components = {
+  p: ({ children }) => <p style={{ margin: 0 }}>{children}</p>,
+  ul: ({ children }) => (
+    <ul style={{ margin: '4px 0', paddingLeft: 20, listStyle: 'disc' }}>{children}</ul>
+  ),
+  ol: ({ children }) => (
+    <ol style={{ margin: '4px 0', paddingLeft: 20, listStyle: 'decimal' }}>{children}</ol>
+  ),
+  li: ({ children }) => <li style={{ margin: '2px 0' }}>{children}</li>,
+  a: ({ children, href }) => (
+    <a
+      href={href}
+      target="_blank"
+      rel="noopener noreferrer"
+      style={{ color: 'inherit', textDecoration: 'underline' }}
+    >
+      {children}
+    </a>
+  ),
+  code: ({ children, className }) => {
+    // react-markdown v9 no longer passes an `inline` prop; fenced blocks
+    // carry a `language-*` className, inline code has none. Inline gets a
+    // small background pill; fenced code lets the surrounding `pre`
+    // override paint the block background.
+    const isFenced = typeof className === 'string' && className.startsWith('language-');
+    return (
+      <code
+        className={className}
+        style={{
+          fontFamily:
+            'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace',
+          fontSize: '0.92em',
+          background: isFenced ? 'transparent' : 'rgba(127,127,127,0.18)',
+          borderRadius: isFenced ? 0 : 4,
+          padding: isFenced ? 0 : '0 4px',
+        }}
+      >
+        {children}
+      </code>
+    );
+  },
+  pre: ({ children }) => (
+    <pre
+      style={{
+        margin: '6px 0',
+        padding: 8,
+        borderRadius: 6,
+        background: 'rgba(127,127,127,0.14)',
+        overflowX: 'auto',
+        fontSize: '0.92em',
+      }}
+    >
+      {children}
+    </pre>
+  ),
+  // Headings inside a chat bubble are heavy — render bold paragraphs.
+  h1: ({ children }) => <p style={{ margin: '4px 0 2px', fontWeight: 600 }}>{children}</p>,
+  h2: ({ children }) => <p style={{ margin: '4px 0 2px', fontWeight: 600 }}>{children}</p>,
+  h3: ({ children }) => <p style={{ margin: '4px 0 2px', fontWeight: 600 }}>{children}</p>,
+  blockquote: ({ children }) => (
+    <blockquote
+      style={{
+        margin: '4px 0',
+        padding: '0 8px',
+        borderLeft: '3px solid rgba(127,127,127,0.4)',
+        opacity: 0.92,
+      }}
+    >
+      {children}
+    </blockquote>
+  ),
+  hr: () => (
+    <hr style={{ border: 0, borderTop: '1px solid rgba(127,127,127,0.3)', margin: '8px 0' }} />
+  ),
+};
+
+export function MarkdownBody({ children }: { children: string }) {
+  return (
+    <div
+      style={{
+        // Children carry their own margins; this wrapper just contains them
+        // so adjacent paragraphs/lists don't collapse outside the bubble.
+        display: 'flex',
+        flexDirection: 'column',
+        gap: 0,
+      }}
+    >
+      <ReactMarkdown remarkPlugins={[remarkGfm]} components={MD_COMPONENTS}>
+        {children}
+      </ReactMarkdown>
+    </div>
+  );
+}
 
 export type WidgetTheme = 'light' | 'dark';
 
@@ -34,6 +149,11 @@ export interface ChatWidgetProps {
   onSend: (text: string) => void;
   /** Preview mode: position within the parent instead of the viewport. */
   inline?: boolean;
+  /** Fullscreen panel layout. The widget runs inside an iframe whose own
+   *  size is loader-controlled, so matchMedia here can't see the device
+   *  viewport — the loader passes this in (live) or the preview pane
+   *  passes it explicitly (dashboard). Defaults to false. */
+  mobile?: boolean;
 }
 
 interface Palette {
@@ -89,19 +209,97 @@ export function ChatWidget({
   onToggle,
   onSend,
   inline = false,
+  mobile = false,
 }: ChatWidgetProps) {
   const [draft, setDraft] = useState('');
   const p = PALETTES[theme];
   const fg = onAccent(config.accentColor);
   const side = config.position === 'bottom-left' ? { left: 20 } : { right: 20 };
+  const isMobile = mobile;
 
-  const root: CSSProperties = {
-    position: inline ? 'absolute' : 'fixed',
-    bottom: 20,
-    ...side,
-    fontFamily: FONT,
-    zIndex: 2147483000,
+  // Scroll behaviour. Three rules, matching the chat-widget norm:
+  //  1. Opening the panel always lands at the newest turn.
+  //  2. While at the bottom, new messages auto-scroll into view.
+  //  3. While scrolled up reading history, we DON'T yank — instead we show
+  //     a floating "jump to latest" button that the user can click.
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const wasOpen = useRef(false);
+  const [showJumpDown, setShowJumpDown] = useState(false);
+  const lastMessageId = messages.length > 0 ? messages[messages.length - 1].id : '';
+
+  const onMessagesScroll = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    // 24px of forgiveness — sub-pixel layout + the gap above the input
+    // shouldn't count as "scrolled up".
+    const scrolledUp = el.scrollHeight - el.scrollTop - el.clientHeight > 24;
+    setShowJumpDown(scrolledUp);
   };
+
+  const scrollToLatest = () => {
+    const el = scrollRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: 'smooth' });
+    setShowJumpDown(false);
+  };
+
+  // Snap on open + on new messages (only if not currently scrolled up).
+  // useLayoutEffect avoids a one-frame flash where the panel paints at
+  // the top before snapping down.
+  useLayoutEffect(() => {
+    const el = scrollRef.current;
+    if (!el || !open) {
+      wasOpen.current = open;
+      return;
+    }
+    const justOpened = !wasOpen.current;
+    wasOpen.current = open;
+    if (justOpened) {
+      el.scrollTop = el.scrollHeight;
+      setShowJumpDown(false);
+      return;
+    }
+    if (!showJumpDown) {
+      el.scrollTop = el.scrollHeight;
+    }
+  }, [open, showJumpDown, lastMessageId, messages.length]);
+
+  // Re-snap on the next paint to catch markdown content that lays out
+  // after our synchronous layout effect (long AI replies otherwise land
+  // mid-message). Guarded by !showJumpDown so the user reading history
+  // stays put.
+  useEffect(() => {
+    if (!open || showJumpDown) return;
+    const el = scrollRef.current;
+    if (!el) return;
+    const id = requestAnimationFrame(() => {
+      el.scrollTop = el.scrollHeight;
+    });
+    return () => cancelAnimationFrame(id);
+  }, [open, showJumpDown, lastMessageId, messages.length]);
+
+  // Anchor for both states. In mobile + open, the panel fills its frame
+  // (inline parent or viewport) and the launcher's bottom-corner anchor
+  // doesn't apply.
+  const fullscreen = isMobile && open;
+  // Live embed needs near-max z so customer-site CSS can't bury it. Preview
+  // (inline) uses a normal stacking value so the dashboard's own portals
+  // (Select dropdowns, menus) layer above it correctly.
+  const z = inline ? 1 : 2147483000;
+  const root: CSSProperties = fullscreen
+    ? {
+        position: inline ? 'absolute' : 'fixed',
+        inset: 0,
+        fontFamily: FONT,
+        zIndex: z,
+      }
+    : {
+        position: inline ? 'absolute' : 'fixed',
+        bottom: 20,
+        ...side,
+        fontFamily: FONT,
+        zIndex: z,
+      };
 
   const submit = (e: FormEvent) => {
     e.preventDefault();
@@ -114,6 +312,7 @@ export function ChatWidget({
   if (!open) {
     return (
       <div style={root}>
+        <WidgetKeyframes />
         <button
           aria-label="Open chat"
           onClick={onToggle}
@@ -128,6 +327,10 @@ export function ChatWidget({
             boxShadow: '0 6px 20px rgba(0,0,0,0.18)',
             display: 'grid',
             placeItems: 'center',
+            // Entrance flourish: subtle scale-up + fade so the launcher
+            // doesn't appear as a hard pop when the page loads.
+            animation: 'jane-launcher-in 260ms cubic-bezier(0.2, 0.8, 0.3, 1.15)',
+            transformOrigin: 'center',
           }}
         >
           <ChatIcon />
@@ -138,18 +341,20 @@ export function ChatWidget({
 
   return (
     <div style={root}>
+      <WidgetKeyframes />
       <div
         style={{
-          width: 360,
-          maxWidth: 'calc(100vw - 40px)',
-          height: 520,
-          maxHeight: inline ? '100%' : 'calc(100vh - 40px)',
+          width: fullscreen ? '100%' : 360,
+          maxWidth: fullscreen ? 'none' : 'calc(100vw - 40px)',
+          height: fullscreen ? '100%' : 520,
+          maxHeight: fullscreen ? 'none' : inline ? '100%' : 'calc(100vh - 40px)',
           display: 'flex',
           flexDirection: 'column',
           background: p.panel,
-          borderRadius: 16,
+          borderRadius: fullscreen ? 0 : 16,
           overflow: 'hidden',
-          boxShadow: '0 12px 40px rgba(0,0,0,0.28)',
+          boxShadow: fullscreen ? 'none' : '0 12px 40px rgba(0,0,0,0.28)',
+          position: 'relative',
         }}
       >
         <header
@@ -180,6 +385,8 @@ export function ChatWidget({
         </header>
 
         <div
+          ref={scrollRef}
+          onScroll={onMessagesScroll}
           style={{
             flex: 1,
             overflowY: 'auto',
@@ -202,6 +409,34 @@ export function ChatWidget({
             />
           ))}
         </div>
+
+        {showJumpDown && (
+          <button
+            type="button"
+            onClick={scrollToLatest}
+            aria-label="Scroll to latest message"
+            style={{
+              position: 'absolute',
+              bottom: 76,
+              left: '50%',
+              transform: 'translateX(-50%)',
+              width: 32,
+              height: 32,
+              borderRadius: '50%',
+              border: `1px solid ${p.border}`,
+              background: p.panel,
+              color: p.text,
+              cursor: 'pointer',
+              display: 'grid',
+              placeItems: 'center',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.22)',
+              zIndex: 1,
+              animation: 'jane-fade-in 140ms ease-out',
+            }}
+          >
+            <DownIcon />
+          </button>
+        )}
 
         <form
           onSubmit={submit}
@@ -264,11 +499,14 @@ function Bubble({
   p: Palette;
 }) {
   const mine = author === 'customer';
+  // Markdown only for AI output. Human authors (customer / agent) stay as
+  // plain text so a stray `**` never gets interpreted as formatting.
+  const renderMarkdown = author === 'ai';
   return (
     <div
       style={{
         alignSelf: mine ? 'flex-end' : 'flex-start',
-        maxWidth: '78%',
+        maxWidth: '85%',
         background: mine ? accent : p.agentBubble,
         color: mine ? accentFg : p.text,
         border: mine ? 'none' : `1px solid ${p.border}`,
@@ -276,11 +514,11 @@ function Bubble({
         padding: '8px 12px',
         fontSize: 14,
         lineHeight: 1.4,
-        whiteSpace: 'pre-wrap',
+        whiteSpace: renderMarkdown ? 'normal' : 'pre-wrap',
         wordBreak: 'break-word',
       }}
     >
-      {content}
+      {renderMarkdown ? <MarkdownBody>{content}</MarkdownBody> : content}
     </div>
   );
 }
@@ -292,6 +530,39 @@ function ChatIcon() {
         d="M4 5h16v11H7l-3 3V5z"
         stroke="currentColor"
         strokeWidth="2"
+        strokeLinejoin="round"
+      />
+    </svg>
+  );
+}
+
+/** Single inline stylesheet for the widget's CSS-only animations. Rendered
+ *  in both the closed and open branches so the keyframes are always present
+ *  in the DOM (the launcher animation references them on first mount; the
+ *  jump-down button references them on appearance). */
+function WidgetKeyframes() {
+  return (
+    <style>{`
+      @keyframes jane-launcher-in {
+        from { opacity: 0; transform: scale(0.6); }
+        to   { opacity: 1; transform: scale(1); }
+      }
+      @keyframes jane-fade-in {
+        from { opacity: 0; transform: translate(-50%, 6px); }
+        to   { opacity: 1; transform: translate(-50%, 0); }
+      }
+    `}</style>
+  );
+}
+
+function DownIcon() {
+  return (
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+      <path
+        d="M6 9l6 6 6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
         strokeLinejoin="round"
       />
     </svg>

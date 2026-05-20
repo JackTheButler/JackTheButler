@@ -1,0 +1,25 @@
+/**
+ * Brand mark for Jane. Inlined SVG (not <img>) so it picks up the parent's
+ * text color via `currentColor` — same primitive used by lucide icons. Use
+ * the same `<div className="bg-accent text-on-accent">` chrome the brand
+ * badge already uses; this component supplies just the glyph.
+ */
+export function JaneLogo({ size = 20 }: { size?: number }) {
+  return (
+    <svg
+      width={size}
+      height={size}
+      viewBox="0 0 250 250"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      aria-hidden="true"
+    >
+      <path
+        d="M125 240C188.513 240 240 188.513 240 125L240 9.99999C204 10.1532 153.656 9.99999 125 9.99999L125 50L200 50L200 125C200 166.421 166.421 200 125 200C83.5786 200 50 166.421 50 125L9.99999 125C10 188.513 61.4873 240 125 240Z"
+        fill="currentColor"
+      />
+      <circle cx="160" cy="100" r="20" fill="currentColor" />
+      <circle cx="90" cy="100" r="20" fill="currentColor" />
+    </svg>
+  );
+}

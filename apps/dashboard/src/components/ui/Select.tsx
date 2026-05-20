@@ -35,8 +35,13 @@ export function Select({
           className,
         )}
       >
-        <RadixSelect.Value placeholder={placeholder} />
-        <RadixSelect.Icon>
+        {/* Truncate long display values instead of letting them wrap the
+            trigger. flex-1 + min-w-0 is the standard flexbox truncation
+            recipe; the chevron stays pinned via shrink-0. */}
+        <span className="min-w-0 flex-1 truncate text-left">
+          <RadixSelect.Value placeholder={placeholder} />
+        </span>
+        <RadixSelect.Icon className="shrink-0">
           <ChevronDown size={15} className="text-muted" />
         </RadixSelect.Icon>
       </RadixSelect.Trigger>

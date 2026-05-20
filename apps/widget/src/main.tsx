@@ -30,6 +30,10 @@ function App() {
   const [theme, setTheme] = useState<WidgetTheme>(
     (params.get('theme') as WidgetTheme) || 'light',
   );
+  // Mobile state is loader-driven (only the host page can see the device
+  // viewport — matchMedia inside the iframe reflects the iframe's own size
+  // and is meaningless). Seeded from the hash, updated via `jane:viewport`.
+  const [mobile, setMobile] = useState(params.get('mobile') === '1');
   const ws = useRef<WebSocket | null>(null);
 
   useEffect(() => {
@@ -73,6 +77,7 @@ function App() {
 
     const onParent = (e: MessageEvent) => {
       if (e.data?.type === 'jane:theme') setTheme(e.data.theme);
+      if (e.data?.type === 'jane:viewport') setMobile(!!e.data.mobile);
     };
     window.addEventListener('message', onParent);
     post({ type: 'jane:ready' });
@@ -93,6 +98,7 @@ function App() {
   return (
     <ChatWidget
       inline
+      mobile={mobile}
       config={config}
       theme={theme}
       messages={messages}

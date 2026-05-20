@@ -13,6 +13,7 @@ import {
   cn,
 } from '@/components/ui';
 import { useApps } from './useApps';
+import { iconFor } from './icon';
 
 const STATUS: Record<AppStatus, { label: string; tone: 'primary' | 'accent' | 'muted' }> = {
   active: { label: 'Connected', tone: 'primary' },
@@ -31,23 +32,41 @@ function AppCard({ app }: { app: AppSummary }) {
         ? 'border-accent/20 bg-accent-soft/30'
         : 'border-line';
 
+  // Minimal: only show a badge for the meaningful states (Connected / Error).
+  // Disabled / Not configured stay implicit (no badge on the card).
+  const showBadge = app.status === 'active' || app.status === 'error';
+
   return (
     <div className={cn('relative flex flex-col gap-3 rounded-xl border bg-panel p-4', cardStyle)}>
-      <Badge
-        tone={s.tone}
-        className={cn(
-          'absolute right-0 top-0 rounded-bl-lg rounded-br-none rounded-tl-none rounded-tr-xl',
-          app.status === 'error' && 'text-red-600',
-        )}
-      >
-        {s.label}
-      </Badge>
-      <div className="flex items-start gap-3 pr-24">
+      {showBadge && (
+        <Badge
+          tone={s.tone}
+          className={cn(
+            'absolute right-0 top-0 rounded-bl-lg rounded-br-none rounded-tl-none rounded-tr-xl',
+            app.status === 'error' && 'text-red-600',
+          )}
+        >
+          {s.label}
+        </Badge>
+      )}
+      <div className={cn('flex items-start gap-3', showBadge && 'pr-24')}>
         <Avatar
           size="md"
           shape="square"
           tone={app.status === 'active' ? 'solid' : 'muted'}
-          name={app.name}
+          icon={
+            iconFor(app.id) ? (
+              <img
+                src={iconFor(app.id)}
+                alt=""
+                className={cn(
+                  'h-5 w-5 object-contain',
+                  app.status === 'active' && 'invert',
+                )}
+              />
+            ) : undefined
+          }
+          name={iconFor(app.id) ? undefined : app.name}
         />
         <div className="min-w-0 flex-1">
           <h3 className="truncate text-sm font-semibold">{app.name}</h3>

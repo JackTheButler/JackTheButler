@@ -21,8 +21,7 @@ appsRoutes.get('/:id', (c) => c.json(getApp(c.req.param('id'))));
 appsRoutes.put('/:id/config', async (c) => {
   const parsed = configBody.safeParse(await body(c));
   if (!parsed.success) throw new AppError('invalid_input', 400);
-  saveConfig(c.req.param('id'), parsed.data.config);
-  return c.json(getApp(c.req.param('id')));
+  return c.json(await saveConfig(c.req.param('id'), parsed.data.config));
 });
 
 appsRoutes.post('/:id/enable', (c) => {

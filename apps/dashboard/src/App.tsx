@@ -4,6 +4,7 @@ import { AppLayout } from '@/components/AppLayout';
 import { InboxPage } from '@/features/inbox/InboxPage';
 import { AppsPage } from '@/features/apps/AppsPage';
 import { WebchatConfigPanel } from '@/features/apps/WebchatConfigPanel';
+import { AppConfigPanel } from '@/features/apps/AppConfigPanel';
 import { KnowledgeBasePage } from '@/features/knowledge/KnowledgeBasePage';
 import { AssistantPage } from '@/features/assistant/AssistantPage';
 import { TeamPage } from '@/features/team/TeamPage';
@@ -17,9 +18,9 @@ export function App() {
         <Route path="/" element={<InboxPage />} />
         <Route path="/apps" element={<AppsPage />} />
         <Route path="/apps/webchat" element={<WebchatConfigPanel />} />
+        <Route path="/apps/:id" element={<AppConfigPanel />} />
         <Route path="/knowledge" element={<KnowledgeBasePage />} />
         <Route path="/assistant" element={<AssistantPage />} />
-        <Route path="/assistant/:section" element={<AssistantPage />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/settings/:section" element={<SettingsPage />} />

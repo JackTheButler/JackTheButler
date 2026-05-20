@@ -1,5 +1,6 @@
 import type { AppModule } from '@janetheoperator/shared/contracts';
 import { webchatModule } from '@janetheoperator/channel-webchat';
+import { aiAnthropicModule } from '@janetheoperator/ai-anthropic';
 
 /**
  * The only place the core references integration packages. Adding an app =
@@ -7,7 +8,7 @@ import { webchatModule } from '@janetheoperator/channel-webchat';
  * mounting in app.ts). Settable so tests can inject a fixture instead of
  * shipping a fake app at runtime.
  */
-const DEFAULT_MODULES: AppModule[] = [webchatModule];
+const DEFAULT_MODULES: AppModule[] = [webchatModule, aiAnthropicModule];
 
 let modules: AppModule[] = DEFAULT_MODULES;
 

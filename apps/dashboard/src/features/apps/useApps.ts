@@ -1,4 +1,4 @@
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { AppDetail, AppSummary } from '@janetheoperator/shared';
 import { api } from '@/lib/api';
 
@@ -18,7 +18,7 @@ export function useApp(id: string) {
   });
 }
 
-function useAppMutation<V>(fn: (v: V) => Promise<unknown>, id: string) {
+function useAppMutation<V, TData = unknown>(fn: (v: V) => Promise<TData>, id: string) {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: fn,
@@ -32,13 +32,28 @@ function useAppMutation<V>(fn: (v: V) => Promise<unknown>, id: string) {
 export const useSetAppEnabled = (id: string) =>
   useAppMutation(
     (enabled: boolean) =>
-      api.post(`/api/app/apps/${id}/${enabled ? 'enable' : 'disable'}`),
+      api.post<AppDetail>(`/api/app/apps/${id}/${enabled ? 'enable' : 'disable'}`),
     id,
   );
 
 export const useSaveAppConfig = (id: string) =>
   useAppMutation(
     (config: Record<string, unknown>) =>
-      api.put(`/api/app/apps/${id}/config`, { config }),
+      api.put<AppDetail>(`/api/app/apps/${id}/config`, { config }),
     id,
   );
+
+/** Live connectivity test — actually hits the integration (e.g. Anthropic).
+ *  Returns `{ok, detail?}`; HTTP 200 even when ok=false. The server persists
+ *  the result in `app_configs.last_error`, so we invalidate the app query
+ *  to surface it everywhere immediately. */
+export function useCheckApp(id: string) {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post<{ ok: boolean; detail?: string }>(`/api/app/apps/${id}/check`),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ['app', id] });
+      qc.invalidateQueries({ queryKey: ['apps'] });
+    },
+  });
+}

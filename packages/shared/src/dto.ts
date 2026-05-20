@@ -1,6 +1,21 @@
 /** Wire types shared by API + dashboard for the Apps feature. */
 import type { AppManifest } from './manifest.js';
 
+/* ── Assistant profile ─────────────────────────────────────────── */
+
+export type AssistantTone = 'Friendly' | 'Professional' | 'Concise';
+
+/** Single-row persona that drives the AI pipeline's system prompt.
+ *  Save shape and read shape are identical — secrets aren't involved. */
+export interface AssistantProfile {
+  name: string;
+  tone: AssistantTone;
+  instructions: string;
+  fallback: string;
+  topicsToAvoid: string;
+}
+
+
 export type AppStatus = 'unconfigured' | 'disabled' | 'active' | 'error';
 
 export interface AppSummary {
@@ -18,6 +33,8 @@ export interface AppDetail {
   status: AppStatus;
   /** Current config; secret fields are masked, never the stored value. */
   config: Record<string, unknown>;
+  /** Most recent integration-call failure (cleared on next success). */
+  lastError: string | null;
 }
 
 /* ── Conversations ─────────────────────────────────────────────── */

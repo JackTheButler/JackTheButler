@@ -1,7 +1,9 @@
 export { cn } from './cn';
 export { Button } from './Button';
+export { SaveButton } from './SaveButton';
 export { Badge } from './Badge';
 export { Input } from './Input';
+export { PasswordInput } from './PasswordInput';
 export { ColorInput } from './ColorInput';
 export { Toaster, toast } from './toast';
 export { Select, SelectItem } from './Select';

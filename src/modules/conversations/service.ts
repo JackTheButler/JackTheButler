@@ -15,6 +15,8 @@ import {
 } from '@/db/schema/index.js';
 import { AppError } from '@/core/errors.js';
 import { events } from '@/core/events.js';
+import { runAiPipeline } from '@/core/pipeline.js';
+import { getActiveGenerationInstance } from '@/modules/apps/service.js';
 
 /**
  * Transport-agnostic conversation logic. The seam every channel calls.
@@ -166,6 +168,8 @@ export function ingestInboundMessage(
       channel: convo.channel,
       channelExternalId: convo.channelExternalId,
       createdAtMs: now.getTime(),
+      mode: convo.mode,
+      now,
     };
   });
 
@@ -181,6 +185,21 @@ export function ingestInboundMessage(
       createdAt: result.createdAtMs,
     },
   });
+
+  // Dispatch the AI reply pipeline when this conversation is in AI mode and
+  // a generation provider is active. Fire-and-forget — the customer-side
+  // 'message.created' event above has already updated the UI; the AI reply
+  // arrives later via the same event from inside the pipeline.
+  if (result.mode === 'ai' && getActiveGenerationInstance() !== null) {
+    runAiPipeline({
+      conversationId: result.conversationId,
+      channel: result.channel,
+      channelExternalId: result.channelExternalId,
+      messageId: result.messageId,
+      content,
+      createdAt: result.now,
+    });
+  }
 
   return { conversationId: result.conversationId, messageId: result.messageId };
 }

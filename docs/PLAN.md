@@ -4,13 +4,18 @@ AI support chat for a single business. Customers reach support via channels
 (WebChat first, more later). The AI handles most conversations; human agents
 can take over, and the AI pauses until handed back.
 
-> Status: **Stages 1–3 done. Stage 5 slices 1–4 done** (widget-ui + preview;
-> conversation backend + identity; public ingress; WS gateway + event bus;
-> real loader + iframe bundle; 5a inbox live; 5b Apps tab + webchat config
-> wired to real apps API, all mocks removed). **Stage 5 COMPLETE.** Next:
-> Stage 6 (AI pipeline) — but per sequence, Stage 4 (AI app) first. Order: 5 → 4 → 6. **Stage 1 done. Stage 2 DB done. Stage 3 done** (backend — app
-> framework + stub; Apps UI deferred as a follow-on slice). Stage 2
-> service/routes deferred to build alongside webchat. Mock dashboard UI exists.
+> Status: **Stages 1–6 + 9 (deploy) done.** Stage 6 ships the AI pipeline:
+> `assistant_profile` table + UI (5 fields drive the system prompt);
+> `@thebutler/pipeline` integration with a 4-stage custom list
+> (resolveConversation → loadPriorHistory → generateResponse →
+> saveOutboundMessage); `GenerationContract` adds `generate()` to
+> `ai-anthropic`; fire-and-forget dispatch from `ingestInboundMessage`
+> when `mode='ai'` and a generation app is active; AI replies flow back
+> through the existing event bus / WS gateways. Last-10 prior turns
+> feed the model; system prompt rebuilt per turn from `assistant_profile`.
+> Runtime failures record on `last_error` (no auto-disable). 69 tests
+> green. Next: **Stage 7 — Knowledge Base** (RAG; embeddings app +
+> contract).
 > Each stage below is detailed and agreed **before** it is built. Keep every
 > stage minimal, clean, and independently testable.
 
@@ -100,18 +105,56 @@ forces the channel-contract design, so it goes first.
 
 ---
 
-## Stage 4 — locked scope (AI app)
+## Stage 4 — done (AI app)
 
-- One `ai` app `packages/ai-anthropic`, **capability `completion`**.
-  Config: `apiKey` (secret), `completionModel` (opus/sonnet),
-  `utilityModel` (haiku — language/intent = same contract, cheap model).
-- Utility is **not** a separate app/contract — it's `completion` with the
-  utility model. Embedding is a **separate app + `EmbeddingProvider`
-  contract, built in Stage 7** (RAG), not here.
-- Manifest gains `capability: 'completion' | 'embedding'` for `ai` apps.
-  `CompletionProvider`/`EmbeddingProvider` contracts defined in Stage 6/7.
-- `check()` is **network-free** in Stage 4 (config-shape only); real
-  connectivity check deferred to Stage 6.
+- `packages/ai-anthropic`, capability **`generation`** (renamed from
+  "completion" for vendor-neutrality; covers answer + utility roles via two
+  model fields).
+- Manifest extended: `AppCapability = 'generation' | 'embedding'`,
+  `AppManifest.capability?`, new `ConfigFieldType = 'select'` +
+  `options?`. Embedding stays a separate app + contract, built in **Stage 7**.
+- `check()` is a **real connectivity test** (raw `/v1/messages` call) —
+  exposed in the UI via a "Test connection" button.
+- **Generic config panel** `/apps/:id` (renders any manifest, Status/Switch,
+  per-field errors, Save, Test connection). Custom panel `/apps/webchat`
+  unchanged.
+
+---
+
+## Stage 6 — done (AI pipeline)
+
+- **`assistant_profile`** single-row table (migration `0006`); five fields
+  drive the system prompt: Name, Tone, Instructions, Fallback message,
+  Topics to avoid. Lazy-seeded with defaults on first read so the
+  pipeline never trips on missing config. `GET`/`PUT /api/app/assistant`.
+- `AssistantPage` rewritten as a single-page form (no tabs); reuses the
+  shared `SaveButton`, `Field`, `Card` patterns + ApiError-driven field
+  errors.
+- **`GenerationContract`** in `shared/contracts` (`generate(messages,
+  maxTokens?, temperature?) → {content, usage?}`) — provider-neutral.
+- `ai-anthropic.generate()` splits system turns out into Anthropic's
+  top-level `system` field; default `maxTokens=512`.
+- **Pipeline glue** in `src/core/pipeline.ts` — cross-cutting infra (not
+  a module), same tier as `core/events.ts` and `core/realtime.ts`.
+  Provider adapters over our conversations/messages/customers/apps
+  modules. Custom 4-stage list:
+  - `resolveConversation` (defaults; finds by id)
+  - `loadPriorHistory` (custom — last 10, excludes the just-saved inbound by id)
+  - `generateResponse` (defaults)
+  - `saveOutboundMessage` (defaults; our `addMessage` adapter persists
+    + emits `message.created`)
+- Skip stages we don't need: language detection, translation, intent
+  classification, embeddings, RAG, long-term memory.
+- `ingestInboundMessage` persists the customer turn synchronously and
+  fires-and-forgets `runAiPipeline` when `mode='ai'` and
+  `getActiveGenerationInstance()` is non-null. Pipeline errors record
+  on the AI app's `last_error` (no auto-disable; admin-only policy).
+- Existing webchat + dashboard WS gateways pick up the AI
+  `message.created` event with no extra wiring.
+- Tests (`tests/pipeline.test.ts`, 5 cases): skip-when-disabled, reply
+  persisted + emitted, system-prompt assembly, prior-history feeds
+  excluding the inbound, success clears `last_error`. Fixture
+  `stub-generation-app` replaces the registry for hermetic runs.
 
 ---
 

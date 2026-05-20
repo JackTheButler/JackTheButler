@@ -1,5 +1,6 @@
 import { useState, type FormEvent, type ReactNode } from 'react';
 import { Button, Field, Input } from '@/components/ui';
+import { JaneLogo } from '@/components/JaneLogo';
 import { ApiError } from '@/lib/api';
 import { useLogin, useSetup } from './useAuth';
 
@@ -22,8 +23,8 @@ function AuthShell({ title, subtitle, children }: { title: string; subtitle: str
     <div className="grid min-h-full place-items-center p-6">
       <div className="w-full max-w-sm">
         <div className="mb-6 flex items-center gap-2.5">
-          <div className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-sm font-bold text-on-accent">
-            J
+          <div className="grid h-9 w-9 place-items-center rounded-xl bg-accent text-on-accent">
+            <JaneLogo size={20} />
           </div>
           <span className="text-sm font-semibold">Jane</span>
         </div>

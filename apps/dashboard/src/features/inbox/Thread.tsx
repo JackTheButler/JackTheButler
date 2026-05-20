@@ -1,5 +1,6 @@
 import { Bot, User, ChevronRight, ChevronLeft } from 'lucide-react';
 import type { ConversationDetail, MessageDTO } from '@janetheoperator/shared';
+import { MarkdownBody } from '@janetheoperator/widget-ui';
 import { useIsWide } from '@/lib/useMediaQuery';
 import { Button, cn } from '@/components/ui';
 import { ChannelIcon, channelLabel } from './channel';
@@ -42,7 +43,7 @@ function Bubble({ msg }: { msg: MessageDTO }) {
         <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
           {isAi ? <Bot size={11} /> : <User size={11} />} {isAi ? 'Jane AI' : 'You'}
         </div>
-        {msg.content}
+        {isAi ? <MarkdownBody>{msg.content}</MarkdownBody> : msg.content}
         <div className="mt-1 text-[10px] opacity-70">{relativeTime(msg.createdAt)}</div>
       </div>
     </div>

@@ -29,6 +29,7 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
 } from '@/components/ui';
+import { JaneLogo } from '@/components/JaneLogo';
 
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
@@ -47,8 +48,8 @@ const rowWidth = (collapsed: boolean) =>
 function Brand({ collapsed }: { collapsed: boolean }) {
   return (
     <div className={cn('flex items-center gap-2.5', collapsed && 'justify-center')}>
-      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-sm font-bold text-on-accent">
-        J
+      <div className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-on-accent">
+        <JaneLogo size={20} />
       </div>
       {!collapsed && <span className="text-sm font-semibold">Jane</span>}
     </div>
