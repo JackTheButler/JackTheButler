@@ -123,9 +123,7 @@ export function AssistantPage() {
           <div className="rounded-lg border border-red-500/30 bg-red-500/[0.04] p-3 text-xs text-red-600">
             <ul className="space-y-1">
               {Object.entries(details).map(([field, msg]) => (
-                <li key={field}>
-                  <span className="font-semibold">{field}:</span> {msg}
-                </li>
+                <li key={field}>{msg}</li>
               ))}
             </ul>
           </div>

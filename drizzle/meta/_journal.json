@@ -50,6 +50,20 @@
       "when": 1779274828169,
       "tag": "0006_happy_squadron_supreme",
       "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1779298516431,
+      "tag": "0007_loving_mikhail_rasputin",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1779299070711,
+      "tag": "0008_first_korg",
+      "breakpoints": true
     }
   ]
 }

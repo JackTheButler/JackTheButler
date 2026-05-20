@@ -9,3 +9,4 @@ export * from './conversations.js';
 export * from './messages.js';
 export * from './app_configs.js';
 export * from './assistant_profile.js';
+export * from './business_profile.js';

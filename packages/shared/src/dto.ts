@@ -1,6 +1,19 @@
 /** Wire types shared by API + dashboard for the Apps feature. */
 import type { AppManifest } from './manifest.js';
 
+/* ── Business profile ──────────────────────────────────────────── */
+
+/** Single-row business settings. Drives the dashboard's default reading
+ *  language (now) and the AI pipeline's system language (Phase 2).
+ *  Only `defaultLanguage` is seeded ('en'); `name` starts empty (the
+ *  operator fills it in on first visit) and `supportEmail` is optional. */
+export interface BusinessProfile {
+  name: string;
+  supportEmail: string | null;
+  /** BCP-47 code, e.g. 'en', 'fa', 'ar'. */
+  defaultLanguage: string;
+}
+
 /* ── Assistant profile ─────────────────────────────────────────── */
 
 export type AssistantTone = 'Friendly' | 'Professional' | 'Concise';
