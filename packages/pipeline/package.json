@@ -1,6 +1,6 @@
 {
   "name": "@thebutler/pipeline",
-  "version": "0.1.1",
+  "version": "0.1.2",
   "description": "Domain-agnostic message-processing pipeline for AI assistants. Used by Jack The Butler for hospitality; designed to be reused for other verticals.",
   "author": "The Butler LLC",
   "license": "Elastic-2.0",
@@ -37,11 +37,13 @@
   },
   "files": ["dist", "README.md", "LICENSE.txt"],
   "scripts": {
-    "build": "tsc",
+    "build": "tsc --build --force",
+    "clean": "tsc --build --clean",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "test:watch": "vitest",
-    "prepare": "tsc"
+    "prepare": "tsc --build --force",
+    "prepublishOnly": "tsc --build --force"
   },
   "publishConfig": {
     "access": "public"
