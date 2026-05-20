@@ -42,7 +42,6 @@ describe('webchat — inert until configured + enabled', () => {
           welcomeMessage: 'Hi!',
           accentColor: '#4f46e5',
           position: 'bottom-right',
-          themeDefault: 'auto',
           allowedDomains: 'example.com',
         },
       }),
@@ -62,7 +61,6 @@ describe('webchat — public config (origin-checked)', () => {
       welcomeMessage: 'Hi!',
       accentColor: '#4f46e5',
       position: 'bottom-right',
-      theme: 'auto',
     });
   });
 
@@ -106,7 +104,6 @@ describe('webchat — allowed domains accept URL / host:port forms', () => {
           welcomeMessage: 'Hi!',
           accentColor: '#4f46e5',
           position: 'bottom-right',
-          themeDefault: 'auto',
           allowedDomains: 'https://example.com:8443',
         },
       }),
@@ -125,7 +122,6 @@ describe('webchat — allowed domains accept URL / host:port forms', () => {
           welcomeMessage: 'Hi!',
           accentColor: '#4f46e5',
           position: 'bottom-right',
-          themeDefault: 'auto',
           allowedDomains: 'example.com',
         },
       }),

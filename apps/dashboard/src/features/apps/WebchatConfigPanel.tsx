@@ -39,11 +39,53 @@ const DEFAULTS = {
   welcomeMessage: 'Hi 👋 How can we help?',
   accentColor: '#4f46e5',
   position: 'bottom-right',
-  themeDefault: 'auto',
   allowedDomains: '',
 };
 
 type Form = typeof DEFAULTS;
+
+/** Inline `<code>` chip styled for use inside the dark Theme help cards
+ *  below. Same dark surface + soft text the surrounding console uses,
+ *  so it stays legible against the dark background. */
+function ConsoleInline({ children }: { children: React.ReactNode }) {
+  return (
+    <code className="rounded bg-white/5 px-1 font-mono text-[10.5px] text-zinc-200">
+      {children}
+    </code>
+  );
+}
+
+/** A single dark "console" card for the Theme help block. Header (with a
+ *  language badge) + the snippet line + a hint footer separated by hair
+ *  rules — reads like a docs example. */
+function ConsoleSnippet({
+  title,
+  lang,
+  code,
+  children,
+}: {
+  title: string;
+  lang: string;
+  code: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl bg-[#0d1017] ring-1 ring-white/10">
+      <div className="flex items-center justify-between border-b border-white/5 px-3.5 py-2">
+        <p className="text-xs font-medium text-zinc-200">{title}</p>
+        <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+          {lang}
+        </span>
+      </div>
+      <pre className="overflow-x-auto px-3.5 py-3 font-mono text-[12px] leading-relaxed text-zinc-100">
+        {code}
+      </pre>
+      <div className="border-t border-white/5 px-3.5 py-2 text-[11px] text-zinc-400">
+        {children}
+      </div>
+    </div>
+  );
+}
 
 export function WebchatConfigPanel() {
   const { data: detail, isLoading } = useApp('webchat');
@@ -190,16 +232,6 @@ export function WebchatConfigPanel() {
                 </Select>
               </Field>
             </div>
-            <Field label="Default theme">
-              <Select
-                value={form.themeDefault}
-                onValueChange={(v) => set('themeDefault', v)}
-              >
-                <SelectItem value="auto">Auto (visitor’s system)</SelectItem>
-                <SelectItem value="light">Light</SelectItem>
-                <SelectItem value="dark">Dark</SelectItem>
-              </Select>
-            </Field>
             <Field
               label="Allowed domains"
               hint="Comma/newline separated. Domain, host:port, or full URL (scheme/port ignored), e.g. localhost, example.com."
@@ -251,7 +283,10 @@ export function WebchatConfigPanel() {
 
           <Card title="Install">
             <p className="text-sm text-muted">
-              Paste this before <code>&lt;/body&gt;</code> on your site.
+              Add the chat to your site by pasting this snippet just before the closing{' '}
+              <code className="rounded bg-surface px-1 text-ink">&lt;/body&gt;</code> tag on
+              every page where you want the chat to appear. A small launcher will show in
+              the bottom corner — visitors click it to open the chat.
             </p>
             <pre className="overflow-x-auto rounded-lg border border-line bg-surface p-3 text-xs">
               {snippet}
@@ -261,20 +296,41 @@ export function WebchatConfigPanel() {
                 {copied ? 'Copied' : 'Copy snippet'}
               </Button>
             </div>
-            <div className="space-y-1.5 border-t border-line pt-4 text-xs text-muted">
-              <p className="font-medium text-ink">Theme</p>
-              <p>By default the widget matches each visitor’s system light/dark setting.</p>
-              <p>
-                To force one, add{' '}
-                <code className="rounded bg-surface px-1">data-jane-theme="dark"</code> (or{' '}
-                <code className="rounded bg-surface px-1">light</code> /{' '}
-                <code className="rounded bg-surface px-1">auto</code>) to the script tag.
-              </p>
-              <p>
-                If your site has its own theme switch, call{' '}
-                <code className="rounded bg-surface px-1">JaneWidget.setTheme('dark')</code>{' '}
-                from it.
-              </p>
+            {/* Theming reference. Two ways to override the default
+                (which is to follow the visitor's system setting) — each
+                shown as a labelled block with a copy-shaped code line,
+                so the page scans like documentation rather than prose. */}
+            <div className="space-y-3 border-t border-line pt-4">
+              <div>
+                <h4 className="text-sm font-medium text-ink">Theme (optional)</h4>
+                <p className="mt-1 text-sm text-muted">
+                  The chat picks up each visitor’s light/dark preference from their browser
+                  automatically — no setup needed. Override it only if you want one fixed
+                  look or to sync with a light/dark toggle you already have on your site.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <ConsoleSnippet
+                  title="Force a theme (script tag)"
+                  lang="HTML"
+                  code={'data-jane-theme="dark"'}
+                >
+                  Use <ConsoleInline>"dark"</ConsoleInline>,{' '}
+                  <ConsoleInline>"light"</ConsoleInline>, or{' '}
+                  <ConsoleInline>"auto"</ConsoleInline>.
+                </ConsoleSnippet>
+
+                <ConsoleSnippet
+                  title="Sync with your theme switcher"
+                  lang="JS"
+                  code={"JaneWidget.setTheme('dark')"}
+                >
+                  Pass <ConsoleInline>'light'</ConsoleInline>,{' '}
+                  <ConsoleInline>'dark'</ConsoleInline>, or{' '}
+                  <ConsoleInline>'auto'</ConsoleInline> (revert to system).
+                </ConsoleSnippet>
+              </div>
             </div>
           </Card>
           </div>

@@ -19,7 +19,6 @@ interface ActiveWebchat {
   welcomeMessage: string;
   accentColor: string;
   position: string;
-  themeDefault: string;
   allowedDomains: string;
 }
 
@@ -72,10 +71,11 @@ export interface PublicWidgetConfig {
   welcomeMessage: string;
   accentColor: string;
   position: string;
-  theme: string;
 }
 
-/** Appearance config the widget renders. Origin-checked. */
+/** Appearance config the widget renders. Origin-checked.
+ *  Theme is loader-resolved, not server-driven — see channel-webchat
+ *  manifest for the precedence chain. */
 export function getPublicWidgetConfig(origin: string | null): PublicWidgetConfig {
   const cfg = activeConfig();
   assertAllowedOrigin(origin, cfg.allowedDomains);
@@ -84,7 +84,6 @@ export function getPublicWidgetConfig(origin: string | null): PublicWidgetConfig
     welcomeMessage: cfg.welcomeMessage,
     accentColor: cfg.accentColor,
     position: cfg.position,
-    theme: cfg.themeDefault,
   };
 }
 
