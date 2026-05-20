@@ -97,5 +97,9 @@ export interface ConversationDetail {
   mode: ConversationMode;
   status: ConversationStatus;
   customer: ConversationCustomer | null;
+  /** BCP-47 of the customer's language as last detected by the pipeline.
+   *  Null on conversations created before language detection landed.
+   *  Drives the disclosed-text language label on outbound bubbles. */
+  language: string | null;
   messages: MessageDTO[];
 }

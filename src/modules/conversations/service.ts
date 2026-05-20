@@ -15,8 +15,9 @@ import {
 } from '@/db/schema/index.js';
 import { AppError } from '@/core/errors.js';
 import { events } from '@/core/events.js';
-import { runAiPipeline } from '@/core/pipeline.js';
+import { runAiPipeline, translateText } from '@/core/pipeline.js';
 import { getActiveGenerationInstance } from '@/modules/apps/service.js';
+import { getBusiness } from '@/modules/business/service.js';
 
 /**
  * Transport-agnostic conversation logic. The seam every channel calls.
@@ -291,6 +292,7 @@ export function getConversation(id: string): ConversationDetail {
     customer: customer
       ? { id: customer.id, name: customer.name, contact: customer.contact }
       : null,
+    language: c.language,
     messages: msgs.map(toMessageDTO),
   };
 }
@@ -319,10 +321,26 @@ export function getPublicHistory(channel: string, externalId: string): MessageDT
     .map(toMessageDTO);
 }
 
-export function reply(id: string, agentId: string, content: string): ConversationDetail {
+export async function reply(
+  id: string,
+  agentId: string,
+  content: string,
+): Promise<ConversationDetail> {
   const c = getOrThrow(id);
   if (c.status === 'closed') throw new AppError('conversation_closed', 409);
   if (c.mode !== 'human') throw new AppError('takeover_required', 409);
+
+  // Translate to the customer's language when known + different from default.
+  // Graceful: if no AI app is active or translation fails, `translation`
+  // stays null, the customer reads the default-language version, and the
+  // agent's reply still goes out.
+  const defaultLang = getBusiness().defaultLanguage;
+  const customerLang = c.language;
+  const needsTranslation =
+    !!customerLang && customerLang !== defaultLang;
+  const translation = needsTranslation
+    ? await translateText(content, defaultLang, customerLang)
+    : null;
 
   const now = new Date();
   const messageId = randomUUID();
@@ -333,6 +351,8 @@ export function reply(id: string, agentId: string, content: string): Conversatio
       author: 'agent',
       senderAgentId: agentId,
       content,
+      language: defaultLang,
+      translation,
       createdAt: now,
     })
     .run();
@@ -346,9 +366,8 @@ export function reply(id: string, agentId: string, content: string): Conversatio
       id: messageId,
       author: 'agent',
       content,
-      // Staff reply translation lands in Phase 2e — null here until then.
-      language: null,
-      translation: null,
+      language: defaultLang,
+      translation,
       event: null,
       createdAt: now.getTime(),
     },

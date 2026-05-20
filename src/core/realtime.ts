@@ -33,6 +33,7 @@ export function broadcastToDashboard(type: string, data: unknown): void {
 // Forward domain events to dashboards. Add more `events.on(...)` lines here
 // as new event kinds appear (notifications, etc.).
 events.on('message.created', (p) => broadcastToDashboard('message.created', p));
+events.on('message.updated', (p) => broadcastToDashboard('message.updated', p));
 
 export function registerDashboardSocket<E extends Env>(
   app: Hono<E>,

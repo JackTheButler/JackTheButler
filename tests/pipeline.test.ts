@@ -14,6 +14,9 @@ const {
   stubAiCalls,
   resetStubAi,
   setStubAiReply,
+  setStubDetectedLanguage,
+  setStubTranslation,
+  lastResponderCall,
 } = await import('./fixtures/stub-generation-app.js');
 
 // Replace the real registry with just our stub AI module. The webchat
@@ -142,13 +145,17 @@ describe('AI pipeline', () => {
     await ingest('webchat', 'sess-2', 'hey');
     await wait;
 
-    expect(stubAiCalls).toHaveLength(1);
-    const system = stubAiCalls[0].messages.find((m) => m.role === 'system')!;
+    // Detect + (no translate, same lang) + responder. Find the responder
+    // call by purpose — detect/translate use the utility tier.
+    const responder = lastResponderCall();
+    expect(responder).toBeDefined();
+    const system = responder!.messages.find((m) => m.role === 'system')!;
     expect(system.content).toContain('You are Ada');
     expect(system.content).toContain('Voice: professional');
     expect(system.content).toContain('Be terse.');
     expect(system.content).toContain('legal advice');
     expect(system.content).toContain('I will get a teammate.');
+    expect(system.content).toContain('Respond in en'); // default systemLanguage
   });
 
   it('feeds prior turns as history, excluding the current inbound', async () => {
@@ -164,10 +171,9 @@ describe('AI pipeline', () => {
     await ingest('webchat', 'sess-hist', 'second');
     await wait2;
 
-    expect(stubAiCalls).toHaveLength(1);
-    const call = stubAiCalls[0];
-    const userTurns = call.messages.filter((m) => m.role === 'user');
-    const assistantTurns = call.messages.filter((m) => m.role === 'assistant');
+    const responder = lastResponderCall()!;
+    const userTurns = responder.messages.filter((m) => m.role === 'user');
+    const assistantTurns = responder.messages.filter((m) => m.role === 'assistant');
     expect(userTurns.map((m) => m.content)).toEqual(['first', 'second']);
     expect(assistantTurns).toHaveLength(1);
   });
@@ -180,5 +186,177 @@ describe('AI pipeline', () => {
 
     const detail = await (await authed('/api/app/apps/stub-ai')).json();
     expect(detail.lastError).toBeNull();
+  });
+
+  it('enriches the saved inbound row with detected language + emits message.updated (same-lang)', async () => {
+    // Default flow: detect returns 'en', system is 'en', no translation runs.
+    // The inbound row should still get language='en' and translation=null.
+    const updates: Array<{ messageId: string; language: string | null; translation: string | null }> = [];
+    const off = events.on('message.updated', (p) =>
+      updates.push({ messageId: p.messageId, language: p.language, translation: p.translation }),
+    );
+
+    const wait = nextAiReply('webchat', 'sess-enrich');
+    const res = await ingest('webchat', 'sess-enrich', 'hello there');
+    const { conversationId } = await res.json();
+    await wait;
+    off();
+
+    const convo = await (
+      await authed(`/api/app/conversations/${conversationId}`)
+    ).json();
+    const inbound = convo.messages.find((m: { author: string }) => m.author === 'customer');
+    expect(inbound.language).toBe('en');
+    expect(inbound.translation).toBeNull();
+
+    expect(updates).toHaveLength(1);
+    expect(updates[0]).toMatchObject({
+      messageId: inbound.id,
+      language: 'en',
+      translation: null,
+    });
+  });
+
+  it('translates when customer language differs from system; AI sees the translation; outbound is translated back', async () => {
+    // Stub the detector to say the customer wrote Farsi; system is English.
+    setStubDetectedLanguage('fa');
+    setStubTranslation('fa', 'en', 'Where is my order?');
+    setStubTranslation('en', 'fa', 'سفارش شما در راه است.');
+    setStubAiReply('Your order is on its way.');
+
+    const wait = nextAiReply('webchat', 'sess-translate');
+    const res = await ingest('webchat', 'sess-translate', 'سفارش من کجاست؟');
+    const { conversationId } = await res.json();
+    const reply = await wait;
+
+    // 1. Responder saw the translated English question in its user turn,
+    //    not the raw Farsi.
+    const responder = lastResponderCall()!;
+    const lastUser = responder.messages.filter((m) => m.role === 'user').pop()!;
+    expect(lastUser.content).toBe('Where is my order?');
+
+    // 2. Inbound row has language='fa', translation in default lang.
+    const convo = await (
+      await authed(`/api/app/conversations/${conversationId}`)
+    ).json();
+    const inbound = convo.messages.find((m: { author: string }) => m.author === 'customer');
+    expect(inbound).toMatchObject({
+      content: 'سفارش من کجاست؟',
+      language: 'fa',
+      translation: 'Where is my order?',
+    });
+
+    // 3. Outbound row stores content (default lang) + translation (customer lang).
+    const outbound = convo.messages.find((m: { author: string }) => m.author === 'ai');
+    expect(outbound).toMatchObject({
+      content: 'Your order is on its way.',
+      language: 'en',
+      translation: 'سفارش شما در راه است.',
+    });
+    // 4. The 'message.created' event for the AI row delivers the customer-lang
+    //    version on `content` field of the event (translation when present —
+    //    today the event carries content of the persisted row; the widget
+    //    will prefer translation in Phase 2d). For now: confirm reply arrived.
+    expect(reply.content).toBe('Your order is on its way.');
+  });
+
+  it('translates staff replies into the customer language', async () => {
+    // Set up: an established Farsi conversation, staff takes over, types
+    // in English (default). The reply should be persisted with
+    // language='en', translation=<farsi>, and the 'message.created' event
+    // should carry both.
+    setStubDetectedLanguage('fa');
+    setStubTranslation('fa', 'en', 'Hi, status of my order?');
+    setStubTranslation('en', 'fa', 'سلام، چه کمکی می‌توانم بکنم؟'); // AI's outbound first
+    setStubTranslation('en', 'fa', 'Hello — your order ships tomorrow. (fa)');
+    setStubAiReply('Hello! How can I help?');
+
+    const wait = nextAiReply('webchat', 'sess-staff-reply');
+    const res = await ingest('webchat', 'sess-staff-reply', 'سلام، سفارش من کجاست؟');
+    const { conversationId } = await res.json();
+    await wait;
+
+    // Stage staff-reply translation specifically.
+    setStubTranslation('en', 'fa', 'سفارش شما فردا ارسال می‌شود.');
+
+    await authed(`/api/app/conversations/${conversationId}/takeover`, { method: 'POST' });
+    const replyRes = await authed(
+      `/api/app/conversations/${conversationId}/reply`,
+      {
+        method: 'POST',
+        body: JSON.stringify({ content: 'Your order ships tomorrow.' }),
+      },
+    );
+    expect(replyRes.status).toBe(200);
+
+    const convo = await (
+      await authed(`/api/app/conversations/${conversationId}`)
+    ).json();
+    const agentMsg = convo.messages.findLast((m: { author: string }) => m.author === 'agent');
+    expect(agentMsg).toMatchObject({
+      content: 'Your order ships tomorrow.',
+      language: 'en',
+      translation: 'سفارش شما فردا ارسال می‌شود.',
+    });
+  });
+
+  it('persists staff reply with translation=null when languages match', async () => {
+    // Same-language flow: no translation should happen even though we
+    // configured a stub translator.
+    setStubDetectedLanguage('en');
+    setStubAiReply('Hello.');
+
+    const wait = nextAiReply('webchat', 'sess-staff-samelang');
+    const res = await ingest('webchat', 'sess-staff-samelang', 'hi');
+    const { conversationId } = await res.json();
+    await wait;
+
+    await authed(`/api/app/conversations/${conversationId}/takeover`, { method: 'POST' });
+    await authed(`/api/app/conversations/${conversationId}/reply`, {
+      method: 'POST',
+      body: JSON.stringify({ content: 'Sure, happy to help.' }),
+    });
+
+    const convo = await (
+      await authed(`/api/app/conversations/${conversationId}`)
+    ).json();
+    const agentMsg = convo.messages.findLast((m: { author: string }) => m.author === 'agent');
+    expect(agentMsg).toMatchObject({
+      content: 'Sure, happy to help.',
+      language: 'en',
+      translation: null,
+    });
+  });
+
+  it('rebuilds the pipeline when business default language changes', async () => {
+    // Switch system language to Farsi, then send a message in English.
+    // The responder's system prompt should now contain "Respond in fa".
+    await authed('/api/app/business', {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: 'Acme',
+        supportEmail: null,
+        defaultLanguage: 'fa',
+      }),
+    });
+    setStubDetectedLanguage('en'); // customer writes English
+
+    const wait = nextAiReply('webchat', 'sess-lang-change');
+    await ingest('webchat', 'sess-lang-change', 'hello');
+    await wait;
+
+    const responder = lastResponderCall()!;
+    const system = responder.messages.find((m) => m.role === 'system')!;
+    expect(system.content).toContain('Respond in fa');
+
+    // Reset for any tests that run after.
+    await authed('/api/app/business', {
+      method: 'PUT',
+      body: JSON.stringify({
+        name: 'Acme',
+        supportEmail: null,
+        defaultLanguage: 'en',
+      }),
+    });
   });
 });

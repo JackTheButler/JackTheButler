@@ -108,6 +108,9 @@ const MD_COMPONENTS: Components = {
 export function MarkdownBody({ children }: { children: string }) {
   return (
     <div
+      // `dir="auto"` lets the browser pick LTR/RTL per script-block — invisible
+      // for English, correct for Farsi/Arabic/Hebrew content.
+      dir="auto"
       style={{
         // Children carry their own margins; this wrapper just contains them
         // so adjacent paragraphs/lists don't collapse outside the bubble.
@@ -136,6 +139,13 @@ export interface WidgetMessage {
   id: string;
   author: 'customer' | 'agent' | 'ai';
   content: string;
+  /** BCP-47 code of `content`. Optional (locally-added optimistic messages
+   *  may not have it; server-served messages do via MessageDTO). */
+  language?: string | null;
+  /** Customer-language version of an AI / agent reply. When present and the
+   *  author isn't `'customer'`, the widget prefers it over `content` so the
+   *  customer reads in their own language. */
+  translation?: string | null;
   time?: string;
 }
 
@@ -403,6 +413,7 @@ export function ChatWidget({
               key={m.id}
               author={m.author}
               content={m.content}
+              translation={m.translation ?? null}
               accent={config.accentColor}
               accentFg={fg}
               p={p}
@@ -488,22 +499,33 @@ export function ChatWidget({
 function Bubble({
   author,
   content,
+  translation,
   accent,
   accentFg,
   p,
 }: {
   author: WidgetMessage['author'];
   content: string;
+  translation?: string | null;
   accent: string;
   accentFg: string;
   p: Palette;
 }) {
   const mine = author === 'customer';
+  // The customer reads their own words back (content). AI/agent replies are
+  // surfaced in the customer's language — the pipeline's translateOutbound
+  // populates `translation` when the system language ≠ conversation
+  // language; we prefer it over `content` for delivery.
+  const text = mine ? content : (translation ?? content);
   // Markdown only for AI output. Human authors (customer / agent) stay as
   // plain text so a stray `**` never gets interpreted as formatting.
   const renderMarkdown = author === 'ai';
   return (
     <div
+      // `dir="auto"` lets the browser pick LTR / RTL per script — invisible
+      // for English, correct for Farsi / Arabic / Hebrew, including the
+      // customer's own message bubble.
+      dir="auto"
       style={{
         alignSelf: mine ? 'flex-end' : 'flex-start',
         maxWidth: '85%',
@@ -518,7 +540,7 @@ function Bubble({
         wordBreak: 'break-word',
       }}
     >
-      {renderMarkdown ? <MarkdownBody>{content}</MarkdownBody> : content}
+      {renderMarkdown ? <MarkdownBody>{text}</MarkdownBody> : text}
     </div>
   );
 }

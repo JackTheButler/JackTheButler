@@ -15,8 +15,23 @@ export interface MessageCreated {
   message: MessageDTO;
 }
 
+/** Patch event for a message that was created earlier and has since been
+ *  enriched in-flight — e.g. the AI pipeline's `enrichInboundMessage`
+ *  stage populating `language` + `translation` on the just-saved
+ *  customer turn after detection runs. Consumers patch their cached
+ *  copy by `messageId`. */
+export interface MessageUpdated {
+  conversationId: string;
+  channel: string;
+  channelExternalId: string;
+  messageId: string;
+  language: string | null;
+  translation: string | null;
+}
+
 interface EventMap {
   'message.created': MessageCreated;
+  'message.updated': MessageUpdated;
 }
 
 const emitter = new EventEmitter();

@@ -66,6 +66,12 @@ export interface GenerationRequest {
   temperature?: number;
   /** Which model tier the caller prefers; defaults to `'reasoning'`. */
   modelTier?: ModelTier;
+  /** Free-form telemetry / routing tag identifying what this call is for
+   *  (`'language_detection'`, `'translation'`, `'response_generation'`).
+   *  Forwarded from `@thebutler/pipeline`'s stages so providers can
+   *  branch on intent (e.g. test stubs returning a BCP-47 code for
+   *  language_detection). */
+  purpose?: string;
 }
 
 export interface GenerationResult {

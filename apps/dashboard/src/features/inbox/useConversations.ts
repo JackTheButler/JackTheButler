@@ -83,6 +83,25 @@ export function useDashboardSocket() {
           if (type === 'message.created') {
             qc.invalidateQueries({ queryKey: ['conversations'] });
             qc.invalidateQueries({ queryKey: ['conversation', data?.conversationId] });
+          } else if (type === 'message.updated') {
+            // In-flight enrichment (language + translation populated by the
+            // pipeline after detect/translate). Patch the cached conversation
+            // detail in-place so the bubble re-renders with the toggle, no
+            // full refetch needed.
+            qc.setQueryData<ConversationDetail>(
+              ['conversation', data?.conversationId],
+              (prev) =>
+                prev
+                  ? {
+                      ...prev,
+                      messages: prev.messages.map((m) =>
+                        m.id === data.messageId
+                          ? { ...m, language: data.language, translation: data.translation }
+                          : m,
+                      ),
+                    }
+                  : prev,
+            );
           }
         } catch {
           /* ignore */

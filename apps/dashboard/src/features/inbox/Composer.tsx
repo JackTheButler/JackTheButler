@@ -19,11 +19,16 @@ export function Composer({
   onTakeOver,
   onHandBack,
   onSend,
+  translateHint,
 }: {
   human: boolean;
   onTakeOver: () => void;
   onHandBack: () => void;
   onSend: (text: string) => void;
+  /** Set when the conversation language differs from the business default
+   *  — staff types in the default, the server translates before delivery.
+   *  Renders a small unobtrusive note inside the active composer. */
+  translateHint?: string;
 }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const startX = useRef(0);
@@ -107,6 +112,12 @@ export function Composer({
           </div>
         </div>
       </div>
+
+      {human && translateHint && (
+        <div className="border-t border-staff/20 bg-staff-soft/40 px-3 py-1 text-[11px] text-muted">
+          {translateHint}
+        </div>
+      )}
 
       <div ref={trackRef} className="relative flex h-11 items-center bg-panel">
         {human ? (

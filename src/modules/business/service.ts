@@ -2,6 +2,7 @@ import { eq } from 'drizzle-orm';
 import type { BusinessProfile } from '@janetheoperator/shared';
 import { db } from '@/db/client.js';
 import { businessProfile } from '@/db/schema/index.js';
+import { rebuildPipeline } from '@/core/pipeline.js';
 
 /**
  * Single-row business profile. Drives:
@@ -54,5 +55,10 @@ export function saveBusiness(input: BusinessProfile): BusinessProfile {
       set: { ...input, updatedAt: new Date() },
     })
     .run();
+  // The AI pipeline captures `systemLanguage` at createPipeline time, so
+  // a default-language change wouldn't take effect until restart without
+  // this. Cheap enough to do on every save regardless of which field
+  // changed.
+  rebuildPipeline();
   return getBusiness();
 }
