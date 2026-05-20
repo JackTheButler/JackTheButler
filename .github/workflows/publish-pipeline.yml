@@ -29,6 +29,22 @@ jobs:
           cache: pnpm
           registry-url: 'https://registry.npmjs.org'
 
+      # pnpm publish does not reliably expand ${NODE_AUTH_TOKEN} in the
+      # .npmrc that setup-node writes — write the literal token instead
+      # so pnpm reads valid auth and we get 401/403 (not 404) on misconfig.
+      - name: Configure npm auth for pnpm
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > ~/.npmrc
+          echo "always-auth=true" >> ~/.npmrc
+        env:
+          NPM_TOKEN: ${{ secrets.NPM_TOKEN }}
+
+      - name: Verify auth and scope access
+        run: |
+          echo "Authenticated as: $(npm whoami)"
+          echo "Org membership:"
+          npm org ls thebutler || (echo "::error::user is not a member of @thebutler org" >&2; exit 1)
+
       - name: Install dependencies
         run: pnpm install --frozen-lockfile --filter @thebutler/pipeline...
 
