@@ -20,6 +20,12 @@ events.on('message.created', (p) => {
   pushToVisitor(p.channelExternalId, JSON.stringify({ type: 'message', message: p.message }));
 });
 
+// "Assistant is typing" → widget shows the indicator until the reply lands.
+events.on('assistant.typing', (p) => {
+  if (p.channel !== 'webchat') return;
+  pushToVisitor(p.channelExternalId, JSON.stringify({ type: 'typing' }));
+});
+
 export function registerWebchatSocket<E extends Env>(
   app: Hono<E>,
   upgradeWebSocket: UpgradeWebSocket,

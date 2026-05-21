@@ -40,6 +40,7 @@ function forward<K extends keyof EventMap>(type: K): void {
 
 forward('message.created');
 forward('message.updated');
+forward('assistant.typing');
 forward('job.progress');
 
 export function registerDashboardSocket<E extends Env>(

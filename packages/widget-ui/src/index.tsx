@@ -154,6 +154,8 @@ export interface ChatWidgetProps {
   /** Already resolved by the runtime — the component just renders it. */
   theme: WidgetTheme;
   messages: WidgetMessage[];
+  /** Assistant is composing a reply — show the typing indicator. */
+  isTyping?: boolean;
   open: boolean;
   onToggle: () => void;
   onSend: (text: string) => void;
@@ -215,6 +217,7 @@ export function ChatWidget({
   config,
   theme,
   messages,
+  isTyping = false,
   open,
   onToggle,
   onSend,
@@ -272,7 +275,7 @@ export function ChatWidget({
     if (!showJumpDown) {
       el.scrollTop = el.scrollHeight;
     }
-  }, [open, showJumpDown, lastMessageId, messages.length]);
+  }, [open, showJumpDown, lastMessageId, messages.length, isTyping]);
 
   // Re-snap on the next paint to catch markdown content that lays out
   // after our synchronous layout effect (long AI replies otherwise land
@@ -286,7 +289,7 @@ export function ChatWidget({
       el.scrollTop = el.scrollHeight;
     });
     return () => cancelAnimationFrame(id);
-  }, [open, showJumpDown, lastMessageId, messages.length]);
+  }, [open, showJumpDown, lastMessageId, messages.length, isTyping]);
 
   // Anchor for both states. In mobile + open, the panel fills its frame
   // (inline parent or viewport) and the launcher's bottom-corner anchor
@@ -419,6 +422,7 @@ export function ChatWidget({
               p={p}
             />
           ))}
+          {isTyping && <TypingBubble p={p} />}
         </div>
 
         {showJumpDown && (
@@ -545,6 +549,43 @@ function Bubble({
   );
 }
 
+/** "Assistant is typing" bubble — three dots bouncing in sequence. Styled
+ *  like an agent bubble so it reads as an incoming reply being composed. */
+function TypingBubble({ p }: { p: Palette }) {
+  const dot = (delay: number) => (
+    <span
+      style={{
+        width: 6,
+        height: 6,
+        borderRadius: '50%',
+        background: p.text,
+        opacity: 0.4,
+        display: 'inline-block',
+        animation: `jane-typing 1.2s ${delay}ms infinite ease-in-out`,
+      }}
+    />
+  );
+  return (
+    <div
+      aria-label="Assistant is typing"
+      style={{
+        alignSelf: 'flex-start',
+        background: p.agentBubble,
+        border: `1px solid ${p.border}`,
+        borderRadius: 12,
+        padding: '10px 12px',
+        display: 'flex',
+        gap: 4,
+        alignItems: 'center',
+      }}
+    >
+      {dot(0)}
+      {dot(160)}
+      {dot(320)}
+    </div>
+  );
+}
+
 function ChatIcon() {
   return (
     <svg width="24" height="24" viewBox="0 0 24 24" fill="none" aria-hidden="true">
@@ -572,6 +613,10 @@ function WidgetKeyframes() {
       @keyframes jane-fade-in {
         from { opacity: 0; transform: translate(-50%, 6px); }
         to   { opacity: 1; transform: translate(-50%, 0); }
+      }
+      @keyframes jane-typing {
+        0%, 60%, 100% { opacity: 0.3; transform: translateY(0); }
+        30%           { opacity: 0.9; transform: translateY(-3px); }
       }
     `}</style>
   );

@@ -226,7 +226,9 @@ export function ImportDialog({
             <Embedding processed={job?.processed ?? 0} total={job?.total ?? 0} />
           )}
 
-          {phase === 'done' && <Done inserted={inserted} embedded={canEmbed} />}
+          {/* `jobId` is set only when the embed step ran (and reset on close),
+              so it survives `check` being cleared on the review→importing exit. */}
+          {phase === 'done' && <Done inserted={inserted} embedded={jobId !== null} />}
         </div>
 
         <input

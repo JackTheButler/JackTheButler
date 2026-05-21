@@ -34,7 +34,9 @@ function App() {
   // viewport — matchMedia inside the iframe reflects the iframe's own size
   // and is meaningless). Seeded from the hash, updated via `jane:viewport`.
   const [mobile, setMobile] = useState(params.get('mobile') === '1');
+  const [typing, setTyping] = useState(false);
   const ws = useRef<WebSocket | null>(null);
+  const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
   useEffect(() => {
     fetch(`/widget/config?${q}`)
@@ -64,6 +66,14 @@ function App() {
           const data = JSON.parse(e.data);
           if (data?.type === 'message' && data.message) {
             setMessages((m) => [...m, data.message]);
+            // Reply landed → stop the typing indicator.
+            if (typingTimer.current) clearTimeout(typingTimer.current);
+            setTyping(false);
+          } else if (data?.type === 'typing') {
+            setTyping(true);
+            // Safety net: clear if no reply arrives (e.g. an errored turn).
+            if (typingTimer.current) clearTimeout(typingTimer.current);
+            typingTimer.current = setTimeout(() => setTyping(false), 25000);
           }
         } catch {
           /* ignore */
@@ -85,6 +95,7 @@ function App() {
     return () => {
       alive = false;
       window.removeEventListener('message', onParent);
+      if (typingTimer.current) clearTimeout(typingTimer.current);
       ws.current?.close();
     };
   }, []);
@@ -102,6 +113,7 @@ function App() {
       config={config}
       theme={theme}
       messages={messages}
+      isTyping={typing}
       open={open}
       onToggle={() => setOpen((o) => !o)}
       onSend={(text) => {

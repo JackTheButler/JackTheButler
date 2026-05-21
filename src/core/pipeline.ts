@@ -541,6 +541,21 @@ const loadKnowledge: Stage = async (ctx, env) => {
 };
 
 /**
+ * Announce that the assistant is composing a reply — emitted after the inbound
+ * turn is resolved/translated and history is loaded, just before the slower
+ * retrieval + generation work, so the "typing…" indicator covers that stretch.
+ * The eventual saveOutboundMessage → message.created ends it.
+ */
+const signalTyping: Stage = async (ctx, _env) => {
+  if (!ctx.conversation) return;
+  events.emit('assistant.typing', {
+    conversationId: ctx.conversation.id,
+    channel: ctx.conversation.channel,
+    channelExternalId: ctx.conversation.channelId,
+  });
+};
+
+/**
  * Logs the AI's reply in the system language — i.e. exactly what the model
  * produced, before `translateOutbound` rewrites it into the customer's
  * language. Sits between generateResponse and translateOutbound so the trace
@@ -581,6 +596,9 @@ function buildPipeline(): Pipeline {
       translateInbound,
       enrichInboundMessage,
       loadPriorHistory,
+      // Signal "typing…" once the inbound turn is resolved/translated, before
+      // the slower retrieval + generation work.
+      signalTyping,
       // KB retrieval: embed the (translated) question, search, attach hits.
       // computeEmbedding embeds `inboundTranslation ?? inbound.content`, so a
       // Farsi question searches the English KB via its translation.
