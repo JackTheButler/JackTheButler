@@ -78,6 +78,13 @@
       "when": 1779303693648,
       "tag": "0010_add_knowledge_base",
       "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1779310000000,
+      "tag": "0011_replace_kb_with_knowledge_entries",
+      "breakpoints": true
     }
   ]
 }

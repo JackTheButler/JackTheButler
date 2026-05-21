@@ -1,6 +1,25 @@
 /** Wire types shared by API + dashboard for the Apps feature. */
 import type { AppManifest } from './manifest.js';
 
+/* ── Knowledge base ────────────────────────────────────────────── */
+
+export type KnowledgeStatus = 'draft' | 'approved';
+
+/** One Q&A pair the AI can find via embedding search. `hasEmbedding`
+ *  lets the dashboard surface "this entry isn't searchable until an
+ *  embedding provider is connected" without sending the raw vector. */
+export interface KnowledgeEntry {
+  id: string;
+  question: string;
+  answer: string;
+  topic: string | null;
+  status: KnowledgeStatus;
+  hasEmbedding: boolean;
+  createdAt: number;
+  updatedAt: number;
+}
+
+
 /* ── Business profile ──────────────────────────────────────────── */
 
 /** Single-row business settings. Drives the dashboard's default reading

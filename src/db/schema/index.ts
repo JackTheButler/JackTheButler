@@ -10,5 +10,4 @@ export * from './messages.js';
 export * from './app_configs.js';
 export * from './assistant_profile.js';
 export * from './business_profile.js';
-export * from './kb_documents.js';
-export * from './kb_chunks.js';
+export * from './knowledge_entries.js';

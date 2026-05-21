@@ -6,6 +6,7 @@ import { appsRoutes } from '@/modules/apps/routes.js';
 import { assistantRoutes } from '@/modules/assistant/routes.js';
 import { businessRoutes } from '@/modules/business/routes.js';
 import { conversationRoutes } from '@/modules/conversations/routes.js';
+import { knowledgeRoutes } from '@/modules/knowledge/routes.js';
 import { webchatRoutes } from '@/modules/webchat/routes.js';
 import { registerWebchatSocket } from '@/modules/webchat/gateway.js';
 import { registerDashboardSocket } from '@/core/realtime.js';
@@ -49,6 +50,7 @@ app.route('/api/app/apps', appsRoutes);
 app.route('/api/app/assistant', assistantRoutes);
 app.route('/api/app/business', businessRoutes);
 app.route('/api/app/conversations', conversationRoutes);
+app.route('/api/app/knowledge', knowledgeRoutes);
 
 // Last: serve the built dashboard SPA (single-origin production model).
 registerSpa(app);
