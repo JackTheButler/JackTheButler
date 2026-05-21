@@ -1,3 +1,4 @@
+import { useEffect, useRef, useState } from 'react';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import type { ConversationDetail, ConversationSummary } from '@janetheoperator/shared';
 import { api } from '@/lib/api';
@@ -101,4 +102,46 @@ export function useInboxRealtime() {
         : prev,
     );
   });
+}
+
+/** Tell the server an agent is typing, so the customer's widget shows the
+ *  indicator. Fire-and-forget; the composer throttles calls. */
+export function notifyTyping(id: string): void {
+  api.post(`/api/app/conversations/${id}/typing`).catch(() => {});
+}
+
+/** Whether the AI is currently composing a reply in `conversationId` — driven
+ *  by the pipeline's `assistant.typing` event. Cleared when the reply (any
+ *  non-customer message) lands, on conversation switch, or after a safety
+ *  timeout (the rare errored turn never sends a message). */
+export function useAssistantTyping(conversationId: string | null): boolean {
+  const [typing, setTyping] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stop = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    setTyping(false);
+  };
+
+  useRealtimeEvent<{ conversationId: string }>('assistant.typing', (data) => {
+    if (!conversationId || data?.conversationId !== conversationId) return;
+    setTyping(true);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setTyping(false), 10000);
+  });
+
+  useRealtimeEvent<{ conversationId: string; message?: { author?: string } }>(
+    'message.created',
+    (data) => {
+      if (data?.conversationId !== conversationId) return;
+      if (data?.message?.author === 'customer') return; // the inbound, not the reply
+      stop();
+    },
+  );
+
+  // Reset when switching conversations.
+  useEffect(() => stop, [conversationId]);
+
+  return typing;
 }

@@ -10,6 +10,7 @@ import {
   useReply,
   useClose,
   useReopen,
+  notifyTyping,
 } from './useConversations';
 
 type MobileView = 'list' | 'thread' | 'profile';
@@ -56,6 +57,7 @@ export function InboxPage() {
             onTakeover={() => activeId && takeover.mutate(activeId)}
             onHandback={() => activeId && handback.mutate(activeId)}
             onReply={(text) => activeId && reply.mutate({ id: activeId, content: text })}
+            onTyping={() => activeId && notifyTyping(activeId)}
             onReopen={() => activeId && reopen.mutate(activeId)}
             onClose={() => activeId && close.mutate(activeId)}
           />

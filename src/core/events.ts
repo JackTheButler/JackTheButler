@@ -33,12 +33,14 @@ export interface MessageUpdated {
 /** Every event the in-process bus can carry. Realtime.ts forwards a subset
  *  of these to dashboard sockets; add a key here + a `forward(...)` line in
  *  realtime.ts to surface a new event type to the UI. */
-/** Assistant is composing a reply. Emitted by the pipeline just before the
- *  (slowest) generation call so the widget / inbox can show a "typing…"
- *  indicator for the whole compose+translate stretch. No explicit "stop" —
- *  the eventual `message.created` ends it (plus a client-side safety timeout
- *  for the rare errored turn). */
-export interface AssistantTyping {
+/** Someone is composing a reply — drives a "typing…" indicator. No explicit
+ *  "stop": the eventual `message.created` ends it (plus a client-side safety
+ *  timeout). Two sources:
+ *   - `assistant.typing`: the AI pipeline, before the slow generation call →
+ *     shown in both the widget and the dashboard inbox.
+ *   - `staff.typing`: an agent typing in the inbox composer (human mode) →
+ *     forwarded to the widget so the customer sees the agent composing. */
+export interface TypingSignal {
   conversationId: string;
   channel: string;
   channelExternalId: string;
@@ -47,7 +49,8 @@ export interface AssistantTyping {
 export interface EventMap {
   'message.created': MessageCreated;
   'message.updated': MessageUpdated;
-  'assistant.typing': AssistantTyping;
+  'assistant.typing': TypingSignal;
+  'staff.typing': TypingSignal;
   'job.progress': Job;
 }
 

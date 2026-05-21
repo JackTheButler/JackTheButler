@@ -19,12 +19,16 @@ export function Composer({
   onTakeOver,
   onHandBack,
   onSend,
+  onTyping,
   translateHint,
 }: {
   human: boolean;
   onTakeOver: () => void;
   onHandBack: () => void;
   onSend: (text: string) => void;
+  /** Called (throttled) while the agent types, so the customer's widget shows
+   *  a typing indicator. */
+  onTyping?: () => void;
   /** Set when the conversation language differs from the business default
    *  — staff types in the default, the server translates before delivery.
    *  Renders a small unobtrusive note inside the active composer. */
@@ -38,6 +42,18 @@ export function Composer({
   const [draft, setDraft] = useState('');
   const draggingRef = useRef(false);
   draggingRef.current = dragging;
+
+  // Throttle the typing broadcast — one ping per keystroke burst, not per
+  // keypress. The widget's own timeout clears the indicator after a pause.
+  const lastTyping = useRef(0);
+  const pingTyping = () => {
+    if (!onTyping) return;
+    const now = Date.now();
+    if (now - lastTyping.current > 2500) {
+      lastTyping.current = now;
+      onTyping();
+    }
+  };
 
   const maxX = () => Math.max(0, (trackRef.current?.clientWidth ?? 0) - KNOB - PAD * 2);
 
@@ -140,7 +156,10 @@ export function Composer({
           <input
             autoFocus
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              pingTyping();
+            }}
             onKeyDown={(e) => {
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();

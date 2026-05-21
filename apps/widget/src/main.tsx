@@ -71,9 +71,11 @@ function App() {
             setTyping(false);
           } else if (data?.type === 'typing') {
             setTyping(true);
-            // Safety net: clear if no reply arrives (e.g. an errored turn).
+            // Auto-clear after a pause: covers an errored AI turn and a staff
+            // member who types then stops without sending. Refreshed on each
+            // typing ping while they're active.
             if (typingTimer.current) clearTimeout(typingTimer.current);
-            typingTimer.current = setTimeout(() => setTyping(false), 25000);
+            typingTimer.current = setTimeout(() => setTyping(false), 10000);
           }
         } catch {
           /* ignore */

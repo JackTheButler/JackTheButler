@@ -8,6 +8,7 @@ import { useBusiness } from '@/features/settings/useBusiness';
 import { ChannelIcon, channelLabel } from './channel';
 import { Composer } from './Composer';
 import { relativeTime, customerLabel } from './format';
+import { useAssistantTyping } from './useConversations';
 
 /** BCP-47 → readable language name. Falls back to the raw code when
  *  unknown — the toggle label still reads sensibly. */
@@ -165,6 +166,29 @@ function Bubble({
   );
 }
 
+/** "Jane AI is composing" indicator — mirrors the AI bubble (right side,
+ *  accent) with bouncing dots. Shown while the pipeline runs. */
+function TypingBubble() {
+  return (
+    <div className="flex justify-end">
+      <div className="rounded-xl rounded-tr-sm bg-accent px-3.5 py-2.5 text-on-accent">
+        <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
+          <Bot size={11} /> Jane AI
+        </div>
+        <div className="flex items-center gap-1 py-0.5">
+          {[0, 150, 300].map((d) => (
+            <span
+              key={d}
+              className="h-1.5 w-1.5 animate-bounce rounded-full bg-current opacity-70"
+              style={{ animationDelay: `${d}ms` }}
+            />
+          ))}
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function Thread({
   convo,
   mobileActive = false,
@@ -173,6 +197,7 @@ export function Thread({
   onTakeover,
   onHandback,
   onReply,
+  onTyping,
   onReopen,
   onClose,
 }: {
@@ -183,11 +208,13 @@ export function Thread({
   onTakeover: () => void;
   onHandback: () => void;
   onReply: (text: string) => void;
+  onTyping?: () => void;
   onReopen: () => void;
   onClose: () => void;
 }) {
   const isWide = useIsWide();
   const human = convo.mode === 'human';
+  const aiTyping = useAssistantTyping(convo.id);
   const name = customerLabel(convo.customer?.name);
   // Business default language drives which side of a bilingual bubble the
   // dashboard shows by default. Falls back to 'en' before the query lands.
@@ -233,7 +260,7 @@ export function Thread({
     if (!showJumpDown) {
       el.scrollTop = el.scrollHeight;
     }
-  }, [convo.id, showJumpDown, lastMessageId, convo.messages.length]);
+  }, [convo.id, showJumpDown, lastMessageId, convo.messages.length, aiTyping]);
 
   // Re-snap on the next paint to catch markdown bubbles that lay out
   // after the synchronous layout pass — long AI replies otherwise land
@@ -246,7 +273,7 @@ export function Thread({
       el.scrollTop = el.scrollHeight;
     });
     return () => cancelAnimationFrame(id);
-  }, [showJumpDown, lastMessageId, convo.messages.length]);
+  }, [showJumpDown, lastMessageId, convo.messages.length, aiTyping]);
 
   return (
     <section
@@ -324,6 +351,7 @@ export function Thread({
               conversationLanguage={convo.language}
             />
           ))}
+          {aiTyping && <TypingBubble />}
         </div>
 
         {showJumpDown && (
@@ -352,6 +380,7 @@ export function Thread({
             onTakeOver={onTakeover}
             onHandBack={onHandback}
             onSend={onReply}
+            onTyping={onTyping}
             translateHint={
               convo.language && convo.language !== defaultLang
                 ? `Your reply will be translated to ${languageName(convo.language) || convo.language} before the customer reads it.`

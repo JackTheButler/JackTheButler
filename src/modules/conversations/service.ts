@@ -321,6 +321,19 @@ export function getPublicHistory(channel: string, externalId: string): MessageDT
     .map(toMessageDTO);
 }
 
+/** Broadcast that an agent is composing a reply, so the customer's widget
+ *  shows a typing indicator. Fire-and-forget, throttled by the caller (the
+ *  composer). No-op on a closed conversation. */
+export function notifyStaffTyping(id: string): void {
+  const c = getOrThrow(id);
+  if (c.status === 'closed') return;
+  events.emit('staff.typing', {
+    conversationId: id,
+    channel: c.channel,
+    channelExternalId: c.channelExternalId,
+  });
+}
+
 export async function reply(
   id: string,
   agentId: string,

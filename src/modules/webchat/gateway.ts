@@ -20,11 +20,14 @@ events.on('message.created', (p) => {
   pushToVisitor(p.channelExternalId, JSON.stringify({ type: 'message', message: p.message }));
 });
 
-// "Assistant is typing" → widget shows the indicator until the reply lands.
-events.on('assistant.typing', (p) => {
+// "Someone is typing" (AI pre-generation, or an agent in the inbox) → widget
+// shows the indicator until the reply lands. Same frame for both sources.
+const pushTyping = (p: { channel: string; channelExternalId: string }) => {
   if (p.channel !== 'webchat') return;
   pushToVisitor(p.channelExternalId, JSON.stringify({ type: 'typing' }));
-});
+};
+events.on('assistant.typing', pushTyping);
+events.on('staff.typing', pushTyping);
 
 export function registerWebchatSocket<E extends Env>(
   app: Hono<E>,

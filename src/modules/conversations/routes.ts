@@ -7,6 +7,7 @@ import {
   handback,
   ingestInboundMessage,
   listConversations,
+  notifyStaffTyping,
   reply,
   setStatus,
   takeover,
@@ -29,6 +30,13 @@ conversationRoutes.post('/:id/reply', async (c) => {
   const parsed = replyBody.safeParse(await body(c));
   if (!parsed.success) throw new AppError('invalid_input', 400);
   return c.json(await reply(c.req.param('id'), c.get('user').id, parsed.data.content));
+});
+
+// Agent typing → broadcast to the widget. Fire-and-forget; the composer
+// throttles calls. Returns no body.
+conversationRoutes.post('/:id/typing', (c) => {
+  notifyStaffTyping(c.req.param('id'));
+  return c.json({ ok: true });
 });
 
 conversationRoutes.post('/:id/takeover', (c) =>
