@@ -1,8 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
+import { useQueryClient } from '@tanstack/react-query';
 import { Plus, Trash2, Pencil, AlertCircle, BookOpen } from 'lucide-react';
 import type { KnowledgeEntry } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
+import { JobProgress } from '@/components/JobProgress';
 import {
   Badge,
   Button,
@@ -20,11 +22,14 @@ import {
   toast,
 } from '@/components/ui';
 import { ApiError } from '@/lib/api';
+import { useJob } from '@/lib/useJob';
 import { useApps } from '@/features/apps/useApps';
 import {
   useAddEntry,
   useDeleteEntry,
   useKnowledgeEntries,
+  useMissingCount,
+  useReembed,
   useUpdateEntry,
   type EntryInput,
 } from './useKnowledge';
@@ -40,6 +45,12 @@ export function KnowledgeBasePage() {
   const { data, isLoading, isError } = useKnowledgeEntries();
   const apps = useApps();
 
+  const qc = useQueryClient();
+  const missing = useMissingCount();
+  const reembed = useReembed();
+  const [jobId, setJobId] = useState<string | null>(null);
+  const job = useJob(jobId);
+
   const [query, setQuery] = useState('');
   const [topicFilter, setTopicFilter] = useState<string>(ALL_TOPICS);
   const [editing, setEditing] = useState<KnowledgeEntry | null>(null);
@@ -48,6 +59,21 @@ export function KnowledgeBasePage() {
   const entries = data?.entries ?? [];
   const embeddingAppActive =
     (apps.data?.apps ?? []).some((a) => a.category === 'embedding' && a.status === 'active');
+  const missingCount = missing.data?.missing ?? 0;
+
+  // When the re-embed job finishes, refresh the entry list + missing count so
+  // the "No embedding" chips and banner update.
+  useEffect(() => {
+    if (job?.state === 'done' || job?.state === 'cancelled' || job?.state === 'error') {
+      qc.invalidateQueries({ queryKey: ['knowledge'] });
+    }
+  }, [job?.state, qc]);
+
+  const startReembed = () =>
+    reembed.mutate(undefined, {
+      onSuccess: (j) => setJobId(j.id),
+      onError: () => toast.error('Could not start re-embedding.'),
+    });
 
   const topics = useMemo(() => {
     const set = new Set<string>();
@@ -82,7 +108,19 @@ export function KnowledgeBasePage() {
           }
         />
 
-        {!embeddingAppActive && (
+        {/* Three banner states, in priority order:
+            1. re-embed job running → progress bar
+            2. no embedding provider → can't make anything searchable
+            3. provider active but N entries unembedded → offer re-embed */}
+        {job && job.state === 'running' ? (
+          <div className="mt-6 rounded-xl border border-line bg-panel p-3">
+            <JobProgress
+              job={job}
+              label="Embedding knowledge base"
+              onCancel={() => qc.invalidateQueries({ queryKey: ['knowledge'] })}
+            />
+          </div>
+        ) : !embeddingAppActive ? (
           <div className="mt-6 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3 text-sm text-amber-700 dark:text-amber-300">
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <div>
@@ -97,7 +135,29 @@ export function KnowledgeBasePage() {
               </p>
             </div>
           </div>
-        )}
+        ) : missingCount > 0 ? (
+          <div className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3 text-sm text-amber-700 dark:text-amber-300">
+            <div className="flex items-start gap-3">
+              <AlertCircle size={16} className="mt-0.5 shrink-0" />
+              <p>
+                <span className="font-medium">
+                  {missingCount} {missingCount === 1 ? 'entry isn’t' : 'entries aren’t'} searchable
+                  yet.
+                </span>{' '}
+                <span className="opacity-90">Embed them so the AI can use them.</span>
+              </p>
+            </div>
+            <Button
+              variant="outline"
+              size="sm"
+              className="shrink-0"
+              onClick={startReembed}
+              disabled={reembed.isPending}
+            >
+              {reembed.isPending ? 'Starting…' : 'Re-embed'}
+            </Button>
+          </div>
+        ) : null}
 
         <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
           <SearchInput

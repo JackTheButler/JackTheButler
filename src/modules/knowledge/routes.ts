@@ -3,9 +3,11 @@ import { AppError } from '@/core/errors.js';
 import { entryBody } from '@/modules/knowledge/schema.js';
 import {
   addEntry,
+  countMissingEmbeddings,
   deleteEntry,
   getEntry,
   listEntries,
+  startReembedMissing,
   updateEntry,
 } from '@/modules/knowledge/service.js';
 
@@ -49,3 +51,11 @@ knowledgeRoutes.delete('/entries/:id', (c) => {
   deleteEntry(c.req.param('id'));
   return c.json({ ok: true });
 });
+
+/** Count of entries not yet searchable (missing an embedding). Drives the
+ *  KB banner. */
+knowledgeRoutes.get('/missing-count', (c) => c.json({ missing: countMissingEmbeddings() }));
+
+/** Start (or rejoin) the re-embed-missing job. Returns the Job snapshot;
+ *  the client tracks live progress over the realtime socket. */
+knowledgeRoutes.post('/reembed', (c) => c.json(startReembedMissing()));

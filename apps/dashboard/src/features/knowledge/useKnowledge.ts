@@ -46,3 +46,19 @@ export function useDeleteEntry() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+/** How many entries aren't searchable yet (missing an embedding). */
+export function useMissingCount() {
+  return useQuery({
+    queryKey: ['knowledge', 'missing'],
+    queryFn: () => api.get<{ missing: number }>('/api/app/knowledge/missing-count'),
+  });
+}
+
+/** Start (or rejoin) the re-embed-missing job; returns the Job snapshot. */
+export function useReembed() {
+  return useMutation({
+    mutationFn: () =>
+      api.post<{ id: string; state: string }>('/api/app/knowledge/reembed'),
+  });
+}

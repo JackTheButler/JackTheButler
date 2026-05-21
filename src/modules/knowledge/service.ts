@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq } from 'drizzle-orm';
+import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import type { KnowledgeEntry } from '@janetheoperator/shared';
 import { db } from '@/db/client.js';
 import {
@@ -8,6 +8,7 @@ import {
 } from '@/db/schema/index.js';
 import { AppError } from '@/core/errors.js';
 import { logger as appLogger } from '@/core/logger.js';
+import { startJob, activeJobOfType, type Job } from '@/core/jobs.js';
 import { getActiveEmbeddingInstance } from '@/modules/apps/service.js';
 
 /**
@@ -121,12 +122,11 @@ export async function updateEntry(
     .get();
   if (!existing) throw new AppError('entry_not_found', 404);
 
-  // Re-embed only when the question changed — answer + topic edits don't
-  // affect the retrieval key.
-  const embedding =
-    existing.question === input.question
-      ? existing.embedding
-      : await embedQuestion(input.question);
+  // Re-embed when the question changed (the retrieval key moved) OR when the
+  // entry currently has no embedding (e.g. it was created before an
+  // embedding app was connected — a manual edit should backfill it).
+  const needsEmbed = existing.question !== input.question || existing.embedding === null;
+  const embedding = needsEmbed ? await embedQuestion(input.question) : existing.embedding;
 
   db.update(knowledgeEntries)
     .set({
@@ -149,4 +149,65 @@ export function deleteEntry(id: string): void {
     .get();
   if (!existing) throw new AppError('entry_not_found', 404);
   db.delete(knowledgeEntries).where(eq(knowledgeEntries.id, id)).run();
+}
+
+const REEMBED_JOB = 'kb-reembed';
+const REEMBED_BATCH = 50;
+
+/** How many entries are missing an embedding (i.e. not yet searchable). */
+export function countMissingEmbeddings(): number {
+  const row = db
+    .select({ n: sql<number>`count(*)` })
+    .from(knowledgeEntries)
+    .where(isNull(knowledgeEntries.embedding))
+    .get();
+  return row?.n ?? 0;
+}
+
+/**
+ * Start (or return the already-running) re-embed job. Embeds every entry
+ * with a null embedding in batches, ticking progress per batch. Idempotent
+ * + incremental: only touches null-embedding rows, so a crash mid-run just
+ * means the next run finishes the rest.
+ *
+ * Returns the Job snapshot — `{ jobId }` for the client, which then tracks
+ * live progress over the realtime socket.
+ */
+export function startReembedMissing(): Job {
+  const running = activeJobOfType(REEMBED_JOB);
+  if (running) return running;
+
+  const total = countMissingEmbeddings();
+
+  return startJob(REEMBED_JOB, total, async (ctx) => {
+    const instance = getActiveEmbeddingInstance();
+    if (!instance) throw new Error('no_active_embedding_app');
+
+    // Snapshot the pending ids once, then iterate a fixed list in batches.
+    // (Re-querying "where null" each loop would spin forever on any row
+    // that fails to embed.) A row that fails stays null and is picked up
+    // by the next run; we still tick it so the bar completes honestly —
+    // the banner re-derives the missing count afterwards.
+    const pending = db
+      .select({ id: knowledgeEntries.id, question: knowledgeEntries.question })
+      .from(knowledgeEntries)
+      .where(isNull(knowledgeEntries.embedding))
+      .all();
+
+    for (let i = 0; i < pending.length; i += REEMBED_BATCH) {
+      if (ctx.cancelled) return;
+      const batch = pending.slice(i, i + REEMBED_BATCH);
+      const { vectors } = await instance.embed({ texts: batch.map((b) => b.question) });
+      const now = new Date();
+      for (let j = 0; j < batch.length; j++) {
+        const vector = vectors[j];
+        if (!vector || vector.length === 0) continue;
+        db.update(knowledgeEntries)
+          .set({ embedding: encodeEmbedding(vector), updatedAt: now })
+          .where(eq(knowledgeEntries.id, batch[j].id))
+          .run();
+      }
+      ctx.tick(batch.length);
+    }
+  });
 }

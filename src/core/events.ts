@@ -1,5 +1,6 @@
 import { EventEmitter } from 'node:events';
 import type { MessageDTO } from '@janetheoperator/shared';
+import type { Job } from '@/core/jobs.js';
 
 /**
  * Tiny in-process event bus. Lets transport-agnostic services announce
@@ -35,6 +36,7 @@ export interface MessageUpdated {
 export interface EventMap {
   'message.created': MessageCreated;
   'message.updated': MessageUpdated;
+  'job.progress': Job;
 }
 
 const emitter = new EventEmitter();
