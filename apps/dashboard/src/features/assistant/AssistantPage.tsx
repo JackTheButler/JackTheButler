@@ -65,7 +65,7 @@ export function AssistantPage() {
 
   return (
     <PageShell>
-      <div className="mx-auto max-w-3xl space-y-6 px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 md:px-8">
         <PageHeader
           title="Assistant"
           subtitle="Shape how the AI talks. These settings drive every reply."

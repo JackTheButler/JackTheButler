@@ -9,7 +9,45 @@ import {
 import { AppError } from '@/core/errors.js';
 import { logger as appLogger } from '@/core/logger.js';
 import { startJob, activeJobOfType, type Job } from '@/core/jobs.js';
+import { readSetting, writeSetting } from '@/core/settings.js';
 import { getActiveEmbeddingInstance } from '@/modules/apps/service.js';
+
+/* ── Retrieval match strictness ────────────────────────────────── */
+
+export const MATCH_STRICTNESS_LEVELS = ['loose', 'balanced', 'strict'] as const;
+export type MatchStrictness = (typeof MATCH_STRICTNESS_LEVELS)[number];
+
+const STRICTNESS_KEY = 'kb.matchStrictness';
+const DEFAULT_STRICTNESS: MatchStrictness = 'balanced';
+
+/** Qualitative level → cosine floor. Calibrated to text-embedding-3; tune
+ *  the floors here without touching stored values (we persist the level,
+ *  not the number). */
+const STRICTNESS_FLOOR: Record<MatchStrictness, number> = {
+  loose: 0.3,
+  balanced: 0.4,
+  strict: 0.5,
+};
+
+/** Current strictness level. Lazy-seeds `'balanced'` on first read (same
+ *  pattern as the business default language) so it's an explicit row. */
+export function getMatchStrictness(): MatchStrictness {
+  const stored = readSetting<string>(STRICTNESS_KEY);
+  if (stored && (MATCH_STRICTNESS_LEVELS as readonly string[]).includes(stored)) {
+    return stored as MatchStrictness;
+  }
+  writeSetting(STRICTNESS_KEY, DEFAULT_STRICTNESS);
+  return DEFAULT_STRICTNESS;
+}
+
+export function setMatchStrictness(level: MatchStrictness): void {
+  writeSetting(STRICTNESS_KEY, level);
+}
+
+/** The cosine floor the retriever should use, derived from the level. */
+export function getKbMinSimilarity(): number {
+  return STRICTNESS_FLOOR[getMatchStrictness()];
+}
 
 /**
  * Knowledge base — flat Q&A entries.
@@ -41,11 +79,20 @@ function toDTO(row: KnowledgeEntryRow): KnowledgeEntry {
   };
 }
 
-async function embedQuestion(question: string): Promise<Buffer | null> {
+/** Text we embed for retrieval. We combine the question AND the answer (not
+ *  the question alone) so the entry's vector carries the answer's content
+ *  words too — that broadens recall against differently-phrased customer
+ *  questions (e.g. "when do I get my money back?" matching a "refund speed"
+ *  entry). The query side still embeds just the customer's question. */
+function embedText(question: string, answer: string): string {
+  return `${question}\n\n${answer}`;
+}
+
+async function embedEntry(question: string, answer: string): Promise<Buffer | null> {
   const instance = getActiveEmbeddingInstance();
   if (!instance) return null;
   try {
-    const result = await instance.embed({ texts: [question] });
+    const result = await instance.embed({ texts: [embedText(question, answer)] });
     const vector = result.vectors[0];
     if (!vector || vector.length === 0) return null;
     return encodeEmbedding(vector);
@@ -94,7 +141,7 @@ export interface EntryInput {
 export async function addEntry(input: EntryInput): Promise<KnowledgeEntry> {
   const now = new Date();
   const id = randomUUID();
-  const embedding = await embedQuestion(input.question);
+  const embedding = await embedEntry(input.question, input.answer);
 
   db.insert(knowledgeEntries)
     .values({
@@ -122,11 +169,16 @@ export async function updateEntry(
     .get();
   if (!existing) throw new AppError('entry_not_found', 404);
 
-  // Re-embed when the question changed (the retrieval key moved) OR when the
-  // entry currently has no embedding (e.g. it was created before an
-  // embedding app was connected — a manual edit should backfill it).
-  const needsEmbed = existing.question !== input.question || existing.embedding === null;
-  const embedding = needsEmbed ? await embedQuestion(input.question) : existing.embedding;
+  // Re-embed when the question OR answer changed (both feed the vector now)
+  // OR when the entry has no embedding yet (created before an embedding app
+  // was connected — a manual edit should backfill it).
+  const needsEmbed =
+    existing.question !== input.question ||
+    existing.answer !== input.answer ||
+    existing.embedding === null;
+  const embedding = needsEmbed
+    ? await embedEntry(input.question, input.answer)
+    : existing.embedding;
 
   db.update(knowledgeEntries)
     .set({
@@ -154,50 +206,66 @@ export function deleteEntry(id: string): void {
 const REEMBED_JOB = 'kb-reembed';
 const REEMBED_BATCH = 50;
 
-/** How many entries are missing an embedding (i.e. not yet searchable). */
-export function countMissingEmbeddings(): number {
-  const row = db
+/** Counts driving the KB banner / re-embed actions. `missing` = not yet
+ *  searchable; `total` = approved entries (the re-embed-all target). */
+export function embeddingCounts(): { missing: number; total: number } {
+  const missing = db
     .select({ n: sql<number>`count(*)` })
     .from(knowledgeEntries)
     .where(isNull(knowledgeEntries.embedding))
     .get();
-  return row?.n ?? 0;
+  const total = db
+    .select({ n: sql<number>`count(*)` })
+    .from(knowledgeEntries)
+    .where(eq(knowledgeEntries.status, 'approved'))
+    .get();
+  return { missing: missing?.n ?? 0, total: total?.n ?? 0 };
 }
 
+export type ReembedScope = 'missing' | 'all';
+
 /**
- * Start (or return the already-running) re-embed job. Embeds every entry
- * with a null embedding in batches, ticking progress per batch. Idempotent
- * + incremental: only touches null-embedding rows, so a crash mid-run just
- * means the next run finishes the rest.
+ * Start (or return the already-running) re-embed job.
+ *  - `'missing'` (default): only entries with a null embedding — backfill
+ *    after connecting an embedding provider. Cheap, incremental.
+ *  - `'all'`: every approved entry — use after changing the embedding model
+ *    (vector space changed) or what we embed (e.g. question-only → Q+A).
  *
- * Returns the Job snapshot — `{ jobId }` for the client, which then tracks
- * live progress over the realtime socket.
+ * Embeds in batches of the combined question+answer text, ticking progress
+ * per batch. Idempotent + incremental: snapshots ids once; a failed row is
+ * left as-is and picked up next run; a crash mid-run is recovered by
+ * re-running.
  */
-export function startReembedMissing(): Job {
+export function startReembed(scope: ReembedScope = 'missing'): Job {
   const running = activeJobOfType(REEMBED_JOB);
   if (running) return running;
 
-  const total = countMissingEmbeddings();
+  const baseFilter =
+    scope === 'all'
+      ? eq(knowledgeEntries.status, 'approved')
+      : isNull(knowledgeEntries.embedding);
 
-  return startJob(REEMBED_JOB, total, async (ctx) => {
+  // Snapshot ids + text once, then iterate a fixed list in batches.
+  const pending = db
+    .select({
+      id: knowledgeEntries.id,
+      question: knowledgeEntries.question,
+      answer: knowledgeEntries.answer,
+    })
+    .from(knowledgeEntries)
+    .where(baseFilter)
+    .all();
+
+  return startJob(REEMBED_JOB, pending.length, async (ctx) => {
     const instance = getActiveEmbeddingInstance();
     if (!instance) throw new Error('no_active_embedding_app');
-
-    // Snapshot the pending ids once, then iterate a fixed list in batches.
-    // (Re-querying "where null" each loop would spin forever on any row
-    // that fails to embed.) A row that fails stays null and is picked up
-    // by the next run; we still tick it so the bar completes honestly —
-    // the banner re-derives the missing count afterwards.
-    const pending = db
-      .select({ id: knowledgeEntries.id, question: knowledgeEntries.question })
-      .from(knowledgeEntries)
-      .where(isNull(knowledgeEntries.embedding))
-      .all();
 
     for (let i = 0; i < pending.length; i += REEMBED_BATCH) {
       if (ctx.cancelled) return;
       const batch = pending.slice(i, i + REEMBED_BATCH);
-      const { vectors } = await instance.embed({ texts: batch.map((b) => b.question) });
+      const { vectors } = await instance.embed({
+        texts: batch.map((b) => embedText(b.question, b.answer)),
+      });
       const now = new Date();
       for (let j = 0; j < batch.length; j++) {
         const vector = vectors[j];

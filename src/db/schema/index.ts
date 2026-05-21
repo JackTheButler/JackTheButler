@@ -11,3 +11,4 @@ export * from './app_configs.js';
 export * from './assistant_profile.js';
 export * from './business_profile.js';
 export * from './knowledge_entries.js';
+export * from './settings.js';

@@ -1,21 +1,25 @@
-import { useEffect, useMemo, useState } from 'react';
+import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Pencil, AlertCircle, BookOpen } from 'lucide-react';
+import { Plus, Trash2, Pencil, AlertCircle, BookOpen, RefreshCw } from 'lucide-react';
 import type { KnowledgeEntry } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
+import { Toolbar } from '@/components/Toolbar';
 import { JobProgress } from '@/components/JobProgress';
 import {
   Badge,
   Button,
+  Card,
   Dialog,
   DialogClose,
   DialogContent,
   EmptyState,
   Field,
-  Input,
   SaveButton,
   SearchInput,
+  SearchableSelect,
+  SegmentedControl,
   Select,
   SelectItem,
   Textarea,
@@ -27,26 +31,73 @@ import { useApps } from '@/features/apps/useApps';
 import {
   useAddEntry,
   useDeleteEntry,
+  useEmbeddingCounts,
+  useKbSettings,
   useKnowledgeEntries,
-  useMissingCount,
   useReembed,
+  useSetMatchStrictness,
   useUpdateEntry,
   type EntryInput,
+  type MatchStrictness,
 } from './useKnowledge';
 
 /**
- * KB management — flat list of Q&A entries, manual add/edit/delete.
- * AI-extraction from pasted blobs lands in a follow-on slice.
+ * Knowledge feature. Two tabs (GitHub repo Code/Settings pattern):
+ *  - Entries  → the content: list, search, add/edit/delete, re-embed.
+ *  - Settings → KB config (match strictness; future top-K, etc.).
+ * Routed like the Settings page (`/knowledge`, `/knowledge/:section`) so
+ * content and config live under one feature without blending on a screen.
  */
 
 const ALL_TOPICS = '__all__';
+const TABS = ['Entries', 'Settings'] as const;
+type Tab = (typeof TABS)[number];
+const SLUG: Record<Tab, string> = { Entries: 'entries', Settings: 'settings' };
 
 export function KnowledgeBasePage() {
+  const { section } = useParams();
+  const tab = TABS.find((t) => SLUG[t] === section) ?? 'Entries';
+
+  return (
+    <PageShell>
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
+        {tab === 'Entries' ? <EntriesTab /> : <SettingsTab />}
+      </div>
+    </PageShell>
+  );
+}
+
+/** Shared page chrome for both tabs: title + the Entries/Settings tab nav.
+ *  `action` is the active tab's primary action, rendered on the right of the
+ *  header (Entries supplies Add entry / Re-embed all; Settings has none). */
+function KnowledgeHeader({ action }: { action?: ReactNode }) {
+  const { section } = useParams();
+  const navigate = useNavigate();
+  const tab = TABS.find((t) => SLUG[t] === section) ?? 'Entries';
+  return (
+    <>
+      <PageHeader
+        title="Knowledge"
+        subtitle="Q&A entries the AI searches when a customer asks something."
+        action={action}
+      />
+      <SegmentedControl
+        aria-label="Knowledge sections"
+        options={TABS}
+        value={tab}
+        onChange={(t) => navigate(`/knowledge/${SLUG[t]}`)}
+        className="-mx-4 mt-6 px-4 md:mx-0 md:px-0"
+      />
+    </>
+  );
+}
+
+function EntriesTab() {
   const { data, isLoading, isError } = useKnowledgeEntries();
   const apps = useApps();
 
   const qc = useQueryClient();
-  const missing = useMissingCount();
+  const counts = useEmbeddingCounts();
   const reembed = useReembed();
   const [jobId, setJobId] = useState<string | null>(null);
   const job = useJob(jobId);
@@ -57,20 +108,20 @@ export function KnowledgeBasePage() {
   const [adding, setAdding] = useState(false);
 
   const entries = data?.entries ?? [];
-  const embeddingAppActive =
-    (apps.data?.apps ?? []).some((a) => a.category === 'embedding' && a.status === 'active');
-  const missingCount = missing.data?.missing ?? 0;
+  const embeddingAppActive = (apps.data?.apps ?? []).some(
+    (a) => a.category === 'embedding' && a.status === 'active',
+  );
+  const missingCount = counts.data?.missing ?? 0;
+  const totalCount = counts.data?.total ?? 0;
 
-  // When the re-embed job finishes, refresh the entry list + missing count so
-  // the "No embedding" chips and banner update.
   useEffect(() => {
     if (job?.state === 'done' || job?.state === 'cancelled' || job?.state === 'error') {
       qc.invalidateQueries({ queryKey: ['knowledge'] });
     }
   }, [job?.state, qc]);
 
-  const startReembed = () =>
-    reembed.mutate(undefined, {
+  const startReembed = (scope: 'missing' | 'all' = 'missing') =>
+    reembed.mutate(scope, {
       onSuccess: (j) => setJobId(j.id),
       onError: () => toast.error('Could not start re-embedding.'),
     });
@@ -94,26 +145,41 @@ export function KnowledgeBasePage() {
     });
   }, [entries, query, topicFilter]);
 
-  return (
-    <PageShell>
-      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
-        <PageHeader
-          title="Knowledge"
-          subtitle="Q&A entries the AI searches when a customer asks something."
-          action={
-            <Button size="md" onClick={() => setAdding(true)}>
-              <Plus size={16} />
-              Add entry
-            </Button>
-          }
-        />
+  // Active tab's primary actions, rendered in the shared header (right side).
+  const actions = (
+    <div className="flex flex-wrap gap-2">
+      {/* Re-embed everything — after a model/embedding-scheme change (vectors
+          need rebuilding). Hidden while a job runs or there's nothing to embed. */}
+      {embeddingAppActive && totalCount > 0 && !(job && job.state === 'running') && (
+        <Button
+          variant="outline"
+          size="md"
+          onClick={() => startReembed('all')}
+          disabled={reembed.isPending}
+          title="Rebuild embeddings for every entry"
+        >
+          <RefreshCw size={15} />
+          Re-embed all
+        </Button>
+      )}
+      <Button size="md" onClick={() => setAdding(true)}>
+        <Plus size={16} />
+        Add entry
+      </Button>
+    </div>
+  );
 
-        {/* Three banner states, in priority order:
+  return (
+    <>
+      <KnowledgeHeader action={actions} />
+
+      <div className="mt-6 space-y-4">
+        {/* Banner states, in priority order:
             1. re-embed job running → progress bar
             2. no embedding provider → can't make anything searchable
             3. provider active but N entries unembedded → offer re-embed */}
         {job && job.state === 'running' ? (
-          <div className="mt-6 rounded-xl border border-line bg-panel p-3">
+          <div className="rounded-xl border border-line bg-panel p-3">
             <JobProgress
               job={job}
               label="Embedding knowledge base"
@@ -121,13 +187,13 @@ export function KnowledgeBasePage() {
             />
           </div>
         ) : !embeddingAppActive ? (
-          <div className="mt-6 flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3 text-sm text-amber-700 dark:text-amber-300">
+          <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3 text-sm text-amber-700 dark:text-amber-300">
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <div>
               <p className="font-medium">Embedding provider not connected.</p>
               <p className="text-xs opacity-90">
-                Entries you add will be saved but won't be searchable by the AI until you
-                connect an embedding provider in{' '}
+                Entries you add will be saved but won't be searchable by the AI until you connect an
+                embedding provider in{' '}
                 <a href="/apps" className="underline">
                   Apps
                 </a>
@@ -136,7 +202,7 @@ export function KnowledgeBasePage() {
             </div>
           </div>
         ) : missingCount > 0 ? (
-          <div className="mt-6 flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3 text-sm text-amber-700 dark:text-amber-300">
+          <div className="flex items-center justify-between gap-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3 text-sm text-amber-700 dark:text-amber-300">
             <div className="flex items-start gap-3">
               <AlertCircle size={16} className="mt-0.5 shrink-0" />
               <p>
@@ -151,7 +217,7 @@ export function KnowledgeBasePage() {
               variant="outline"
               size="sm"
               className="shrink-0"
-              onClick={startReembed}
+              onClick={() => startReembed('missing')}
               disabled={reembed.isPending}
             >
               {reembed.isPending ? 'Starting…' : 'Re-embed'}
@@ -159,26 +225,30 @@ export function KnowledgeBasePage() {
           </div>
         ) : null}
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <SearchInput
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search question, answer, or topic…"
-            className="w-full sm:w-72"
-          />
-          {topics.length > 0 && (
-            <Select value={topicFilter} onValueChange={setTopicFilter}>
-              <SelectItem value={ALL_TOPICS}>All topics</SelectItem>
-              {topics.map((t) => (
-                <SelectItem key={t} value={t}>
-                  {t}
-                </SelectItem>
-              ))}
-            </Select>
-          )}
-        </div>
+        <Toolbar
+          filters={
+            topics.length > 0 && (
+              <Select value={topicFilter} onValueChange={setTopicFilter}>
+                <SelectItem value={ALL_TOPICS}>All topics</SelectItem>
+                {topics.map((t) => (
+                  <SelectItem key={t} value={t}>
+                    {t}
+                  </SelectItem>
+                ))}
+              </Select>
+            )
+          }
+          search={
+            <SearchInput
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search question, answer, or topic…"
+              className="w-full sm:w-72"
+            />
+          }
+        />
 
-        <div className="mt-6">
+        <div>
           {isError ? (
             <EmptyState>Couldn't load entries.</EmptyState>
           ) : isLoading ? (
@@ -213,28 +283,64 @@ export function KnowledgeBasePage() {
         </div>
       </div>
 
-      <EntryDialog
-        open={adding}
-        onOpenChange={setAdding}
-        topics={topics}
-      />
+      <EntryDialog open={adding} onOpenChange={setAdding} topics={topics} />
       <EntryDialog
         open={!!editing}
         onOpenChange={(o) => !o && setEditing(null)}
         topics={topics}
         existing={editing}
       />
-    </PageShell>
+    </>
   );
 }
 
-function EntryRow({
-  entry,
-  onEdit,
-}: {
-  entry: KnowledgeEntry;
-  onEdit: () => void;
-}) {
+const STRICTNESS_LABELS: Record<MatchStrictness, string> = {
+  loose: 'Loose',
+  balanced: 'Balanced',
+  strict: 'Strict',
+};
+const STRICTNESS_VALUES = Object.values(STRICTNESS_LABELS); // ['Loose','Balanced','Strict']
+
+function SettingsTab() {
+  const settings = useKbSettings();
+  const setStrictness = useSetMatchStrictness();
+  const current = settings.data?.matchStrictness ?? 'balanced';
+
+  return (
+    <>
+      <KnowledgeHeader />
+      <Card title="Retrieval" className="mt-6">
+        <div className="flex flex-col gap-3 py-1 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
+          <div className="min-w-0">
+            <div className="text-sm font-medium">Match strictness</div>
+            <div className="mt-0.5 text-xs text-muted">
+              How closely a customer's question must match an entry for the AI to use it. Looser
+              finds more answers; stricter is more precise.
+            </div>
+          </div>
+          <SegmentedControl
+            aria-label="Match strictness"
+            className="shrink-0"
+            options={STRICTNESS_VALUES}
+            value={STRICTNESS_LABELS[current]}
+            onChange={(label) => {
+              const level = (Object.keys(STRICTNESS_LABELS) as MatchStrictness[]).find(
+                (k) => STRICTNESS_LABELS[k] === label,
+              );
+              if (level)
+                setStrictness.mutate(level, {
+                  onSuccess: () => toast.success('Match strictness updated'),
+                  onError: () => toast.error('Could not update match strictness'),
+                });
+            }}
+          />
+        </div>
+      </Card>
+    </>
+  );
+}
+
+function EntryRow({ entry, onEdit }: { entry: KnowledgeEntry; onEdit: () => void }) {
   const del = useDeleteEntry();
   const onDelete = () => {
     if (!window.confirm('Delete this entry?')) return;
@@ -247,11 +353,7 @@ function EntryRow({
     <li className="flex items-start gap-3 p-3 sm:p-4">
       <div className="min-w-0 flex-1">
         <div className="flex items-center gap-2">
-          <p
-            className="truncate text-sm font-medium text-ink"
-            dir="auto"
-            title={entry.question}
-          >
+          <p className="truncate text-sm font-medium text-ink" dir="auto" title={entry.question}>
             {entry.question}
           </p>
           {entry.topic && (
@@ -308,13 +410,8 @@ function EntryDialog({
   const update = useUpdateEntry();
   const save = isEdit ? update : add;
 
-  const [form, setForm] = useState<EntryInput>({
-    question: '',
-    answer: '',
-    topic: null,
-  });
+  const [form, setForm] = useState<EntryInput>({ question: '', answer: '', topic: null });
 
-  // Reset / hydrate on open / existing change.
   useEffect(() => {
     if (open) {
       setForm({
@@ -384,18 +481,17 @@ function EntryDialog({
             />
           </Field>
 
-          <Field label="Topic" optional hint="Optional. Used to group entries (e.g. Shipping).">
-            <Input
+          <Field label="Topic" optional hint="Optional. Pick an existing topic or type a new one.">
+            <SearchableSelect
               value={form.topic ?? ''}
-              onChange={(e) => set('topic', e.target.value || null)}
-              placeholder={topics.length > 0 ? `e.g. ${topics[0]}` : 'e.g. Shipping'}
-              list="knowledge-topics"
+              onValueChange={(v) => set('topic', v || null)}
+              options={topics.map((t) => ({ value: t, label: t }))}
+              placeholder="No topic"
+              searchPlaceholder="Search or create a topic…"
+              creatable
+              clearable
+              clearLabel="No topic"
             />
-            <datalist id="knowledge-topics">
-              {topics.map((t) => (
-                <option key={t} value={t} />
-              ))}
-            </datalist>
           </Field>
 
           {details && (
@@ -427,4 +523,3 @@ function EntryDialog({
     </Dialog>
   );
 }
-

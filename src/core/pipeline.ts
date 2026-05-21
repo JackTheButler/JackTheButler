@@ -32,9 +32,10 @@
  * business service calls `rebuildPipeline()` so the next turn picks it
  * up without a restart.
  */
-import { and, asc, desc, eq, isNull, ne } from 'drizzle-orm';
+import { and, asc, desc, eq, isNotNull, isNull, ne } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import {
+  computeEmbedding,
   createPipeline,
   detectLanguage,
   generateResponse,
@@ -50,6 +51,8 @@ import {
   type InboundMessage,
   type Intent,
   type IntentProvider,
+  type KnowledgeHit,
+  type KnowledgeProvider,
   type Logger,
   type Message as PipelineMessage,
   type Pipeline,
@@ -61,6 +64,7 @@ import { db } from '@/db/client.js';
 import {
   conversations,
   customers,
+  knowledgeEntries,
   messages,
   type Message,
 } from '@/db/schema/index.js';
@@ -68,13 +72,19 @@ import { events } from '@/core/events.js';
 import { logger as appLogger } from '@/core/logger.js';
 import { getAssistant } from '@/modules/assistant/service.js';
 import { getBusiness } from '@/modules/business/service.js';
+import { getKbMinSimilarity } from '@/modules/knowledge/service.js';
 import {
+  getActiveEmbeddingInstance,
   getActiveGenerationInstance,
   recordAppCallResult,
 } from '@/modules/apps/service.js';
 
 /** Last N prior turns the responder gets as context. The user picked this. */
 const HISTORY_LIMIT = 10;
+
+/** Top-K retrieved KB entries. The cosine floor is operator-tunable (KB
+ *  "match strictness" setting) and read per-turn via getKbMinSimilarity(). */
+const KB_TOP_K = 5;
 
 /* ── ConversationProvider ──────────────────────────────────────── */
 
@@ -286,7 +296,7 @@ const promptProvider: PromptProvider = {
    *  We instruct the model to output only the translation so saveOutboundMessage
    *  can persist it verbatim. */
   translator: translatorPrompt,
-  responder: (_ctx, env) => {
+  responder: (ctx, env) => {
     // Build the system prompt from assistant_profile + business_profile.
     // Read at call time (not at pipeline-init) so operator edits to the
     // assistant persona / business name take effect on the next turn.
@@ -303,16 +313,34 @@ const promptProvider: PromptProvider = {
         `Decline these topics politely and offer to connect a human: ${p.topicsToAvoid.trim()}.`,
       );
     }
-    lines.push(
-      `If you cannot help confidently, say: "${p.fallback.trim()}" and offer to connect a human.`,
-    );
+
+    // Retrieved knowledge base entries (loadKnowledge stage). When present,
+    // the AI should ground its answer in them; when they don't cover the
+    // question, fall back to the persona's fallback line.
+    const hits = ctx.knowledgeHits ?? [];
+    if (hits.length > 0) {
+      lines.push(
+        '',
+        'Use the following knowledge base entries to answer the question. ' +
+          'Prefer them over your general knowledge. If they do not cover the ' +
+          `question, say: "${p.fallback.trim()}" and offer to connect a human.`,
+        ...hits.map((h, i) => `[${i + 1}] ${h.title}\n${h.content}`),
+      );
+    } else {
+      lines.push(
+        `If you cannot help confidently, say: "${p.fallback.trim()}" and offer to connect a human.`,
+      );
+    }
+
     // Always answer in the system language. The pipeline's translateOutbound
     // stage handles delivery to the customer's language; if we let Claude
     // pick the response language directly we'd skip that step and end up
     // with inconsistent storage (the dashboard reads `content`, which we
     // want in the system language regardless of customer language).
-    lines.push(`Respond in ${env.systemLanguage}.`);
-    return lines.join('\n');
+    lines.push('', `Respond in ${env.systemLanguage}.`);
+    const prompt = lines.join('\n');
+    appLogger.debug({ messageId: ctx.inbound.id, systemPrompt: prompt }, 'responder prompt');
+    return prompt;
   },
 };
 
@@ -344,10 +372,95 @@ const aiProvider: AIProvider = {
     recordAppCallResult(AI_APP_ID, { ok: true });
     return { content: result.content, usage: result.usage };
   },
-  async embed() {
-    // Embedding stages are not in our pipeline. If they ever are, an
-    // embedding-capable app needs to be wired here.
-    throw new Error('embedding_not_supported');
+  async embed(request) {
+    // Delegates to the active embedding app. Throwing when none is active
+    // is fine — the computeEmbedding stage catches + warns, then
+    // loadKnowledge no-ops, so the AI answers from persona alone.
+    const instance = getActiveEmbeddingInstance();
+    if (!instance) throw new Error('no_active_embedding_app');
+    const result = await instance.embed({ texts: [request.text] });
+    const vector = result.vectors[0];
+    if (!vector || vector.length === 0) throw new Error('empty_embedding');
+    return { embedding: vector };
+  },
+};
+
+/* ── KnowledgeProvider (KB vector search) ──────────────────────── */
+
+function decodeEmbedding(blob: Buffer | Uint8Array): Float32Array {
+  const buf = Buffer.isBuffer(blob) ? blob : Buffer.from(blob);
+  return new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.byteLength / 4));
+}
+
+function cosine(a: readonly number[], b: Float32Array): number {
+  const n = Math.min(a.length, b.length);
+  let dot = 0;
+  let na = 0;
+  let nb = 0;
+  for (let i = 0; i < n; i++) {
+    dot += a[i] * b[i];
+    na += a[i] * a[i];
+    nb += b[i] * b[i];
+  }
+  if (na === 0 || nb === 0) return 0;
+  return dot / (Math.sqrt(na) * Math.sqrt(nb));
+}
+
+/** Diagnostics alongside the hits so the loadKnowledge debug log can
+ *  explain an empty result: candidates = approved + embedded entries
+ *  scanned; bestScore = top cosine seen even if below the threshold. */
+interface KnowledgeSearchResult {
+  hits: KnowledgeHit[];
+  candidates: number;
+  bestScore: number | null;
+}
+
+function searchKnowledge(
+  embedding: readonly number[],
+  limit: number,
+  minSim: number,
+): KnowledgeSearchResult {
+  // In-process scan over approved, embedded entries. Fine up to ~10k
+  // rows; swap to sqlite-vec only if that stops being fast enough.
+  const rows = db
+    .select({
+      id: knowledgeEntries.id,
+      question: knowledgeEntries.question,
+      answer: knowledgeEntries.answer,
+      topic: knowledgeEntries.topic,
+      embedding: knowledgeEntries.embedding,
+    })
+    .from(knowledgeEntries)
+    .where(and(eq(knowledgeEntries.status, 'approved'), isNotNull(knowledgeEntries.embedding)))
+    .all();
+
+  let bestScore: number | null = null;
+  const scored: KnowledgeHit[] = [];
+  for (const row of rows) {
+    if (!row.embedding) continue;
+    const similarity = cosine(embedding, decodeEmbedding(row.embedding as Buffer));
+    if (bestScore === null || similarity > bestScore) bestScore = similarity;
+    if (similarity < minSim) continue;
+    scored.push({
+      id: row.id,
+      // Title carries the matched question (+ topic for context); content
+      // is the answer the AI reads. Both rendered by `responder`.
+      title: row.topic ? `${row.topic}: ${row.question}` : row.question,
+      content: row.answer,
+      similarity,
+    });
+  }
+  scored.sort((a, b) => b.similarity - a.similarity);
+  return { hits: scored.slice(0, limit), candidates: rows.length, bestScore };
+}
+
+const knowledgeProvider: KnowledgeProvider = {
+  async search(embedding, options) {
+    return searchKnowledge(
+      embedding,
+      options?.limit ?? KB_TOP_K,
+      options?.minSimilarity ?? getKbMinSimilarity(),
+    ).hits;
   },
 };
 
@@ -423,6 +536,51 @@ const enrichInboundMessage: Stage = async (ctx, _env) => {
     language,
     translation,
   });
+
+  // Visibility: detected language + the original/translated pair, so a turn's
+  // language handling is debuggable in one line.
+  appLogger.debug(
+    {
+      messageId: ctx.inbound.id,
+      detectedLang: language,
+      original: ctx.inbound.content,
+      translation, // null when same language as system (no translation ran)
+    },
+    'inbound language',
+  );
+};
+
+/**
+ * Custom replacement for the package's `loadKnowledge` (which hardcodes
+ * limit 3 / minSimilarity 0.5). Same behaviour, our retrieval ceilings.
+ * No-ops cleanly when computeEmbedding produced no vector (no embedding
+ * app active) — the responder then answers from persona alone.
+ */
+const loadKnowledge: Stage = async (ctx, env) => {
+  if (!ctx.inboundEmbedding) return;
+  try {
+    const minSim = getKbMinSimilarity();
+    const { hits, candidates, bestScore } = searchKnowledge(
+      ctx.inboundEmbedding,
+      KB_TOP_K,
+      minSim,
+    );
+    ctx.knowledgeHits = hits;
+    appLogger.debug(
+      {
+        messageId: ctx.inbound.id,
+        // The system-language text that was embedded + searched.
+        query: ctx.inboundTranslation ?? ctx.inbound.content,
+        candidates, // approved + embedded entries scanned (0 ⇒ KB empty / unembedded)
+        threshold: minSim,
+        bestScore: bestScore === null ? null : Number(bestScore.toFixed(3)),
+        returned: hits.map((h) => ({ title: h.title, score: Number(h.similarity.toFixed(3)) })),
+      },
+      'kb search',
+    );
+  } catch (err) {
+    env.services.logger.warn({ err }, 'knowledge search failed');
+  }
 };
 
 /* ── The pipeline ─────────────────────────────────────────────── */
@@ -437,6 +595,7 @@ function buildPipeline(): Pipeline {
       entities: entityProvider,
       ai: aiProvider,
       conversation: conversationProvider,
+      knowledge: knowledgeProvider,
       logger: pipelineLogger,
     },
     systemLanguage: getBusiness().defaultLanguage,
@@ -446,6 +605,11 @@ function buildPipeline(): Pipeline {
       translateInbound,
       enrichInboundMessage,
       loadPriorHistory,
+      // KB retrieval: embed the (translated) question, search, attach hits.
+      // computeEmbedding embeds `inboundTranslation ?? inbound.content`, so a
+      // Farsi question searches the English KB via its translation.
+      computeEmbedding,
+      loadKnowledge,
       generateResponse,
       translateOutbound,
       saveOutboundMessage,
@@ -495,11 +659,58 @@ export function runAiPipeline(input: AiPipelineInput): void {
   };
   void getPipeline()
     .process(inbound)
+    .then((ctx) => {
+      // One structured line per turn (info). Grep `messageId` to follow a
+      // single turn across the debug lines from responder + loadKnowledge.
+      appLogger.info(turnSummary(ctx, 'ok'), 'ai turn');
+    })
     .catch((err: unknown) => {
       const detail = err instanceof Error ? err.message : 'pipeline failed';
-      appLogger.error({ err, conversationId: input.conversationId }, 'ai pipeline failed');
+      // PipelineError carries the partial ctx at the point of failure, so we
+      // can still log how far the turn got.
+      const ctx = (err as { ctx?: PipelineTurnCtx })?.ctx;
+      appLogger.error(
+        { ...turnSummary(ctx, 'error'), err, conversationId: input.conversationId },
+        'ai turn failed',
+      );
       recordAppCallResult(AI_APP_ID, { ok: false, detail });
     });
+}
+
+/** Subset of MessageContext the trace reads. Loose because PipelineError's
+ *  ctx may be partial. */
+interface PipelineTurnCtx {
+  inbound?: { id?: string; channel?: string };
+  conversation?: { id?: string };
+  startTime?: number;
+  inboundLanguage?: string;
+  inboundTranslation?: string;
+  history?: readonly unknown[];
+  knowledgeHits?: readonly { similarity: number }[];
+  aiResponse?: { usage?: { inputTokens: number; outputTokens: number } };
+}
+
+/** Flatten a turn's ctx into a structured log object. */
+function turnSummary(
+  ctx: PipelineTurnCtx | undefined,
+  outcome: 'ok' | 'error',
+): Record<string, unknown> {
+  const hits = ctx?.knowledgeHits ?? [];
+  return {
+    outcome,
+    messageId: ctx?.inbound?.id,
+    conversationId: ctx?.conversation?.id,
+    channel: ctx?.inbound?.channel,
+    inboundLang: ctx?.inboundLanguage,
+    translated: !!ctx?.inboundTranslation,
+    historyTurns: ctx?.history?.length ?? 0,
+    kbHits: hits.length,
+    kbTopScore: hits.length > 0 ? Number(hits[0].similarity.toFixed(3)) : null,
+    tokens: ctx?.aiResponse?.usage
+      ? { in: ctx.aiResponse.usage.inputTokens, out: ctx.aiResponse.usage.outputTokens }
+      : null,
+    durationMs: ctx?.startTime ? Date.now() - ctx.startTime : null,
+  };
 }
 
 /**

@@ -3,6 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import type { AppSummary, AppStatus } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
+import { Toolbar } from '@/components/Toolbar';
 import {
   Avatar,
   Badge,
@@ -112,21 +113,26 @@ export function AppsPage() {
           subtitle={`Channels and AI providers. ${apps.length} registered.`}
         />
 
-        <div className="mt-6 flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <SegmentedControl
-            aria-label="Filter apps by category"
-            options={categories}
-            value={activeCategory}
-            onChange={setActiveCategory}
-            className="-mx-4 px-4 md:mx-0 md:px-0"
-          />
-          <SearchInput
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search apps…"
-            className="w-full sm:w-56"
-          />
-        </div>
+        <Toolbar
+          className="mt-6"
+          filters={
+            <SegmentedControl
+              aria-label="Filter apps by category"
+              options={categories}
+              value={activeCategory}
+              onChange={setActiveCategory}
+              className="-mx-4 px-4 md:mx-0 md:px-0"
+            />
+          }
+          search={
+            <SearchInput
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search apps…"
+              className="w-full sm:w-56"
+            />
+          }
+        />
 
         <div className="mt-6">
           {isLoading ? (

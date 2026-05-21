@@ -47,18 +47,43 @@ export function useDeleteEntry() {
   });
 }
 
-/** How many entries aren't searchable yet (missing an embedding). */
-export function useMissingCount() {
+/** Embedding counts: `missing` (not searchable) + `total` (approved). */
+export function useEmbeddingCounts() {
   return useQuery({
-    queryKey: ['knowledge', 'missing'],
-    queryFn: () => api.get<{ missing: number }>('/api/app/knowledge/missing-count'),
+    queryKey: ['knowledge', 'embedding-counts'],
+    queryFn: () =>
+      api.get<{ missing: number; total: number }>('/api/app/knowledge/embedding-counts'),
   });
 }
 
-/** Start (or rejoin) the re-embed-missing job; returns the Job snapshot. */
+/** Start (or rejoin) the re-embed job. `scope='all'` re-embeds every entry
+ *  (after a model/scheme change); default backfills only missing ones. */
 export function useReembed() {
   return useMutation({
-    mutationFn: () =>
-      api.post<{ id: string; state: string }>('/api/app/knowledge/reembed'),
+    mutationFn: (scope: 'missing' | 'all' = 'missing') =>
+      api.post<{ id: string; state: string }>(
+        `/api/app/knowledge/reembed${scope === 'all' ? '?scope=all' : ''}`,
+      ),
+  });
+}
+
+export type MatchStrictness = 'loose' | 'balanced' | 'strict';
+
+/** KB retrieval match-strictness setting. */
+export function useKbSettings() {
+  return useQuery({
+    queryKey: ['knowledge', 'settings'],
+    queryFn: () => api.get<{ matchStrictness: MatchStrictness }>('/api/app/knowledge/settings'),
+  });
+}
+
+export function useSetMatchStrictness() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (matchStrictness: MatchStrictness) =>
+      api.put<{ matchStrictness: MatchStrictness }>('/api/app/knowledge/settings', {
+        matchStrictness,
+      }),
+    onSuccess: (data) => qc.setQueryData(['knowledge', 'settings'], data),
   });
 }

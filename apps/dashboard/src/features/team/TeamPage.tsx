@@ -3,6 +3,7 @@ import { UserPlus, Shield, User, RefreshCw, Ban, Trash2 } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import { ListRow, RowMenu } from '@/components/ListRow';
+import { Toolbar } from '@/components/Toolbar';
 import {
   Avatar,
   Badge,
@@ -133,19 +134,24 @@ export function TeamPage() {
 
   return (
     <PageShell>
-      <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
         <PageHeader
           title="Team"
           subtitle={`${active} members${pending > 0 ? ` · ${pending} pending` : ''}`}
           action={<InviteTeammate />}
         />
 
-        <SegmentedControl
-          aria-label="Filter team"
-          options={teamFilters}
-          value={filter}
-          onChange={setFilter}
-          className="-mx-4 mt-6 px-4 md:mx-0 md:px-0"
+        <Toolbar
+          className="mt-6"
+          filters={
+            <SegmentedControl
+              aria-label="Filter team"
+              options={teamFilters}
+              value={filter}
+              onChange={setFilter}
+              className="-mx-4 px-4 md:mx-0 md:px-0"
+            />
+          }
         />
 
         <div className="mt-6 overflow-hidden rounded-xl border border-line bg-panel">

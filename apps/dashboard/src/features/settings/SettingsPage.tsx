@@ -219,7 +219,7 @@ export function SettingsPage() {
   const tab = TABS.find((t) => SLUG[t] === section) ?? 'Business';
   return (
     <PageShell>
-      <div className="mx-auto max-w-3xl px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
         <PageHeader title="Settings" subtitle="Manage your workspace and account." />
 
         <SegmentedControl

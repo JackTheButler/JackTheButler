@@ -162,4 +162,29 @@ describe('knowledge base — entries', () => {
       expect(e.topic).toBe('Shipping');
     }
   });
+
+  it('match strictness lazy-seeds to balanced and round-trips', async () => {
+    // First read seeds 'balanced'.
+    expect(await (await authed('/api/app/knowledge/settings')).json()).toEqual({
+      matchStrictness: 'balanced',
+    });
+
+    const res = await authed('/api/app/knowledge/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ matchStrictness: 'strict' }),
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ matchStrictness: 'strict' });
+    expect(await (await authed('/api/app/knowledge/settings')).json()).toEqual({
+      matchStrictness: 'strict',
+    });
+  });
+
+  it('rejects an invalid strictness level', async () => {
+    const res = await authed('/api/app/knowledge/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ matchStrictness: 'whatever' }),
+    });
+    expect(res.status).toBe(400);
+  });
 });

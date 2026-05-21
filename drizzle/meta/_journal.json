@@ -85,6 +85,13 @@
       "when": 1779310000000,
       "tag": "0011_replace_kb_with_knowledge_entries",
       "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1779352571790,
+      "tag": "0012_add_settings",
+      "breakpoints": true
     }
   ]
 }
