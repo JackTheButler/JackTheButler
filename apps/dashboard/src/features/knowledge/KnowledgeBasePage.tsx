@@ -86,7 +86,7 @@ function KnowledgeHeader({ action }: { action?: ReactNode }) {
         options={TABS}
         value={tab}
         onChange={(t) => navigate(`/knowledge/${SLUG[t]}`)}
-        className="-mx-4 mt-6 px-4 md:mx-0 md:px-0"
+        className="-mx-4 mt-6 flex min-h-[2.375rem] items-center px-4 md:mx-0 md:px-0"
       />
     </>
   );
@@ -147,7 +147,7 @@ function EntriesTab() {
 
   // Active tab's primary actions, rendered in the shared header (right side).
   const actions = (
-    <div className="flex flex-wrap gap-2">
+    <div className="flex flex-wrap justify-end gap-2">
       {/* Re-embed everything — after a model/embedding-scheme change (vectors
           need rebuilding). Hidden while a job runs or there's nothing to embed. */}
       {embeddingAppActive && totalCount > 0 && !(job && job.state === 'running') && (

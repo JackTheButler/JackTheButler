@@ -94,8 +94,8 @@ function InviteTeammate() {
   return (
     <Dialog>
       <DialogTrigger asChild>
-        <Button>
-          <UserPlus size={15} /> Invite teammate
+        <Button size="md">
+          <UserPlus size={16} /> Invite
         </Button>
       </DialogTrigger>
       <DialogContent title="Invite teammate" description="They’ll get an email to set a password.">

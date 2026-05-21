@@ -1,3 +1,4 @@
+import { Fragment } from 'react';
 import {
   Inbox,
   BookOpen,
@@ -36,7 +37,7 @@ const NAV = [
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
   { to: '/assistant', label: 'Assistant', icon: Bot },
   { to: '/team', label: 'Team', icon: Users },
-  { to: '/apps', label: 'Apps', icon: Blocks },
+  { to: '/apps', label: 'Apps', icon: Blocks, dividerBefore: true },
   { to: '/settings', label: 'Settings', icon: Settings },
 ];
 
@@ -81,11 +82,17 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
           style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
         />
       )}
-      {NAV.map(({ to, label, icon: Icon, end }, i) => {
+      {NAV.map(({ to, label, icon: Icon, end, dividerBefore }, i) => {
         const badge = to === '/' ? inboxCount : 0;
         return (
-          <NavLink
-            key={to}
+          <Fragment key={to}>
+            {dividerBefore && (
+              <div
+                role="separator"
+                className={cn('my-1 h-px bg-line', collapsed ? 'mx-auto w-6' : 'mx-3')}
+              />
+            )}
+            <NavLink
             to={to}
             end={end}
             ref={(el) => {
@@ -114,7 +121,8 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
                 {badge}
               </Badge>
             )}
-          </NavLink>
+            </NavLink>
+          </Fragment>
         );
       })}
     </div>
