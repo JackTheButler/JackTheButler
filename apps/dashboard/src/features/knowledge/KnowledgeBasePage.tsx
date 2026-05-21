@@ -17,6 +17,7 @@ import type { KnowledgeEntry } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import { Toolbar } from '@/components/Toolbar';
+import { Pagination } from '@/components/Pagination';
 import { JobProgress } from '@/components/JobProgress';
 import { ImportDialog } from './import/ImportDialog';
 import {
@@ -70,6 +71,7 @@ import {
  */
 
 const ALL_TOPICS = '__all__';
+const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
 const TABS = ['Entries', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
 const SLUG: Record<Tab, string> = { Entries: 'entries', Settings: 'settings' };
@@ -225,6 +227,16 @@ function EntriesTab() {
     });
   }, [entries, query, topicFilter]);
 
+  // Client-side display pagination: filter first, then show one page. Reset to
+  // page 1 when the filter or page size changes; clamp so a shrinking list
+  // (delete) can never strand us past the last page.
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState<number>(20);
+  useEffect(() => setPage(1), [query, topicFilter, pageSize]);
+  const pageCount = Math.max(1, Math.ceil(filtered.length / pageSize));
+  const safePage = Math.min(page, pageCount);
+  const paged = filtered.slice((safePage - 1) * pageSize, safePage * pageSize);
+
   // Active tab's primary actions, rendered in the shared header (right side).
   const actions = (
     <div className="flex flex-wrap justify-end gap-2">
@@ -349,13 +361,23 @@ function EntriesTab() {
           ) : filtered.length === 0 ? (
             <EmptyState>No entries match your filters.</EmptyState>
           ) : (
-            <div className="overflow-hidden rounded-xl border border-line bg-panel">
-              <ul className="divide-y divide-line">
-                {filtered.map((entry) => (
-                  <EntryRow key={entry.id} entry={entry} onEdit={() => setEditing(entry)} />
-                ))}
-              </ul>
-            </div>
+            <>
+              <div className="overflow-hidden rounded-xl border border-line bg-panel">
+                <ul className="divide-y divide-line">
+                  {paged.map((entry) => (
+                    <EntryRow key={entry.id} entry={entry} onEdit={() => setEditing(entry)} />
+                  ))}
+                </ul>
+              </div>
+              <Pagination
+                page={safePage}
+                pageSize={pageSize}
+                total={filtered.length}
+                onPage={setPage}
+                pageSizeOptions={PAGE_SIZE_OPTIONS}
+                onPageSize={setPageSize}
+              />
+            </>
           )}
         </div>
       </div>

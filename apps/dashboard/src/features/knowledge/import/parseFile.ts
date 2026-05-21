@@ -10,8 +10,9 @@ export type Grid = string[][];
 export class UnsupportedFileError extends Error {}
 
 /** Minimal RFC-4180-ish CSV parser: handles quoted fields, escaped `""`,
- *  and commas / newlines inside quotes. Adequate for exported Q&A sheets. */
-function parseCsv(text: string): Grid {
+ *  and commas / newlines inside quotes. Adequate for exported Q&A sheets.
+ *  Exported for unit testing; callers use `parseSpreadsheet`. */
+export function parseCsv(text: string): Grid {
   const rows: Grid = [];
   let row: string[] = [];
   let field = '';
