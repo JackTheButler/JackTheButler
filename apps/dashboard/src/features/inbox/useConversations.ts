@@ -1,10 +1,10 @@
-import { useEffect } from 'react';
-import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
 import type { ConversationDetail, ConversationSummary } from '@janetheoperator/shared';
 import { api } from '@/lib/api';
+import { useRealtimeEvent } from '@/lib/realtime';
 
-/** Conversation data layer: TanStack Query for load/mutations, the
- *  authed dashboard WebSocket for live invalidation. */
+/** Conversation data layer: TanStack Query for load/mutations, the shared
+ *  realtime bus for live invalidation. */
 
 export type StatusFilter = 'open' | 'closed' | undefined;
 
@@ -67,54 +67,38 @@ export function useReply() {
   });
 }
 
-/** Single authed dashboard socket → invalidate on live events. Generic
- *  envelope, so future event types just add a case here. */
-export function useDashboardSocket() {
+/** Inbox's slice of realtime: subscribe to the two message events on the
+ *  shared bus and keep TanStack Query in sync. No socket plumbing here —
+ *  that lives in lib/realtime; this just declares what the inbox cares
+ *  about. */
+export function useInboxRealtime() {
   const qc = useQueryClient();
-  useEffect(() => {
-    let alive = true;
-    let ws: WebSocket | null = null;
-    const connect = () => {
-      const proto = location.protocol === 'https:' ? 'wss' : 'ws';
-      ws = new WebSocket(`${proto}://${location.host}/api/app/realtime`);
-      ws.onmessage = (e) => {
-        try {
-          const { type, data } = JSON.parse(e.data);
-          if (type === 'message.created') {
-            qc.invalidateQueries({ queryKey: ['conversations'] });
-            qc.invalidateQueries({ queryKey: ['conversation', data?.conversationId] });
-          } else if (type === 'message.updated') {
-            // In-flight enrichment (language + translation populated by the
-            // pipeline after detect/translate). Patch the cached conversation
-            // detail in-place so the bubble re-renders with the toggle, no
-            // full refetch needed.
-            qc.setQueryData<ConversationDetail>(
-              ['conversation', data?.conversationId],
-              (prev) =>
-                prev
-                  ? {
-                      ...prev,
-                      messages: prev.messages.map((m) =>
-                        m.id === data.messageId
-                          ? { ...m, language: data.language, translation: data.translation }
-                          : m,
-                      ),
-                    }
-                  : prev,
-            );
+
+  useRealtimeEvent<{ conversationId: string }>('message.created', (data) => {
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+    qc.invalidateQueries({ queryKey: ['conversation', data?.conversationId] });
+  });
+
+  useRealtimeEvent<{
+    conversationId: string;
+    messageId: string;
+    language: string | null;
+    translation: string | null;
+  }>('message.updated', (data) => {
+    // In-flight enrichment (language + translation populated by the pipeline
+    // after detect/translate). Patch the cached conversation detail in place
+    // so the bubble re-renders with the toggle — no full refetch.
+    qc.setQueryData<ConversationDetail>(['conversation', data?.conversationId], (prev) =>
+      prev
+        ? {
+            ...prev,
+            messages: prev.messages.map((m) =>
+              m.id === data.messageId
+                ? { ...m, language: data.language, translation: data.translation }
+                : m,
+            ),
           }
-        } catch {
-          /* ignore */
-        }
-      };
-      ws.onclose = () => {
-        if (alive) setTimeout(connect, 2000);
-      };
-    };
-    connect();
-    return () => {
-      alive = false;
-      ws?.close();
-    };
-  }, [qc]);
+        : prev,
+    );
+  });
 }

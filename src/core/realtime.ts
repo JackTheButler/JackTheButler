@@ -1,6 +1,6 @@
 import type { Env, Hono } from 'hono';
 import type { UpgradeWebSocket } from 'hono/ws';
-import { events } from '@/core/events.js';
+import { events, type EventMap } from '@/core/events.js';
 
 /**
  * Authenticated dashboard event channel. One WebSocket per agent tab,
@@ -19,7 +19,7 @@ type Sink = (data: string) => void;
 // by which conversation is open. Keyed loosely for future per-agent targeting.
 const agents = new Set<Sink>();
 
-export function broadcastToDashboard(type: string, data: unknown): void {
+function broadcast(type: string, data: unknown): void {
   const frame = JSON.stringify({ type, data });
   for (const sink of agents) {
     try {
@@ -30,10 +30,16 @@ export function broadcastToDashboard(type: string, data: unknown): void {
   }
 }
 
-// Forward domain events to dashboards. Add more `events.on(...)` lines here
-// as new event kinds appear (notifications, etc.).
-events.on('message.created', (p) => broadcastToDashboard('message.created', p));
-events.on('message.updated', (p) => broadcastToDashboard('message.updated', p));
+/** Surface a bus event to every connected dashboard, preserving its name as
+ *  the envelope `type`. The whole forwarding allowlist lives below — adding
+ *  a realtime event to the UI is one `forward(...)` line + a `useRealtimeEvent`
+ *  subscription on the client. */
+function forward<K extends keyof EventMap>(type: K): void {
+  events.on(type, (payload) => broadcast(type, payload));
+}
+
+forward('message.created');
+forward('message.updated');
 
 export function registerDashboardSocket<E extends Env>(
   app: Hono<E>,

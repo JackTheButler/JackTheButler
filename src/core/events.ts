@@ -29,7 +29,10 @@ export interface MessageUpdated {
   translation: string | null;
 }
 
-interface EventMap {
+/** Every event the in-process bus can carry. Realtime.ts forwards a subset
+ *  of these to dashboard sockets; add a key here + a `forward(...)` line in
+ *  realtime.ts to surface a new event type to the UI. */
+export interface EventMap {
   'message.created': MessageCreated;
   'message.updated': MessageUpdated;
 }
