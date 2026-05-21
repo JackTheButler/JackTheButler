@@ -366,7 +366,13 @@ export function ChatWidget({
           background: p.panel,
           borderRadius: fullscreen ? 0 : 16,
           overflow: 'hidden',
-          boxShadow: fullscreen ? 'none' : '0 12px 40px rgba(0,0,0,0.28)',
+          // Two soft, light layers whose reach (~18px) stays inside the 20px
+          // gap to the iframe edge — so it fades out instead of being clipped
+          // into a hard dark band. (The iframe hard-clips; a big 40px-blur
+          // shadow got sliced at the edge.)
+          boxShadow: fullscreen
+            ? 'none'
+            : '0 2px 8px rgba(0,0,0,0.08), 0 5px 14px rgba(0,0,0,0.10)',
           position: 'relative',
         }}
       >
@@ -403,6 +409,10 @@ export function ChatWidget({
           style={{
             flex: 1,
             overflowY: 'auto',
+            // Stop scroll from chaining to the host page when the list hits
+            // its top/bottom (the widget is an overlay — it shouldn't move
+            // the page behind it).
+            overscrollBehavior: 'contain',
             padding: 16,
             background: p.body,
             display: 'flex',
