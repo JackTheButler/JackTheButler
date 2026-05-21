@@ -3,7 +3,9 @@ import { AppError } from '@/core/errors.js';
 import { entryBody } from '@/modules/knowledge/schema.js';
 import { z } from 'zod';
 import {
+  addEntries,
   addEntry,
+  checkDuplicates,
   embeddingCounts,
   deleteEntry,
   getEntry,
@@ -14,6 +16,7 @@ import {
   setMatchStrictness,
   startReembed,
   updateEntry,
+  BULK_MAX,
   MATCH_STRICTNESS_LEVELS,
   TOP_K_OPTIONS,
   type TopK,
@@ -24,7 +27,7 @@ export const knowledgeRoutes = new Hono();
 
 const body = (c: Context): Promise<unknown> => c.req.json().catch(() => null);
 
-function fieldErrors(parsed: ReturnType<typeof entryBody.safeParse>): Record<string, string> {
+function fieldErrors(parsed: z.ZodSafeParseResult<unknown>): Record<string, string> {
   const details: Record<string, string> = {};
   if (!parsed.success) {
     for (const issue of parsed.error.issues) {
@@ -47,6 +50,28 @@ knowledgeRoutes.post('/entries', async (c) => {
   const parsed = entryBody.safeParse(await body(c));
   if (!parsed.success) throw new AppError('invalid_input', 400, fieldErrors(parsed));
   return c.json(await addEntry(parsed.data), 201);
+});
+
+/** Bulk import. Inserts approved-but-unembedded entries (the re-embed-missing
+ *  flow backfills vectors) and skips normalized-duplicate questions. The
+ *  client sends large files in sequential batches of ≤ BULK_MAX; retries are
+ *  idempotent (dupes come back as `skipped`). */
+const bulkBody = z.object({ entries: z.array(entryBody).min(1).max(BULK_MAX) });
+
+knowledgeRoutes.post('/entries/bulk', async (c) => {
+  const parsed = bulkBody.safeParse(await body(c));
+  if (!parsed.success) throw new AppError('invalid_input', 400, fieldErrors(parsed));
+  return c.json(addEntries(parsed.data.entries), 201);
+});
+
+/** Duplicate pre-check for the import preview. Read-only: returns, per
+ *  question (index-aligned), whether a normalized match already exists. */
+const checkBody = z.object({ questions: z.array(z.string()).min(1).max(BULK_MAX) });
+
+knowledgeRoutes.post('/entries/check', async (c) => {
+  const parsed = checkBody.safeParse(await body(c));
+  if (!parsed.success) throw new AppError('invalid_input', 400);
+  return c.json(await checkDuplicates(parsed.data.questions));
 });
 
 knowledgeRoutes.put('/entries/:id', async (c) => {

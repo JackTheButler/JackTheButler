@@ -14,24 +14,39 @@ export function DialogContent({
   title,
   description,
   children,
+  footer,
+  fullScreen = false,
   className,
 }: {
   title: string;
   description?: string;
   children: React.ReactNode;
+  /** Pinned action bar at the bottom (stays put while the body scrolls). */
+  footer?: React.ReactNode;
+  /** Edge-to-edge takeover for space-heavy workflows (e.g. bulk import).
+   *  Constrain your own content to a centered max-width column inside it. */
+  fullScreen?: boolean;
   className?: string;
 }) {
   return (
     <RadixDialog.Portal>
-      <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-[fade-in_150ms_ease-out]" />
+      {/* No backdrop in full-screen — the surface already covers the viewport. */}
+      {!fullScreen && (
+        <RadixDialog.Overlay className="fixed inset-0 z-50 bg-black/40 data-[state=open]:animate-[fade-in_150ms_ease-out]" />
+      )}
       <RadixDialog.Content
         className={cn(
-          'fixed z-50 flex flex-col bg-panel shadow-xl focus:outline-none',
-          // mobile: bottom sheet
-          'inset-x-0 bottom-0 max-h-[90vh] rounded-t-xl',
-          // desktop: centered modal
-          'md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[85vh] md:w-full md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl',
-          'data-[state=open]:animate-[dialog-in_180ms_ease-out]',
+          'fixed z-50 flex flex-col bg-panel focus:outline-none',
+          fullScreen
+            ? 'inset-0 data-[state=open]:animate-[fade-in_150ms_ease-out]'
+            : cn(
+                'shadow-xl',
+                // mobile: bottom sheet
+                'inset-x-0 bottom-0 max-h-[90vh] rounded-t-xl',
+                // desktop: centered modal
+                'md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[85vh] md:w-full md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl',
+                'data-[state=open]:animate-[dialog-in_180ms_ease-out]',
+              ),
           className,
         )}
       >
@@ -52,6 +67,7 @@ export function DialogContent({
           </RadixDialog.Close>
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
+        {footer && <div className="border-t border-line px-5 py-3">{footer}</div>}
       </RadixDialog.Content>
     </RadixDialog.Portal>
   );

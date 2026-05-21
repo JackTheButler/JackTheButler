@@ -207,3 +207,102 @@ describe('knowledge base — entries', () => {
     expect(res.status).toBe(400);
   });
 });
+
+describe('knowledge base — bulk import', () => {
+  it('requires auth (protected-by-default)', async () => {
+    expect(
+      (await app.request('/api/app/knowledge/entries/bulk', { method: 'POST' })).status,
+    ).toBe(401);
+  });
+
+  it('bulk-inserts entries unembedded and reports counts', async () => {
+    const res = await authed('/api/app/knowledge/entries/bulk', {
+      method: 'POST',
+      body: JSON.stringify({
+        entries: [
+          { question: 'Bulk Q one?', answer: 'A one', topic: 'Import' },
+          { question: 'Bulk Q two?', answer: 'A two', topic: null },
+        ],
+      }),
+    });
+    expect(res.status).toBe(201);
+    expect(await res.json()).toEqual({ inserted: 2, skipped: 0 });
+
+    // Inserted as approved-but-unembedded — the re-embed-missing flow backfills.
+    const { entries } = await (
+      await authed('/api/app/knowledge/entries?topic=Import')
+    ).json();
+    const one = (entries as Array<{ question: string; status: string; hasEmbedding: boolean }>).find(
+      (e) => e.question === 'Bulk Q one?',
+    );
+    expect(one).toMatchObject({ status: 'approved', hasEmbedding: false });
+  });
+
+  it('skips duplicates — existing rows and within-batch (normalized)', async () => {
+    const res = await authed('/api/app/knowledge/entries/bulk', {
+      method: 'POST',
+      body: JSON.stringify({
+        entries: [
+          { question: 'Bulk Q one?', answer: 'dup of an existing entry', topic: null },
+          { question: 'Bulk Q THREE', answer: 'genuinely new', topic: null },
+          { question: 'bulk q three?', answer: 'normalized dup of the prev row', topic: null },
+        ],
+      }),
+    });
+    expect(res.status).toBe(201);
+    expect(await res.json()).toEqual({ inserted: 1, skipped: 2 });
+  });
+
+  it('check flags exact (normalized) matches, index-aligned', async () => {
+    const res = await authed('/api/app/knowledge/entries/check', {
+      method: 'POST',
+      body: JSON.stringify({ questions: ['bulk q one', 'A brand new question'] }),
+    });
+    expect(res.status).toBe(200);
+    const { results } = await res.json();
+    // Normalized match despite different case + missing '?'.
+    expect(results[0]).toMatchObject({ exists: true, matchedQuestion: 'Bulk Q one?' });
+    expect(results[1].exists).toBe(false);
+  });
+
+  it('flags semantic near-matches via question vectors (and reports mode)', async () => {
+    // An embedded entry whose QUESTION vector is on the z-axis — orthogonal to
+    // every other entry's vector in these tests, so matches are isolated.
+    setStubVector('How do I reset my password?', [0, 0, 1]);
+    await authed('/api/app/knowledge/entries', {
+      method: 'POST',
+      body: JSON.stringify({
+        question: 'How do I reset my password?',
+        answer: 'Open Settings → Security → Reset password.',
+        topic: 'Account',
+      }),
+    });
+
+    // A reworded question (different text → no exact hit) with the same vector,
+    // and an unrelated one pointing the opposite way (cosine -1 → no match).
+    setStubVector('What are the steps to reset my password?', [0, 0, 1]);
+    setStubVector('Totally unrelated weather query', [0, 0, -1]);
+
+    const res = await authed('/api/app/knowledge/entries/check', {
+      method: 'POST',
+      body: JSON.stringify({
+        questions: ['What are the steps to reset my password?', 'Totally unrelated weather query'],
+      }),
+    });
+    expect(res.status).toBe(200);
+    const { mode, results } = await res.json();
+    expect(mode).toBe('semantic');
+    expect(results[0].exists).toBe(false); // different text — not an exact dup
+    expect(results[0].similar).toMatchObject({ question: 'How do I reset my password?' });
+    expect(results[0].similar.score).toBeGreaterThanOrEqual(0.9);
+    expect(results[1]).toEqual({ exists: false }); // orthogonal/opposite — no match
+  });
+
+  it('rejects an empty batch', async () => {
+    const res = await authed('/api/app/knowledge/entries/bulk', {
+      method: 'POST',
+      body: JSON.stringify({ entries: [] }),
+    });
+    expect(res.status).toBe(400);
+  });
+});

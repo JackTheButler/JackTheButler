@@ -35,22 +35,36 @@ export function DropdownMenuItem({
   children,
   onSelect,
   destructive,
+  disabled,
 }: {
   children: React.ReactNode;
   onSelect?: () => void;
   destructive?: boolean;
+  disabled?: boolean;
 }) {
   return (
     <RadixMenu.Item
       onSelect={onSelect}
+      disabled={disabled}
       className={cn(
-        'flex cursor-pointer items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm outline-none transition-colors',
+        'flex items-center gap-2 rounded-lg px-2.5 py-1.5 text-sm outline-none transition-colors',
         'data-[highlighted]:bg-surface',
+        'data-[disabled]:pointer-events-none data-[disabled]:opacity-50',
+        disabled ? 'cursor-default' : 'cursor-pointer',
         destructive ? 'text-red-600' : 'text-ink',
       )}
     >
       {children}
     </RadixMenu.Item>
+  );
+}
+
+/** Non-interactive section heading inside a menu (e.g. "Add from"). */
+export function DropdownMenuLabel({ children }: { children: React.ReactNode }) {
+  return (
+    <RadixMenu.Label className="px-2.5 py-1.5 text-xs font-medium text-muted">
+      {children}
+    </RadixMenu.Label>
   );
 }
 

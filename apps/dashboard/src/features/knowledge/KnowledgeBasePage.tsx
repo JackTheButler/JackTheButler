@@ -1,12 +1,24 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
 import { useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
-import { Plus, Trash2, Pencil, AlertCircle, BookOpen, RefreshCw } from 'lucide-react';
+import {
+  Plus,
+  Trash2,
+  Pencil,
+  AlertCircle,
+  BookOpen,
+  RefreshCw,
+  ChevronDown,
+  FileSpreadsheet,
+  FileText,
+  Globe,
+} from 'lucide-react';
 import type { KnowledgeEntry } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import { Toolbar } from '@/components/Toolbar';
 import { JobProgress } from '@/components/JobProgress';
+import { ImportDialog } from './import/ImportDialog';
 import {
   Badge,
   Button,
@@ -14,6 +26,11 @@ import {
   Dialog,
   DialogClose,
   DialogContent,
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuTrigger,
   EmptyState,
   Field,
   SaveButton,
@@ -57,6 +74,10 @@ const TABS = ['Entries', 'Settings'] as const;
 type Tab = (typeof TABS)[number];
 const SLUG: Record<Tab, string> = { Entries: 'entries', Settings: 'settings' };
 
+// Bulk-add sources surfaced in the "Add entry" split-button menu. Only `excel`
+// is wired up; the rest are roadmap placeholders (disabled in the menu).
+type ImportSource = 'excel';
+
 export function KnowledgeBasePage() {
   const { section } = useParams();
   const tab = TABS.find((t) => SLUG[t] === section) ?? 'Entries';
@@ -95,6 +116,61 @@ function KnowledgeHeader({ action }: { action?: ReactNode }) {
   );
 }
 
+/**
+ * Primary "Add entry" action as a split button: the main face writes one
+ * entry by hand; the chevron opens a menu of bulk-add sources. New sources
+ * (PDF, URL) drop in as menu items — shown disabled with a "Soon" badge until
+ * they're built, so the structure is visible without dead actions.
+ */
+function AddEntrySplitButton({
+  onAdd,
+  onImport,
+}: {
+  onAdd: () => void;
+  onImport: (source: ImportSource) => void;
+}) {
+  return (
+    <div className="inline-flex">
+      <Button size="md" className="rounded-r-none" onClick={onAdd}>
+        <Plus size={16} />
+        Add entry
+      </Button>
+      <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+          <Button
+            size="md"
+            aria-label="More ways to add"
+            className="rounded-l-none border-l border-on-accent/25 px-2"
+          >
+            <ChevronDown size={16} />
+          </Button>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent align="end">
+          <DropdownMenuLabel>Add from</DropdownMenuLabel>
+          <DropdownMenuItem onSelect={() => onImport('excel')}>
+            <FileSpreadsheet size={16} />
+            Excel or CSV
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            <FileText size={16} />
+            PDF
+            <Badge tone="muted" className="ml-auto">
+              Soon
+            </Badge>
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled>
+            <Globe size={16} />
+            Website URL
+            <Badge tone="muted" className="ml-auto">
+              Soon
+            </Badge>
+          </DropdownMenuItem>
+        </DropdownMenuContent>
+      </DropdownMenu>
+    </div>
+  );
+}
+
 function EntriesTab() {
   const { data, isLoading, isError } = useKnowledgeEntries();
   const apps = useApps();
@@ -109,6 +185,7 @@ function EntriesTab() {
   const [topicFilter, setTopicFilter] = useState<string>(ALL_TOPICS);
   const [editing, setEditing] = useState<KnowledgeEntry | null>(null);
   const [adding, setAdding] = useState(false);
+  const [importOpen, setImportOpen] = useState(false);
 
   const entries = data?.entries ?? [];
   const embeddingAppActive = (apps.data?.apps ?? []).some(
@@ -165,10 +242,7 @@ function EntriesTab() {
           Re-embed all
         </Button>
       )}
-      <Button size="md" onClick={() => setAdding(true)}>
-        <Plus size={16} />
-        Add entry
-      </Button>
+      <AddEntrySplitButton onAdd={() => setAdding(true)} onImport={() => setImportOpen(true)} />
     </div>
   );
 
@@ -293,6 +367,7 @@ function EntriesTab() {
         topics={topics}
         existing={editing}
       />
+      <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
   );
 }

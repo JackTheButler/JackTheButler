@@ -15,8 +15,7 @@ export interface EntryInput {
 export function useKnowledgeEntries() {
   return useQuery({
     queryKey: KEY,
-    queryFn: () =>
-      api.get<{ entries: KnowledgeEntry[] }>('/api/app/knowledge/entries'),
+    queryFn: () => api.get<{ entries: KnowledgeEntry[] }>('/api/app/knowledge/entries'),
   });
 }
 
@@ -41,8 +40,7 @@ export function useUpdateEntry() {
 export function useDeleteEntry() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (id: string) =>
-      api.delete<{ ok: true }>(`/api/app/knowledge/entries/${id}`),
+    mutationFn: (id: string) => api.delete<{ ok: true }>(`/api/app/knowledge/entries/${id}`),
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
@@ -65,6 +63,61 @@ export function useReembed() {
         `/api/app/knowledge/reembed${scope === 'all' ? '?scope=all' : ''}`,
       ),
   });
+}
+
+/* ── Bulk import + duplicate check ─────────────────────────────── */
+
+/** Per-request cap (mirrors the server's BULK_MAX); large files are sent in
+ *  sequential batches of this size. */
+const BATCH = 200;
+
+export interface DuplicateCheck {
+  exists: boolean;
+  matchedQuestion?: string;
+  similar?: { question: string; score: number };
+}
+export interface CheckResult {
+  mode: 'semantic' | 'exact';
+  results: DuplicateCheck[];
+}
+
+/** Duplicate-check questions against the KB, batched. Mode degrades to
+ *  'exact' if any batch lacked semantic matching (no embedding app). */
+export async function checkDuplicates(questions: string[]): Promise<CheckResult> {
+  let mode: 'semantic' | 'exact' = 'semantic';
+  const results: DuplicateCheck[] = [];
+  for (let i = 0; i < questions.length; i += BATCH) {
+    const r = await api.post<CheckResult>('/api/app/knowledge/entries/check', {
+      questions: questions.slice(i, i + BATCH),
+    });
+    if (r.mode === 'exact') mode = 'exact';
+    results.push(...r.results);
+  }
+  return { mode, results };
+}
+
+export interface BulkResult {
+  inserted: number;
+  skipped: number;
+}
+
+/** Insert entries in sequential batches, reporting progress. Idempotent —
+ *  a retried run skips rows already present. */
+export async function bulkImport(
+  entries: EntryInput[],
+  onProgress: (processed: number, total: number) => void,
+): Promise<BulkResult> {
+  let inserted = 0;
+  let skipped = 0;
+  for (let i = 0; i < entries.length; i += BATCH) {
+    const r = await api.post<BulkResult>('/api/app/knowledge/entries/bulk', {
+      entries: entries.slice(i, i + BATCH),
+    });
+    inserted += r.inserted;
+    skipped += r.skipped;
+    onProgress(Math.min(i + BATCH, entries.length), entries.length);
+  }
+  return { inserted, skipped };
 }
 
 export type MatchStrictness = 'loose' | 'balanced' | 'strict';

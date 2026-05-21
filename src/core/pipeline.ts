@@ -32,7 +32,7 @@
  * business service calls `rebuildPipeline()` so the next turn picks it
  * up without a restart.
  */
-import { and, asc, desc, eq, isNotNull, isNull, ne } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, ne } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import {
   computeEmbedding,
@@ -62,18 +62,13 @@ import {
 import type { GenerationMessage } from '@janetheoperator/shared/contracts';
 import type { ResponseLength } from '@janetheoperator/shared';
 import { db } from '@/db/client.js';
-import {
-  conversations,
-  customers,
-  knowledgeEntries,
-  messages,
-  type Message,
-} from '@/db/schema/index.js';
+import { conversations, customers, messages, type Message } from '@/db/schema/index.js';
 import { events } from '@/core/events.js';
 import { logger as appLogger } from '@/core/logger.js';
 import { getAssistant } from '@/modules/assistant/service.js';
 import { getBusiness } from '@/modules/business/service.js';
 import { getKbMinSimilarity, getKbTopK } from '@/modules/knowledge/service.js';
+import { searchKnowledge, type KnowledgeMatch } from '@/modules/knowledge/search.js';
 import {
   getActiveEmbeddingInstance,
   getActiveGenerationInstance,
@@ -399,80 +394,26 @@ const aiProvider: AIProvider = {
 
 /* ── KnowledgeProvider (KB vector search) ──────────────────────── */
 
-function decodeEmbedding(blob: Buffer | Uint8Array): Float32Array {
-  const buf = Buffer.isBuffer(blob) ? blob : Buffer.from(blob);
-  return new Float32Array(buf.buffer, buf.byteOffset, Math.floor(buf.byteLength / 4));
-}
-
-function cosine(a: readonly number[], b: Float32Array): number {
-  const n = Math.min(a.length, b.length);
-  let dot = 0;
-  let na = 0;
-  let nb = 0;
-  for (let i = 0; i < n; i++) {
-    dot += a[i] * b[i];
-    na += a[i] * a[i];
-    nb += b[i] * b[i];
-  }
-  if (na === 0 || nb === 0) return 0;
-  return dot / (Math.sqrt(na) * Math.sqrt(nb));
-}
-
-/** Diagnostics alongside the hits so the loadKnowledge debug log can
- *  explain an empty result: candidates = approved + embedded entries
- *  scanned; bestScore = top cosine seen even if below the threshold. */
-interface KnowledgeSearchResult {
-  hits: KnowledgeHit[];
-  candidates: number;
-  bestScore: number | null;
-}
-
-function searchKnowledge(
-  embedding: readonly number[],
-  limit: number,
-  minSim: number,
-): KnowledgeSearchResult {
-  // In-process scan over approved, embedded entries. Fine up to ~10k
-  // rows; swap to sqlite-vec only if that stops being fast enough.
-  const rows = db
-    .select({
-      id: knowledgeEntries.id,
-      question: knowledgeEntries.question,
-      answer: knowledgeEntries.answer,
-      topic: knowledgeEntries.topic,
-      embedding: knowledgeEntries.embedding,
-    })
-    .from(knowledgeEntries)
-    .where(and(eq(knowledgeEntries.status, 'approved'), isNotNull(knowledgeEntries.embedding)))
-    .all();
-
-  let bestScore: number | null = null;
-  const scored: KnowledgeHit[] = [];
-  for (const row of rows) {
-    if (!row.embedding) continue;
-    const similarity = cosine(embedding, decodeEmbedding(row.embedding as Buffer));
-    if (bestScore === null || similarity > bestScore) bestScore = similarity;
-    if (similarity < minSim) continue;
-    scored.push({
-      id: row.id,
-      // Title carries the matched question (+ topic for context); content
-      // is the answer the AI reads. Both rendered by `responder`.
-      title: row.topic ? `${row.topic}: ${row.question}` : row.question,
-      content: row.answer,
-      similarity,
-    });
-  }
-  scored.sort((a, b) => b.similarity - a.similarity);
-  return { hits: scored.slice(0, limit), candidates: rows.length, bestScore };
+/** Map a domain search match to the pipeline's KnowledgeHit. Title carries
+ *  the matched question (+ topic for context); content is the answer the AI
+ *  reads. Both are rendered by `responder`. */
+function toHit(m: KnowledgeMatch): KnowledgeHit {
+  return {
+    id: m.id,
+    title: m.topic ? `${m.topic}: ${m.question}` : m.question,
+    content: m.answer,
+    similarity: m.similarity,
+  };
 }
 
 const knowledgeProvider: KnowledgeProvider = {
   async search(embedding, options) {
-    return searchKnowledge(
+    const { hits } = searchKnowledge(
       embedding,
       options?.limit ?? getKbTopK(),
       options?.minSimilarity ?? getKbMinSimilarity(),
-    ).hits;
+    );
+    return hits.map(toHit);
   },
 };
 
@@ -577,7 +518,8 @@ const loadKnowledge: Stage = async (ctx, env) => {
       getKbTopK(),
       minSim,
     );
-    ctx.knowledgeHits = hits;
+    const knowledgeHits = hits.map(toHit);
+    ctx.knowledgeHits = knowledgeHits;
     appLogger.debug(
       {
         messageId: ctx.inbound.id,
@@ -586,7 +528,10 @@ const loadKnowledge: Stage = async (ctx, env) => {
         candidates, // approved + embedded entries scanned (0 ⇒ KB empty / unembedded)
         threshold: minSim,
         bestScore: bestScore === null ? null : Number(bestScore.toFixed(3)),
-        returned: hits.map((h) => ({ title: h.title, score: Number(h.similarity.toFixed(3)) })),
+        returned: knowledgeHits.map((h) => ({
+          title: h.title,
+          score: Number(h.similarity.toFixed(3)),
+        })),
       },
       'kb search',
     );
