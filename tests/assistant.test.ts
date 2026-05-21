@@ -41,6 +41,7 @@ describe('assistant profile', () => {
     expect(body).toMatchObject({
       name: 'Jane',
       tone: 'Friendly',
+      responseLength: 'standard',
       fallback: expect.any(String),
       instructions: expect.any(String),
       topicsToAvoid: '',
@@ -79,5 +80,21 @@ describe('assistant profile', () => {
     expect(await res.json()).toMatchObject(next);
     // Round-trip via GET to confirm it landed in storage.
     expect(await (await authed('/api/app/assistant')).json()).toMatchObject(next);
+  });
+
+  it('patches only the provided fields, leaving the rest unchanged', async () => {
+    // Prior test left name 'Ada', tone 'Professional'. Send just one field.
+    const res = await authed('/api/app/assistant', {
+      method: 'PUT',
+      body: JSON.stringify({ responseLength: 'brief' }),
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({
+      name: 'Ada', // untouched
+      tone: 'Professional', // untouched
+      responseLength: 'brief', // updated
+      fallback: 'Let me get a teammate.', // untouched
+      topicsToAvoid: 'legal', // untouched
+    });
   });
 });

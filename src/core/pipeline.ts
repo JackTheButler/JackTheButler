@@ -60,6 +60,7 @@ import {
   type Stage,
 } from '@thebutler/pipeline';
 import type { GenerationMessage } from '@janetheoperator/shared/contracts';
+import type { ResponseLength } from '@janetheoperator/shared';
 import { db } from '@/db/client.js';
 import {
   conversations,
@@ -72,7 +73,7 @@ import { events } from '@/core/events.js';
 import { logger as appLogger } from '@/core/logger.js';
 import { getAssistant } from '@/modules/assistant/service.js';
 import { getBusiness } from '@/modules/business/service.js';
-import { getKbMinSimilarity } from '@/modules/knowledge/service.js';
+import { getKbMinSimilarity, getKbTopK } from '@/modules/knowledge/service.js';
 import {
   getActiveEmbeddingInstance,
   getActiveGenerationInstance,
@@ -82,9 +83,19 @@ import {
 /** Last N prior turns the responder gets as context. The user picked this. */
 const HISTORY_LIMIT = 10;
 
-/** Top-K retrieved KB entries. The cosine floor is operator-tunable (KB
- *  "match strictness" setting) and read per-turn via getKbMinSimilarity(). */
-const KB_TOP_K = 5;
+// Both retrieval ceilings are operator-tunable and read per-turn from the
+// KB settings: top-K via getKbTopK(), the cosine floor (match strictness)
+// via getKbMinSimilarity().
+
+/** Verbosity directive injected into the responder prompt. Orthogonal to
+ *  tone (voice): this controls *how much* the AI says, via instruction
+ *  rather than a token cap (a cap would truncate mid-sentence). */
+const RESPONSE_LENGTH_DIRECTIVE: Record<ResponseLength, string> = {
+  brief: 'Length: keep replies brief — 1–2 short sentences, lead with the answer.',
+  standard: 'Length: keep replies concise but complete — usually a short paragraph.',
+  detailed:
+    'Length: give thorough, well-structured replies; use short lists or steps when it helps.',
+};
 
 /* ── ConversationProvider ──────────────────────────────────────── */
 
@@ -306,6 +317,7 @@ const promptProvider: PromptProvider = {
     const lines = [
       `You are ${p.name}, the support assistant for ${businessName}.`,
       `Voice: ${p.tone.toLowerCase()}.`,
+      RESPONSE_LENGTH_DIRECTIVE[p.responseLength],
     ];
     if (p.instructions.trim()) lines.push(`Additional instructions: ${p.instructions.trim()}`);
     if (p.topicsToAvoid.trim()) {
@@ -458,7 +470,7 @@ const knowledgeProvider: KnowledgeProvider = {
   async search(embedding, options) {
     return searchKnowledge(
       embedding,
-      options?.limit ?? KB_TOP_K,
+      options?.limit ?? getKbTopK(),
       options?.minSimilarity ?? getKbMinSimilarity(),
     ).hits;
   },
@@ -562,7 +574,7 @@ const loadKnowledge: Stage = async (ctx, env) => {
     const minSim = getKbMinSimilarity();
     const { hits, candidates, bestScore } = searchKnowledge(
       ctx.inboundEmbedding,
-      KB_TOP_K,
+      getKbTopK(),
       minSim,
     );
     ctx.knowledgeHits = hits;
@@ -581,6 +593,25 @@ const loadKnowledge: Stage = async (ctx, env) => {
   } catch (err) {
     env.services.logger.warn({ err }, 'knowledge search failed');
   }
+};
+
+/**
+ * Logs the AI's reply in the system language — i.e. exactly what the model
+ * produced, before `translateOutbound` rewrites it into the customer's
+ * language. Sits between generateResponse and translateOutbound so the trace
+ * shows the original answer next to the prompt that produced it; the delivered
+ * (translated) text is separately visible on the saved message.
+ */
+const logGeneratedResponse: Stage = async (ctx, _env) => {
+  if (!ctx.aiResponse) return;
+  appLogger.debug(
+    {
+      messageId: ctx.inbound.id,
+      systemLanguage: getBusiness().defaultLanguage,
+      response: ctx.aiResponse.content,
+    },
+    'ai response (pre-translation)',
+  );
 };
 
 /* ── The pipeline ─────────────────────────────────────────────── */
@@ -611,6 +642,7 @@ function buildPipeline(): Pipeline {
       computeEmbedding,
       loadKnowledge,
       generateResponse,
+      logGeneratedResponse,
       translateOutbound,
       saveOutboundMessage,
     ],

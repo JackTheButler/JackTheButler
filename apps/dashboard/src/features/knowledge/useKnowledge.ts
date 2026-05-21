@@ -68,12 +68,19 @@ export function useReembed() {
 }
 
 export type MatchStrictness = 'loose' | 'balanced' | 'strict';
+export type TopK = 3 | 5 | 8 | 10;
+export const TOP_K_OPTIONS: readonly TopK[] = [3, 5, 8, 10];
 
-/** KB retrieval match-strictness setting. */
+export interface KbSettings {
+  matchStrictness: MatchStrictness;
+  topK: TopK;
+}
+
+/** KB retrieval settings (match strictness + top-K). */
 export function useKbSettings() {
   return useQuery({
     queryKey: ['knowledge', 'settings'],
-    queryFn: () => api.get<{ matchStrictness: MatchStrictness }>('/api/app/knowledge/settings'),
+    queryFn: () => api.get<KbSettings>('/api/app/knowledge/settings'),
   });
 }
 
@@ -81,9 +88,15 @@ export function useSetMatchStrictness() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: (matchStrictness: MatchStrictness) =>
-      api.put<{ matchStrictness: MatchStrictness }>('/api/app/knowledge/settings', {
-        matchStrictness,
-      }),
+      api.put<KbSettings>('/api/app/knowledge/settings', { matchStrictness }),
+    onSuccess: (data) => qc.setQueryData(['knowledge', 'settings'], data),
+  });
+}
+
+export function useSetTopK() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (topK: TopK) => api.put<KbSettings>('/api/app/knowledge/settings', { topK }),
     onSuccess: (data) => qc.setQueryData(['knowledge', 'settings'], data),
   });
 }

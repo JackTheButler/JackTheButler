@@ -49,6 +49,32 @@ export function getKbMinSimilarity(): number {
   return STRICTNESS_FLOOR[getMatchStrictness()];
 }
 
+/* ── Retrieval top-K ───────────────────────────────────────────── */
+
+/** How many top-scoring entries the retriever feeds the AI. Below 3 risks
+ *  dropping a relevant entry on a multi-part question; above ~10 is mostly
+ *  low-similarity noise + wasted tokens. */
+export const TOP_K_OPTIONS = [3, 5, 8, 10] as const;
+export type TopK = (typeof TOP_K_OPTIONS)[number];
+
+const TOP_K_KEY = 'kb.topK';
+const DEFAULT_TOP_K: TopK = 5;
+
+/** Current top-K. Lazy-seeds the default on first read (same pattern as
+ *  match strictness) so it's an explicit, editable row. */
+export function getKbTopK(): TopK {
+  const stored = readSetting<number>(TOP_K_KEY);
+  if (typeof stored === 'number' && (TOP_K_OPTIONS as readonly number[]).includes(stored)) {
+    return stored as TopK;
+  }
+  writeSetting(TOP_K_KEY, DEFAULT_TOP_K);
+  return DEFAULT_TOP_K;
+}
+
+export function setKbTopK(k: TopK): void {
+  writeSetting(TOP_K_KEY, k);
+}
+
 /**
  * Knowledge base — flat Q&A entries.
  *

@@ -14,11 +14,13 @@ export function useAssistant() {
   });
 }
 
+/** Patch the profile. The PUT merges the provided fields over the stored
+ *  row, so callers may send just the subset they edited (e.g. one tab). */
 export function useSaveAssistant() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (profile: AssistantProfile) =>
-      api.put<AssistantProfile>('/api/app/assistant', profile),
+    mutationFn: (patch: Partial<AssistantProfile>) =>
+      api.put<AssistantProfile>('/api/app/assistant', patch),
     onSuccess: (data) => qc.setQueryData(KEY, data),
   });
 }

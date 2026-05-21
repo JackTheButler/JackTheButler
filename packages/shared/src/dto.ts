@@ -35,13 +35,19 @@ export interface BusinessProfile {
 
 /* ── Assistant profile ─────────────────────────────────────────── */
 
-export type AssistantTone = 'Friendly' | 'Professional' | 'Concise';
+export type AssistantTone = 'Friendly' | 'Professional' | 'Casual';
+
+/** How verbose replies should be. Orthogonal to tone (voice): tone is *how*
+ *  it sounds, length is *how much* it says. Drives a responder-prompt
+ *  directive, not a token cap. */
+export type ResponseLength = 'brief' | 'standard' | 'detailed';
 
 /** Single-row persona that drives the AI pipeline's system prompt.
  *  Save shape and read shape are identical — secrets aren't involved. */
 export interface AssistantProfile {
   name: string;
   tone: AssistantTone;
+  responseLength: ResponseLength;
   instructions: string;
   fallback: string;
   topicsToAvoid: string;

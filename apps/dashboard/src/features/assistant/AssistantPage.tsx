@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
-import type { AssistantProfile, AssistantTone } from '@janetheoperator/shared';
+import { useNavigate, useParams } from 'react-router-dom';
+import type { AssistantProfile, AssistantTone, ResponseLength } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import {
@@ -14,14 +15,38 @@ import {
 import { ApiError } from '@/lib/api';
 import { useAssistant, useSaveAssistant } from './useAssistant';
 
-const TONES: readonly AssistantTone[] = ['Friendly', 'Professional', 'Concise'];
+const TONES: readonly AssistantTone[] = ['Friendly', 'Professional', 'Casual'];
+
+// Verbosity, distinct from tone. Labels are title-case for display; the stored
+// value is the lowercase ResponseLength.
+const LENGTHS: readonly { value: ResponseLength; label: string }[] = [
+  { value: 'brief', label: 'Brief' },
+  { value: 'standard', label: 'Standard' },
+  { value: 'detailed', label: 'Detailed' },
+];
+
+const TABS = ['Persona', 'Boundaries'] as const;
+type Tab = (typeof TABS)[number];
+const SLUG: Record<Tab, string> = { Persona: 'persona', Boundaries: 'boundaries' };
+
+// Which profile fields each tab owns. A tab's Save sends only these, so the
+// PUT (which merges) leaves the other tab's fields untouched.
+const TAB_FIELDS: Record<Tab, readonly (keyof AssistantProfile)[]> = {
+  Persona: ['name', 'tone', 'responseLength', 'instructions'],
+  Boundaries: ['topicsToAvoid', 'fallback'],
+};
 
 /**
- * Assistant persona — single page, single Save. These five fields drive the
- * system prompt the AI pipeline builds; auto-handoff rules are pipeline-side
- * concerns and will appear here when the pipeline supports them.
+ * Assistant persona, split into Persona / Boundaries tabs. The profile is a
+ * single row, so both tabs edit one shared form and each tab's Save persists
+ * the whole profile (the backend PUT is full-document) — switching tabs never
+ * loses edits. These fields drive the system prompt the AI pipeline builds.
  */
 export function AssistantPage() {
+  const { section } = useParams();
+  const navigate = useNavigate();
+  const tab = TABS.find((t) => SLUG[t] === section) ?? 'Persona';
+
   const { data, isLoading, isError } = useAssistant();
   const save = useSaveAssistant();
 
@@ -52,8 +77,12 @@ export function AssistantPage() {
     setForm((f) => (f ? { ...f, [key]: value } : f));
 
   const onSave = () => {
-    save.mutate(form, {
-      onSuccess: () => toast.success('Assistant settings saved'),
+    // Send only the active tab's fields; the PUT merges, leaving the rest.
+    const patch = Object.fromEntries(
+      TAB_FIELDS[tab].map((k) => [k, form[k]]),
+    ) as Partial<AssistantProfile>;
+    save.mutate(patch, {
+      onSuccess: () => toast.success(`${tab} saved`),
       onError: () => toast.error('Could not save. Check the highlighted fields.'),
     });
   };
@@ -65,77 +94,97 @@ export function AssistantPage() {
 
   return (
     <PageShell>
-      <div className="mx-auto max-w-5xl space-y-6 px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
         <PageHeader
           title="Assistant"
           subtitle="Shape how the AI talks. These settings drive every reply."
         />
 
-        <Card title="Persona">
-          <Field label="Assistant name">
-            <Input value={form.name} onChange={(e) => set('name', e.target.value)} />
-          </Field>
-          <Field label="Tone">
-            <SegmentedControl
-              aria-label="Tone"
-              options={TONES}
-              value={form.tone}
-              onChange={(v) => set('tone', v)}
-            />
-          </Field>
-          <Field
-            label="Instructions"
-            hint="Extra guidance — what the assistant represents, what it should emphasise."
-          >
-            <Textarea
-              rows={5}
-              value={form.instructions}
-              onChange={(e) => set('instructions', e.target.value)}
-            />
-          </Field>
-        </Card>
+        <SegmentedControl
+          aria-label="Assistant sections"
+          options={TABS}
+          value={tab}
+          onChange={(t) => navigate(`/assistant/${SLUG[t]}`)}
+          className="-mx-4 mt-6 flex min-h-[2.375rem] items-center px-4 md:mx-0 md:px-0"
+        />
 
-        <Card title="Boundaries & fallback">
-          <Field
-            label="Topics to avoid"
-            hint="The assistant will politely decline these and offer a human."
-          >
-            <Textarea
-              rows={3}
-              value={form.topicsToAvoid}
-              onChange={(e) => set('topicsToAvoid', e.target.value)}
-              placeholder="e.g. legal advice, refunds over $500, anything about competitors"
-            />
-          </Field>
-          <Field
-            label="Fallback message"
-            hint="Sent when the assistant has no good answer."
-          >
-            <Textarea
-              rows={3}
-              value={form.fallback}
-              onChange={(e) => set('fallback', e.target.value)}
-            />
-          </Field>
-        </Card>
+        <div className="mt-6 space-y-6">
+          {tab === 'Persona' ? (
+            <Card title="Persona">
+              <Field label="Assistant name">
+                <Input value={form.name} onChange={(e) => set('name', e.target.value)} />
+              </Field>
+              <Field label="Tone" hint="How the assistant sounds.">
+                <SegmentedControl
+                  aria-label="Tone"
+                  options={TONES}
+                  value={form.tone}
+                  onChange={(v) => set('tone', v)}
+                />
+              </Field>
+              <Field label="Response length" hint="How much the assistant says per reply.">
+                <SegmentedControl
+                  aria-label="Response length"
+                  options={LENGTHS.map((l) => l.label)}
+                  value={LENGTHS.find((l) => l.value === form.responseLength)?.label ?? 'Standard'}
+                  onChange={(label) => {
+                    const match = LENGTHS.find((l) => l.label === label);
+                    if (match) set('responseLength', match.value);
+                  }}
+                />
+              </Field>
+              <Field
+                label="Instructions"
+                hint="Extra guidance — what the assistant represents, what it should emphasise."
+              >
+                <Textarea
+                  rows={5}
+                  value={form.instructions}
+                  onChange={(e) => set('instructions', e.target.value)}
+                />
+              </Field>
+            </Card>
+          ) : (
+            <Card title="Boundaries & fallback">
+              <Field
+                label="Topics to avoid"
+                hint="The assistant will politely decline these and offer a human."
+              >
+                <Textarea
+                  rows={3}
+                  value={form.topicsToAvoid}
+                  onChange={(e) => set('topicsToAvoid', e.target.value)}
+                  placeholder="e.g. legal advice, refunds over $500, anything about competitors"
+                />
+              </Field>
+              <Field label="Fallback message" hint="Sent when the assistant has no good answer.">
+                <Textarea
+                  rows={3}
+                  value={form.fallback}
+                  onChange={(e) => set('fallback', e.target.value)}
+                />
+              </Field>
+            </Card>
+          )}
 
-        {details && (
-          <div className="rounded-lg border border-red-500/30 bg-red-500/[0.04] p-3 text-xs text-red-600">
-            <ul className="space-y-1">
-              {Object.entries(details).map(([field, msg]) => (
-                <li key={field}>{msg}</li>
-              ))}
-            </ul>
+          {details && (
+            <div className="rounded-lg border border-red-500/30 bg-red-500/[0.04] p-3 text-xs text-red-600">
+              <ul className="space-y-1">
+                {Object.entries(details).map(([field, msg]) => (
+                  <li key={field}>{msg}</li>
+                ))}
+              </ul>
+            </div>
+          )}
+
+          <div className="flex justify-end">
+            <SaveButton
+              size="md"
+              isPending={save.isPending}
+              isSuccess={save.isSuccess}
+              onSave={onSave}
+            />
           </div>
-        )}
-
-        <div className="flex justify-end">
-          <SaveButton
-            size="md"
-            isPending={save.isPending}
-            isSuccess={save.isSuccess}
-            onSave={onSave}
-          />
         </div>
       </div>
     </PageShell>

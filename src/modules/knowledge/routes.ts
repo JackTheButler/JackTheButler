@@ -7,12 +7,16 @@ import {
   embeddingCounts,
   deleteEntry,
   getEntry,
+  getKbTopK,
   getMatchStrictness,
   listEntries,
+  setKbTopK,
   setMatchStrictness,
   startReembed,
   updateEntry,
   MATCH_STRICTNESS_LEVELS,
+  TOP_K_OPTIONS,
+  type TopK,
 } from '@/modules/knowledge/service.js';
 
 /** Thin HTTP adapter for KB entries. */
@@ -67,15 +71,30 @@ knowledgeRoutes.post('/reembed', (c) => {
   return c.json(startReembed(scope));
 });
 
-/** KB retrieval settings — match strictness (how closely a question must
- *  match an entry for the AI to use it). */
-const settingsBody = z.object({ matchStrictness: z.enum(MATCH_STRICTNESS_LEVELS) });
+/** KB retrieval settings:
+ *  - matchStrictness: how closely a question must match an entry to be used.
+ *  - topK: how many top matches to feed the AI.
+ *  PUT accepts either or both; each present field is applied. */
+const settingsBody = z
+  .object({
+    matchStrictness: z.enum(MATCH_STRICTNESS_LEVELS).optional(),
+    topK: z
+      .number()
+      .refine((n): n is TopK => (TOP_K_OPTIONS as readonly number[]).includes(n))
+      .optional(),
+  })
+  .refine((b) => b.matchStrictness !== undefined || b.topK !== undefined, {
+    message: 'no settings provided',
+  });
 
-knowledgeRoutes.get('/settings', (c) => c.json({ matchStrictness: getMatchStrictness() }));
+const settings = () => ({ matchStrictness: getMatchStrictness(), topK: getKbTopK() });
+
+knowledgeRoutes.get('/settings', (c) => c.json(settings()));
 
 knowledgeRoutes.put('/settings', async (c) => {
   const parsed = settingsBody.safeParse(await body(c));
   if (!parsed.success) throw new AppError('invalid_input', 400);
-  setMatchStrictness(parsed.data.matchStrictness);
-  return c.json({ matchStrictness: getMatchStrictness() });
+  if (parsed.data.matchStrictness) setMatchStrictness(parsed.data.matchStrictness);
+  if (parsed.data.topK) setKbTopK(parsed.data.topK);
+  return c.json(settings());
 });

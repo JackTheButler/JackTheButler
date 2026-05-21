@@ -22,6 +22,7 @@ export function App() {
         <Route path="/knowledge" element={<KnowledgeBasePage />} />
         <Route path="/knowledge/:section" element={<KnowledgeBasePage />} />
         <Route path="/assistant" element={<AssistantPage />} />
+        <Route path="/assistant/:section" element={<AssistantPage />} />
         <Route path="/team" element={<TeamPage />} />
         <Route path="/settings" element={<SettingsPage />} />
         <Route path="/settings/:section" element={<SettingsPage />} />

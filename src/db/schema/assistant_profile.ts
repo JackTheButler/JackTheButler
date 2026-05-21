@@ -10,6 +10,7 @@ export const assistantProfile = sqliteTable('assistant_profile', {
   id: text('id').primaryKey(), // always 'default'
   name: text('name').notNull(),
   tone: text('tone').notNull(),
+  responseLength: text('response_length').notNull().default('standard'),
   instructions: text('instructions').notNull().default(''),
   fallback: text('fallback').notNull(),
   topicsToAvoid: text('topics_to_avoid').notNull().default(''),

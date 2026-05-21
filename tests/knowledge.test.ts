@@ -163,10 +163,11 @@ describe('knowledge base — entries', () => {
     }
   });
 
-  it('match strictness lazy-seeds to balanced and round-trips', async () => {
-    // First read seeds 'balanced'.
+  it('settings lazy-seed (balanced + topK 5) and strictness round-trips', async () => {
+    // First read seeds the defaults.
     expect(await (await authed('/api/app/knowledge/settings')).json()).toEqual({
       matchStrictness: 'balanced',
+      topK: 5,
     });
 
     const res = await authed('/api/app/knowledge/settings', {
@@ -174,16 +175,34 @@ describe('knowledge base — entries', () => {
       body: JSON.stringify({ matchStrictness: 'strict' }),
     });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ matchStrictness: 'strict' });
+    expect(await res.json()).toEqual({ matchStrictness: 'strict', topK: 5 });
     expect(await (await authed('/api/app/knowledge/settings')).json()).toEqual({
       matchStrictness: 'strict',
+      topK: 5,
     });
+  });
+
+  it('topK round-trips and is independent of strictness', async () => {
+    const res = await authed('/api/app/knowledge/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ topK: 8 }),
+    });
+    expect(res.status).toBe(200);
+    expect(await res.json()).toEqual({ matchStrictness: 'strict', topK: 8 });
   });
 
   it('rejects an invalid strictness level', async () => {
     const res = await authed('/api/app/knowledge/settings', {
       method: 'PUT',
       body: JSON.stringify({ matchStrictness: 'whatever' }),
+    });
+    expect(res.status).toBe(400);
+  });
+
+  it('rejects an out-of-set topK', async () => {
+    const res = await authed('/api/app/knowledge/settings', {
+      method: 'PUT',
+      body: JSON.stringify({ topK: 7 }),
     });
     expect(res.status).toBe(400);
   });

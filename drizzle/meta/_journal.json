@@ -92,6 +92,13 @@
       "when": 1779352571790,
       "tag": "0012_add_settings",
       "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1779360488998,
+      "tag": "0013_add_assistant_response_length",
+      "breakpoints": true
     }
   ]
 }
