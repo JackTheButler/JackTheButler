@@ -32,14 +32,14 @@ import {
 } from '@/components/ui';
 import { JaneLogo } from '@/components/JaneLogo';
 
-// `bottomGroup` items (Apps, Settings) form the config section. A divider is
-// drawn before the FIRST *visible* one — Apps for admins, Settings for agents
-// (who don't see Apps) — so the separator never disappears.
+// `bottomGroup` items (Assistant, Apps, Settings) form the config section. A
+// divider is drawn before the FIRST *visible* one — Assistant for admins,
+// Settings for agents (who don't see Assistant/Apps) — so it never disappears.
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
-  { to: '/assistant', label: 'Assistant', icon: Bot, adminOnly: true },
   { to: '/team', label: 'Team', icon: Users, adminOnly: true },
+  { to: '/assistant', label: 'Assistant', icon: Bot, adminOnly: true, bottomGroup: true },
   { to: '/apps', label: 'Apps', icon: Blocks, adminOnly: true, bottomGroup: true },
   { to: '/settings', label: 'Settings', icon: Settings, bottomGroup: true },
 ];

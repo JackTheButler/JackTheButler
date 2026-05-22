@@ -88,7 +88,7 @@ function BusinessTab() {
   if (isLoading || !form) {
     return (
       <Card title="Business profile">
-        <Loading size={44} />
+        <Loading size={44} inline />
       </Card>
     );
   }
