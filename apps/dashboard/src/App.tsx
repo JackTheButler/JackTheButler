@@ -37,7 +37,6 @@ function GatedApp() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<InboxPage />} />
           <Route path="/knowledge" element={<KnowledgeBasePage />} />
-          <Route path="/knowledge/:section" element={<KnowledgeBasePage />} />
 
           {/* Admin-only areas */}
           <Route
@@ -88,22 +87,10 @@ function GatedApp() {
               </AdminOnly>
             }
           />
-          <Route
-            path="/settings"
-            element={
-              <AdminOnly>
-                <SettingsPage />
-              </AdminOnly>
-            }
-          />
-          <Route
-            path="/settings/:section"
-            element={
-              <AdminOnly>
-                <SettingsPage />
-              </AdminOnly>
-            }
-          />
+          {/* Settings is open to all staff; the SettingsPage shows agents only
+              their Profile tab and admins the workspace tabs too. */}
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/:section" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
       </Routes>

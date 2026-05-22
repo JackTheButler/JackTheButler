@@ -32,13 +32,16 @@ import {
 } from '@/components/ui';
 import { JaneLogo } from '@/components/JaneLogo';
 
+// `bottomGroup` items (Apps, Settings) form the config section. A divider is
+// drawn before the FIRST *visible* one — Apps for admins, Settings for agents
+// (who don't see Apps) — so the separator never disappears.
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
   { to: '/assistant', label: 'Assistant', icon: Bot, adminOnly: true },
   { to: '/team', label: 'Team', icon: Users, adminOnly: true },
-  { to: '/apps', label: 'Apps', icon: Blocks, dividerBefore: true, adminOnly: true },
-  { to: '/settings', label: 'Settings', icon: Settings, adminOnly: true },
+  { to: '/apps', label: 'Apps', icon: Blocks, adminOnly: true, bottomGroup: true },
+  { to: '/settings', label: 'Settings', icon: Settings, bottomGroup: true },
 ];
 
 // Shared sidebar-row shape (nav item, theme toggle, account chip).
@@ -65,6 +68,8 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
   const activeIndex = nav.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/'),
   );
+  // Divider before the first visible bottom-group item (not if it's first).
+  const dividerIndex = nav.findIndex((item) => item.bottomGroup);
   const { containerRef, itemsRef, rect, transition } = useSlidingIndicator(activeIndex);
   const inboxCount = useInboxCount();
 
@@ -85,11 +90,11 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
           style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
         />
       )}
-      {nav.map(({ to, label, icon: Icon, end, dividerBefore }, i) => {
+      {nav.map(({ to, label, icon: Icon, end }, i) => {
         const badge = to === '/' ? inboxCount : 0;
         return (
           <Fragment key={to}>
-            {dividerBefore && (
+            {i === dividerIndex && dividerIndex > 0 && (
               <div
                 role="separator"
                 className={cn('my-1 h-px bg-line', collapsed ? 'mx-auto w-6' : 'mx-3')}

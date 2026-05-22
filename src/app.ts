@@ -9,6 +9,7 @@ import { conversationRoutes } from '@/modules/conversations/routes.js';
 import { knowledgeRoutes } from '@/modules/knowledge/routes.js';
 import { staffRoutes } from '@/modules/staff/routes.js';
 import { statusRoutes } from '@/modules/status/routes.js';
+import { accountRoutes } from '@/modules/account/routes.js';
 import { jobRoutes } from '@/core/jobs.js';
 import { webchatRoutes } from '@/modules/webchat/routes.js';
 import { registerWebchatSocket } from '@/modules/webchat/gateway.js';
@@ -56,6 +57,7 @@ app.route('/api/app/conversations', conversationRoutes);
 app.route('/api/app/knowledge', knowledgeRoutes);
 app.route('/api/app/staff', staffRoutes);
 app.route('/api/app/status', statusRoutes);
+app.route('/api/app/account', accountRoutes);
 app.route('/api/app/jobs', jobRoutes);
 
 // Last: serve the built dashboard SPA (single-origin production model).

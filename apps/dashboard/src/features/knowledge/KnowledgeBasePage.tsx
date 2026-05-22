@@ -1,5 +1,4 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -25,7 +24,6 @@ import { ImportDialog } from './import/ImportDialog';
 import {
   Badge,
   Button,
-  Card,
   Dialog,
   DialogClose,
   DialogContent,
@@ -39,7 +37,6 @@ import {
   SaveButton,
   SearchInput,
   SearchableSelect,
-  SegmentedControl,
   Select,
   SelectItem,
   Textarea,
@@ -52,81 +49,44 @@ import {
   useAddEntry,
   useDeleteEntry,
   useEmbeddingCounts,
-  useKbSettings,
   useKnowledgeEntries,
   useReembed,
-  useSetMatchStrictness,
-  useSetTopK,
   useUpdateEntry,
-  TOP_K_OPTIONS,
   type EntryInput,
-  type MatchStrictness,
-  type TopK,
 } from './useKnowledge';
 
 /**
- * Knowledge feature. Two tabs (GitHub repo Code/Settings pattern):
- *  - Entries  → the content: list, search, add/edit/delete, re-embed.
- *  - Settings → KB config (match strictness; future top-K, etc.).
- * Routed like the Settings page (`/knowledge`, `/knowledge/:section`) so
- * content and config live under one feature without blending on a screen.
+ * Knowledge feature — the Q&A entry list (search, add/edit/delete, bulk
+ * import, re-embed). Retrieval *settings* (strictness, top-K) live on the
+ * Settings page now (the "Knowledge" tab), not here.
  */
 
 const ALL_TOPICS = '__all__';
 const PAGE_SIZE_OPTIONS = [10, 20, 50, 100] as const;
-const TABS = ['Entries', 'Settings'] as const;
-type Tab = (typeof TABS)[number];
-const SLUG: Record<Tab, string> = { Entries: 'entries', Settings: 'settings' };
 
 // Bulk-add sources surfaced in the "Add entry" split-button menu. Only `excel`
 // is wired up; the rest are roadmap placeholders (disabled in the menu).
 type ImportSource = 'excel';
 
 export function KnowledgeBasePage() {
-  const { section } = useParams();
-  const { user } = useSession();
-  const isAdmin = user?.role === 'admin';
-  const tab = TABS.find((t) => SLUG[t] === section) ?? 'Entries';
-
-  // Settings is admin-only (retrieval config); send agents back to Entries.
-  if (tab === 'Settings' && !isAdmin) return <Navigate to="/knowledge" replace />;
-
   return (
     <PageShell>
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
-        {tab === 'Entries' ? <EntriesTab /> : <SettingsTab />}
+        <EntriesTab />
       </div>
     </PageShell>
   );
 }
 
-/** Shared page chrome for both tabs: title + the Entries/Settings tab nav.
- *  `action` is the active tab's primary action, rendered on the right of the
- *  header (Entries supplies Add entry / Re-embed all; Settings has none). */
+/** Page header for the entries view. `action` is the right-side primary
+ *  action (Add entry / Re-embed all). */
 function KnowledgeHeader({ action }: { action?: ReactNode }) {
-  const { section } = useParams();
-  const navigate = useNavigate();
-  const { user } = useSession();
-  const isAdmin = user?.role === 'admin';
-  const tab = TABS.find((t) => SLUG[t] === section) ?? 'Entries';
   return (
-    <>
-      <PageHeader
-        title="Knowledge"
-        subtitle="Q&A entries the AI searches when a customer asks something."
-        action={action}
-      />
-      {/* Settings tab is admin-only; agents just see the Entries content. */}
-      {isAdmin && (
-        <SegmentedControl
-          aria-label="Knowledge sections"
-          options={TABS}
-          value={tab}
-          onChange={(t) => navigate(`/knowledge/${SLUG[t]}`)}
-          className="-mx-4 mt-6 flex min-h-[2.375rem] items-center px-4 md:mx-0 md:px-0"
-        />
-      )}
-    </>
+    <PageHeader
+      title="Knowledge"
+      subtitle="Q&A entries the AI searches when a customer asks something."
+      action={action}
+    />
   );
 }
 
@@ -411,97 +371,6 @@ function EntriesTab() {
       />
       <ImportDialog open={importOpen} onOpenChange={setImportOpen} />
     </>
-  );
-}
-
-const STRICTNESS_LABELS: Record<MatchStrictness, string> = {
-  loose: 'Loose',
-  balanced: 'Balanced',
-  strict: 'Strict',
-};
-const STRICTNESS_VALUES = Object.values(STRICTNESS_LABELS); // ['Loose','Balanced','Strict']
-
-function SettingsTab() {
-  const settings = useKbSettings();
-  const setStrictness = useSetMatchStrictness();
-  const setTopK = useSetTopK();
-  const current = settings.data?.matchStrictness ?? 'balanced';
-  const currentTopK = settings.data?.topK ?? 5;
-
-  return (
-    <>
-      <KnowledgeHeader />
-      <Card title="Retrieval" className="mt-6">
-        <SettingRow
-          label="Match strictness"
-          desc="How closely a customer's question must match an entry for the AI to use it. Looser finds more answers; stricter is more precise."
-        >
-          <SegmentedControl
-            aria-label="Match strictness"
-            className="shrink-0"
-            options={STRICTNESS_VALUES}
-            value={STRICTNESS_LABELS[current]}
-            onChange={(label) => {
-              const level = (Object.keys(STRICTNESS_LABELS) as MatchStrictness[]).find(
-                (k) => STRICTNESS_LABELS[k] === label,
-              );
-              if (level)
-                setStrictness.mutate(level, {
-                  onSuccess: () => toast.success('Match strictness updated'),
-                  onError: () => toast.error('Could not update match strictness'),
-                });
-            }}
-          />
-        </SettingRow>
-
-        <div className="h-px bg-line" />
-
-        <SettingRow
-          label="Results returned"
-          desc="How many matching entries the AI sees per question. Fewer is more focused; more improves recall on multi-part questions but adds noise."
-        >
-          <Select
-            aria-label="Results returned"
-            className="w-24"
-            value={String(currentTopK)}
-            onValueChange={(v) =>
-              setTopK.mutate(Number(v) as TopK, {
-                onSuccess: () => toast.success('Results returned updated'),
-                onError: () => toast.error('Could not update results returned'),
-              })
-            }
-          >
-            {TOP_K_OPTIONS.map((k) => (
-              <SelectItem key={k} value={String(k)}>
-                {k}
-              </SelectItem>
-            ))}
-          </Select>
-        </SettingRow>
-      </Card>
-    </>
-  );
-}
-
-/** A single settings row: label + description on the left, control trailing
- *  on the right (stacks on mobile). Shared by the Retrieval card's rows. */
-function SettingRow({
-  label,
-  desc,
-  children,
-}: {
-  label: string;
-  desc: string;
-  children: ReactNode;
-}) {
-  return (
-    <div className="flex flex-col gap-3 py-1 sm:flex-row sm:items-center sm:justify-between sm:gap-6">
-      <div className="min-w-0">
-        <div className="text-sm font-medium">{label}</div>
-        <div className="mt-0.5 text-xs text-muted">{desc}</div>
-      </div>
-      <div className="shrink-0">{children}</div>
-    </div>
   );
 }
 

@@ -195,3 +195,52 @@ describe('staff — invite + accept', () => {
     });
   });
 });
+
+describe('account self-service', () => {
+  it('updates your own name (reflected in /me)', async () => {
+    const res = await req('/api/app/account', adminCookie, {
+      method: 'PUT',
+      body: JSON.stringify({ name: 'Admin Renamed' }),
+    });
+    expect(res.status).toBe(200);
+    expect((await res.json()).name).toBe('Admin Renamed');
+    const me = await (await req('/api/auth/me', adminCookie)).json();
+    expect(me.user.name).toBe('Admin Renamed');
+  });
+
+  it('rejects a password change with the wrong current password', async () => {
+    const res = await req(
+      '/api/app/account/password',
+      adminCookie,
+      post({ currentPassword: 'wrongpass', newPassword: 'newadminpass1' }),
+    );
+    expect(res.status).toBe(400);
+  });
+
+  it('changes the password with the correct current; new one works for login', async () => {
+    const res = await req(
+      '/api/app/account/password',
+      adminCookie,
+      post({ currentPassword: 'supersecret', newPassword: 'newadminpass1' }),
+    );
+    expect(res.status).toBe(200);
+    expect(
+      (
+        await req(
+          '/api/auth/login',
+          null,
+          post({ email: 'admin@acme.co', password: 'newadminpass1' }),
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await req(
+          '/api/auth/login',
+          null,
+          post({ email: 'admin@acme.co', password: 'supersecret' }),
+        )
+      ).status,
+    ).toBe(401);
+  });
+});

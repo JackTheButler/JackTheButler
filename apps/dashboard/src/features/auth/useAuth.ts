@@ -66,3 +66,15 @@ export const useAcceptInvite = () =>
   useSessionMutation((v: { token: string; name: string; password: string }) =>
     api.post('/api/auth/accept-invite', v),
   );
+
+/** Update your own display name. Invalidates the session so the new name
+ *  shows everywhere (sidebar, etc.). */
+export const useUpdateName = () =>
+  useSessionMutation((v: { name: string }) => api.put('/api/app/account', v));
+
+/** Change your own password. Not a session mutation — the session is unchanged. */
+export const useChangePassword = () =>
+  useMutation({
+    mutationFn: (v: { currentPassword: string; newPassword: string }) =>
+      api.post('/api/app/account/password', v),
+  });

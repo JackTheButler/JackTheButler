@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import type { BusinessProfile } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
@@ -12,21 +12,22 @@ import {
   Field,
   Card,
   SaveButton,
-  SwitchField,
   SegmentedControl,
   toast,
   Button,
 } from '@/components/ui';
 import { ApiError } from '@/lib/api';
+import { useSession, useUpdateName, useChangePassword } from '@/features/auth/useAuth';
+import { KnowledgeSettingsTab } from '@/features/knowledge/KnowledgeSettingsTab';
 import { useBusiness, useSaveBusiness } from './useBusiness';
 
-const TABS = ['Business', 'Your Profile', 'Notifications'] as const;
+const TABS = ['Business', 'Knowledge', 'Your Profile'] as const;
 type Tab = (typeof TABS)[number];
 
 const SLUG: Record<Tab, string> = {
   Business: 'business',
+  Knowledge: 'knowledge',
   'Your Profile': 'profile',
-  Notifications: 'notifications',
 };
 
 /** Dropdown choices for the business default language. English first as
@@ -162,83 +163,149 @@ function BusinessTab() {
 }
 
 function AccountTab() {
+  const { user } = useSession();
+  const updateName = useUpdateName();
+  const changePassword = useChangePassword();
+
+  const [name, setName] = useState(user?.name ?? '');
+  const [current, setCurrent] = useState('');
+  const [next, setNext] = useState('');
+  const [confirm, setConfirm] = useState('');
+
+  const nameChanged = name.trim().length > 0 && name.trim() !== (user?.name ?? '');
+  const passwordReady = current.length > 0 && next.length >= 8 && confirm.length > 0;
+
+  const saveName = () =>
+    updateName.mutate(
+      { name: name.trim() },
+      {
+        onSuccess: () => toast.success('Name updated'),
+        onError: () => toast.error('Could not update your name.'),
+      },
+    );
+
+  const savePassword = () => {
+    if (next !== confirm) {
+      toast.error('New passwords don’t match.');
+      return;
+    }
+    changePassword.mutate(
+      { currentPassword: current, newPassword: next },
+      {
+        onSuccess: () => {
+          setCurrent('');
+          setNext('');
+          setConfirm('');
+          toast.success('Password changed');
+        },
+        onError: (e) =>
+          toast.error(
+            e instanceof ApiError && e.message === 'invalid_password'
+              ? 'Your current password is incorrect.'
+              : 'Could not change password.',
+          ),
+      },
+    );
+  };
+
   return (
-    <Card title="Your profile">
-      <div className="grid gap-4 sm:grid-cols-2">
-        <Field label="Name">
-          <Input defaultValue="Arash K." />
-        </Field>
-        <Field label="Email">
-          <Input defaultValue="a.karimzadeh@gmail.com" disabled />
-        </Field>
-      </div>
-      <div className="border-t border-line pt-4">
-        <h3 className="text-xs font-semibold uppercase tracking-wide text-muted">
-          Change password
-        </h3>
-        <div className="mt-3 grid gap-4 sm:grid-cols-2">
-          <Field label="New password">
-            <Input type="password" placeholder="••••••••" />
+    <div className="space-y-6">
+      <Card title="Your profile">
+        <div className="grid gap-4 sm:grid-cols-2">
+          <Field label="Name">
+            <Input value={name} onChange={(e) => setName(e.target.value)} />
           </Field>
-          <Field label="Confirm password">
-            <Input type="password" placeholder="••••••••" />
+          <Field label="Email" hint="Contact an admin to change your email.">
+            <Input value={user?.email ?? ''} disabled />
           </Field>
         </div>
-      </div>
-      <div className="flex justify-end">
-        <Button size="md">Save changes</Button>
-      </div>
-    </Card>
-  );
-}
+        <div className="flex justify-end">
+          <SaveButton
+            size="md"
+            idleLabel="Save name"
+            isPending={updateName.isPending}
+            isSuccess={updateName.isSuccess}
+            onSave={saveName}
+            disabled={!nameChanged}
+          />
+        </div>
+      </Card>
 
-function NotificationsTab() {
-  const [prefs, setPrefs] = useState({ handoff: true, reply: true, summary: false });
-  return (
-    <Card title="Notifications">
-      <SwitchField
-        label="Conversation handed to me"
-        desc="When a chat is escalated or assigned to you."
-        checked={prefs.handoff}
-        onCheckedChange={(v) => setPrefs((p) => ({ ...p, handoff: v }))}
-      />
-      <SwitchField
-        label="Customer replied"
-        desc="A customer responded in a chat you're handling."
-        checked={prefs.reply}
-        onCheckedChange={(v) => setPrefs((p) => ({ ...p, reply: v }))}
-      />
-      <SwitchField
-        label="Daily summary"
-        desc="A morning digest of conversation volume and AI resolution rate."
-        checked={prefs.summary}
-        onCheckedChange={(v) => setPrefs((p) => ({ ...p, summary: v }))}
-      />
-    </Card>
+      <Card title="Change password">
+        <div className="grid gap-4 sm:grid-cols-3">
+          <Field label="Current password">
+            <Input
+              type="password"
+              autoComplete="current-password"
+              value={current}
+              onChange={(e) => setCurrent(e.target.value)}
+            />
+          </Field>
+          <Field label="New password" hint="At least 8 characters.">
+            <Input
+              type="password"
+              autoComplete="new-password"
+              value={next}
+              onChange={(e) => setNext(e.target.value)}
+            />
+          </Field>
+          <Field label="Confirm">
+            <Input
+              type="password"
+              autoComplete="new-password"
+              value={confirm}
+              onChange={(e) => setConfirm(e.target.value)}
+            />
+          </Field>
+        </div>
+        <div className="flex justify-end">
+          <Button
+            size="md"
+            onClick={savePassword}
+            disabled={!passwordReady || changePassword.isPending}
+          >
+            {changePassword.isPending ? 'Changing…' : 'Change password'}
+          </Button>
+        </div>
+      </Card>
+    </div>
   );
 }
 
 export function SettingsPage() {
   const { section } = useParams();
   const navigate = useNavigate();
-  const tab = TABS.find((t) => SLUG[t] === section) ?? 'Business';
+  const { user } = useSession();
+  const isAdmin = user?.role === 'admin';
+  // Agents get only their own profile; admins get the workspace tabs too.
+  const visibleTabs: readonly Tab[] = isAdmin ? TABS : ['Your Profile'];
+  const tab = TABS.find((t) => SLUG[t] === section) ?? (isAdmin ? 'Business' : 'Your Profile');
+
+  // Business + Knowledge are admin-only — route agents to their profile.
+  if (!isAdmin && tab !== 'Your Profile') return <Navigate to="/settings/profile" replace />;
+
   return (
     <PageShell>
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
-        <PageHeader title="Settings" subtitle="Manage your workspace and account." />
-
-        <SegmentedControl
-          aria-label="Settings sections"
-          options={TABS}
-          value={tab}
-          onChange={(t) => navigate(`/settings/${SLUG[t]}`)}
-          className="-mx-4 mt-6 px-4 md:mx-0 md:px-0"
+        <PageHeader
+          title="Settings"
+          subtitle={isAdmin ? 'Manage your workspace and account.' : 'Manage your account.'}
         />
+
+        {visibleTabs.length > 1 && (
+          <SegmentedControl
+            aria-label="Settings sections"
+            options={visibleTabs}
+            value={tab}
+            onChange={(t) => navigate(`/settings/${SLUG[t]}`)}
+            className="-mx-4 mt-6 px-4 md:mx-0 md:px-0"
+          />
+        )}
 
         <div className="mt-6">
           {tab === 'Business' && <BusinessTab />}
+          {tab === 'Knowledge' && <KnowledgeSettingsTab />}
           {tab === 'Your Profile' && <AccountTab />}
-          {tab === 'Notifications' && <NotificationsTab />}
         </div>
       </div>
     </PageShell>
