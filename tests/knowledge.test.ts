@@ -163,38 +163,38 @@ describe('knowledge base — entries', () => {
     }
   });
 
-  it('settings lazy-seed (balanced + topK 5) and strictness round-trips', async () => {
+  it('settings lazy-seed (threshold 0.4 + topK 5) and threshold round-trips', async () => {
     // First read seeds the defaults.
     expect(await (await authed('/api/app/knowledge/settings')).json()).toEqual({
-      matchStrictness: 'balanced',
+      matchThreshold: 0.4,
       topK: 5,
     });
 
     const res = await authed('/api/app/knowledge/settings', {
       method: 'PUT',
-      body: JSON.stringify({ matchStrictness: 'strict' }),
+      body: JSON.stringify({ matchThreshold: 0.52 }),
     });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ matchStrictness: 'strict', topK: 5 });
+    expect(await res.json()).toEqual({ matchThreshold: 0.52, topK: 5 });
     expect(await (await authed('/api/app/knowledge/settings')).json()).toEqual({
-      matchStrictness: 'strict',
+      matchThreshold: 0.52,
       topK: 5,
     });
   });
 
-  it('topK round-trips and is independent of strictness', async () => {
+  it('topK round-trips and is independent of the threshold', async () => {
     const res = await authed('/api/app/knowledge/settings', {
       method: 'PUT',
       body: JSON.stringify({ topK: 8 }),
     });
     expect(res.status).toBe(200);
-    expect(await res.json()).toEqual({ matchStrictness: 'strict', topK: 8 });
+    expect(await res.json()).toEqual({ matchThreshold: 0.52, topK: 8 });
   });
 
-  it('rejects an invalid strictness level', async () => {
+  it('rejects an out-of-range threshold', async () => {
     const res = await authed('/api/app/knowledge/settings', {
       method: 'PUT',
-      body: JSON.stringify({ matchStrictness: 'whatever' }),
+      body: JSON.stringify({ matchThreshold: 0.95 }),
     });
     expect(res.status).toBe(400);
   });

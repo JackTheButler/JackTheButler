@@ -12,39 +12,56 @@ import { findSimilarQuestions } from '@/modules/knowledge/search.js';
 
 /* ── Retrieval match strictness ────────────────────────────────── */
 
-export const MATCH_STRICTNESS_LEVELS = ['loose', 'balanced', 'strict'] as const;
-export type MatchStrictness = (typeof MATCH_STRICTNESS_LEVELS)[number];
+/** Match strictness is a continuous cosine-similarity floor: an entry must
+ *  score at or above it to be retrieved. The UI labels sub-ranges Loose /
+ *  Balanced / Strict, but we persist the raw number. Bounds keep it in the
+ *  band that's actually useful for text-embedding-3 (outside ~[0.2, 0.7] it's
+ *  either everything or nothing). */
+export const MATCH_THRESHOLD_MIN = 0.2;
+export const MATCH_THRESHOLD_MAX = 0.7;
+export const MATCH_THRESHOLD_STEP = 0.01;
+const DEFAULT_MATCH_THRESHOLD = 0.4; // was the 'balanced' floor
 
 const STRICTNESS_KEY = 'kb.matchStrictness';
-const DEFAULT_STRICTNESS: MatchStrictness = 'balanced';
 
-/** Qualitative level → cosine floor. Calibrated to text-embedding-3; tune
- *  the floors here without touching stored values (we persist the level,
- *  not the number). */
-const STRICTNESS_FLOOR: Record<MatchStrictness, number> = {
-  loose: 0.3,
-  balanced: 0.4,
-  strict: 0.5,
-};
+/** Legacy named levels → their floor, so older DBs migrate transparently on
+ *  first read (the stored level is rewritten as a number). */
+const LEGACY_LEVEL_FLOOR: Record<string, number> = { loose: 0.3, balanced: 0.4, strict: 0.5 };
 
-/** Current strictness level. Lazy-seeds `'balanced'` on first read (same
- *  pattern as the business default language) so it's an explicit row. */
-export function getMatchStrictness(): MatchStrictness {
-  const stored = readSetting<string>(STRICTNESS_KEY);
-  if (stored && (MATCH_STRICTNESS_LEVELS as readonly string[]).includes(stored)) {
-    return stored as MatchStrictness;
+const clampThreshold = (v: number): number =>
+  Number(
+    Math.min(
+      MATCH_THRESHOLD_MAX,
+      Math.max(MATCH_THRESHOLD_MIN, Math.round(v / MATCH_THRESHOLD_STEP) * MATCH_THRESHOLD_STEP),
+    ).toFixed(2),
+  );
+
+/** Current match threshold. Lazy-seeds the default; migrates a legacy level
+ *  string ('loose'|'balanced'|'strict') to its floor in place. */
+export function getMatchThreshold(): number {
+  const stored = readSetting<number | string>(STRICTNESS_KEY);
+  if (
+    typeof stored === 'number' &&
+    stored >= MATCH_THRESHOLD_MIN &&
+    stored <= MATCH_THRESHOLD_MAX
+  ) {
+    return stored;
   }
-  writeSetting(STRICTNESS_KEY, DEFAULT_STRICTNESS);
-  return DEFAULT_STRICTNESS;
+  const migrated =
+    typeof stored === 'string' && stored in LEGACY_LEVEL_FLOOR
+      ? LEGACY_LEVEL_FLOOR[stored]
+      : DEFAULT_MATCH_THRESHOLD;
+  writeSetting(STRICTNESS_KEY, migrated);
+  return migrated;
 }
 
-export function setMatchStrictness(level: MatchStrictness): void {
-  writeSetting(STRICTNESS_KEY, level);
+export function setMatchThreshold(value: number): void {
+  writeSetting(STRICTNESS_KEY, clampThreshold(value));
 }
 
-/** The cosine floor the retriever should use, derived from the level. */
+/** The cosine floor the retriever should use. */
 export function getKbMinSimilarity(): number {
-  return STRICTNESS_FLOOR[getMatchStrictness()];
+  return getMatchThreshold();
 }
 
 /* ── Retrieval top-K ───────────────────────────────────────────── */

@@ -1,53 +1,28 @@
 import { type ReactNode } from 'react';
-import { Card, SegmentedControl, Select, SelectItem, toast } from '@/components/ui';
-import {
-  useKbSettings,
-  useSetMatchStrictness,
-  useSetTopK,
-  TOP_K_OPTIONS,
-  type MatchStrictness,
-  type TopK,
-} from './useKnowledge';
-
-const STRICTNESS_LABELS: Record<MatchStrictness, string> = {
-  loose: 'Loose',
-  balanced: 'Balanced',
-  strict: 'Strict',
-};
-const STRICTNESS_VALUES = Object.values(STRICTNESS_LABELS); // ['Loose','Balanced','Strict']
+import { Card, Select, SelectItem, toast } from '@/components/ui';
+import { StrictnessSlider } from './StrictnessSlider';
+import { useKbSettings, useSetMatchThreshold, useSetTopK, TOP_K_OPTIONS, type TopK } from './useKnowledge';
 
 /** Knowledge retrieval settings — match strictness + top-K. Rendered as the
  *  "Knowledge" tab on the Settings page (admin-only). Instant-save. */
 export function KnowledgeSettingsTab() {
   const settings = useKbSettings();
-  const setStrictness = useSetMatchStrictness();
+  const setThreshold = useSetMatchThreshold();
   const setTopK = useSetTopK();
-  const current = settings.data?.matchStrictness ?? 'balanced';
+  const currentThreshold = settings.data?.matchThreshold ?? 0.4;
   const currentTopK = settings.data?.topK ?? 5;
 
   return (
     <Card title="Retrieval">
-      <SettingRow
-        label="Match strictness"
-        desc="How closely a customer's question must match an entry for the AI to use it. Looser finds more answers; stricter is more precise."
-      >
-        <SegmentedControl
-          aria-label="Match strictness"
-          className="shrink-0"
-          options={STRICTNESS_VALUES}
-          value={STRICTNESS_LABELS[current]}
-          onChange={(label) => {
-            const level = (Object.keys(STRICTNESS_LABELS) as MatchStrictness[]).find(
-              (k) => STRICTNESS_LABELS[k] === label,
-            );
-            if (level)
-              setStrictness.mutate(level, {
-                onSuccess: () => toast.success('Match strictness updated'),
-                onError: () => toast.error('Could not update match strictness'),
-              });
-          }}
-        />
-      </SettingRow>
+      <StrictnessSlider
+        value={currentThreshold}
+        onCommit={(v) =>
+          setThreshold.mutate(v, {
+            onSuccess: () => toast.success('Match strictness updated'),
+            onError: () => toast.error('Could not update match strictness'),
+          })
+        }
+      />
 
       <div className="h-px bg-line" />
 

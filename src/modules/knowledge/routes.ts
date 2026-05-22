@@ -11,14 +11,15 @@ import {
   deleteEntry,
   getEntry,
   getKbTopK,
-  getMatchStrictness,
+  getMatchThreshold,
   listEntries,
   setKbTopK,
-  setMatchStrictness,
+  setMatchThreshold,
   startReembed,
   updateEntry,
   BULK_MAX,
-  MATCH_STRICTNESS_LEVELS,
+  MATCH_THRESHOLD_MIN,
+  MATCH_THRESHOLD_MAX,
   TOP_K_OPTIONS,
   type TopK,
 } from '@/modules/knowledge/service.js';
@@ -102,29 +103,29 @@ knowledgeRoutes.post('/reembed', (c) => {
 });
 
 /** KB retrieval settings:
- *  - matchStrictness: how closely a question must match an entry to be used.
+ *  - matchThreshold: cosine-similarity floor a question must clear to use an entry.
  *  - topK: how many top matches to feed the AI.
  *  PUT accepts either or both; each present field is applied. */
 const settingsBody = z
   .object({
-    matchStrictness: z.enum(MATCH_STRICTNESS_LEVELS).optional(),
+    matchThreshold: z.number().min(MATCH_THRESHOLD_MIN).max(MATCH_THRESHOLD_MAX).optional(),
     topK: z
       .number()
       .refine((n): n is TopK => (TOP_K_OPTIONS as readonly number[]).includes(n))
       .optional(),
   })
-  .refine((b) => b.matchStrictness !== undefined || b.topK !== undefined, {
+  .refine((b) => b.matchThreshold !== undefined || b.topK !== undefined, {
     message: 'no settings provided',
   });
 
-const settings = () => ({ matchStrictness: getMatchStrictness(), topK: getKbTopK() });
+const settings = () => ({ matchThreshold: getMatchThreshold(), topK: getKbTopK() });
 
 knowledgeRoutes.get('/settings', (c) => c.json(settings()));
 
 knowledgeRoutes.put('/settings', async (c) => {
   const parsed = settingsBody.safeParse(await body(c));
   if (!parsed.success) throw new AppError('invalid_input', 400);
-  if (parsed.data.matchStrictness) setMatchStrictness(parsed.data.matchStrictness);
+  if (parsed.data.matchThreshold !== undefined) setMatchThreshold(parsed.data.matchThreshold);
   if (parsed.data.topK) setKbTopK(parsed.data.topK);
   return c.json(settings());
 });

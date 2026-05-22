@@ -120,16 +120,21 @@ export async function bulkImport(
   return { inserted, skipped };
 }
 
-export type MatchStrictness = 'loose' | 'balanced' | 'strict';
 export type TopK = 3 | 5 | 8 | 10;
 export const TOP_K_OPTIONS: readonly TopK[] = [3, 5, 8, 10];
 
+/** Match strictness is a continuous cosine floor; keep these in sync with the
+ *  backend bounds in modules/knowledge/service.ts. */
+export const MATCH_THRESHOLD_MIN = 0.2;
+export const MATCH_THRESHOLD_MAX = 0.7;
+export const MATCH_THRESHOLD_STEP = 0.01;
+
 export interface KbSettings {
-  matchStrictness: MatchStrictness;
+  matchThreshold: number;
   topK: TopK;
 }
 
-/** KB retrieval settings (match strictness + top-K). */
+/** KB retrieval settings (match threshold + top-K). */
 export function useKbSettings() {
   return useQuery({
     queryKey: ['knowledge', 'settings'],
@@ -137,11 +142,11 @@ export function useKbSettings() {
   });
 }
 
-export function useSetMatchStrictness() {
+export function useSetMatchThreshold() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: (matchStrictness: MatchStrictness) =>
-      api.put<KbSettings>('/api/app/knowledge/settings', { matchStrictness }),
+    mutationFn: (matchThreshold: number) =>
+      api.put<KbSettings>('/api/app/knowledge/settings', { matchThreshold }),
     onSuccess: (data) => qc.setQueryData(['knowledge', 'settings'], data),
   });
 }
