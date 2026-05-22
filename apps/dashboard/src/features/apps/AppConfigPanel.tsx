@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import type { ConfigField } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
+import { Loading } from '@/components/Loading';
 import {
   Badge,
   Avatar,
@@ -107,7 +108,7 @@ export function AppConfigPanel() {
   if (isLoading || !detail || !form) {
     return (
       <PageShell>
-        <div className="p-6 text-sm text-muted">Loading…</div>
+        <Loading />
       </PageShell>
     );
   }

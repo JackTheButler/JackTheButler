@@ -4,6 +4,7 @@ import type { AppSummary, AppStatus } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import { Toolbar } from '@/components/Toolbar';
+import { Loading } from '@/components/Loading';
 import {
   Avatar,
   Badge,
@@ -136,7 +137,7 @@ export function AppsPage() {
 
         <div className="mt-6">
           {isLoading ? (
-            <EmptyState>Loading…</EmptyState>
+            <Loading />
           ) : filtered.length === 0 ? (
             <EmptyState>No apps match your filters.</EmptyState>
           ) : (

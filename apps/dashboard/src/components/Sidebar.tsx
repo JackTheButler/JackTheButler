@@ -35,10 +35,10 @@ import { JaneLogo } from '@/components/JaneLogo';
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
-  { to: '/assistant', label: 'Assistant', icon: Bot },
-  { to: '/team', label: 'Team', icon: Users },
-  { to: '/apps', label: 'Apps', icon: Blocks, dividerBefore: true },
-  { to: '/settings', label: 'Settings', icon: Settings },
+  { to: '/assistant', label: 'Assistant', icon: Bot, adminOnly: true },
+  { to: '/team', label: 'Team', icon: Users, adminOnly: true },
+  { to: '/apps', label: 'Apps', icon: Blocks, dividerBefore: true, adminOnly: true },
+  { to: '/settings', label: 'Settings', icon: Settings, adminOnly: true },
 ];
 
 // Shared sidebar-row shape (nav item, theme toggle, account chip).
@@ -59,7 +59,10 @@ function Brand({ collapsed }: { collapsed: boolean }) {
 
 function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: () => void }) {
   const { pathname } = useLocation();
-  const activeIndex = NAV.findIndex(({ to, end }) =>
+  const { user } = useSession();
+  // Agents see only Inbox + Knowledge; admins see everything.
+  const nav = NAV.filter((item) => !item.adminOnly || user?.role === 'admin');
+  const activeIndex = nav.findIndex(({ to, end }) =>
     end ? pathname === to : pathname === to || pathname.startsWith(to + '/'),
   );
   const { containerRef, itemsRef, rect, transition } = useSlidingIndicator(activeIndex);
@@ -82,7 +85,7 @@ function NavList({ collapsed, onNavigate }: { collapsed: boolean; onNavigate?: (
           style={{ top: rect.top, left: rect.left, width: rect.width, height: rect.height }}
         />
       )}
-      {NAV.map(({ to, label, icon: Icon, end, dividerBefore }, i) => {
+      {nav.map(({ to, label, icon: Icon, end, dividerBefore }, i) => {
         const badge = to === '/' ? inboxCount : 0;
         return (
           <Fragment key={to}>

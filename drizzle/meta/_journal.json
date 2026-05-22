@@ -106,6 +106,13 @@
       "when": 1779370000000,
       "tag": "0014_rename_embedding_add_question_embedding",
       "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1779422972786,
+      "tag": "0015_add_staff_roles_status",
+      "breakpoints": true
     }
   ]
 }

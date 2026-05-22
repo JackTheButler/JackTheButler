@@ -5,6 +5,8 @@ import { setSessionCookie, clearSessionCookie } from '@/modules/auth/cookie.js';
 import { requireAuth, type AuthEnv } from '@/modules/auth/middleware.js';
 import { credentials, setupBody } from '@/modules/auth/schema.js';
 import { authenticate, createInitialAdmin, needsSetup } from '@/modules/auth/service.js';
+import { acceptInviteBody } from '@/modules/staff/schema.js';
+import { acceptInvite } from '@/modules/staff/service.js';
 
 /** Thin HTTP adapter: validate → call service → set cookie → serialize.
  *  No business logic here; no error formatting (see core/http.ts). */
@@ -28,6 +30,15 @@ authRoutes.post('/login', async (c) => {
   if (!parsed.success) throw new AppError('invalid_input', 400);
 
   const user = await authenticate(parsed.data.email, parsed.data.password);
+  setSessionCookie(c, await signSession({ sub: user.id, email: user.email, name: user.name }));
+  return c.json({ user });
+});
+
+// Public: accept a team invite → set name + password, then log in.
+authRoutes.post('/accept-invite', async (c) => {
+  const parsed = acceptInviteBody.safeParse(await body(c));
+  if (!parsed.success) throw new AppError('invalid_input', 400);
+  const user = await acceptInvite(parsed.data.token, parsed.data.name, parsed.data.password);
   setSessionCookie(c, await signSession({ sub: user.id, email: user.email, name: user.name }));
   return c.json({ user });
 });

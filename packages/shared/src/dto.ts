@@ -33,6 +33,48 @@ export interface BusinessProfile {
   defaultLanguage: string;
 }
 
+/* ── System status ─────────────────────────────────────────────── */
+
+/** Coarse, role-safe health for a provider. Detailed errors/config stay in
+ *  the admin-only Apps page; everyone can see this much. */
+export type ProviderHealth = 'ok' | 'error' | 'unknown';
+
+export interface ProviderStatus {
+  connected: boolean;
+  /** Display name of the connected/configured app, or null when none. */
+  name: string | null;
+  health: ProviderHealth;
+}
+
+/** Role-agnostic operational status the dashboard needs to render correctly
+ *  without reading the admin-only Apps management endpoint (e.g. so an agent's
+ *  KB page knows whether an embedding provider is connected). Slow-changing,
+ *  ambient state — fast-changing data keeps its own focused endpoints. */
+export interface SystemStatus {
+  providers: {
+    embedding: ProviderStatus;
+    generation: ProviderStatus;
+  };
+}
+
+/* ── Staff & permissions ───────────────────────────────────────── */
+
+/** admin = full access; agent = Inbox + Knowledge only. */
+export type StaffRole = 'admin' | 'agent';
+/** invited = created, not yet accepted (no password); active = can log in;
+ *  disabled = kept for history, can't log in. */
+export type StaffStatus = 'invited' | 'active' | 'disabled';
+
+export interface StaffMember {
+  id: string;
+  email: string;
+  name: string;
+  role: StaffRole;
+  status: StaffStatus;
+  lastLoginAt: number | null;
+  createdAt: number;
+}
+
 /* ── Assistant profile ─────────────────────────────────────────── */
 
 export type AssistantTone = 'Friendly' | 'Professional' | 'Casual';

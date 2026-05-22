@@ -8,7 +8,7 @@ import * as schema from '@/db/schema/index.js';
 const path = config.dbPath;
 if (path !== ':memory:') mkdirSync(dirname(path), { recursive: true });
 
-const sqlite = new Database(path);
+export const sqlite: Database.Database = new Database(path);
 sqlite.pragma('journal_mode = WAL');
 sqlite.pragma('foreign_keys = ON');
 

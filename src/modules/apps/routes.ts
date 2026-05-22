@@ -1,5 +1,6 @@
 import { Hono, type Context } from 'hono';
 import { AppError } from '@/core/errors.js';
+import { requireAdmin, type AuthEnv } from '@/modules/auth/middleware.js';
 import { configBody } from '@/modules/apps/schema.js';
 import {
   listApps,
@@ -9,8 +10,9 @@ import {
   checkApp,
 } from '@/modules/apps/service.js';
 
-/** Thin HTTP adapter. Validate → call service → serialize. No logic here. */
-export const appsRoutes = new Hono();
+/** Thin HTTP adapter. Validate → call service → serialize. Admin-only. */
+export const appsRoutes = new Hono<AuthEnv>();
+appsRoutes.use('*', requireAdmin);
 
 const body = (c: Context): Promise<unknown> => c.req.json().catch(() => null);
 

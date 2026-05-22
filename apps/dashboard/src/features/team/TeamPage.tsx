@@ -1,9 +1,11 @@
 import { useMemo, useState } from 'react';
-import { UserPlus, Shield, User, RefreshCw, Ban, Trash2 } from 'lucide-react';
+import { UserPlus, Shield, User, Ban, Copy, Check } from 'lucide-react';
+import type { StaffMember, StaffRole } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import { ListRow, RowMenu } from '@/components/ListRow';
 import { Toolbar } from '@/components/Toolbar';
+import { Loading } from '@/components/Loading';
 import {
   Avatar,
   Badge,
@@ -15,30 +17,74 @@ import {
   EmptyState,
   SegmentedControl,
   Dialog,
-  DialogTrigger,
   DialogContent,
-  DialogClose,
   DropdownMenuItem,
-  DropdownMenuSeparator,
+  toast,
 } from '@/components/ui';
-import {
-  members,
-  roleLabel,
-  roleHint,
-  teamFilters,
-  matchesTeamFilter,
-  type Member,
-  type Role,
-  type TeamFilter,
-} from '@/mock/team';
+import { ApiError } from '@/lib/api';
+import { useSession } from '@/features/auth/useAuth';
+import { useTeam, useInvite, useSetRole, useSetStatus } from './useTeam';
 
-function MemberRow({ member }: { member: Member }) {
+const ROLE_LABEL: Record<StaffRole, string> = { admin: 'Admin', agent: 'Agent' };
+const ROLE_HINT: Record<StaffRole, string> = {
+  admin: 'Full access — Inbox, Knowledge, Apps, Assistant, Team & Settings.',
+  agent: 'Limited access — Inbox and Knowledge only.',
+};
+
+const FILTERS = ['All', 'Admins', 'Agents', 'Invited'] as const;
+type Filter = (typeof FILTERS)[number];
+
+function matchesFilter(m: StaffMember, f: Filter): boolean {
+  switch (f) {
+    case 'All':
+      return true;
+    case 'Admins':
+      return m.role === 'admin' && m.status !== 'invited';
+    case 'Agents':
+      return m.role === 'agent' && m.status !== 'invited';
+    case 'Invited':
+      return m.status === 'invited';
+  }
+}
+
+function lastActiveLabel(m: StaffMember): string {
+  if (m.status === 'invited') return 'Invited — not yet accepted';
+  if (!m.lastLoginAt) return 'Never signed in';
+  const days = Math.floor((Date.now() - m.lastLoginAt) / 86_400_000);
+  if (days <= 0) return 'Active today';
+  if (days === 1) return 'Active yesterday';
+  if (days < 30) return `Active ${days}d ago`;
+  return 'Inactive 30d+';
+}
+
+function MemberRow({ member, isYou }: { member: StaffMember; isYou: boolean }) {
+  const setRole = useSetRole();
+  const setStatus = useSetStatus();
   const invited = member.status === 'invited';
   const disabled = member.status === 'disabled';
+
+  const onError = (e: unknown) =>
+    toast.error(
+      e instanceof ApiError && e.message === 'last_admin'
+        ? "That's the last admin — promote someone else first."
+        : 'Could not update member.',
+    );
+
+  const flipRole = () =>
+    setRole.mutate(
+      { id: member.id, role: member.role === 'admin' ? 'agent' : 'admin' },
+      { onError },
+    );
+  const flipStatus = () =>
+    setStatus.mutate(
+      { id: member.id, action: disabled ? 'enable' : 'disable' },
+      { onError },
+    );
+
   return (
     <ListRow
       disabled={disabled}
-      leading={<Avatar name={member.name} />}
+      leading={<Avatar name={member.name || member.email} />}
       status={
         (invited || disabled) && (
           <Badge tone="muted" className="hidden shrink-0 sm:inline-flex">
@@ -47,89 +93,150 @@ function MemberRow({ member }: { member: Member }) {
         )
       }
       trailing={
-        member.you ? (
+        isYou ? (
           <span className="grid h-9 w-9 shrink-0" />
         ) : (
           <RowMenu>
-            <DropdownMenuItem>
-              {member.role === 'admin' ? <User size={14} /> : <Shield size={14} />}
-              Make {member.role === 'admin' ? 'Agent' : 'Admin'}
-            </DropdownMenuItem>
-            {invited && (
-              <DropdownMenuItem>
-                <RefreshCw size={14} /> Resend invite
+            {!invited && (
+              <DropdownMenuItem onSelect={flipRole}>
+                {member.role === 'admin' ? <User size={14} /> : <Shield size={14} />}
+                Make {member.role === 'admin' ? 'Agent' : 'Admin'}
               </DropdownMenuItem>
             )}
-            <DropdownMenuItem>
-              <Ban size={14} /> {disabled ? 'Reactivate' : 'Deactivate'}
-            </DropdownMenuItem>
-            <DropdownMenuSeparator />
-            <DropdownMenuItem destructive>
-              <Trash2 size={14} /> Remove
-            </DropdownMenuItem>
+            {!invited && (
+              <DropdownMenuItem onSelect={flipStatus}>
+                <Ban size={14} /> {disabled ? 'Reactivate' : 'Deactivate'}
+              </DropdownMenuItem>
+            )}
           </RowMenu>
         )
       }
     >
       <div className="flex items-center gap-2">
-        <span className="truncate text-sm font-medium">{member.name}</span>
-        {member.you && (
+        <span className="truncate text-sm font-medium">{member.name || member.email}</span>
+        {isYou && (
           <Badge tone="muted" className="shrink-0 normal-case">
             You
           </Badge>
         )}
         <Badge tone={member.role === 'admin' ? 'accent' : 'muted'} className="shrink-0">
-          {roleLabel[member.role]}
+          {ROLE_LABEL[member.role]}
         </Badge>
       </div>
       <p className="mt-0.5 truncate text-xs text-muted">
-        {member.email} · {member.lastActive}
+        {member.email} · {lastActiveLabel(member)}
       </p>
     </ListRow>
   );
 }
 
-function InviteTeammate() {
-  const [role, setRole] = useState<Role>('agent');
+function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o: boolean) => void }) {
+  const invite = useInvite();
+  const [email, setEmail] = useState('');
+  const [role, setRole] = useState<StaffRole>('agent');
+  const [link, setLink] = useState<string | null>(null);
+  const [copied, setCopied] = useState(false);
+
+  const reset = () => {
+    setEmail('');
+    setRole('agent');
+    setLink(null);
+    setCopied(false);
+  };
+
+  const submit = () => {
+    invite.mutate(
+      { email, role },
+      {
+        onSuccess: (r) => setLink(`${window.location.origin}/accept-invite?token=${r.token}`),
+        onError: (e) =>
+          toast.error(
+            e instanceof ApiError && e.message === 'email_taken'
+              ? 'Someone with that email already exists.'
+              : 'Could not send the invite.',
+          ),
+      },
+    );
+  };
+
+  const copy = async () => {
+    if (!link) return;
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    toast.success('Invite link copied');
+  };
+
   return (
-    <Dialog>
-      <DialogTrigger asChild>
-        <Button size="md">
-          <UserPlus size={16} /> Invite
-        </Button>
-      </DialogTrigger>
-      <DialogContent title="Invite teammate" description="They’ll get an email to set a password.">
-        <div className="space-y-3">
-          <Field label="Email">
-            <Input type="email" placeholder="name@company.com" />
-          </Field>
-          <Field label="Role" hint={roleHint[role]}>
-            <Select value={role} onValueChange={(v) => setRole(v as Role)}>
-              <SelectItem value="agent">Agent</SelectItem>
-              <SelectItem value="admin">Admin</SelectItem>
-            </Select>
-          </Field>
-        </div>
-        <div className="mt-6 flex justify-end gap-2">
-          <DialogClose asChild>
-            <Button variant="ghost" size="md">
-              Cancel
-            </Button>
-          </DialogClose>
-          <DialogClose asChild>
-            <Button size="md">Send invite</Button>
-          </DialogClose>
-        </div>
+    <Dialog
+      open={open}
+      onOpenChange={(o) => {
+        onOpenChange(o);
+        if (!o) reset();
+      }}
+    >
+      <DialogContent
+        title="Invite teammate"
+        description={
+          link
+            ? 'Share this link — it lets them set a password and join.'
+            : 'Create an invite. No email is sent yet — you’ll get a link to share.'
+        }
+      >
+        {link ? (
+          <div className="space-y-3">
+            <div className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2">
+              <code className="min-w-0 flex-1 truncate text-xs text-muted">{link}</code>
+              <Button size="sm" variant="outline" onClick={copy} className="shrink-0">
+                {copied ? <Check size={14} /> : <Copy size={14} />}
+                {copied ? 'Copied' : 'Copy'}
+              </Button>
+            </div>
+            <div className="flex justify-end">
+              <Button size="md" onClick={() => onOpenChange(false)}>
+                Done
+              </Button>
+            </div>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            <Field label="Email">
+              <Input
+                type="email"
+                placeholder="name@company.com"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+              />
+            </Field>
+            <Field label="Role" hint={ROLE_HINT[role]}>
+              <Select value={role} onValueChange={(v) => setRole(v as StaffRole)}>
+                <SelectItem value="agent">Agent</SelectItem>
+                <SelectItem value="admin">Admin</SelectItem>
+              </Select>
+            </Field>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="md" onClick={() => onOpenChange(false)}>
+                Cancel
+              </Button>
+              <Button size="md" onClick={submit} disabled={!email.trim() || invite.isPending}>
+                {invite.isPending ? 'Creating…' : 'Create invite'}
+              </Button>
+            </div>
+          </div>
+        )}
       </DialogContent>
     </Dialog>
   );
 }
 
 export function TeamPage() {
-  const [filter, setFilter] = useState<TeamFilter>('All');
+  const { user } = useSession();
+  const { data, isLoading } = useTeam();
+  const members = data?.members ?? [];
+  const [filter, setFilter] = useState<Filter>('All');
+  const [inviteOpen, setInviteOpen] = useState(false);
 
-  const visible = useMemo(() => members.filter((m) => matchesTeamFilter(m, filter)), [filter]);
-  const active = members.filter((m) => m.status !== 'invited').length;
+  const visible = useMemo(() => members.filter((m) => matchesFilter(m, filter)), [members, filter]);
+  const active = members.filter((m) => m.status === 'active').length;
   const pending = members.filter((m) => m.status === 'invited').length;
 
   return (
@@ -137,8 +244,12 @@ export function TeamPage() {
       <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
         <PageHeader
           title="Team"
-          subtitle={`${active} members${pending > 0 ? ` · ${pending} pending` : ''}`}
-          action={<InviteTeammate />}
+          subtitle={`${active} active${pending > 0 ? ` · ${pending} pending` : ''}`}
+          action={
+            <Button size="md" onClick={() => setInviteOpen(true)}>
+              <UserPlus size={16} /> Invite
+            </Button>
+          }
         />
 
         <Toolbar
@@ -146,7 +257,7 @@ export function TeamPage() {
           filters={
             <SegmentedControl
               aria-label="Filter team"
-              options={teamFilters}
+              options={FILTERS}
               value={filter}
               onChange={setFilter}
               className="-mx-4 px-4 md:mx-0 md:px-0"
@@ -155,13 +266,17 @@ export function TeamPage() {
         />
 
         <div className="mt-6 overflow-hidden rounded-xl border border-line bg-panel">
-          {visible.length === 0 ? (
+          {isLoading ? (
+            <Loading />
+          ) : visible.length === 0 ? (
             <EmptyState>No one here.</EmptyState>
           ) : (
-            visible.map((m) => <MemberRow key={m.id} member={m} />)
+            visible.map((m) => <MemberRow key={m.id} member={m} isYou={m.id === user?.id} />)
           )}
         </div>
       </div>
+
+      <InviteDialog open={inviteOpen} onOpenChange={setInviteOpen} />
     </PageShell>
   );
 }

@@ -1,10 +1,12 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
+import type { StaffRole } from '@janetheoperator/shared';
 import { api, ApiError } from '@/lib/api';
 
 export interface User {
   id: string;
   email: string;
   name: string;
+  role: StaffRole;
 }
 
 interface SessionData {
@@ -59,3 +61,8 @@ export const useSetup = () =>
   );
 
 export const useLogout = () => useSessionMutation(() => api.post('/api/auth/logout'));
+
+export const useAcceptInvite = () =>
+  useSessionMutation((v: { token: string; name: string; password: string }) =>
+    api.post('/api/auth/accept-invite', v),
+  );

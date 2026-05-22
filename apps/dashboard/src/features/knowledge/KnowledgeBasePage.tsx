@@ -1,5 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
-import { useNavigate, useParams } from 'react-router-dom';
+import { Navigate, useNavigate, useParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -19,6 +19,8 @@ import { PageHeader } from '@/components/PageHeader';
 import { Toolbar } from '@/components/Toolbar';
 import { Pagination } from '@/components/Pagination';
 import { JobProgress } from '@/components/JobProgress';
+import { Loading } from '@/components/Loading';
+import { useSession } from '@/features/auth/useAuth';
 import { ImportDialog } from './import/ImportDialog';
 import {
   Badge,
@@ -45,7 +47,7 @@ import {
 } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { useJob } from '@/lib/useJob';
-import { useApps } from '@/features/apps/useApps';
+import { useStatus } from '@/lib/useStatus';
 import {
   useAddEntry,
   useDeleteEntry,
@@ -82,7 +84,12 @@ type ImportSource = 'excel';
 
 export function KnowledgeBasePage() {
   const { section } = useParams();
+  const { user } = useSession();
+  const isAdmin = user?.role === 'admin';
   const tab = TABS.find((t) => SLUG[t] === section) ?? 'Entries';
+
+  // Settings is admin-only (retrieval config); send agents back to Entries.
+  if (tab === 'Settings' && !isAdmin) return <Navigate to="/knowledge" replace />;
 
   return (
     <PageShell>
@@ -99,6 +106,8 @@ export function KnowledgeBasePage() {
 function KnowledgeHeader({ action }: { action?: ReactNode }) {
   const { section } = useParams();
   const navigate = useNavigate();
+  const { user } = useSession();
+  const isAdmin = user?.role === 'admin';
   const tab = TABS.find((t) => SLUG[t] === section) ?? 'Entries';
   return (
     <>
@@ -107,13 +116,16 @@ function KnowledgeHeader({ action }: { action?: ReactNode }) {
         subtitle="Q&A entries the AI searches when a customer asks something."
         action={action}
       />
-      <SegmentedControl
-        aria-label="Knowledge sections"
-        options={TABS}
-        value={tab}
-        onChange={(t) => navigate(`/knowledge/${SLUG[t]}`)}
-        className="-mx-4 mt-6 flex min-h-[2.375rem] items-center px-4 md:mx-0 md:px-0"
-      />
+      {/* Settings tab is admin-only; agents just see the Entries content. */}
+      {isAdmin && (
+        <SegmentedControl
+          aria-label="Knowledge sections"
+          options={TABS}
+          value={tab}
+          onChange={(t) => navigate(`/knowledge/${SLUG[t]}`)}
+          className="-mx-4 mt-6 flex min-h-[2.375rem] items-center px-4 md:mx-0 md:px-0"
+        />
+      )}
     </>
   );
 }
@@ -175,7 +187,11 @@ function AddEntrySplitButton({
 
 function EntriesTab() {
   const { data, isLoading, isError } = useKnowledgeEntries();
-  const apps = useApps();
+  // Status (not the admin-only Apps endpoint) so agents get the right hint
+  // without a 403.
+  const status = useStatus();
+  const { user } = useSession();
+  const isAdmin = user?.role === 'admin';
 
   const qc = useQueryClient();
   const counts = useEmbeddingCounts();
@@ -190,9 +206,7 @@ function EntriesTab() {
   const [importOpen, setImportOpen] = useState(false);
 
   const entries = data?.entries ?? [];
-  const embeddingAppActive = (apps.data?.apps ?? []).some(
-    (a) => a.category === 'embedding' && a.status === 'active',
-  );
+  const embeddingAppActive = status.data?.providers.embedding.connected ?? false;
   const missingCount = counts.data?.missing ?? 0;
   const totalCount = counts.data?.total ?? 0;
 
@@ -275,18 +289,24 @@ function EntriesTab() {
               onCancel={() => qc.invalidateQueries({ queryKey: ['knowledge'] })}
             />
           </div>
-        ) : !embeddingAppActive ? (
+        ) : status.isSuccess && !embeddingAppActive ? (
           <div className="flex items-start gap-3 rounded-xl border border-amber-500/30 bg-amber-500/[0.05] p-3 text-sm text-amber-700 dark:text-amber-300">
             <AlertCircle size={16} className="mt-0.5 shrink-0" />
             <div>
               <p className="font-medium">Embedding provider not connected.</p>
               <p className="text-xs opacity-90">
-                Entries you add will be saved but won't be searchable by the AI until you connect an
-                embedding provider in{' '}
-                <a href="/apps" className="underline">
-                  Apps
-                </a>
-                .
+                {isAdmin ? (
+                  <>
+                    Entries you add are saved but won't be searchable by the AI until you connect an
+                    embedding provider in{' '}
+                    <a href="/apps" className="underline">
+                      Apps
+                    </a>
+                    .
+                  </>
+                ) : (
+                  "Entries you add are saved but won't be searchable until an admin connects an embedding provider."
+                )}
               </p>
             </div>
           </div>
@@ -341,7 +361,7 @@ function EntriesTab() {
           {isError ? (
             <EmptyState>Couldn't load entries.</EmptyState>
           ) : isLoading ? (
-            <EmptyState>Loading…</EmptyState>
+            <Loading />
           ) : entries.length === 0 ? (
             <EmptyState>
               <div className="flex flex-col items-center gap-3">

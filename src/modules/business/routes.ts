@@ -1,10 +1,12 @@
 import { Hono, type Context } from 'hono';
 import { AppError } from '@/core/errors.js';
+import { requireAdmin, type AuthEnv } from '@/modules/auth/middleware.js';
 import { businessBody } from '@/modules/business/schema.js';
 import { getBusiness, saveBusiness } from '@/modules/business/service.js';
 
-/** Thin HTTP adapter for the single-row business profile. */
-export const businessRoutes = new Hono();
+/** Thin HTTP adapter for the single-row business profile. Admin-only. */
+export const businessRoutes = new Hono<AuthEnv>();
+businessRoutes.use('*', requireAdmin);
 
 const body = (c: Context): Promise<unknown> => c.req.json().catch(() => null);
 

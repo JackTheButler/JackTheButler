@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { Loading } from '@/components/Loading';
 import { ConversationList } from './ConversationList';
 import { Thread } from './Thread';
 import { ContextPanel } from './ContextPanel';
@@ -68,8 +69,12 @@ export function InboxPage() {
           />
         </>
       ) : (
-        <section className="hidden flex-1 items-center justify-center text-sm text-muted md:flex">
-          {list.isLoading ? 'Loading…' : 'Select a conversation'}
+        <section className="hidden flex-1 items-center justify-center md:flex">
+          {list.isLoading ? (
+            <Loading />
+          ) : (
+            <span className="text-sm text-muted">Select a conversation</span>
+          )}
         </section>
       )}
     </>

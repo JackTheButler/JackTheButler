@@ -1,5 +1,6 @@
 import { Hono, type Context } from 'hono';
 import { AppError } from '@/core/errors.js';
+import { requireAdmin, type AuthEnv } from '@/modules/auth/middleware.js';
 import { entryBody } from '@/modules/knowledge/schema.js';
 import { z } from 'zod';
 import {
@@ -22,8 +23,12 @@ import {
   type TopK,
 } from '@/modules/knowledge/service.js';
 
-/** Thin HTTP adapter for KB entries. */
-export const knowledgeRoutes = new Hono();
+/** Thin HTTP adapter for KB entries. Entries are open to all staff; the
+ *  retrieval *settings* (below) are admin-only. */
+export const knowledgeRoutes = new Hono<AuthEnv>();
+// KB Settings (match strictness, top-K) is config → admin-only. Registered
+// before the route handlers so it gates GET + PUT /settings.
+knowledgeRoutes.use('/settings', requireAdmin);
 
 const body = (c: Context): Promise<unknown> => c.req.json().catch(() => null);
 

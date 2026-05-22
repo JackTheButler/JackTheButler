@@ -18,7 +18,7 @@ function errorText(err: unknown): string {
   }
 }
 
-function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
+export function AuthShell({ title, subtitle, children }: { title: string; subtitle: string; children: ReactNode }) {
   return (
     <div className="grid min-h-full place-items-center p-6">
       <div className="w-full max-w-sm">

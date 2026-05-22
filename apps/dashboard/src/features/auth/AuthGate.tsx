@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { Loading } from '@/components/Loading';
 import { useSession } from './useAuth';
 import { LoginScreen, SetupScreen } from './AuthScreens';
 
@@ -7,7 +8,12 @@ export function AuthGate({ children }: { children: ReactNode }) {
   const { status } = useSession();
 
   if (status === 'loading') {
-    return <div className="grid min-h-full place-items-center text-sm text-muted">Loading…</div>;
+    // Delay-show + full-height centering; a fast session check shows nothing.
+    return (
+      <div className="grid min-h-full place-items-center">
+        <Loading size={72} />
+      </div>
+    );
   }
   if (status === 'needsSetup') return <SetupScreen />;
   if (status === 'unauthed') return <LoginScreen />;

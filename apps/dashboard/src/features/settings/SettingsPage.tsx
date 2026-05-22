@@ -3,6 +3,7 @@ import { useNavigate, useParams } from 'react-router-dom';
 import type { BusinessProfile } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
+import { Loading } from '@/components/Loading';
 import {
   Input,
   Select,
@@ -84,7 +85,11 @@ function BusinessTab() {
     return <Card title="Business profile">Couldn't load business settings.</Card>;
   }
   if (isLoading || !form) {
-    return <Card title="Business profile">Loading…</Card>;
+    return (
+      <Card title="Business profile">
+        <Loading size={44} />
+      </Card>
+    );
   }
 
   const set = <K extends keyof BusinessProfile>(k: K, v: BusinessProfile[K]) =>
