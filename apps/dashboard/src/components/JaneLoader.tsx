@@ -34,10 +34,10 @@ export function JaneLoader({
         aria-hidden="true"
       >
         {/* The "J" face — draws itself, then exits, on a loop. */}
-        <path className="jl-j" pathLength="100" d="M 50,15 L 80,15 L 80,55 A 30,30 0 0,1 20,55" />
+        <path className="jl-j" pathLength="100" d="M 50,15 L 85,15 L 85,50 A 35,35 0 0,1 15,50" />
         <g className="jl-eyes">
-          <circle className="jl-eye jl-eye-l" cx="38" cy="40" r="7" />
-          <circle className="jl-eye jl-eye-r" cx="62" cy="40" r="7" />
+          <circle className="jl-eye jl-eye-l" cx="36" cy="40" r="6" />
+          <circle className="jl-eye jl-eye-r" cx="64" cy="40" r="6" />
         </g>
       </svg>
 
@@ -58,24 +58,25 @@ export function JaneLoader({
 const STYLES = `
 .jane-loader .jl-svg { animation: jl-float 4s ease-in-out infinite; }
 .jane-loader .jl-j {
-  fill: none; stroke: currentColor; stroke-width: 20;
+  fill: none; stroke: currentColor; stroke-width: 12;
   stroke-linecap: butt; stroke-linejoin: miter;
   stroke-dasharray: 100;
-  animation: jl-draw 3.5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  animation: jl-draw 2s infinite;
 }
 .jane-loader .jl-eyes { animation: jl-look 7s cubic-bezier(0.25, 1, 0.5, 1) infinite; }
 .jane-loader .jl-eye { fill: currentColor; animation: jl-blink 4.5s infinite; }
-.jane-loader .jl-eye-l { transform-origin: 38px 40px; }
-.jane-loader .jl-eye-r { transform-origin: 62px 40px; }
+.jane-loader .jl-eye-l { transform-origin: 36px 40px; }
+.jane-loader .jl-eye-r { transform-origin: 64px 40px; }
 .jane-loader .jl-dots span { display: inline-block; opacity: 0.3; animation: jl-dot 1.5s infinite; }
 .jane-loader .jl-dots span:nth-child(2) { animation-delay: 0.3s; }
 .jane-loader .jl-dots span:nth-child(3) { animation-delay: 0.6s; }
 
 @keyframes jl-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-12px); } }
 @keyframes jl-draw {
-  0%, 10%   { stroke-dashoffset: 100; }  /* hidden */
-  45%, 55%  { stroke-dashoffset: 0; }    /* fully drawn */
-  90%, 100% { stroke-dashoffset: -100; } /* exit through the end */
+  0%, 7%      { stroke-dashoffset: 0; animation-timing-function: cubic-bezier(0.5, 0, 1, 1); }   /* drawn, hold, then accelerate out */
+  40%         { stroke-dashoffset: -100; }                                                       /* wiped out through the end */
+  40.1%, 60%  { stroke-dashoffset: 100; animation-timing-function: cubic-bezier(0, 0, 0.2, 1); } /* jump to hidden, hold, then decelerate in */
+  93%, 100%   { stroke-dashoffset: 0; }                                                          /* fully drawn again */
 }
 @keyframes jl-look {
   0%, 15%   { transform: translate(0, 0); }
