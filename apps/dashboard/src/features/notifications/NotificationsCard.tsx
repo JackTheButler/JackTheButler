@@ -1,9 +1,11 @@
-import { Alert, Card, SwitchField, toast } from '@/components/ui';
+import { Alert, Button, Card, SwitchField, toast } from '@/components/ui';
+import { useInstallPrompt } from '@/lib/useInstallPrompt';
 import { usePush } from './usePush';
 
 /** Per-device push toggle, shown on the Profile tab. Available to all staff. */
 export function NotificationsCard() {
   const push = usePush();
+  const install = useInstallPrompt();
 
   const onToggle = async (next: boolean) => {
     try {
@@ -40,6 +42,14 @@ export function NotificationsCard() {
         <Alert variant="warning" className="mt-2">
           Notifications are blocked in your browser settings. Allow them there, then turn this on.
         </Alert>
+      )}
+      {install.canInstall && (
+        <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
+          <p className="text-xs text-muted">Install the app for the most reliable delivery.</p>
+          <Button size="sm" variant="outline" onClick={install.promptInstall} className="shrink-0">
+            Install app
+          </Button>
+        </div>
       )}
     </Card>
   );

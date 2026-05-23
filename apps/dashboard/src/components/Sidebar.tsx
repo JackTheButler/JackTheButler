@@ -13,10 +13,12 @@ import {
   Menu,
   X,
   LogOut,
+  Download,
 } from 'lucide-react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { useTheme } from '@/lib/theme';
 import { useSidebar } from '@/lib/sidebar';
+import { useInstallPrompt } from '@/lib/useInstallPrompt';
 import { useSlidingIndicator } from '@/lib/useSlidingIndicator';
 import { useSession, useLogout } from '@/features/auth/useAuth';
 import { useInboxCount } from '@/features/inbox/useConversations';
@@ -157,6 +159,24 @@ function ThemeButton({ collapsed }: { collapsed: boolean }) {
   );
 }
 
+/** One-click PWA install — only rendered on browsers that can prompt and when
+ *  the app isn't already installed (see useInstallPrompt). */
+function InstallButton({ collapsed }: { collapsed: boolean }) {
+  const { canInstall, promptInstall } = useInstallPrompt();
+  if (!canInstall) return null;
+  return (
+    <button
+      onClick={promptInstall}
+      title="Install app"
+      aria-label="Install app"
+      className={cn(ROW, rowWidth(collapsed), 'text-muted hover:bg-surface hover:text-ink')}
+    >
+      <Download size={20} />
+      {!collapsed && <span className="text-sm font-medium">Install app</span>}
+    </button>
+  );
+}
+
 function AccountChip({ collapsed }: { collapsed: boolean }) {
   const { user } = useSession();
   const logout = useLogout();
@@ -212,6 +232,7 @@ function DesktopSidebar() {
         <Brand collapsed={collapsed} />
       </div>
       <NavList collapsed={collapsed} />
+      <InstallButton collapsed={collapsed} />
       <ThemeButton collapsed={collapsed} />
       <AccountChip collapsed={collapsed} />
     </nav>
@@ -262,6 +283,7 @@ function MobileSidebar() {
         </div>
         <div className="flex flex-1 flex-col px-3 py-4">
           <NavList collapsed={false} onNavigate={close} />
+          <InstallButton collapsed={false} />
           <ThemeButton collapsed={false} />
           <AccountChip collapsed={false} />
         </div>
