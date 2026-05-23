@@ -49,7 +49,9 @@ async function showPush(event: PushEvent): Promise<void> {
     body: payload.body,
     tag: payload.tag,
     icon: '/web-app-manifest-192x192.png',
-    badge: '/favicon-96x96.png',
+    // Status-bar icon: Android uses only the alpha channel, so this must be a
+    // transparent monochrome silhouette (not the full-colour favicon).
+    badge: '/badge-96x96.png',
     data: { url: payload.url ?? '/', ...(payload.data ?? {}) },
   });
 }
