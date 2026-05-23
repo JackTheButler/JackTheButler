@@ -1,9 +1,10 @@
 import { useState, type FormEvent } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Button, Field, Input } from '@/components/ui';
+import { Loading } from '@/components/Loading';
 import { ApiError } from '@/lib/api';
 import { AuthShell } from './AuthScreens';
-import { useAcceptInvite } from './useAuth';
+import { useAcceptInvite, useInvitePreview } from './useAuth';
 
 function errorText(err: unknown): string {
   const code = err instanceof ApiError ? err.message : '';
@@ -19,15 +20,25 @@ export function AcceptInvite() {
   const token = params.get('token') ?? '';
   const navigate = useNavigate();
   const accept = useAcceptInvite();
+  const preview = useInvitePreview(token);
   const [name, setName] = useState('');
   const [password, setPassword] = useState('');
 
-  if (!token) {
+  const broken = !token || preview.isError;
+  if (broken) {
     return (
-      <AuthShell title="Invite link broken" subtitle="This link is missing its invite token.">
+      <AuthShell title="Invite link broken" subtitle="This link is invalid or has already been used.">
         <p className="text-sm text-muted">
-          Ask whoever invited you to send the full link again.
+          Ask whoever invited you to send a fresh link.
         </p>
+      </AuthShell>
+    );
+  }
+
+  if (preview.isLoading) {
+    return (
+      <AuthShell title="Join the team" subtitle="Checking your invite…">
+        <Loading size={44} />
       </AuthShell>
     );
   }
@@ -40,6 +51,9 @@ export function AcceptInvite() {
   return (
     <AuthShell title="Join the team" subtitle="Set your name and a password to get started.">
       <form onSubmit={submit} className="space-y-4">
+        <Field label="Email">
+          <Input value={preview.data?.email ?? ''} disabled />
+        </Field>
         <Field label="Name">
           <Input value={name} onChange={(e) => setName(e.target.value)} required />
         </Field>

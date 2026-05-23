@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { UserPlus, Shield, User, Ban, Copy, Check, Trash2 } from 'lucide-react';
+import { UserPlus, Shield, User, Ban, Copy, Check, Trash2, Link2 } from 'lucide-react';
 import type { StaffMember, StaffRole } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
@@ -23,12 +23,12 @@ import {
 } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { useSession } from '@/features/auth/useAuth';
-import { useTeam, useInvite, useSetRole, useSetStatus, useCancelInvite } from './useTeam';
+import { useTeam, useInvite, useSetRole, useSetStatus, useCancelInvite, useInviteLink } from './useTeam';
 
 const ROLE_LABEL: Record<StaffRole, string> = { admin: 'Admin', agent: 'Agent' };
 const ROLE_HINT: Record<StaffRole, string> = {
-  admin: 'Full access — Inbox, Knowledge, Apps, Assistant, Team & Settings.',
-  agent: 'Limited access — Inbox and Knowledge only.',
+  admin: 'Full access to Inbox, Knowledge, Apps, Assistant, Team & Settings.',
+  agent: 'Limited access to Inbox and Knowledge only.',
 };
 
 const FILTERS = ['All', 'Admins', 'Agents', 'Invited'] as const;
@@ -57,13 +57,71 @@ function lastActiveLabel(m: StaffMember): string {
   return 'Inactive 30d+';
 }
 
+/** The copyable accept-link row, shared by the create flow and re-share. */
+function InviteLinkBox({ link }: { link: string }) {
+  const [copied, setCopied] = useState(false);
+  const copy = async () => {
+    await navigator.clipboard.writeText(link);
+    setCopied(true);
+    toast.success('Invite link copied');
+  };
+  return (
+    <div className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2">
+      <code className="min-w-0 flex-1 truncate text-xs text-muted">{link}</code>
+      <Button size="sm" variant="outline" onClick={copy} className="shrink-0">
+        {copied ? <Check size={14} /> : <Copy size={14} />}
+        {copied ? 'Copied' : 'Copy'}
+      </Button>
+    </div>
+  );
+}
+
+/** Standalone "here's the link again" popup for an existing invite. */
+function InviteLinkDialog({
+  link,
+  open,
+  onOpenChange,
+}: {
+  link: string;
+  open: boolean;
+  onOpenChange: (o: boolean) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      <DialogContent
+        dividers={false}
+        title="Invite link"
+        description="Share this link so they can set a password and join."
+      >
+        <div className="space-y-3">
+          <InviteLinkBox link={link} />
+          <div className="flex justify-end">
+            <Button size="md" onClick={() => onOpenChange(false)}>
+              Done
+            </Button>
+          </div>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
 function MemberRow({ member, isYou }: { member: StaffMember; isYou: boolean }) {
   const setRole = useSetRole();
   const setStatus = useSetStatus();
   const cancelInvite = useCancelInvite();
+  const inviteLink = useInviteLink();
   const invited = member.status === 'invited';
   const disabled = member.status === 'disabled';
   const [confirmCancel, setConfirmCancel] = useState(false);
+  const [link, setLink] = useState<string | null>(null);
+
+  const showInviteLink = () =>
+    inviteLink.mutate(member.id, {
+      onSuccess: ({ token }) =>
+        setLink(`${window.location.origin}/accept-invite?token=${token}`),
+      onError: () => toast.error('Could not load the invite link.'),
+    });
 
   const onError = (e: unknown) =>
     toast.error(
@@ -120,6 +178,11 @@ function MemberRow({ member, isYou }: { member: StaffMember; isYou: boolean }) {
               </DropdownMenuItem>
             )}
             {invited && (
+              <DropdownMenuItem onSelect={showInviteLink}>
+                <Link2 size={14} /> Copy invite link
+              </DropdownMenuItem>
+            )}
+            {invited && (
               <DropdownMenuItem onSelect={() => setConfirmCancel(true)} destructive>
                 <Trash2 size={14} /> Cancel invite
               </DropdownMenuItem>
@@ -144,23 +207,33 @@ function MemberRow({ member, isYou }: { member: StaffMember; isYou: boolean }) {
       </p>
     </ListRow>
 
+      <InviteLinkDialog
+        link={link ?? ''}
+        open={link !== null}
+        onOpenChange={(o) => !o && setLink(null)}
+      />
+
       <Dialog open={confirmCancel} onOpenChange={setConfirmCancel}>
-        <DialogContent
-          title="Cancel invite?"
-          description={`This permanently removes the pending invite for ${member.email}. They haven't joined yet, so nothing else is affected. You can always invite them again.`}
-        >
-          <div className="flex justify-end gap-2">
-            <Button variant="ghost" size="md" onClick={() => setConfirmCancel(false)}>
-              Keep invite
-            </Button>
-            <Button
-              variant="destructive"
-              size="md"
-              onClick={doCancelInvite}
-              disabled={cancelInvite.isPending}
-            >
-              {cancelInvite.isPending ? 'Canceling…' : 'Cancel invite'}
-            </Button>
+        <DialogContent dividers={false} showClose={false} title="Cancel invite?">
+          <div className="space-y-4">
+            <p className="text-sm text-muted">
+              This permanently removes the pending invite for{' '}
+              <span className="text-ink">{member.email}</span>. They haven't joined yet, so nothing
+              else is affected. You can always invite them again.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="md" onClick={() => setConfirmCancel(false)}>
+                Keep invite
+              </Button>
+              <Button
+                variant="destructive"
+                size="md"
+                onClick={doCancelInvite}
+                disabled={cancelInvite.isPending}
+              >
+                {cancelInvite.isPending ? 'Canceling…' : 'Cancel invite'}
+              </Button>
+            </div>
           </div>
         </DialogContent>
       </Dialog>
@@ -173,13 +246,11 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o:
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<StaffRole>('agent');
   const [link, setLink] = useState<string | null>(null);
-  const [copied, setCopied] = useState(false);
 
   const reset = () => {
     setEmail('');
     setRole('agent');
     setLink(null);
-    setCopied(false);
   };
 
   const submit = () => {
@@ -197,13 +268,6 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o:
     );
   };
 
-  const copy = async () => {
-    if (!link) return;
-    await navigator.clipboard.writeText(link);
-    setCopied(true);
-    toast.success('Invite link copied');
-  };
-
   return (
     <Dialog
       open={open}
@@ -213,22 +277,17 @@ function InviteDialog({ open, onOpenChange }: { open: boolean; onOpenChange: (o:
       }}
     >
       <DialogContent
+        dividers={false}
         title="Invite teammate"
         description={
           link
-            ? 'Share this link — it lets them set a password and join.'
-            : 'Create an invite. No email is sent yet — you’ll get a link to share.'
+            ? 'Share this link so they can set a password and join.'
+            : 'Create a unique invite link to share with your teammate.'
         }
       >
         {link ? (
           <div className="space-y-3">
-            <div className="flex items-center gap-2 rounded-lg border border-line bg-surface p-2">
-              <code className="min-w-0 flex-1 truncate text-xs text-muted">{link}</code>
-              <Button size="sm" variant="outline" onClick={copy} className="shrink-0">
-                {copied ? <Check size={14} /> : <Copy size={14} />}
-                {copied ? 'Copied' : 'Copy'}
-              </Button>
-            </div>
+            <InviteLinkBox link={link} />
             <div className="flex justify-end">
               <Button size="md" onClick={() => onOpenChange(false)}>
                 Done

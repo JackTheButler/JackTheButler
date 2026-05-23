@@ -89,6 +89,21 @@ export function setStatus(id: string, status: 'active' | 'disabled'): StaffMembe
   return toMember(getOrThrow(id));
 }
 
+/** Public preview of a pending invite by token — lets the accept page show
+ *  which email the invite is for. Returns null for an unknown/used token. */
+export function getInviteByToken(token: string): { email: string; role: StaffRole } | null {
+  const row = db.select().from(staff).where(eq(staff.inviteToken, token)).get();
+  if (!row || row.status !== 'invited') return null;
+  return { email: row.email, role: row.role };
+}
+
+/** The accept token of a pending invite, so an admin can re-share the link. */
+export function getInviteToken(id: string): string {
+  const row = getOrThrow(id);
+  if (row.status !== 'invited' || !row.inviteToken) throw new AppError('not_invited', 409);
+  return row.inviteToken;
+}
+
 /** Hard-delete an invited (not-yet-accepted) staff row. Safe because an
  *  invited account has no related data — it never logged in, was never
  *  assigned a conversation, sent a message, or registered a device. Joined

@@ -53,3 +53,10 @@ export function useCancelInvite() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+/** Fetch a pending invite's token on demand, to re-share the accept link. */
+export function useInviteLink() {
+  return useMutation({
+    mutationFn: (id: string) => api.get<{ token: string }>(`/api/app/staff/${id}/invite-token`),
+  });
+}

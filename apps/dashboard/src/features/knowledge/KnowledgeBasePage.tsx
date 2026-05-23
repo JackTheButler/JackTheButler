@@ -376,13 +376,15 @@ function EntriesTab() {
 
 function EntryRow({ entry, onEdit }: { entry: KnowledgeEntry; onEdit: () => void }) {
   const del = useDeleteEntry();
-  const onDelete = () => {
-    if (!window.confirm('Delete this entry?')) return;
+  const [confirmDelete, setConfirmDelete] = useState(false);
+  const onDelete = () =>
     del.mutate(entry.id, {
-      onSuccess: () => toast.success('Entry deleted'),
+      onSuccess: () => {
+        setConfirmDelete(false);
+        toast.success('Entry deleted');
+      },
       onError: () => toast.error('Could not delete entry'),
     });
-  };
   return (
     <li className="flex items-start gap-3 p-3 sm:p-4">
       <div className="min-w-0 flex-1">
@@ -417,13 +419,32 @@ function EntryRow({ entry, onEdit }: { entry: KnowledgeEntry; onEdit: () => void
         <Button
           variant="ghost"
           size="icon"
-          onClick={onDelete}
+          onClick={() => setConfirmDelete(true)}
           disabled={del.isPending}
           aria-label="Delete"
         >
           <Trash2 size={16} />
         </Button>
       </div>
+
+      <Dialog open={confirmDelete} onOpenChange={setConfirmDelete}>
+        <DialogContent dividers={false} showClose={false} title="Delete entry?">
+          <div className="space-y-4">
+            <p className="text-sm text-muted">
+              This permanently removes this question and answer from the knowledge base. The AI will
+              no longer use it in replies.
+            </p>
+            <div className="flex justify-end gap-2">
+              <Button variant="ghost" size="md" onClick={() => setConfirmDelete(false)}>
+                Keep
+              </Button>
+              <Button variant="destructive" size="md" onClick={onDelete} disabled={del.isPending}>
+                {del.isPending ? 'Deleting…' : 'Delete'}
+              </Button>
+            </div>
+          </div>
+        </DialogContent>
+      </Dialog>
     </li>
   );
 }

@@ -2,7 +2,14 @@ import { Hono, type Context } from 'hono';
 import { AppError } from '@/core/errors.js';
 import { requireAdmin, type AuthEnv } from '@/modules/auth/middleware.js';
 import { inviteBody, roleBody } from '@/modules/staff/schema.js';
-import { cancelInvite, inviteStaff, listStaff, setRole, setStatus } from '@/modules/staff/service.js';
+import {
+  cancelInvite,
+  getInviteToken,
+  inviteStaff,
+  listStaff,
+  setRole,
+  setStatus,
+} from '@/modules/staff/service.js';
 
 /** Staff management. Admin-only (agents can't reach the Team area). */
 export const staffRoutes = new Hono<AuthEnv>();
@@ -11,6 +18,9 @@ staffRoutes.use('*', requireAdmin);
 const body = (c: Context): Promise<unknown> => c.req.json().catch(() => null);
 
 staffRoutes.get('/', (c) => c.json({ members: listStaff() }));
+
+// Re-fetch a pending invite's token so the admin can re-share the accept link.
+staffRoutes.get('/:id/invite-token', (c) => c.json({ token: getInviteToken(c.req.param('id')) }));
 
 staffRoutes.post('/invite', async (c) => {
   const parsed = inviteBody.safeParse(await body(c));

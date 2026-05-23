@@ -67,6 +67,16 @@ export const useAcceptInvite = () =>
     api.post('/api/auth/accept-invite', v),
   );
 
+/** Resolve an invite token to its email so the accept page can show it.
+ *  Errors (404) mean the token is invalid or already used. */
+export const useInvitePreview = (token: string) =>
+  useQuery({
+    queryKey: ['invite', token],
+    queryFn: () => api.get<{ email: string; role: StaffRole }>(`/api/auth/invite?token=${token}`),
+    enabled: token.length > 0,
+    retry: false,
+  });
+
 /** Update your own display name. Invalidates the session so the new name
  *  shows everywhere (sidebar, etc.). */
 export const useUpdateName = () =>

@@ -6,7 +6,7 @@ import { requireAuth, type AuthEnv } from '@/modules/auth/middleware.js';
 import { credentials, setupBody } from '@/modules/auth/schema.js';
 import { authenticate, createInitialAdmin, needsSetup } from '@/modules/auth/service.js';
 import { acceptInviteBody } from '@/modules/staff/schema.js';
-import { acceptInvite } from '@/modules/staff/service.js';
+import { acceptInvite, getInviteByToken } from '@/modules/staff/service.js';
 
 /** Thin HTTP adapter: validate → call service → set cookie → serialize.
  *  No business logic here; no error formatting (see core/http.ts). */
@@ -32,6 +32,13 @@ authRoutes.post('/login', async (c) => {
   const user = await authenticate(parsed.data.email, parsed.data.password);
   setSessionCookie(c, await signSession({ sub: user.id, email: user.email, name: user.name }));
   return c.json({ user });
+});
+
+// Public: resolve an invite token to its email, so the accept page can show it.
+authRoutes.get('/invite', (c) => {
+  const invite = getInviteByToken(c.req.query('token') ?? '');
+  if (!invite) throw new AppError('invalid_invite', 404);
+  return c.json(invite);
 });
 
 // Public: accept a team invite → set name + password, then log in.

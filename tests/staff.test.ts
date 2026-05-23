@@ -92,6 +92,16 @@ describe('staff — invite + accept', () => {
     expect(res.status).toBe(401);
   });
 
+  it('previews the invited email by token (public, no auth)', async () => {
+    const res = await req(`/api/auth/invite?token=${token}`, null);
+    expect(res.status).toBe(200);
+    expect(await res.json()).toMatchObject({ email: 'agent@acme.co', role: 'agent' });
+  });
+
+  it('rejects an unknown invite-token preview (404)', async () => {
+    expect((await req('/api/auth/invite?token=nope', null)).status).toBe(404);
+  });
+
   it('accepting the invite sets a password, activates, and logs in', async () => {
     const res = await req(
       '/api/auth/accept-invite',

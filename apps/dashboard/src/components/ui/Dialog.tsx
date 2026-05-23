@@ -16,6 +16,8 @@ export function DialogContent({
   children,
   footer,
   fullScreen = false,
+  dividers = true,
+  showClose = true,
   className,
 }: {
   title: string;
@@ -26,6 +28,12 @@ export function DialogContent({
   /** Edge-to-edge takeover for space-heavy workflows (e.g. bulk import).
    *  Constrain your own content to a centered max-width column inside it. */
   fullScreen?: boolean;
+  /** Header/footer separator lines. Off for compact confirm dialogs where the
+   *  divider reads as heavy. */
+  dividers?: boolean;
+  /** The ✕ close affordance. Off for confirm dialogs, where the explicit
+   *  action buttons are the way out (and a stray ✕ reads as clutter). */
+  showClose?: boolean;
   className?: string;
 }) {
   return (
@@ -50,7 +58,12 @@ export function DialogContent({
           className,
         )}
       >
-        <div className="flex items-start justify-between gap-3 border-b border-line px-5 py-4">
+        <div
+          className={cn(
+            'flex items-start justify-between gap-3 px-5 py-4',
+            dividers && 'border-b border-line',
+          )}
+        >
           <div>
             <RadixDialog.Title className="text-sm font-semibold">{title}</RadixDialog.Title>
             {description && (
@@ -59,15 +72,19 @@ export function DialogContent({
               </RadixDialog.Description>
             )}
           </div>
-          <RadixDialog.Close
-            aria-label="Close"
-            className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
-          >
-            <X size={16} />
-          </RadixDialog.Close>
+          {showClose && (
+            <RadixDialog.Close
+              aria-label="Close"
+              className="grid h-8 w-8 shrink-0 place-items-center rounded-lg text-muted transition-colors hover:bg-surface hover:text-ink"
+            >
+              <X size={16} />
+            </RadixDialog.Close>
+          )}
         </div>
         <div className="flex-1 overflow-y-auto px-5 py-4">{children}</div>
-        {footer && <div className="border-t border-line px-5 py-3">{footer}</div>}
+        {footer && (
+          <div className={cn('px-5 py-3', dividers && 'border-t border-line')}>{footer}</div>
+        )}
       </RadixDialog.Content>
     </RadixDialog.Portal>
   );
