@@ -25,7 +25,7 @@ export function NotificationsCard() {
     <Card title="Notifications">
       <SwitchField
         label="Desktop notifications"
-        desc="Get notified about new messages in conversations assigned to you, even when this tab isn't focused."
+        desc="Get notified about new messages assigned to you, even when this tab isn't focused. Applies to this device."
         checked={push.subscribed}
         onCheckedChange={onToggle}
         disabled={!push.supported || !push.enabled || push.busy}
@@ -38,13 +38,8 @@ export function NotificationsCard() {
       )}
       {push.supported && push.enabled && push.permission === 'denied' && (
         <Alert variant="warning" className="mt-2">
-          Notifications are blocked in your browser settings — allow them there, then turn this on.
+          Notifications are blocked in your browser settings. Allow them there, then turn this on.
         </Alert>
-      )}
-      {push.supported && push.enabled && push.permission !== 'denied' && (
-        <p className="mt-2 text-xs text-muted">
-          Applies to this device only. Install the app for the most reliable delivery.
-        </p>
       )}
     </Card>
   );
