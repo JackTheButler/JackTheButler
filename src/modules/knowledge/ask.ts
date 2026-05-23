@@ -1,4 +1,5 @@
 import { getBusiness } from '@/modules/business/service.js';
+import { getAssistant } from '@/modules/assistant/service.js';
 import { getActiveEmbeddingInstance, getActiveGenerationInstance } from '@/modules/apps/service.js';
 import { searchKnowledge } from '@/modules/knowledge/search.js';
 import { getKbMinSimilarity, getKbTopK } from '@/modules/knowledge/service.js';
@@ -62,6 +63,15 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
       score: h.similarity,
     })),
   });
+
+  // Strict KB grounding: nothing cleared the strictness floor, so don't call
+  // the model (it would answer from general knowledge). Return the configured
+  // fallback deterministically — same outcome the strengthened prompt drives.
+  if (hits.length === 0) {
+    await emit({ type: 'answer', text: getAssistant().fallback.trim() });
+    await emit({ type: 'done' });
+    return;
+  }
 
   const generation = getActiveGenerationInstance();
   if (!generation) {

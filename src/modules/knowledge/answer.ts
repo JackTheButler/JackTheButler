@@ -52,14 +52,17 @@ export function buildResponsePrompt(hits: readonly ResponseHit[], systemLanguage
   if (hits.length > 0) {
     lines.push(
       '',
-      'Use the following knowledge base entries to answer the question. ' +
-        'Prefer them over your general knowledge. If they do not cover the ' +
-        `question, say: "${p.fallback.trim()}" and offer to connect a human.`,
+      'Answer using ONLY the knowledge base entries below. Do not use any ' +
+        'outside or general knowledge, and never guess or invent details. If ' +
+        'the entries do not fully answer the question, reply with exactly: ' +
+        `"${p.fallback.trim()}" and offer to connect a human.`,
       ...hits.map((h, i) => `[${i + 1}] ${h.title}\n${h.content}`),
     );
   } else {
     lines.push(
-      `If you cannot help confidently, say: "${p.fallback.trim()}" and offer to connect a human.`,
+      'You have no relevant entries to answer this question. Do not answer ' +
+        `from outside or general knowledge. Reply with exactly: "${p.fallback.trim()}" ` +
+        'and offer to connect a human.',
     );
   }
 

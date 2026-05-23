@@ -10,16 +10,20 @@ import { cn } from '@/components/ui';
 export function JaneLoader({
   label,
   size = 120,
+  float = true,
   className,
 }: {
   /** Optional caption under the mark (with pulsing dots). Omit for just the mark. */
   label?: string;
   size?: number;
+  /** The gentle up/down bob. Off for small inline use, where a fixed-px float
+   *  is proportionally large and reads as jumpy. */
+  float?: boolean;
   className?: string;
 }) {
   return (
     <div
-      className={cn('jane-loader flex flex-col items-center gap-7 text-ink', className)}
+      className={cn('jane-loader flex flex-col items-center gap-7 text-ink', !float && 'jl-still', className)}
       role="status"
       aria-label={label ? `${label}…` : 'Loading'}
     >
@@ -57,6 +61,7 @@ export function JaneLoader({
 
 const STYLES = `
 .jane-loader .jl-svg { animation: jl-float 4s ease-in-out infinite; }
+.jane-loader.jl-still .jl-svg { animation: none; }
 .jane-loader .jl-j {
   fill: none; stroke: currentColor; stroke-width: 12;
   stroke-linecap: butt; stroke-linejoin: miter;

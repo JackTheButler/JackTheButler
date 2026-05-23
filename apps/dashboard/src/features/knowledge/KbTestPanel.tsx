@@ -149,7 +149,7 @@ export function KbTestPanel() {
                 </span>
               ) : (
                 <span className="grid h-6 w-6 shrink-0 place-items-center">
-                  <JaneLoader size={18} />
+                  <JaneLoader size={18} float={false} />
                 </span>
               )}
               {answer ? (

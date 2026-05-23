@@ -8,7 +8,7 @@ const { runMigrations } = await import('../src/db/migrate.js');
 runMigrations();
 const { app } = await import('../src/app.js');
 const { setAppModules } = await import('../src/modules/apps/registry.js');
-const { stubEmbeddingModule } = await import('./fixtures/stub-embedding-app.js');
+const { stubEmbeddingModule, setStubVector } = await import('./fixtures/stub-embedding-app.js');
 const { stubGenerationModule, setStubAiReply } = await import('./fixtures/stub-generation-app.js');
 
 setAppModules([stubEmbeddingModule, stubGenerationModule]);
@@ -113,6 +113,24 @@ describe('knowledge ask (test sandbox)', () => {
     expect(events.find((e) => e.type === 'answer')).toMatchObject({
       type: 'answer',
       text: 'Just email support and we’ll sort it out.',
+    });
+  });
+
+  it('strict KB-only: zero matches return the fallback without generating', async () => {
+    // Distinct fallback to assert against (assistant routes are admin-only).
+    await authed('/api/app/assistant', {
+      method: 'PUT',
+      body: JSON.stringify({ fallback: 'Let me connect you to a teammate.' }),
+    });
+    // Query embeds orthogonal to the only entry ([1,0,0]) → cosine 0 → no hit.
+    setStubVector('what is the meaning of life', [0, 1, 0]);
+
+    const events = await askEvents('what is the meaning of life');
+    // No 'generating' phase — we short-circuit before calling the model.
+    expect(events.map((e) => e.type)).toEqual(['phase', 'phase', 'matches', 'answer', 'done']);
+    expect(events.find((e) => e.type === 'matches')!.matches).toEqual([]);
+    expect(events.find((e) => e.type === 'answer')).toMatchObject({
+      text: 'Let me connect you to a teammate.',
     });
   });
 });
