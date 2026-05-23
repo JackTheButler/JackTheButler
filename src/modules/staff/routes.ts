@@ -2,7 +2,7 @@ import { Hono, type Context } from 'hono';
 import { AppError } from '@/core/errors.js';
 import { requireAdmin, type AuthEnv } from '@/modules/auth/middleware.js';
 import { inviteBody, roleBody } from '@/modules/staff/schema.js';
-import { inviteStaff, listStaff, setRole, setStatus } from '@/modules/staff/service.js';
+import { cancelInvite, inviteStaff, listStaff, setRole, setStatus } from '@/modules/staff/service.js';
 
 /** Staff management. Admin-only (agents can't reach the Team area). */
 export const staffRoutes = new Hono<AuthEnv>();
@@ -29,3 +29,9 @@ staffRoutes.post('/:id/role', async (c) => {
 
 staffRoutes.post('/:id/disable', (c) => c.json(setStatus(c.req.param('id'), 'disabled')));
 staffRoutes.post('/:id/enable', (c) => c.json(setStatus(c.req.param('id'), 'active')));
+
+// Cancel a pending invite — hard-deletes the not-yet-joined row.
+staffRoutes.delete('/:id', (c) => {
+  cancelInvite(c.req.param('id'));
+  return c.json({ ok: true });
+});

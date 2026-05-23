@@ -7,8 +7,12 @@ export default defineConfig({
   plugins: [
     react(),
     VitePWA({
-      // We register + show the update prompt ourselves (PwaReloadPrompt), so
-      // don't inject an auto-registration script.
+      // Custom service worker (src/sw.ts) so it can handle Web Push, not just
+      // precaching. We register + show the update prompt ourselves
+      // (PwaReloadPrompt), so don't inject an auto-registration script.
+      strategies: 'injectManifest',
+      srcDir: 'src',
+      filename: 'sw.ts',
       registerType: 'prompt',
       injectRegister: null,
       // Precache the built app shell; these root assets aren't hashed, so list
@@ -41,25 +45,10 @@ export default defineConfig({
           },
         ],
       },
-      workbox: {
-        // SPA navigations resolve to the cached shell — except API, widget, and
-        // health, which must always hit the network.
-        navigateFallback: '/index.html',
-        navigateFallbackDenylist: [/^\/api/, /^\/widget/, /^\/health/],
-        // Cache Google Fonts (the only cross-origin app-shell asset).
-        runtimeCaching: [
-          {
-            urlPattern: ({ url }) =>
-              url.origin === 'https://fonts.googleapis.com' ||
-              url.origin === 'https://fonts.gstatic.com',
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'google-fonts',
-              expiration: { maxEntries: 20, maxAgeSeconds: 60 * 60 * 24 * 365 },
-              cacheableResponse: { statuses: [0, 200] },
-            },
-          },
-        ],
+      // What gets precached into the app shell (navigation fallback + push
+      // handlers live in src/sw.ts).
+      injectManifest: {
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,webmanifest}'],
       },
     }),
   ],

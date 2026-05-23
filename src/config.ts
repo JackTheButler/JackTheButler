@@ -23,6 +23,20 @@ function resolveAppConfigKey(): string {
   return 'dev-insecure-app-config-key-change-me';
 }
 
+/** Web Push (VAPID) keys. Optional — push notifications degrade off cleanly
+ *  when unset (the /push/key endpoint reports disabled and subscribe 503s).
+ *  Generate with: `npx web-push generate-vapid-keys`. */
+function resolveVapid(): { publicKey: string; privateKey: string; subject: string } | null {
+  const publicKey = process.env.VAPID_PUBLIC_KEY;
+  const privateKey = process.env.VAPID_PRIVATE_KEY;
+  if (!publicKey || !privateKey) return null;
+  return {
+    publicKey,
+    privateKey,
+    subject: process.env.VAPID_SUBJECT ?? 'mailto:admin@janetheoperator.com',
+  };
+}
+
 export const config = {
   nodeEnv: NODE_ENV,
   isProduction,
@@ -30,6 +44,8 @@ export const config = {
   dbPath: process.env.DB_PATH ?? 'data/app.db',
   jwtSecret: resolveJwtSecret(),
   appConfigKey: resolveAppConfigKey(),
+  /** Web Push config, or null when VAPID keys aren't configured. */
+  push: resolveVapid(),
 
   /** Session cookie name. */
   cookieName: 'jane_session',

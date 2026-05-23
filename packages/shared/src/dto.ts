@@ -170,3 +170,19 @@ export interface ConversationDetail {
   language: string | null;
   messages: MessageDTO[];
 }
+
+/* ── Push notifications ────────────────────────────────────────── */
+
+/** Payload sent over Web Push and rendered by the service worker. Kept
+ *  channel-agnostic so any feature can raise a notification, not just chat. */
+export interface PushNotificationPayload {
+  title: string;
+  body: string;
+  /** Dedupe key — notifications sharing a tag collapse/replace (e.g. one per
+   *  conversation), which also coalesces across multiple open tabs. */
+  tag?: string;
+  /** Dashboard path to focus/open on click (e.g. '/'). */
+  url?: string;
+  /** Arbitrary structured data for the SW (e.g. { conversationId }). */
+  data?: Record<string, unknown>;
+}

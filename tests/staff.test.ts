@@ -181,6 +181,33 @@ describe('staff — invite + accept', () => {
       ).toBe(200);
     });
 
+    it('cancels a pending invite (hard delete); token then fails, row is gone', async () => {
+      const inv = await req(
+        '/api/app/staff/invite',
+        adminCookie,
+        post({ email: 'temp@acme.co', role: 'agent' }),
+      );
+      const { member, token } = await inv.json();
+
+      const del = await req(`/api/app/staff/${member.id}`, adminCookie, { method: 'DELETE' });
+      expect(del.status).toBe(200);
+
+      const { members } = await (await req('/api/app/staff', adminCookie)).json();
+      expect(members.find((m: { id: string }) => m.id === member.id)).toBeUndefined();
+
+      const accept = await req(
+        '/api/auth/accept-invite',
+        null,
+        post({ token, name: 'X', password: 'password123' }),
+      );
+      expect(accept.status).toBe(400);
+    });
+
+    it('refuses to cancel a joined (active) member', async () => {
+      const del = await req(`/api/app/staff/${adminId}`, adminCookie, { method: 'DELETE' });
+      expect(del.status).toBe(409);
+    });
+
     it('cannot demote or disable the last admin', async () => {
       const demote = await req(
         `/api/app/staff/${adminId}/role`,

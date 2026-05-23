@@ -44,3 +44,12 @@ export function useSetStatus() {
     onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
   });
 }
+
+/** Cancel a pending invite — hard-deletes the not-yet-joined row. */
+export function useCancelInvite() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: (id: string) => api.delete<{ ok: true }>(`/api/app/staff/${id}`),
+    onSuccess: () => qc.invalidateQueries({ queryKey: KEY }),
+  });
+}

@@ -89,6 +89,16 @@ export function setStatus(id: string, status: 'active' | 'disabled'): StaffMembe
   return toMember(getOrThrow(id));
 }
 
+/** Hard-delete an invited (not-yet-accepted) staff row. Safe because an
+ *  invited account has no related data — it never logged in, was never
+ *  assigned a conversation, sent a message, or registered a device. Joined
+ *  accounts must be disabled instead (setStatus). */
+export function cancelInvite(id: string): void {
+  const row = getOrThrow(id);
+  if (row.status !== 'invited') throw new AppError('not_invited', 409);
+  db.delete(staff).where(eq(staff.id, id)).run();
+}
+
 export interface AcceptedInvite {
   id: string;
   email: string;

@@ -113,6 +113,13 @@
       "when": 1779422972786,
       "tag": "0015_add_staff_roles_status",
       "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1779525916618,
+      "tag": "0016_add_push_subscriptions",
+      "breakpoints": true
     }
   ]
 }

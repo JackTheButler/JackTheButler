@@ -12,6 +12,7 @@ export { Textarea } from './Textarea';
 export { Avatar } from './Avatar';
 export { Field } from './Field';
 export { Card } from './Card';
+export { Alert, type AlertVariant } from './Alert';
 export { SearchInput } from './SearchInput';
 export { EmptyState } from './EmptyState';
 export { SwitchField } from './SwitchField';

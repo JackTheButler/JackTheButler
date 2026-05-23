@@ -6,11 +6,13 @@ export function SwitchField({
   desc,
   checked,
   onCheckedChange,
+  disabled = false,
 }: {
   label: string;
   desc: string;
   checked: boolean;
   onCheckedChange: (checked: boolean) => void;
+  disabled?: boolean;
 }) {
   return (
     <div className="flex items-center justify-between gap-4 py-2.5">
@@ -18,7 +20,12 @@ export function SwitchField({
         <div className="text-sm font-medium">{label}</div>
         <div className="text-xs text-muted">{desc}</div>
       </div>
-      <Switch checked={checked} onCheckedChange={onCheckedChange} aria-label={label} />
+      <Switch
+        checked={checked}
+        onCheckedChange={onCheckedChange}
+        disabled={disabled}
+        aria-label={label}
+      />
     </div>
   );
 }

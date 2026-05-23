@@ -62,6 +62,19 @@ function getOrThrow(id: string): Conversation {
   return c;
 }
 
+/** Lightweight routing metadata for a conversation — used by notification
+ *  wiring to decide who to alert without loading the full thread. */
+export function getConversationMeta(
+  id: string,
+): { mode: 'ai' | 'human'; assignedAgentId: string | null } | null {
+  const c = db
+    .select({ mode: conversations.mode, assignedAgentId: conversations.assignedAgentId })
+    .from(conversations)
+    .where(eq(conversations.id, id))
+    .get();
+  return c ?? null;
+}
+
 function resolveCustomerId(
   channel: string,
   externalId: string,

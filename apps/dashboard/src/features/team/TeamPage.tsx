@@ -1,5 +1,5 @@
 import { useMemo, useState } from 'react';
-import { UserPlus, Shield, User, Ban, Copy, Check } from 'lucide-react';
+import { UserPlus, Shield, User, Ban, Copy, Check, Trash2 } from 'lucide-react';
 import type { StaffMember, StaffRole } from '@janetheoperator/shared';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
@@ -23,7 +23,7 @@ import {
 } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { useSession } from '@/features/auth/useAuth';
-import { useTeam, useInvite, useSetRole, useSetStatus } from './useTeam';
+import { useTeam, useInvite, useSetRole, useSetStatus, useCancelInvite } from './useTeam';
 
 const ROLE_LABEL: Record<StaffRole, string> = { admin: 'Admin', agent: 'Agent' };
 const ROLE_HINT: Record<StaffRole, string> = {
@@ -60,8 +60,10 @@ function lastActiveLabel(m: StaffMember): string {
 function MemberRow({ member, isYou }: { member: StaffMember; isYou: boolean }) {
   const setRole = useSetRole();
   const setStatus = useSetStatus();
+  const cancelInvite = useCancelInvite();
   const invited = member.status === 'invited';
   const disabled = member.status === 'disabled';
+  const [confirmCancel, setConfirmCancel] = useState(false);
 
   const onError = (e: unknown) =>
     toast.error(
@@ -80,8 +82,17 @@ function MemberRow({ member, isYou }: { member: StaffMember; isYou: boolean }) {
       { id: member.id, action: disabled ? 'enable' : 'disable' },
       { onError },
     );
+  const doCancelInvite = () =>
+    cancelInvite.mutate(member.id, {
+      onSuccess: () => {
+        setConfirmCancel(false);
+        toast.success('Invite canceled');
+      },
+      onError: () => toast.error('Could not cancel the invite.'),
+    });
 
   return (
+    <>
     <ListRow
       disabled={disabled}
       leading={<Avatar name={member.name || member.email} />}
@@ -108,6 +119,11 @@ function MemberRow({ member, isYou }: { member: StaffMember; isYou: boolean }) {
                 <Ban size={14} /> {disabled ? 'Reactivate' : 'Deactivate'}
               </DropdownMenuItem>
             )}
+            {invited && (
+              <DropdownMenuItem onSelect={() => setConfirmCancel(true)} destructive>
+                <Trash2 size={14} /> Cancel invite
+              </DropdownMenuItem>
+            )}
           </RowMenu>
         )
       }
@@ -127,6 +143,28 @@ function MemberRow({ member, isYou }: { member: StaffMember; isYou: boolean }) {
         {member.email} · {lastActiveLabel(member)}
       </p>
     </ListRow>
+
+      <Dialog open={confirmCancel} onOpenChange={setConfirmCancel}>
+        <DialogContent
+          title="Cancel invite?"
+          description={`This permanently removes the pending invite for ${member.email}. They haven't joined yet, so nothing else is affected. You can always invite them again.`}
+        >
+          <div className="flex justify-end gap-2">
+            <Button variant="ghost" size="md" onClick={() => setConfirmCancel(false)}>
+              Keep invite
+            </Button>
+            <Button
+              variant="destructive"
+              size="md"
+              onClick={doCancelInvite}
+              disabled={cancelInvite.isPending}
+            >
+              {cancelInvite.isPending ? 'Canceling…' : 'Cancel invite'}
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
+    </>
   );
 }
 

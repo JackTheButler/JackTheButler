@@ -19,6 +19,7 @@ import {
 import { ApiError } from '@/lib/api';
 import { useSession, useUpdateName, useChangePassword } from '@/features/auth/useAuth';
 import { KnowledgeSettingsTab } from '@/features/knowledge/KnowledgeSettingsTab';
+import { NotificationsCard } from '@/features/notifications/NotificationsCard';
 import { useBusiness, useSaveBusiness } from './useBusiness';
 
 const TABS = ['Business', 'Knowledge', 'Your Profile'] as const;
@@ -268,6 +269,8 @@ function AccountTab() {
           </Button>
         </div>
       </Card>
+
+      <NotificationsCard />
     </div>
   );
 }

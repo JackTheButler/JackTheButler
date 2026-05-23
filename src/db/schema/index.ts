@@ -12,3 +12,4 @@ export * from './assistant_profile.js';
 export * from './business_profile.js';
 export * from './knowledge_entries.js';
 export * from './settings.js';
+export * from './push_subscriptions.js';
