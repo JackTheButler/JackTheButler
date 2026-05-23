@@ -1,6 +1,8 @@
 import { Fragment } from 'react';
 import {
   Inbox,
+  MessageCircle,
+  MessageCircleDashed,
   BookOpen,
   Blocks,
   Bot,
@@ -10,7 +12,6 @@ import {
   Moon,
   PanelLeftClose,
   PanelLeftOpen,
-  Menu,
   X,
   LogOut,
   Download,
@@ -245,24 +246,30 @@ function MobileSidebar() {
   const close = () => setMobileOpen(false);
   return (
     <div className="md:hidden">
-      {/* Slim top bar with hamburger */}
+      {/* Slim top bar: logo opens the menu; an inbox shortcut sits on the right. */}
       <header className="fixed inset-x-0 top-0 z-30 flex h-14 items-center justify-between border-b border-line bg-panel px-3">
-        <Brand collapsed={false} />
-        <Button
-          variant="ghost"
-          size="icon"
+        <button
           onClick={() => setMobileOpen(true)}
-          aria-label={inboxCount > 0 ? `Open menu, ${inboxCount} unread` : 'Open menu'}
-          className="relative"
+          aria-label="Open menu"
+          className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-on-accent"
         >
-          <Menu size={20} />
-          {/* Unread badge so new messages are visible while the menu is closed. */}
-          {inboxCount > 0 && (
-            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none text-on-accent">
-              {inboxCount > 9 ? '9+' : inboxCount}
-            </span>
-          )}
-        </Button>
+          <JaneLogo size={20} />
+        </button>
+        <NavLink
+          to="/"
+          end
+          aria-label={inboxCount > 0 ? `Inbox, ${inboxCount} unread` : 'Inbox'}
+          className="grid h-9 w-9 place-items-center rounded-lg text-muted hover:bg-surface hover:text-ink"
+        >
+          <span className="relative">
+            {inboxCount > 0 ? <MessageCircle size={20} /> : <MessageCircleDashed size={20} />}
+            {inboxCount > 0 && (
+              <span className="absolute -right-1.5 -top-1.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none text-on-accent">
+                {inboxCount > 9 ? '9+' : inboxCount}
+              </span>
+            )}
+          </span>
+        </NavLink>
       </header>
 
       {/* Backdrop */}
