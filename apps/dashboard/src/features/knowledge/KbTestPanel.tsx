@@ -1,7 +1,16 @@
 import { useState, type KeyboardEvent } from 'react';
-import { ChevronRight } from 'lucide-react';
+import { ChevronRight, ChevronDown } from 'lucide-react';
 import { MarkdownBody } from '@janetheoperator/widget-ui';
-import { Alert, Badge, Button, Card, Input, cn } from '@/components/ui';
+import {
+  Alert,
+  Badge,
+  Button,
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+  Input,
+  cn,
+} from '@/components/ui';
 import { JaneLogo } from '@/components/JaneLogo';
 import { JaneLoader } from '@/components/JaneLoader';
 
@@ -115,17 +124,22 @@ export function KbTestPanel() {
   const working = streaming && !answer && error !== 'no_embedding';
 
   return (
-    <Card title="Test your knowledge base">
-      <div>
-        <p className="mb-3 text-xs text-muted">
-          Ask a question the way a customer would, and see how Jane answers from your entries.
-        </p>
+    <Collapsible className="rounded-xl border border-line bg-panel">
+      <CollapsibleTrigger className="flex w-full items-center justify-between gap-3 p-5 text-left">
+        <span className="text-sm font-semibold">Test your knowledge base</span>
+        <ChevronDown
+          size={16}
+          className="shrink-0 text-muted transition-transform group-data-[state=open]:rotate-180"
+        />
+      </CollapsibleTrigger>
+      <CollapsibleContent>
+        <div className="space-y-4 px-5 pb-5">
         <div className="flex gap-2">
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={onKey}
-            placeholder="e.g. How do I get a refund?"
+            placeholder="Ask a question the way a customer would…"
           />
           <Button
             size="md"
@@ -136,7 +150,6 @@ export function KbTestPanel() {
             {streaming ? 'Asking…' : 'Ask Jane'}
           </Button>
         </div>
-      </div>
 
       {active && (
         <div className="space-y-3 rounded-xl border border-line bg-surface p-3">
@@ -219,6 +232,8 @@ export function KbTestPanel() {
           )}
         </div>
       )}
-    </Card>
+        </div>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
