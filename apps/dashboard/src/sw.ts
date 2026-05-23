@@ -62,12 +62,17 @@ self.addEventListener('notificationclick', (event) => {
 
 async function focusOrOpen(url: string): Promise<void> {
   const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
-  const existing = windows.find((c) => 'focus' in c);
+  const existing = windows[0];
   if (existing) {
-    // Reuse the open dashboard: focus it and let the app route to the thread
-    // client-side (no reload) — see PushNavigationListener.
     await existing.focus();
-    existing.postMessage({ type: 'NAVIGATE', url });
+    // Route the already-open tab to the thread. navigate() is the reliable
+    // path (works even if no app-side listener is wired); fall back to a
+    // postMessage for uncontrolled clients where navigate() isn't permitted.
+    try {
+      await existing.navigate(url);
+    } catch {
+      existing.postMessage({ type: 'NAVIGATE', url });
+    }
     return;
   }
   await self.clients.openWindow(url);
