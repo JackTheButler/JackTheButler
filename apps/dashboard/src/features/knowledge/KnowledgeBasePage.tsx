@@ -21,6 +21,7 @@ import { JobProgress } from '@/components/JobProgress';
 import { Loading } from '@/components/Loading';
 import { useSession } from '@/features/auth/useAuth';
 import { ImportDialog } from './import/ImportDialog';
+import { KbTestPanel } from './KbTestPanel';
 import {
   Alert,
   Badge,
@@ -238,6 +239,8 @@ function EntriesTab() {
       <KnowledgeHeader action={actions} />
 
       <div className="mt-6 space-y-4">
+        <KbTestPanel />
+
         {/* Banner states, in priority order:
             1. re-embed job running → progress bar
             2. no embedding provider → can't make anything searchable

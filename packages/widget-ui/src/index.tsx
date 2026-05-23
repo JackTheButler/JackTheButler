@@ -31,11 +31,13 @@ import remarkGfm from 'remark-gfm';
  */
 const MD_COMPONENTS: Components = {
   p: ({ children }) => <p style={{ margin: 0 }}>{children}</p>,
+  // `paddingInlineStart` (not `paddingLeft`) so the marker indent flips for
+  // RTL scripts (Farsi/Arabic/Hebrew) instead of pushing content off the edge.
   ul: ({ children }) => (
-    <ul style={{ margin: '4px 0', paddingLeft: 20, listStyle: 'disc' }}>{children}</ul>
+    <ul style={{ margin: '4px 0', paddingInlineStart: 20, listStyle: 'disc' }}>{children}</ul>
   ),
   ol: ({ children }) => (
-    <ol style={{ margin: '4px 0', paddingLeft: 20, listStyle: 'decimal' }}>{children}</ol>
+    <ol style={{ margin: '4px 0', paddingInlineStart: 20, listStyle: 'decimal' }}>{children}</ol>
   ),
   li: ({ children }) => <li style={{ margin: '2px 0' }}>{children}</li>,
   a: ({ children, href }) => (
@@ -93,7 +95,7 @@ const MD_COMPONENTS: Components = {
       style={{
         margin: '4px 0',
         padding: '0 8px',
-        borderLeft: '3px solid rgba(127,127,127,0.4)',
+        borderInlineStart: '3px solid rgba(127,127,127,0.4)',
         opacity: 0.92,
       }}
     >

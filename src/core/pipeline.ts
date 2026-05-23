@@ -60,12 +60,11 @@ import {
   type Stage,
 } from '@thebutler/pipeline';
 import type { GenerationMessage } from '@janetheoperator/shared/contracts';
-import type { ResponseLength } from '@janetheoperator/shared';
+import { buildResponsePrompt } from '@/modules/knowledge/answer.js';
 import { db } from '@/db/client.js';
 import { conversations, customers, messages, type Message } from '@/db/schema/index.js';
 import { events } from '@/core/events.js';
 import { logger as appLogger } from '@/core/logger.js';
-import { getAssistant } from '@/modules/assistant/service.js';
 import { getBusiness } from '@/modules/business/service.js';
 import { getKbMinSimilarity, getKbTopK } from '@/modules/knowledge/service.js';
 import { searchKnowledge, type KnowledgeMatch } from '@/modules/knowledge/search.js';
@@ -82,15 +81,6 @@ const HISTORY_LIMIT = 10;
 // KB settings: top-K via getKbTopK(), the cosine floor (match strictness)
 // via getKbMinSimilarity().
 
-/** Verbosity directive injected into the responder prompt. Orthogonal to
- *  tone (voice): this controls *how much* the AI says, via instruction
- *  rather than a token cap (a cap would truncate mid-sentence). */
-const RESPONSE_LENGTH_DIRECTIVE: Record<ResponseLength, string> = {
-  brief: 'Length: keep replies brief — 1–2 short sentences, lead with the answer.',
-  standard: 'Length: keep replies concise but complete — usually a short paragraph.',
-  detailed:
-    'Length: give thorough, well-structured replies; use short lists or steps when it helps.',
-};
 
 /* ── ConversationProvider ──────────────────────────────────────── */
 
@@ -303,49 +293,11 @@ const promptProvider: PromptProvider = {
    *  can persist it verbatim. */
   translator: translatorPrompt,
   responder: (ctx, env) => {
-    // Build the system prompt from assistant_profile + business_profile.
-    // Read at call time (not at pipeline-init) so operator edits to the
-    // assistant persona / business name take effect on the next turn.
-    const p = getAssistant();
-    const b = getBusiness();
-    const businessName = b.name.trim() || 'the business';
-    const lines = [
-      `You are ${p.name}, the support assistant for ${businessName}.`,
-      `Voice: ${p.tone.toLowerCase()}.`,
-      RESPONSE_LENGTH_DIRECTIVE[p.responseLength],
-    ];
-    if (p.instructions.trim()) lines.push(`Additional instructions: ${p.instructions.trim()}`);
-    if (p.topicsToAvoid.trim()) {
-      lines.push(
-        `Decline these topics politely and offer to connect a human: ${p.topicsToAvoid.trim()}.`,
-      );
-    }
-
-    // Retrieved knowledge base entries (loadKnowledge stage). When present,
-    // the AI should ground its answer in them; when they don't cover the
-    // question, fall back to the persona's fallback line.
-    const hits = ctx.knowledgeHits ?? [];
-    if (hits.length > 0) {
-      lines.push(
-        '',
-        'Use the following knowledge base entries to answer the question. ' +
-          'Prefer them over your general knowledge. If they do not cover the ' +
-          `question, say: "${p.fallback.trim()}" and offer to connect a human.`,
-        ...hits.map((h, i) => `[${i + 1}] ${h.title}\n${h.content}`),
-      );
-    } else {
-      lines.push(
-        `If you cannot help confidently, say: "${p.fallback.trim()}" and offer to connect a human.`,
-      );
-    }
-
-    // Always answer in the system language. The pipeline's translateOutbound
-    // stage handles delivery to the customer's language; if we let Claude
-    // pick the response language directly we'd skip that step and end up
-    // with inconsistent storage (the dashboard reads `content`, which we
-    // want in the system language regardless of customer language).
-    lines.push('', `Respond in ${env.systemLanguage}.`);
-    const prompt = lines.join('\n');
+    // Shared with the KB test sandbox (modules/knowledge/answer.ts) so both
+    // speak in the same persona/voice/length and KB grounding. Built at call
+    // time so operator edits take effect on the next turn. We always answer in
+    // the system language; translateOutbound delivers the customer's language.
+    const prompt = buildResponsePrompt(ctx.knowledgeHits ?? [], env.systemLanguage);
     appLogger.debug({ messageId: ctx.inbound.id, systemPrompt: prompt }, 'responder prompt');
     return prompt;
   },

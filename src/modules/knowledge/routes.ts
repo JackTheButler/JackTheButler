@@ -1,7 +1,9 @@
 import { Hono, type Context } from 'hono';
+import { stream } from 'hono/streaming';
 import { AppError } from '@/core/errors.js';
 import { requireAdmin, type AuthEnv } from '@/modules/auth/middleware.js';
 import { entryBody } from '@/modules/knowledge/schema.js';
+import { askKnowledge } from '@/modules/knowledge/ask.js';
 import { z } from 'zod';
 import {
   addEntries,
@@ -42,6 +44,23 @@ function fieldErrors(parsed: z.ZodSafeParseResult<unknown>): Record<string, stri
   }
   return details;
 }
+
+const askBody = z.object({ question: z.string().trim().min(1).max(2000) });
+
+// "Ask Jane" — KB test sandbox. Streams NDJSON progress events (phase →
+// matches → answer) so the UI shows each step and renders matches before the
+// answer. All staff; mirrors live chat retrieval + generation (same settings).
+knowledgeRoutes.post('/ask', async (c) => {
+  const parsed = askBody.safeParse(await body(c));
+  if (!parsed.success) throw new AppError('invalid_input', 400);
+  c.header('Content-Type', 'application/x-ndjson');
+  c.header('Cache-Control', 'no-store');
+  return stream(c, async (s) => {
+    await askKnowledge(parsed.data.question, async (event) => {
+      await s.write(`${JSON.stringify(event)}\n`);
+    });
+  });
+});
 
 knowledgeRoutes.get('/entries', (c) => {
   const topic = c.req.query('topic') ?? undefined;
