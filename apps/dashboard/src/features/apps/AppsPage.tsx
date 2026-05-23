@@ -63,7 +63,10 @@ function AppCard({ app }: { app: AppSummary }) {
                 alt=""
                 className={cn(
                   'h-5 w-5 object-contain',
-                  app.status === 'active' && 'invert',
+                  // Dark logos must contrast the tile, which flips with the
+                  // theme: solid tile is dark in light-mode / light in dark-mode,
+                  // muted tile is the opposite.
+                  app.status === 'active' ? 'invert dark:invert-0' : 'dark:invert',
                 )}
               />
             ) : undefined
