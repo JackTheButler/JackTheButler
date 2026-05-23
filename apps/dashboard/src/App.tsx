@@ -1,5 +1,5 @@
-import type { ReactNode } from 'react';
-import { Routes, Route, Navigate } from 'react-router-dom';
+import { useEffect, type ReactNode } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
 import { AuthGate } from '@/features/auth/AuthGate';
 import { AcceptInvite } from '@/features/auth/AcceptInvite';
 import { useSession } from '@/features/auth/useAuth';
@@ -20,13 +20,32 @@ function AdminOnly({ children }: { children: ReactNode }) {
   return user?.role === 'admin' ? <>{children}</> : <Navigate to="/" replace />;
 }
 
+/** Routes notification taps client-side: the service worker focuses this tab
+ *  and posts the deep-link URL, which we hand to the router (no reload). */
+function PushNavigationListener() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const onMessage = (e: MessageEvent) => {
+      const data = e.data as { type?: string; url?: string } | undefined;
+      if (data?.type === 'NAVIGATE' && data.url) navigate(data.url);
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [navigate]);
+  return null;
+}
+
 export function App() {
   return (
-    <Routes>
-      {/* Public — reachable while logged out, so it sits outside the AuthGate. */}
-      <Route path="/accept-invite" element={<AcceptInvite />} />
-      <Route path="*" element={<GatedApp />} />
-    </Routes>
+    <>
+      <PushNavigationListener />
+      <Routes>
+        {/* Public — reachable while logged out, so it sits outside the AuthGate. */}
+        <Route path="/accept-invite" element={<AcceptInvite />} />
+        <Route path="*" element={<GatedApp />} />
+      </Routes>
+    </>
   );
 }
 

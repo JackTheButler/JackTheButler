@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { Loading } from '@/components/Loading';
 import { ConversationList } from './ConversationList';
 import { Thread } from './Thread';
@@ -19,9 +20,26 @@ type MobileView = 'list' | 'thread' | 'profile';
 export function InboxPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>('list');
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const list = useConversationList(undefined);
   const items = list.data?.conversations ?? [];
+
+  // Deep link from a tapped push notification (?c=<id>): open that thread, then
+  // drop the param so it doesn't override later manual selection.
+  const deepLinkId = searchParams.get('c');
+  useEffect(() => {
+    if (!deepLinkId) return;
+    setActiveId(deepLinkId);
+    setMobileView('thread');
+    setSearchParams(
+      (p) => {
+        p.delete('c');
+        return p;
+      },
+      { replace: true },
+    );
+  }, [deepLinkId, setSearchParams]);
 
   // Default selection once the list arrives.
   useEffect(() => {

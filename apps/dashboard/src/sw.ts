@@ -64,7 +64,10 @@ async function focusOrOpen(url: string): Promise<void> {
   const windows = await self.clients.matchAll({ type: 'window', includeUncontrolled: true });
   const existing = windows.find((c) => 'focus' in c);
   if (existing) {
+    // Reuse the open dashboard: focus it and let the app route to the thread
+    // client-side (no reload) — see PushNavigationListener.
     await existing.focus();
+    existing.postMessage({ type: 'NAVIGATE', url });
     return;
   }
   await self.clients.openWindow(url);

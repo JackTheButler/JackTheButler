@@ -34,7 +34,7 @@ export function registerPushNotifications(): void {
       title: 'New message',
       body: preview(e.message.content),
       tag: e.conversationId, // collapse repeats per conversation + across tabs
-      url: '/',
+      url: `/?c=${e.conversationId}`, // deep link: opens this thread on click
       data: { conversationId: e.conversationId },
     } as const;
 
