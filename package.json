@@ -11,6 +11,7 @@
     "build": "pnpm --filter './packages/*' build && tsc && tsc-alias",
     "build:ui": "pnpm --filter @janetheoperator/widget-ui build",
     "build:dashboard": "pnpm build:ui && pnpm --filter @janetheoperator/dashboard build",
+    "preview:dashboard": "pnpm build:dashboard && pnpm --filter @janetheoperator/dashboard preview",
     "build:website": "pnpm --filter @janetheoperator/landing build",
     "build:widget": "pnpm build:ui && pnpm --filter @janetheoperator/widget build",
     "build:all": "pnpm build && pnpm build:widget && pnpm build:dashboard",

@@ -14,9 +14,18 @@ import { serveStatic } from '@hono/node-server/serve-static';
 const DIST = './apps/dashboard/dist';
 const SKIP = ['/api', '/widget', '/health'];
 
+const serveDist = serveStatic({ root: DIST });
+
 export function registerSpa<E extends Env>(app: Hono<E>): void {
-  app.use('/assets/*', serveStatic({ root: DIST }));
-  app.use('/favicon.ico', serveStatic({ root: DIST }));
+  // Serve any built file (hashed /assets/*, plus root files the SPA fallback
+  // would otherwise swallow: the service worker, manifest.webmanifest, and the
+  // PWA/favicon icons). A path is a "file" if its last segment has an
+  // extension; extensionless paths are client routes and fall through.
+  app.use('*', (c, next) => {
+    const { path } = c.req;
+    if (SKIP.some((p) => path.startsWith(p))) return next();
+    return /\/[^/]+\.[a-zA-Z0-9]+$/.test(path) ? serveDist(c, next) : next();
+  });
 
   // SPA fallback: client-side routes → index.html.
   app.get(
