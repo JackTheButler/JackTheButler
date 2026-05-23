@@ -310,6 +310,10 @@ export function SettingsPage() {
           {tab === 'Knowledge' && <KnowledgeSettingsTab />}
           {tab === 'Your Profile' && <AccountTab />}
         </div>
+
+        <p className="mt-10 text-center text-xs text-muted">
+          Jane v{__APP_VERSION__} · build {__BUILD_TIME__.slice(0, 16).replace('T', ' ')} UTC
+        </p>
       </div>
     </PageShell>
   );
