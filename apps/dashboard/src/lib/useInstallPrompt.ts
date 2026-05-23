@@ -1,10 +1,11 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useSyncExternalStore } from 'react';
 
 /**
- * PWA install affordance. Captures the Chromium `beforeinstallprompt` event so
- * we can offer a one-click "Install app" button, and hides itself when the app
- * is already installed (standalone) or the browser can't prompt (Safari/Firefox
- * have no programmatic install — users add to home screen manually).
+ * PWA install affordance. `beforeinstallprompt` fires early (around page load)
+ * and only once — often before any React effect runs — so we capture it at
+ * module-eval time into shared state and expose it via an external store.
+ * Hides itself when already installed (standalone) or when the browser can't
+ * prompt (Safari/Firefox have no programmatic install).
  */
 
 interface BeforeInstallPromptEvent extends Event {
@@ -12,43 +13,51 @@ interface BeforeInstallPromptEvent extends Event {
   userChoice: Promise<{ outcome: 'accepted' | 'dismissed' }>;
 }
 
-function isStandalone(): boolean {
-  if (typeof window === 'undefined') return false;
-  return (
+let deferred: BeforeInstallPromptEvent | null = null;
+let installed = false;
+const listeners = new Set<() => void>();
+const notify = () => listeners.forEach((fn) => fn());
+
+if (typeof window !== 'undefined') {
+  installed =
     window.matchMedia('(display-mode: standalone)').matches ||
     // iOS Safari's non-standard flag for home-screen apps.
-    (navigator as Navigator & { standalone?: boolean }).standalone === true
-  );
+    (navigator as Navigator & { standalone?: boolean }).standalone === true;
+
+  window.addEventListener('beforeinstallprompt', (e) => {
+    e.preventDefault(); // suppress the mini-infobar; we drive the prompt
+    deferred = e as BeforeInstallPromptEvent;
+    notify();
+  });
+  window.addEventListener('appinstalled', () => {
+    deferred = null;
+    installed = true;
+    notify();
+  });
 }
 
-export function useInstallPrompt() {
-  const [deferred, setDeferred] = useState<BeforeInstallPromptEvent | null>(null);
-  const [installed, setInstalled] = useState(isStandalone);
+function subscribe(cb: () => void): () => void {
+  listeners.add(cb);
+  return () => {
+    listeners.delete(cb);
+  };
+}
+const canInstallSnapshot = (): boolean => !installed && deferred !== null;
 
-  useEffect(() => {
-    const onPrompt = (e: Event) => {
-      e.preventDefault(); // keep the mini-infobar from showing; we drive it
-      setDeferred(e as BeforeInstallPromptEvent);
-    };
-    const onInstalled = () => {
-      setInstalled(true);
-      setDeferred(null);
-    };
-    window.addEventListener('beforeinstallprompt', onPrompt);
-    window.addEventListener('appinstalled', onInstalled);
-    return () => {
-      window.removeEventListener('beforeinstallprompt', onPrompt);
-      window.removeEventListener('appinstalled', onInstalled);
-    };
-  }, []);
+export function useInstallPrompt() {
+  const canInstall = useSyncExternalStore(subscribe, canInstallSnapshot, () => false);
 
   const promptInstall = useCallback(async () => {
     if (!deferred) return;
-    await deferred.prompt();
-    const { outcome } = await deferred.userChoice;
+    const event = deferred;
+    await event.prompt();
+    const { outcome } = await event.userChoice;
     // A used prompt can't be reused; drop it (appinstalled also clears it).
-    if (outcome === 'accepted') setDeferred(null);
-  }, [deferred]);
+    if (outcome === 'accepted') {
+      deferred = null;
+      notify();
+    }
+  }, []);
 
-  return { canInstall: !installed && deferred !== null, promptInstall };
+  return { canInstall, promptInstall };
 }
