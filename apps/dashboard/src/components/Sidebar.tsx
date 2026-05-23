@@ -241,6 +241,7 @@ function DesktopSidebar() {
 
 function MobileSidebar() {
   const { mobileOpen, setMobileOpen } = useSidebar();
+  const inboxCount = useInboxCount();
   const close = () => setMobileOpen(false);
   return (
     <div className="md:hidden">
@@ -251,9 +252,16 @@ function MobileSidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setMobileOpen(true)}
-          aria-label="Open menu"
+          aria-label={inboxCount > 0 ? `Open menu — ${inboxCount} unread` : 'Open menu'}
+          className="relative"
         >
           <Menu size={20} />
+          {/* Unread badge so new messages are visible while the menu is closed. */}
+          {inboxCount > 0 && (
+            <span className="absolute -right-0.5 -top-0.5 grid h-4 min-w-4 place-items-center rounded-full bg-accent px-1 text-[10px] font-semibold leading-none text-on-accent">
+              {inboxCount > 9 ? '9+' : inboxCount}
+            </span>
+          )}
         </Button>
       </header>
 
