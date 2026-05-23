@@ -166,7 +166,10 @@ export function WebchatConfigPanel() {
                   <img
                     src={iconFor('webchat')}
                     alt=""
-                    className={cn('h-5 w-5 object-contain', live && 'invert')}
+                    className={cn(
+                      'h-5 w-5 object-contain',
+                      live ? 'invert dark:invert-0' : 'dark:invert',
+                    )}
                   />
                 ) : undefined
               }
