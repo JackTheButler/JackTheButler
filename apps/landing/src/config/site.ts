@@ -5,7 +5,7 @@ export const site = {
   description:
     'Jane handles your customer conversations across webchat and beyond, resolving questions instantly and escalating to your team only when it matters.',
   ctaLabel: 'Get started',
-  ctaHref: '/signup',
+  ctaHref: 'https://demo.janetheoperator.com/',
 };
 
 export const nav: { label: string; href: string }[] = [
