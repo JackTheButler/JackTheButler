@@ -15,6 +15,7 @@ import {
   SegmentedControl,
   toast,
   Button,
+  Alert,
 } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { useSession, useUpdateName, useChangePassword } from '@/features/auth/useAuth';
@@ -142,13 +143,13 @@ function BusinessTab() {
       </Field>
 
       {details && (
-        <div className="rounded-lg border border-red-500/30 bg-red-500/[0.04] p-3 text-xs text-red-600">
+        <Alert variant="error">
           <ul className="space-y-1">
             {Object.entries(details).map(([field, msg]) => (
               <li key={field}>{msg}</li>
             ))}
           </ul>
-        </div>
+        </Alert>
       )}
 
       <div className="flex justify-end">

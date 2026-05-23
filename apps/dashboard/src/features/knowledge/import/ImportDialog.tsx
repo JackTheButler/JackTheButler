@@ -2,6 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
 import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 import {
+  Alert,
   Badge,
   Button,
   Dialog,
@@ -167,7 +168,7 @@ export function ImportDialog({
         setPhase('done');
       }
     } catch {
-      toast.error('Import failed — you can retry; already-added entries are skipped.');
+      toast.error('Import failed. You can retry; already-added entries are skipped.');
       setPhase('review');
     }
   }
@@ -290,15 +291,14 @@ function SelectFile({
             {parsing ? 'Reading file…' : 'Drop a file here, or click to browse'}
           </p>
           <p className="mt-1 text-xs text-muted">
-            Excel (.xlsx) or CSV — needs Question & Answer columns.
+            Excel (.xlsx) or CSV with Question & Answer columns.
           </p>
         </div>
       </button>
       {error && (
-        <div className="mt-4 flex items-start gap-2 rounded-lg border border-red-500/30 bg-red-500/[0.04] p-3 text-xs text-red-600">
-          <AlertCircle size={14} className="mt-0.5 shrink-0" />
+        <Alert variant="error" className="mt-4">
           {error}
-        </div>
+        </Alert>
       )}
     </div>
   );
@@ -372,7 +372,8 @@ function Review({
         <div className="mt-3 flex items-start gap-2 rounded-lg border border-amber-500/30 bg-amber-500/[0.05] p-3 text-xs text-amber-700 dark:text-amber-300">
           <AlertCircle size={14} className="mt-0.5 shrink-0" />
           <span>
-            No embedding provider connected — duplicate detection is limited to exact text matches.
+            No embedding provider connected, so duplicate detection is limited to exact text
+            matches.
             Connect one in{' '}
             <a href="/apps" className="underline">
               Apps
@@ -437,7 +438,7 @@ function Review({
           <div className="px-3 py-6 text-center text-sm text-muted">
             {map.question < 0 || map.answer < 0
               ? 'Map the Question and Answer columns to preview.'
-              : 'No valid rows — every row is missing a question or answer.'}
+              : 'No valid rows. Every row is missing a question or answer.'}
           </div>
         )}
       </div>
@@ -492,7 +493,7 @@ function Done({ inserted, embedded }: { inserted: number; embedded: boolean }) {
         <p className="mt-1 text-xs text-muted">
           {embedded
             ? 'Embedded and searchable now.'
-            : 'Not searchable until embedded — connect an embedding provider, then use “Re-embed”.'}
+            : 'Not searchable until embedded. Connect an embedding provider, then use “Re-embed”.'}
         </p>
       </div>
     </div>

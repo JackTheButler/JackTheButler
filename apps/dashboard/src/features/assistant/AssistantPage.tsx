@@ -5,6 +5,7 @@ import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import { Loading } from '@/components/Loading';
 import {
+  Alert,
   Card,
   Field,
   Input,
@@ -136,7 +137,7 @@ export function AssistantPage() {
               </Field>
               <Field
                 label="Instructions"
-                hint="Extra guidance — what the assistant represents, what it should emphasise."
+                hint="Extra guidance: what the assistant represents and what it should emphasise."
               >
                 <Textarea
                   rows={5}
@@ -169,13 +170,13 @@ export function AssistantPage() {
           )}
 
           {details && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/[0.04] p-3 text-xs text-red-600">
+            <Alert variant="error">
               <ul className="space-y-1">
                 {Object.entries(details).map(([field, msg]) => (
                   <li key={field}>{msg}</li>
                 ))}
               </ul>
-            </div>
+            </Alert>
           )}
 
           <div className="flex justify-end">

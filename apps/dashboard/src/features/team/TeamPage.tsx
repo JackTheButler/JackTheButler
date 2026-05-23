@@ -48,7 +48,7 @@ function matchesFilter(m: StaffMember, f: Filter): boolean {
 }
 
 function lastActiveLabel(m: StaffMember): string {
-  if (m.status === 'invited') return 'Invited — not yet accepted';
+  if (m.status === 'invited') return 'Invited, not yet accepted';
   if (!m.lastLoginAt) return 'Never signed in';
   const days = Math.floor((Date.now() - m.lastLoginAt) / 86_400_000);
   if (days <= 0) return 'Active today';
@@ -126,7 +126,7 @@ function MemberRow({ member, isYou }: { member: StaffMember; isYou: boolean }) {
   const onError = (e: unknown) =>
     toast.error(
       e instanceof ApiError && e.message === 'last_admin'
-        ? "That's the last admin — promote someone else first."
+        ? "That's the last admin. Promote someone else first."
         : 'Could not update member.',
     );
 

@@ -252,7 +252,7 @@ function MobileSidebar() {
           variant="ghost"
           size="icon"
           onClick={() => setMobileOpen(true)}
-          aria-label={inboxCount > 0 ? `Open menu — ${inboxCount} unread` : 'Open menu'}
+          aria-label={inboxCount > 0 ? `Open menu, ${inboxCount} unread` : 'Open menu'}
           className="relative"
         >
           <Menu size={20} />

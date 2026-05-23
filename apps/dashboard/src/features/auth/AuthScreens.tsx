@@ -88,7 +88,7 @@ export function SetupScreen() {
   };
 
   return (
-    <AuthShell title="Create admin account" subtitle="First-time setup — this creates the owner account.">
+    <AuthShell title="Create admin account" subtitle="First-time setup. This creates the owner account.">
       <form onSubmit={submit} className="space-y-4">
         <Field label="Name">
           <Input value={name} onChange={(e) => setName(e.target.value)} required />

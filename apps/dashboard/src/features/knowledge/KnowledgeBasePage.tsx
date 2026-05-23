@@ -22,6 +22,7 @@ import { Loading } from '@/components/Loading';
 import { useSession } from '@/features/auth/useAuth';
 import { ImportDialog } from './import/ImportDialog';
 import {
+  Alert,
   Badge,
   Button,
   Dialog,
@@ -402,7 +403,7 @@ function EntryRow({ entry, onEdit }: { entry: KnowledgeEntry; onEdit: () => void
               tone="muted"
               shape="tag"
               className="shrink-0 text-amber-600"
-              title="No embedding — this entry won't surface in AI replies until an embedding provider is connected."
+              title="No embedding yet. This entry won't surface in AI replies until an embedding provider is connected."
             >
               No embedding
             </Badge>
@@ -550,13 +551,13 @@ function EntryDialog({
           </Field>
 
           {details && (
-            <div className="rounded-lg border border-red-500/30 bg-red-500/[0.04] p-3 text-xs text-red-600">
+            <Alert variant="error">
               <ul className="space-y-1">
                 {Object.entries(details).map(([k, v]) => (
                   <li key={k}>{v}</li>
                 ))}
               </ul>
-            </div>
+            </Alert>
           )}
         </div>
 

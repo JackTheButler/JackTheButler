@@ -18,6 +18,7 @@ import {
   Switch,
   cn,
   toast,
+  Alert,
 } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { useApp, useCheckApp, useSaveAppConfig, useSetAppEnabled } from './useApps';
@@ -285,7 +286,7 @@ export function AppConfigPanel() {
                   ? (err.details as Record<string, string>)
                   : null;
               return (
-                <div className="rounded-lg border border-red-500/30 bg-red-500/[0.04] p-3 text-xs text-red-600">
+                <Alert variant="error">
                   {details ? (
                     <ul className="space-y-1">
                       {Object.entries(details).map(([field, msg]) => (
@@ -297,7 +298,7 @@ export function AppConfigPanel() {
                   ) : (
                     'Could not save. Please check the fields.'
                   )}
-                </div>
+                </Alert>
               );
             })()}
 

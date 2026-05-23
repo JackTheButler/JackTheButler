@@ -119,7 +119,7 @@ export function StrictnessSlider({
           aria-valuemin={MIN}
           aria-valuemax={MAX}
           aria-valuenow={draft}
-          aria-valuetext={`${draft.toFixed(2)} — ${zone}`}
+          aria-valuetext={`${draft.toFixed(2)}, ${zone}`}
           onKeyDown={onKeyDown}
           onKeyUp={onKeyUp}
           className="absolute top-1/2 size-5 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-accent bg-panel shadow outline-none ring-accent ring-offset-2 ring-offset-panel focus-visible:ring-2"

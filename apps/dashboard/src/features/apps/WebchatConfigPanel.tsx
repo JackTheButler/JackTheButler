@@ -22,6 +22,7 @@ import {
   Textarea,
   cn,
   toast,
+  Alert,
 } from '@/components/ui';
 import { ApiError } from '@/lib/api';
 import { useApp, useSaveAppConfig, useSetAppEnabled } from './useApps';
@@ -32,7 +33,7 @@ import { iconFor } from './icon';
 
 const CANNED: WidgetMessage[] = [
   { id: '1', author: 'customer', content: 'Hi, do you offer annual billing?' },
-  { id: '2', author: 'ai', content: 'Yes — annual billing saves 20% vs monthly.' },
+  { id: '2', author: 'ai', content: 'Yes, annual billing saves 20% vs monthly.' },
 ];
 
 const DEFAULTS = {
@@ -254,7 +255,7 @@ export function WebchatConfigPanel() {
                     ? (err.details as Record<string, string>)
                     : null;
                 return (
-                  <div className="rounded-lg border border-red-500/30 bg-red-500/[0.04] p-3 text-xs text-red-600">
+                  <Alert variant="error">
                     {details ? (
                       <ul className="space-y-1">
                         {Object.entries(details).map(([field, msg]) => (
@@ -266,7 +267,7 @@ export function WebchatConfigPanel() {
                     ) : (
                       'Could not save. Please check the fields.'
                     )}
-                  </div>
+                  </Alert>
                 );
               })()}
             <div className="flex items-center justify-end gap-3">
@@ -290,7 +291,7 @@ export function WebchatConfigPanel() {
               Add the chat to your site by pasting this snippet just before the closing{' '}
               <code className="rounded bg-surface px-1 text-ink">&lt;/body&gt;</code> tag on
               every page where you want the chat to appear. A small launcher will show in
-              the bottom corner — visitors click it to open the chat.
+              the bottom corner, and visitors click it to open the chat.
             </p>
             <pre className="overflow-x-auto rounded-lg border border-line bg-surface p-3 text-xs">
               {snippet}
@@ -309,7 +310,7 @@ export function WebchatConfigPanel() {
                 <h4 className="text-sm font-medium text-ink">Theme (optional)</h4>
                 <p className="mt-1 text-sm text-muted">
                   The chat picks up each visitor’s light/dark preference from their browser
-                  automatically — no setup needed. Override it only if you want one fixed
+                  automatically, with no setup needed. Override it only if you want one fixed
                   look or to sync with a light/dark toggle you already have on your site.
                 </p>
               </div>
