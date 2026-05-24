@@ -73,36 +73,32 @@ export function NotificationBanner() {
   };
 
   return (
-    <div className="flex items-center gap-3 border-b border-amber-500/30 bg-amber-500/[0.06] px-3 py-2.5 md:hidden">
-      <span className="grid h-9 w-9 shrink-0 place-items-center rounded-lg bg-amber-500/15 text-amber-700 dark:text-amber-300">
-        <BellRing size={18} />
-      </span>
-      <div className="min-w-0 flex-1">
-        <p className="text-sm font-semibold text-ink">Notifications are off</p>
-        <p className="text-xs text-muted">
-          {blocked
-            ? 'Allow notifications in your device settings to hear about new chats.'
-            : "You won't be alerted to new chats on this device."}
-        </p>
-      </div>
-      {!blocked && (
+    <div className="flex items-center gap-2 border-b border-line bg-amber-500/[0.06] px-3 py-2 text-xs md:hidden">
+      <BellRing size={14} className="shrink-0 text-amber-700 dark:text-amber-300" aria-hidden />
+      <p className="min-w-0 flex-1 truncate text-muted">
+        {blocked ? 'Notifications blocked in device settings' : 'Notifications are off'}
+      </p>
+      {blocked ? (
+        // Blocked is an OS choice we can't fix in-app, so let them dismiss it.
+        <button
+          type="button"
+          onClick={dismiss}
+          aria-label="Dismiss"
+          className="grid h-5 w-5 shrink-0 place-items-center rounded text-muted transition-colors hover:bg-amber-500/10 hover:text-ink"
+        >
+          <X size={14} />
+        </button>
+      ) : (
+        // Off / never-asked: no close — one tap resolves it.
         <button
           type="button"
           onClick={() => void enable()}
           disabled={push.busy}
-          className="shrink-0 rounded-lg bg-amber-600 px-3 py-1.5 text-xs font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-60"
+          className="shrink-0 font-semibold text-amber-700 hover:underline disabled:opacity-60 dark:text-amber-300"
         >
           Turn on
         </button>
       )}
-      <button
-        type="button"
-        onClick={dismiss}
-        aria-label="Dismiss"
-        className="grid h-7 w-7 shrink-0 place-items-center rounded-md text-muted transition-colors hover:bg-amber-500/10 hover:text-ink"
-      >
-        <X size={16} />
-      </button>
     </div>
   );
 }
