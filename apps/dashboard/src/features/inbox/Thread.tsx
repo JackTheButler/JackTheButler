@@ -451,6 +451,9 @@ export function Thread({
             }
             onAskCopilot={onAskCopilot}
             prefill={composerPrefill}
+            // Focus the composer on desktop, or on mobile only once the thread
+            // is the visible view — not while it's behind the conversation list.
+            autoFocus={isWide || mobileActive}
           />
         )}
       </footer>

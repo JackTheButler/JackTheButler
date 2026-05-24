@@ -23,6 +23,7 @@ export function Composer({
   translateHint,
   onAskCopilot,
   prefill,
+  autoFocus = false,
 }: {
   human: boolean;
   onTakeOver: () => void;
@@ -40,6 +41,9 @@ export function Composer({
   /** A copilot-generated reply to drop into the input. Wrapped in an object so
    *  a new reference signals each insert (even if the text repeats). */
   prefill?: { text: string } | null;
+  /** Focus the input when in human mode. Off while the thread isn't the visible
+   *  view (e.g. the mobile conversation list) so we don't pop the keyboard. */
+  autoFocus?: boolean;
 }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const textareaRef = useRef<HTMLTextAreaElement | null>(null);
@@ -69,6 +73,12 @@ export function Composer({
     el.style.height = 'auto';
     el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
   }, [draft, human]);
+
+  // Focus the composer only when it's the visible view (see `autoFocus`) — never
+  // while it's the off-screen thread behind the mobile conversation list.
+  useEffect(() => {
+    if (human && autoFocus) textareaRef.current?.focus();
+  }, [human, autoFocus]);
 
   // Throttle the typing broadcast — one ping per keystroke burst, not per
   // keypress. The widget's own timeout clears the indicator after a pause.
@@ -174,7 +184,6 @@ export function Composer({
         {human ? (
           <textarea
             ref={textareaRef}
-            autoFocus
             rows={1}
             value={draft}
             onChange={(e) => {
