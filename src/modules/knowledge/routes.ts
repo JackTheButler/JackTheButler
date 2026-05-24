@@ -4,6 +4,7 @@ import { AppError } from '@/core/errors.js';
 import { requireAdmin, type AuthEnv } from '@/modules/auth/middleware.js';
 import { entryBody } from '@/modules/knowledge/schema.js';
 import { askKnowledge } from '@/modules/knowledge/ask.js';
+import { searchKnowledgeByText, generateReplyFromEntries } from '@/modules/knowledge/copilot.js';
 import { z } from 'zod';
 import {
   addEntries,
@@ -60,6 +61,29 @@ knowledgeRoutes.post('/ask', async (c) => {
       await s.write(`${JSON.stringify(event)}\n`);
     });
   });
+});
+
+// Agent copilot KB search. Embeds the query + returns a ranked shortlist of
+// matches (browse-oriented, looser than chat grounding). All staff.
+const searchQueryBody = z.object({ query: z.string().trim().min(1).max(2000) });
+
+knowledgeRoutes.post('/search', async (c) => {
+  const parsed = searchQueryBody.safeParse(await body(c));
+  if (!parsed.success) throw new AppError('invalid_input', 400);
+  return c.json(await searchKnowledgeByText(parsed.data.query));
+});
+
+// Copilot reply generation: draft a reply grounded only in the agent-selected
+// entries (by id), in the business default language. All staff.
+const generateReplyBody = z.object({
+  entryIds: z.array(z.string()).min(1).max(20),
+  question: z.string().trim().min(1).max(4000),
+});
+
+knowledgeRoutes.post('/generate-reply', async (c) => {
+  const parsed = generateReplyBody.safeParse(await body(c));
+  if (!parsed.success) throw new AppError('invalid_input', 400);
+  return c.json(await generateReplyFromEntries(parsed.data.entryIds, parsed.data.question));
 });
 
 knowledgeRoutes.get('/entries', (c) => {

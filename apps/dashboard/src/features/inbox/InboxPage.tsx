@@ -6,6 +6,7 @@ import { ConversationList } from './ConversationList';
 import { Thread } from './Thread';
 import { ContextPanel } from './ContextPanel';
 import { KnowledgePanel } from './KnowledgePanel';
+import { CopilotPanel } from './CopilotPanel';
 import {
   useConversationList,
   useConversation,
@@ -27,6 +28,9 @@ export function InboxPage() {
   // its content.
   const [knowledgeHits, setKnowledgeHits] = useState<KnowledgeHitDTO[]>([]);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
+  const [copilotOpen, setCopilotOpen] = useState(false);
+  // Copilot-generated reply to drop into the composer (new object each time).
+  const [composerPrefill, setComposerPrefill] = useState<{ text: string } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const list = useConversationList(undefined);
@@ -53,11 +57,23 @@ export function InboxPage() {
     if (!activeId && items.length) setActiveId(items[0].id);
   }, [activeId, items]);
 
-  // Close the knowledge panel when switching conversations (its hits are stale).
-  useEffect(() => setKnowledgeOpen(false), [activeId]);
+  // Close the side panels + drop any pending copilot draft when switching
+  // conversations (their data is stale).
+  useEffect(() => {
+    setKnowledgeOpen(false);
+    setCopilotOpen(false);
+    setComposerPrefill(null);
+  }, [activeId]);
 
   const detail = useConversation(activeId);
   const convo = detail.data;
+
+  // Prefill the copilot search with the customer's last message (default-language
+  // version when they wrote in another language).
+  const lastCustomerMessage = convo
+    ? [...convo.messages].reverse().find((m) => m.author === 'customer')
+    : undefined;
+  const copilotPrefill = lastCustomerMessage?.translation ?? lastCustomerMessage?.content;
 
   const takeover = useTakeover();
   const handback = useHandback();
@@ -95,6 +111,8 @@ export function InboxPage() {
               setKnowledgeHits(hits);
               setKnowledgeOpen(true);
             }}
+            onAskCopilot={() => setCopilotOpen(true)}
+            composerPrefill={composerPrefill}
           />
           <ContextPanel
             convo={convo}
@@ -105,6 +123,15 @@ export function InboxPage() {
             hits={knowledgeHits}
             open={knowledgeOpen}
             onClose={() => setKnowledgeOpen(false)}
+          />
+          <CopilotPanel
+            open={copilotOpen}
+            onClose={() => setCopilotOpen(false)}
+            lastCustomerMessage={copilotPrefill}
+            onGenerate={(text) => {
+              setComposerPrefill({ text });
+              setCopilotOpen(false);
+            }}
           />
         </>
       ) : (

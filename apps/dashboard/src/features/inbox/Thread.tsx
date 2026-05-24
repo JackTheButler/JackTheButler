@@ -218,6 +218,8 @@ export function Thread({
   onReopen,
   onClose,
   onShowKnowledge,
+  onAskCopilot,
+  composerPrefill,
 }: {
   convo: ConversationDetail;
   mobileActive?: boolean;
@@ -230,6 +232,8 @@ export function Thread({
   onReopen: () => void;
   onClose: () => void;
   onShowKnowledge?: (hits: KnowledgeHitDTO[]) => void;
+  onAskCopilot?: () => void;
+  composerPrefill?: { text: string } | null;
 }) {
   const isWide = useIsWide();
   const human = convo.mode === 'human';
@@ -403,9 +407,11 @@ export function Thread({
             onTyping={onTyping}
             translateHint={
               convo.language && convo.language !== defaultLang
-                ? `Translate to ${languageName(convo.language) || convo.language} for the customer`
+                ? 'Translate for customer'
                 : undefined
             }
+            onAskCopilot={onAskCopilot}
+            prefill={composerPrefill}
           />
         )}
       </footer>

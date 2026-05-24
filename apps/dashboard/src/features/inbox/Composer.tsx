@@ -1,5 +1,5 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { ChevronsRight, Send, Bot } from 'lucide-react';
+import { ChevronsRight, Send, Bot, Sparkles } from 'lucide-react';
 import { cn } from '@/components/ui';
 
 const KNOB = 32; // h-8 w-8
@@ -21,6 +21,8 @@ export function Composer({
   onSend,
   onTyping,
   translateHint,
+  onAskCopilot,
+  prefill,
 }: {
   human: boolean;
   onTakeOver: () => void;
@@ -31,8 +33,13 @@ export function Composer({
   onTyping?: () => void;
   /** Set when the conversation language differs from the business default
    *  — staff types in the default, the server translates before delivery.
-   *  Renders a small unobtrusive note inside the active composer. */
+   *  Renders the translate checkbox in the composer footer. */
   translateHint?: string;
+  /** Opens the KB copilot (retrieval + draft). Shown as a footer action. */
+  onAskCopilot?: () => void;
+  /** A copilot-generated reply to drop into the input. Wrapped in an object so
+   *  a new reference signals each insert (even if the text repeats). */
+  prefill?: { text: string } | null;
 }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const startX = useRef(0);
@@ -45,6 +52,12 @@ export function Composer({
   const [translate, setTranslate] = useState(true);
   const draggingRef = useRef(false);
   draggingRef.current = dragging;
+
+  // Drop a copilot-generated reply into the input. Runs only when a new
+  // `prefill` object arrives (not on every render), so it won't clobber edits.
+  useEffect(() => {
+    if (prefill) setDraft(prefill.text);
+  }, [prefill]);
 
   // Throttle the typing broadcast — one ping per keystroke burst, not per
   // keypress. The widget's own timeout clears the indicator after a pause.
@@ -132,9 +145,7 @@ export function Composer({
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-staff opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-staff" />
               </span>
-              <span className="truncate font-semibold text-staff">
-                You're handling<span className="hidden sm:inline"> this chat</span>
-              </span>
+              <span className="truncate font-semibold text-staff">You're handling</span>
             </span>
             <button
               onClick={onHandBack}
@@ -142,7 +153,7 @@ export function Composer({
               className="inline-flex shrink-0 items-center gap-1 text-xs font-semibold text-staff transition-colors hover:underline"
             >
               <Bot size={12} />
-              Hand <span className="hidden sm:inline">back </span>to AI
+              Back to AI
             </button>
           </div>
         </div>
@@ -191,16 +202,32 @@ export function Composer({
         </button>
       </div>
 
-      {human && translateHint && (
-        <label className="flex cursor-pointer select-none items-center gap-2 border-t border-staff/20 bg-staff-soft/40 px-3 py-1 text-[11px] text-muted">
-          <input
-            type="checkbox"
-            checked={translate}
-            onChange={(e) => setTranslate(e.target.checked)}
-            className="h-3.5 w-3.5 shrink-0 accent-accent"
-          />
-          {translateHint}
-        </label>
+      {human && (translateHint || onAskCopilot) && (
+        <div className="flex items-center justify-between gap-2 border-t border-staff/20 bg-staff-soft/40 px-3 py-1 text-[11px]">
+          {translateHint ? (
+            <label className="flex cursor-pointer select-none items-center gap-2 text-muted">
+              <input
+                type="checkbox"
+                checked={translate}
+                onChange={(e) => setTranslate(e.target.checked)}
+                className="h-3.5 w-3.5 shrink-0 accent-accent"
+              />
+              {translateHint}
+            </label>
+          ) : (
+            <span />
+          )}
+          {onAskCopilot && (
+            <button
+              type="button"
+              onClick={onAskCopilot}
+              className="inline-flex shrink-0 items-center gap-1 font-semibold text-staff transition-colors hover:underline"
+            >
+              <Sparkles size={12} />
+              Ask Copilot
+            </button>
+          )}
+        </div>
       )}
     </div>
   );
