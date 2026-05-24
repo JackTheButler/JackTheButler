@@ -4,14 +4,27 @@ import { getActiveEmbeddingInstance, getActiveGenerationInstance } from '@/modul
 import { searchKnowledge } from '@/modules/knowledge/search.js';
 import { getKbMinSimilarity, getKbTopK } from '@/modules/knowledge/service.js';
 import { buildResponsePrompt, matchToResponseHit } from '@/modules/knowledge/answer.js';
+import { detectTextLanguage, translateText } from '@/core/pipeline.js';
 import { logger } from '@/core/logger.js';
 
 /**
  * "Ask Jane" — the KB test sandbox backend. Mirrors the live chat path
  * (same embedding → retrieval → generation, same stored strictness + top-K,
- * same response prompt), minus the conversation plumbing. Emits progress
- * events so the UI can show phases and render matches before the answer.
+ * same response prompt, same language handling), minus the conversation
+ * plumbing. Emits progress events so the UI can show phases and render
+ * matches before the answer.
+ *
+ * Language: like live chat, a non-default-language question is translated to
+ * the system/default language before embedding (so retrieval runs in the KB's
+ * language), the answer is generated in the default language, then translated
+ * back to the asker's language. Detection + translation reuse the pipeline's
+ * `detectTextLanguage` / `translateText` (no duplicated prompts or routing).
  */
+
+/** Same language up to the primary subtag ('en' ≈ 'en-US'). */
+function sameLanguage(a: string, b: string): boolean {
+  return a.split('-')[0].toLowerCase() === b.split('-')[0].toLowerCase();
+}
 
 export interface AskMatch {
   id: string;
@@ -37,10 +50,30 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
     return;
   }
 
+  const defaultLang = getBusiness().defaultLanguage;
+
+  // Mirror live chat: detect the asker's language and translate the question
+  // into the system/default language before embedding, so retrieval runs in
+  // the same language the KB is embedded in. Falls back to the original text
+  // if detection/translation is unavailable (no generation app, or failure).
+  const detected = await detectTextLanguage(question);
+  const foreign = !!detected && !sameLanguage(detected, defaultLang);
+  let searchText = question;
+  if (foreign && detected) {
+    const translated = await translateText(question, detected, defaultLang);
+    if (translated) searchText = translated;
+  }
+
+  // Deliver outbound text (answer / fallback) in the asker's language —
+  // generation always happens in the default language, this is the
+  // translateOutbound equivalent.
+  const localize = async (text: string): Promise<string> =>
+    foreign && detected ? ((await translateText(text, defaultLang, detected)) ?? text) : text;
+
   await emit({ type: 'phase', phase: 'embedding' });
   let vector: readonly number[] | undefined;
   try {
-    const result = await embedding.embed({ texts: [question] });
+    const result = await embedding.embed({ texts: [searchText] });
     vector = result.vectors[0];
   } catch (err) {
     logger.warn({ err }, 'kb ask: embedding failed');
@@ -68,7 +101,7 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
   // the model (it would answer from general knowledge). Return the configured
   // fallback deterministically — same outcome the strengthened prompt drives.
   if (hits.length === 0) {
-    await emit({ type: 'answer', text: getAssistant().fallback.trim() });
+    await emit({ type: 'answer', text: await localize(getAssistant().fallback.trim()) });
     await emit({ type: 'done' });
     return;
   }
@@ -81,17 +114,19 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
   }
 
   await emit({ type: 'phase', phase: 'generating' });
-  const prompt = buildResponsePrompt(hits.map(matchToResponseHit), getBusiness().defaultLanguage);
+  const prompt = buildResponsePrompt(hits.map(matchToResponseHit), defaultLang);
   try {
     const result = await generation.generate({
       messages: [
         { role: 'system', content: prompt },
-        { role: 'user', content: question },
+        // Use the system-language question so the model reasons in the same
+        // language as the KB and the prompt directive.
+        { role: 'user', content: searchText },
       ],
       modelTier: 'reasoning',
       purpose: 'response_generation',
     });
-    await emit({ type: 'answer', text: result.content });
+    await emit({ type: 'answer', text: await localize(result.content) });
   } catch (err) {
     logger.warn({ err }, 'kb ask: generation failed');
     await emit({ type: 'error', reason: 'generation_failed' });

@@ -8,8 +8,11 @@ const { runMigrations } = await import('../src/db/migrate.js');
 runMigrations();
 const { app } = await import('../src/app.js');
 const { setAppModules } = await import('../src/modules/apps/registry.js');
-const { stubEmbeddingModule, setStubVector } = await import('./fixtures/stub-embedding-app.js');
-const { stubGenerationModule, setStubAiReply } = await import('./fixtures/stub-generation-app.js');
+const { stubEmbeddingModule, setStubVector, stubEmbedCalls } = await import(
+  './fixtures/stub-embedding-app.js'
+);
+const { stubGenerationModule, setStubAiReply, setStubDetectedLanguage, setStubTranslation } =
+  await import('./fixtures/stub-generation-app.js');
 
 setAppModules([stubEmbeddingModule, stubGenerationModule]);
 
@@ -132,5 +135,31 @@ describe('knowledge ask (test sandbox)', () => {
     expect(events.find((e) => e.type === 'answer')).toMatchObject({
       text: 'Let me connect you to a teammate.',
     });
+  });
+
+  it('translates a foreign-language question for retrieval and the answer back', async () => {
+    // Asker writes Farsi; system/KB language is English (seeded default 'en').
+    setStubDetectedLanguage('fa');
+    // Inbound: the Farsi question translates to the English entry's wording so
+    // it retrieves the same approved entry the English path does.
+    setStubTranslation('fa', 'en', 'How do I get a refund?');
+    setStubAiReply('Just email support.');
+    // Outbound: the English answer translates back to Farsi for delivery.
+    setStubTranslation('en', 'fa', 'فقط به پشتیبانی ایمیل بزنید.');
+
+    stubEmbedCalls.length = 0;
+    const events = await askEvents('چطور پولم را پس بگیرم؟');
+
+    // We embedded the English translation, not the raw Farsi question.
+    const askEmbed = stubEmbedCalls.at(-1);
+    expect(askEmbed?.texts).toEqual(['How do I get a refund?']);
+
+    // Retrieved the entry, and the answer came back in the asker's language.
+    expect(events.find((e) => e.type === 'matches')!.matches!.length).toBeGreaterThan(0);
+    expect(events.find((e) => e.type === 'answer')).toMatchObject({
+      text: 'فقط به پشتیبانی ایمیل بزنید.',
+    });
+
+    setStubDetectedLanguage('en'); // reset so we don't leak into later runs
   });
 });

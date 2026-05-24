@@ -280,13 +280,18 @@ function translatorPrompt(from: string, to: string): string {
   return `You are a professional translator. Translate the user message from ${from} to ${to}. Preserve meaning, tone, register, and any formatting. Do not add commentary. Do not include the original text. Output only the translation.`;
 }
 
+/** Language-detector system prompt — shared by the pipeline's detectLanguage
+ *  stage (via promptProvider.detector) and the standalone `detectTextLanguage`
+ *  helper below, so sandbox detection matches AI-pipeline detection exactly. */
+const DETECTOR_PROMPT =
+  'You are a language detector. Read the user message and respond with ONLY the BCP-47 language code (e.g. "en", "fa", "ar", "es"). Output nothing else — no quotes, no prose, no explanation. Just the code.';
+
 const promptProvider: PromptProvider = {
   classifier: () => '',
   /** Prompts Claude (utility tier) to identify the inbound's language and
    *  return only a BCP-47 code. The package's detectLanguage stage is
    *  lenient and extracts a code-like token from whatever comes back. */
-  detector: () =>
-    'You are a language detector. Read the user message and respond with ONLY the BCP-47 language code (e.g. "en", "fa", "ar", "es"). Output nothing else — no quotes, no prose, no explanation. Just the code.',
+  detector: () => DETECTOR_PROMPT,
   /** Translation between two BCP-47 codes. Used for both inbound
    *  (customer-lang → system-lang) and outbound (system-lang → customer-lang).
    *  We instruct the model to output only the translation so saveOutboundMessage
@@ -658,6 +663,36 @@ function turnSummary(
       : null,
     durationMs: ctx?.startTime ? Date.now() - ctx.startTime : null,
   };
+}
+
+/**
+ * One-shot language detection. Returns a BCP-47 code (e.g. 'en', 'fa') or
+ * `null` when detection fails or no generation app is configured. Reuses the
+ * same detector prompt + utility-tier routing the AI pipeline's detectLanguage
+ * stage uses, and parses the reply leniently (the model may wrap the code), so
+ * the KB test sandbox detects exactly as live chat does.
+ */
+export async function detectTextLanguage(text: string): Promise<string | null> {
+  if (!text.trim()) return null;
+  const instance = getActiveGenerationInstance();
+  if (!instance) return null;
+  try {
+    const result = await instance.generate({
+      modelTier: 'utility',
+      purpose: 'language_detection',
+      maxTokens: 16,
+      messages: [
+        { role: 'system', content: DETECTOR_PROMPT },
+        { role: 'user', content: text },
+      ],
+    });
+    // Extract the first code-like token (e.g. "en", "fa", "pt-BR").
+    const code = result.content.trim().match(/[A-Za-z]{2,3}(?:-[A-Za-z0-9]+)?/)?.[0];
+    return code ? code.toLowerCase() : null;
+  } catch (err) {
+    appLogger.warn({ err }, 'language detection failed');
+    return null;
+  }
 }
 
 /**

@@ -124,7 +124,7 @@ export function KbTestPanel() {
   const working = streaming && !answer && error !== 'no_embedding';
 
   return (
-    <Collapsible className="rounded-xl border border-line bg-panel">
+    <Collapsible className="rounded-xl border border-line bg-accent-soft">
       <CollapsibleTrigger className="flex w-full items-center justify-between gap-3 p-5 text-left">
         <span className="text-sm font-semibold">Test your knowledge base</span>
         <ChevronDown
