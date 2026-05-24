@@ -2,6 +2,7 @@ import { useState } from 'react';
 import type { ConversationSummary } from '@janetheoperator/shared';
 import { Badge, EmptyState, SegmentedControl, cn } from '@/components/ui';
 import { Loading } from '@/components/Loading';
+import { NotificationBanner } from '@/features/notifications/NotificationBanner';
 import { relativeTime, customerLabel } from './format';
 
 const FILTERS = ['Open', 'All', 'Human', 'AI', 'Resolved'] as const;
@@ -49,6 +50,7 @@ export function ConversationList({
           className="-mx-3 px-3 md:-mx-4 md:px-4"
         />
       </div>
+      <NotificationBanner />
       <div className="flex-1 overflow-y-auto">
         {visible.length === 0 &&
           (loading ? <Loading inline /> : <EmptyState>No conversations here.</EmptyState>)}
