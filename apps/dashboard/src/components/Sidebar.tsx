@@ -4,6 +4,7 @@ import {
   MessageCircle,
   MessageCircleDashed,
   BookOpen,
+  BarChart3,
   Blocks,
   Bot,
   Users,
@@ -41,6 +42,7 @@ import { JaneLogo } from '@/components/JaneLogo';
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
+  { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/team', label: 'Team', icon: Users, adminOnly: true },
   { to: '/assistant', label: 'Assistant', icon: Bot, adminOnly: true, bottomGroup: true },
   { to: '/apps', label: 'Apps', icon: Blocks, adminOnly: true, bottomGroup: true },

@@ -9,6 +9,7 @@ import { AppsPage } from '@/features/apps/AppsPage';
 import { WebchatConfigPanel } from '@/features/apps/WebchatConfigPanel';
 import { AppConfigPanel } from '@/features/apps/AppConfigPanel';
 import { KnowledgeBasePage } from '@/features/knowledge/KnowledgeBasePage';
+import { ReportsPage } from '@/features/reports/ReportsPage';
 import { AssistantPage } from '@/features/assistant/AssistantPage';
 import { TeamPage } from '@/features/team/TeamPage';
 import { SettingsPage } from '@/features/settings/SettingsPage';
@@ -56,6 +57,7 @@ function GatedApp() {
         <Route element={<AppLayout />}>
           <Route path="/" element={<InboxPage />} />
           <Route path="/knowledge" element={<KnowledgeBasePage />} />
+          <Route path="/reports" element={<ReportsPage />} />
 
           {/* Admin-only areas */}
           <Route
