@@ -36,13 +36,12 @@ export function ConversationList({
   return (
     <aside className="flex w-full shrink-0 flex-col border-r border-line bg-panel md:w-80">
       <div className="border-b border-line px-3 py-3 md:px-4">
-        <h1 className="text-sm font-semibold">Inbox</h1>
         <SegmentedControl
           aria-label="Filter conversations"
           options={FILTERS}
           value={filter}
           onChange={setFilter}
-          className="-mx-3 mt-3 px-3 md:-mx-4 md:px-4"
+          className="-mx-3 px-3 md:-mx-4 md:px-4"
         />
       </div>
       <div className="flex-1 overflow-y-auto">

@@ -67,6 +67,10 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url)),
     },
+    // Force a single copy of these so providers + hooks share one React context.
+    // The query-persist packages can otherwise pull a second @tanstack/react-query,
+    // which breaks the QueryClient context ("No QueryClient set").
+    dedupe: ['@tanstack/react-query'],
   },
   server: {
     port: 5173,
