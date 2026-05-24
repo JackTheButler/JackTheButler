@@ -41,8 +41,8 @@ import { JaneLogo } from '@/components/JaneLogo';
 // Settings for agents (who don't see Assistant/Apps) — so it never disappears.
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
-  { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
+  { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
   { to: '/team', label: 'Team', icon: Users, adminOnly: true },
   { to: '/assistant', label: 'Assistant', icon: Bot, adminOnly: true, bottomGroup: true },
   { to: '/apps', label: 'Apps', icon: Blocks, adminOnly: true, bottomGroup: true },

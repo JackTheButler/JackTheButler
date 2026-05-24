@@ -15,7 +15,7 @@ import {
   CartesianGrid,
   Tooltip,
 } from 'recharts';
-import { ArrowDown, ArrowUp, BarChart3, Circle } from 'lucide-react';
+import { ArrowDown, ArrowUp, Circle } from 'lucide-react';
 import { PageShell } from '@/components/PageShell';
 import { PageHeader } from '@/components/PageHeader';
 import { Select, SelectItem, SegmentedControl, cn } from '@/components/ui';
@@ -219,15 +219,10 @@ export function ReportsPage() {
 
   return (
     <PageShell>
-      <div className="mx-auto max-w-7xl px-4 py-8 md:px-8">
+      <div className="mx-auto max-w-5xl px-4 py-8 md:px-8">
         <PageHeader
           title="Reports"
           subtitle="How Jane and the team are performing"
-          icon={
-            <span className="grid h-9 w-9 place-items-center rounded-xl bg-accent-soft text-accent">
-              <BarChart3 size={18} />
-            </span>
-          }
           action={
             <div className="flex items-center gap-2">
               <div className="w-40">
