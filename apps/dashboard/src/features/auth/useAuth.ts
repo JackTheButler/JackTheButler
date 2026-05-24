@@ -1,6 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import type { StaffRole } from '@janetheoperator/shared';
 import { api, ApiError } from '@/lib/api';
+import { clearPersistedQueries } from '@/lib/queryPersist';
 
 export interface User {
   id: string;
@@ -60,7 +61,18 @@ export const useSetup = () =>
     api.post('/api/auth/setup', v),
   );
 
-export const useLogout = () => useSessionMutation(() => api.post('/api/auth/logout'));
+export const useLogout = () => {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: () => api.post('/api/auth/logout'),
+    onSuccess: () => {
+      // Drop cached data (and its persisted copy) so it can't rehydrate for the
+      // next agent on this device.
+      clearPersistedQueries();
+      qc.clear();
+    },
+  });
+};
 
 export const useAcceptInvite = () =>
   useSessionMutation((v: { token: string; name: string; password: string }) =>
