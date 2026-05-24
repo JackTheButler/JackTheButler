@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import type { ConversationSummary } from '@janetheoperator/shared';
 import { Badge, EmptyState, SegmentedControl, cn } from '@/components/ui';
+import { Loading } from '@/components/Loading';
 import { relativeTime, customerLabel } from './format';
 
 const FILTERS = ['Open', 'All', 'Human', 'AI', 'Resolved'] as const;
@@ -24,10 +25,14 @@ function matchesFilter(c: ConversationSummary, filter: Filter): boolean {
 export function ConversationList({
   items,
   activeId,
+  loading = false,
   onSelect,
 }: {
   items: ConversationSummary[];
   activeId: string | null;
+  /** First load / cache rehydration in progress — show a loader, not the empty
+   *  state, so "No conversations" doesn't flash before the cached list paints. */
+  loading?: boolean;
   onSelect: (id: string) => void;
 }) {
   const [filter, setFilter] = useState<Filter>('Open');
@@ -45,7 +50,8 @@ export function ConversationList({
         />
       </div>
       <div className="flex-1 overflow-y-auto">
-        {visible.length === 0 && <EmptyState>No conversations here.</EmptyState>}
+        {visible.length === 0 &&
+          (loading ? <Loading inline /> : <EmptyState>No conversations here.</EmptyState>)}
         {visible.map((c) => {
           const on = c.id === activeId;
           return (

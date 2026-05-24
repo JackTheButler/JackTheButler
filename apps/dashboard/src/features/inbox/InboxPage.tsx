@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import { useIsRestoring } from '@tanstack/react-query';
 import type { KnowledgeHitDTO } from '@janetheoperator/shared';
 import { Loading } from '@/components/Loading';
 import { ConversationList } from './ConversationList';
@@ -38,6 +39,11 @@ export function InboxPage() {
 
   const list = useConversationList(undefined);
   const items = list.data?.conversations ?? [];
+  // True while the persisted cache is rehydrating or the first fetch is in
+  // flight — used to suppress the "no conversations" empty state so it doesn't
+  // flash before the cached list paints.
+  const restoring = useIsRestoring();
+  const listLoading = (list.isLoading || restoring) && items.length === 0;
 
   // Deep link from a tapped push notification (?c=<id>): open that thread, then
   // drop the param so it doesn't override later manual selection.
@@ -89,6 +95,7 @@ export function InboxPage() {
       <ConversationList
         items={items}
         activeId={activeId}
+        loading={listLoading}
         onSelect={(id) => {
           setActiveId(id);
           setMobileView('thread');
@@ -142,7 +149,7 @@ export function InboxPage() {
         </>
       ) : (
         <section className="hidden flex-1 items-center justify-center md:flex">
-          {list.isLoading ? (
+          {listLoading ? (
             <Loading />
           ) : (
             <span className="text-sm text-muted">Select a conversation</span>

@@ -33,7 +33,7 @@ export function Pagination({
   const showSizer = pageSizeOptions && pageSizeOptions.length > 0 && onPageSize;
 
   return (
-    <div className="flex flex-col gap-2 pt-1 sm:flex-row sm:items-center sm:justify-between">
+    <div className="flex items-center justify-between gap-2 pt-1">
       {/* One position indicator — the range conveys both window and total, so
           there's no separate "Page X of Y". */}
       <span className="text-xs text-muted">
@@ -43,21 +43,25 @@ export function Pagination({
       {/* One control cluster: page-size selector + prev/next together. */}
       <div className="flex items-center gap-2">
         {showSizer && (
-          <Select
-            aria-label="Rows per page"
-            // Match the sm pager buttons (h-8 / text-xs) — the field default
-            // (py-2 / text-sm) renders taller than them. Label lives in the
-            // options ("20 per page") so there's no separate caption.
-            className="h-8 w-[7.5rem] py-0 text-xs"
-            value={String(pageSize)}
-            onValueChange={(v) => onPageSize(Number(v))}
-          >
-            {pageSizeOptions.map((n) => (
-              <SelectItem key={n} value={String(n)}>
-                {n} per page
-              </SelectItem>
-            ))}
-          </Select>
+          // Hidden only on the narrowest screens (below xxs / 360px) to keep the
+          // footer on one tidy row; prev/next remain.
+          <div className="hidden xxs:block">
+            <Select
+              aria-label="Rows per page"
+              // Match the sm pager buttons (h-8 / text-xs) — the field default
+              // (py-2 / text-sm) renders taller than them. Label lives in the
+              // options ("20 per page") so there's no separate caption.
+              className="h-8 w-[7.5rem] py-0 text-xs"
+              value={String(pageSize)}
+              onValueChange={(v) => onPageSize(Number(v))}
+            >
+              {pageSizeOptions.map((n) => (
+                <SelectItem key={n} value={String(n)}>
+                  {n} per page
+                </SelectItem>
+              ))}
+            </Select>
+          </div>
         )}
         <div className="flex items-center gap-1">
           <Button

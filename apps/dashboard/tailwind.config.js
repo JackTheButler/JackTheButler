@@ -4,6 +4,12 @@ export default {
   content: ['./index.html', './src/**/*.{ts,tsx}'],
   theme: {
     extend: {
+      // Extra-small breakpoints below Tailwind's default `sm` (640px). Merge
+      // with the defaults; use `xxs:` / `xs:` like any other prefix.
+      screens: {
+        xxs: '360px',
+        xs: '480px',
+      },
       colors: {
         surface: 'rgb(var(--surface) / <alpha-value>)',
         panel: 'rgb(var(--panel) / <alpha-value>)',
