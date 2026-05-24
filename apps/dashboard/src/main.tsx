@@ -6,6 +6,7 @@ import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client
 import { App } from './App';
 import { Toaster } from '@/components/ui';
 import { PwaReloadPrompt } from '@/components/PwaReloadPrompt';
+import { InstallBanner } from '@/components/InstallBanner';
 import { persistOptions } from '@/lib/queryPersist';
 import './index.css';
 
@@ -22,6 +23,7 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <App />
         <Toaster />
         <PwaReloadPrompt />
+        <InstallBanner />
       </BrowserRouter>
     </PersistQueryClientProvider>
   </React.StrictMode>,
