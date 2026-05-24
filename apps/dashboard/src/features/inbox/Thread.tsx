@@ -225,7 +225,7 @@ export function Thread({
   onOpenProfile?: () => void;
   onTakeover: () => void;
   onHandback: () => void;
-  onReply: (text: string) => void;
+  onReply: (text: string, translate: boolean) => void;
   onTyping?: () => void;
   onReopen: () => void;
   onClose: () => void;
@@ -403,7 +403,7 @@ export function Thread({
             onTyping={onTyping}
             translateHint={
               convo.language && convo.language !== defaultLang
-                ? `Your reply will be translated to ${languageName(convo.language) || convo.language} before the customer reads it.`
+                ? `Translate to ${languageName(convo.language) || convo.language} for the customer`
                 : undefined
             }
           />

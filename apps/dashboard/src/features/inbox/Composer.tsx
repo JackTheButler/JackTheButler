@@ -25,7 +25,7 @@ export function Composer({
   human: boolean;
   onTakeOver: () => void;
   onHandBack: () => void;
-  onSend: (text: string) => void;
+  onSend: (text: string, translate: boolean) => void;
   /** Called (throttled) while the agent types, so the customer's widget shows
    *  a typing indicator. */
   onTyping?: () => void;
@@ -40,6 +40,9 @@ export function Composer({
   const [dragging, setDragging] = useState(false);
   const [animate, setAnimate] = useState(false);
   const [draft, setDraft] = useState('');
+  // Whether to translate this reply into the customer's language (only relevant
+  // when `translateHint` is shown, i.e. languages differ). Default on.
+  const [translate, setTranslate] = useState(true);
   const draggingRef = useRef(false);
   draggingRef.current = dragging;
 
@@ -110,7 +113,7 @@ export function Composer({
   const send = () => {
     const text = draft.trim();
     if (!text) return;
-    onSend(text);
+    onSend(text, translate);
     setDraft('');
   };
 
@@ -124,7 +127,7 @@ export function Composer({
       >
         <div className="overflow-hidden">
           <div className="flex items-center justify-between gap-2 bg-staff-soft px-3 py-1.5">
-            <span className="inline-flex min-w-0 items-center gap-2 text-xs">
+            <span className="ml-1 inline-flex min-w-0 items-center gap-2 text-xs">
               <span className="relative flex h-2 w-2 shrink-0">
                 <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-staff opacity-60" />
                 <span className="relative inline-flex h-2 w-2 rounded-full bg-staff" />
@@ -144,12 +147,6 @@ export function Composer({
           </div>
         </div>
       </div>
-
-      {human && translateHint && (
-        <div className="border-t border-staff/20 bg-staff-soft/40 px-3 py-1 text-[11px] text-muted">
-          {translateHint}
-        </div>
-      )}
 
       <div ref={trackRef} className="relative flex h-11 items-center bg-panel">
         {human ? (
@@ -193,6 +190,18 @@ export function Composer({
           {human ? <Send size={15} /> : <ChevronsRight size={16} />}
         </button>
       </div>
+
+      {human && translateHint && (
+        <label className="flex cursor-pointer select-none items-center gap-2 border-t border-staff/20 bg-staff-soft/40 px-3 py-1 text-[11px] text-muted">
+          <input
+            type="checkbox"
+            checked={translate}
+            onChange={(e) => setTranslate(e.target.checked)}
+            className="h-3.5 w-3.5 shrink-0 accent-accent"
+          />
+          {translateHint}
+        </label>
+      )}
     </div>
   );
 }

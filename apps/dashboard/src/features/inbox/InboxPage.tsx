@@ -85,7 +85,9 @@ export function InboxPage() {
             onOpenProfile={() => setMobileView('profile')}
             onTakeover={() => activeId && takeover.mutate(activeId)}
             onHandback={() => activeId && handback.mutate(activeId)}
-            onReply={(text) => activeId && reply.mutate({ id: activeId, content: text })}
+            onReply={(text, translate) =>
+              activeId && reply.mutate({ id: activeId, content: text, translate })
+            }
             onTyping={() => activeId && notifyTyping(activeId)}
             onReopen={() => activeId && reopen.mutate(activeId)}
             onClose={() => activeId && close.mutate(activeId)}

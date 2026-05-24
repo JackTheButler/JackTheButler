@@ -12,6 +12,9 @@ export const ingestBody = z.object({
 
 export const replyBody = z.object({
   content: z.string().min(1),
+  /** Whether to translate the reply into the customer's language before
+   *  delivery. Defaults to true; the agent can opt out per reply. */
+  translate: z.boolean().optional().default(true),
 });
 
 export const statusQuery = z.enum(['open', 'closed']).optional();

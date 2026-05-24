@@ -29,7 +29,9 @@ conversationRoutes.get('/:id', (c) => c.json(getConversation(c.req.param('id')))
 conversationRoutes.post('/:id/reply', async (c) => {
   const parsed = replyBody.safeParse(await body(c));
   if (!parsed.success) throw new AppError('invalid_input', 400);
-  return c.json(await reply(c.req.param('id'), c.get('user').id, parsed.data.content));
+  return c.json(
+    await reply(c.req.param('id'), c.get('user').id, parsed.data.content, parsed.data.translate),
+  );
 });
 
 // Agent typing → broadcast to the widget. Fire-and-forget; the composer

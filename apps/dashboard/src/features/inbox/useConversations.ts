@@ -63,8 +63,8 @@ export const useReopen = () =>
 export function useReply() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ id, content }: { id: string; content: string }) =>
-      api.post<ConversationDetail>(`/api/app/conversations/${id}/reply`, { content }),
+    mutationFn: ({ id, content, translate }: { id: string; content: string; translate: boolean }) =>
+      api.post<ConversationDetail>(`/api/app/conversations/${id}/reply`, { content, translate }),
     onSuccess: (_d, { id }) => {
       qc.invalidateQueries({ queryKey: ['conversation', id] });
       qc.invalidateQueries({ queryKey: ['conversations'] });

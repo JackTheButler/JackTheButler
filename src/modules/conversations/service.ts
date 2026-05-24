@@ -370,19 +370,19 @@ export async function reply(
   id: string,
   agentId: string,
   content: string,
+  translate = true,
 ): Promise<ConversationDetail> {
   const c = getOrThrow(id);
   if (c.status === 'closed') throw new AppError('conversation_closed', 409);
   if (c.mode !== 'human') throw new AppError('takeover_required', 409);
 
-  // Translate to the customer's language when known + different from default.
-  // Graceful: if no AI app is active or translation fails, `translation`
-  // stays null, the customer reads the default-language version, and the
-  // agent's reply still goes out.
+  // Translate to the customer's language when known + different from default,
+  // unless the agent opted out for this reply. Graceful: if no AI app is active
+  // or translation fails, `translation` stays null, the customer reads the
+  // default-language version, and the agent's reply still goes out.
   const defaultLang = getBusiness().defaultLanguage;
   const customerLang = c.language;
-  const needsTranslation =
-    !!customerLang && customerLang !== defaultLang;
+  const needsTranslation = translate && !!customerLang && customerLang !== defaultLang;
   const translation = needsTranslation
     ? await translateText(content, defaultLang, customerLang)
     : null;
