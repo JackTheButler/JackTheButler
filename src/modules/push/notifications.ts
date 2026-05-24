@@ -49,8 +49,8 @@ export function registerPushNotifications(): void {
   // notifications for the same thread.
   events.on('handoff.requested', (e) => {
     void broadcastToActiveStaff({
-      title: 'A chat needs a human',
-      body: 'Jane handed off a conversation. Tap to take over.',
+      title: 'Someone needs you',
+      body: "Jane couldn't help with this one. Tap to take over.",
       tag: `handoff:${e.conversationId}`,
       url: `/?c=${e.conversationId}`,
       data: { conversationId: e.conversationId },
