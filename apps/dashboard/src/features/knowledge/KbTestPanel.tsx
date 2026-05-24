@@ -1,11 +1,10 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, ChevronDown, SlidersHorizontal, ArrowRight } from 'lucide-react';
+import { ChevronRight, ChevronDown, SlidersHorizontal, ArrowRight, Send, Loader2 } from 'lucide-react';
 import { MarkdownBody } from '@janetheoperator/widget-ui';
 import {
   Alert,
   Badge,
-  Button,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -15,6 +14,7 @@ import {
 import { JaneLogo } from '@/components/JaneLogo';
 import { JaneLoader } from '@/components/JaneLoader';
 import { useSession } from '@/features/auth/useAuth';
+import { TimingRibbon, type AskTimings } from './TimingRibbon';
 
 /** "Ask Jane" — test the knowledge base. Streams progress from the backend
  *  (POST /knowledge/ask, NDJSON): phase → matches → answer. Mirrors live chat. */
@@ -38,6 +38,7 @@ type AskEvent =
   | { type: 'phase'; phase: Phase }
   | { type: 'matches'; matches: AskMatch[] }
   | { type: 'answer'; text: string }
+  | { type: 'timing'; section: keyof AskTimings; ms: number }
   | { type: 'error'; reason: string }
   | { type: 'done' };
 
@@ -67,6 +68,9 @@ export function KbTestPanel() {
   const [matches, setMatches] = useState<AskMatch[]>([]);
   const [searched, setSearched] = useState(false);
   const [answer, setAnswer] = useState('');
+  // Accumulated per-stage timings; fills in progressively as `timing` events
+  // arrive, so the ribbon grows segment-by-segment during the stream.
+  const [timings, setTimings] = useState<AskTimings>({});
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
 
@@ -86,6 +90,7 @@ export function KbTestPanel() {
     setMatches([]);
     setSearched(false);
     setAnswer('');
+    setTimings({});
     setError(null);
     setExpanded(new Set());
 
@@ -112,6 +117,8 @@ export function KbTestPanel() {
           setSearched(true);
         }
         else if (event.type === 'answer') setAnswer(event.text);
+        else if (event.type === 'timing')
+          setTimings((prev) => ({ ...prev, [event.section]: event.ms }));
         else if (event.type === 'error') setError(event.reason);
       };
       for (;;) {
@@ -150,28 +157,39 @@ export function KbTestPanel() {
       </CollapsibleTrigger>
       <CollapsibleContent>
         <div className="space-y-4 px-5 pb-5">
-        <div className="flex gap-2">
+        {/* Send icon lives inside the input; it colours in once there's text,
+            signalling it's ready to press. */}
+        <div className="relative">
           <Input
             value={q}
             onChange={(e) => setQ(e.target.value)}
             onKeyDown={onKey}
             placeholder="Ask a question the way a customer would…"
+            className="pr-11"
           />
-          <Button
-            size="md"
+          <button
+            type="button"
             onClick={() => void ask()}
             disabled={!q.trim() || streaming}
-            className="shrink-0"
+            aria-label="Ask Jane"
+            title="Ask Jane"
+            className={cn(
+              'absolute right-1.5 top-1/2 grid h-7 w-7 -translate-y-1/2 place-items-center rounded-md transition-colors',
+              q.trim() && !streaming ? 'bg-accent text-on-accent hover:opacity-90' : 'text-muted/50',
+            )}
           >
-            {streaming ? 'Asking…' : 'Ask Jane'}
-          </Button>
+            {streaming ? (
+              <Loader2 size={15} className="animate-spin" />
+            ) : (
+              <Send size={15} />
+            )}
+          </button>
         </div>
 
       {active && (
-        // No inner card — the results sit directly on the panel, separated from
-        // the input by a divider, so we don't stack card-in-card padding. Drop
-        // the parent's space-y margin (!mt-0) so only the divider's pt-4 spaces it.
-        <div className="space-y-3 border-t border-ink/10 pt-4 !mt-0">
+        // No inner card and no divider — results sit directly on the panel,
+        // spaced from the input by the parent's space-y gap.
+        <div className="space-y-3">
           {/* Answer — loader + phase while working, then Jane's reply. */}
           {(answer || working) && (
             <div className="flex gap-3">
@@ -195,6 +213,9 @@ export function KbTestPanel() {
               )}
             </div>
           )}
+
+          {/* Per-stage timing breakdown, right under the answer. */}
+          <TimingRibbon timings={timings} streaming={streaming} />
 
           {error && (
             <Alert variant={error === 'no_generation' ? 'info' : 'error'}>
@@ -278,6 +299,7 @@ export function KbTestPanel() {
               )}
             </div>
           )}
+
         </div>
       )}
         </div>

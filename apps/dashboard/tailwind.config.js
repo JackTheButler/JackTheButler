@@ -22,6 +22,15 @@ export default {
       borderRadius: {
         xl: '0.875rem',
       },
+      keyframes: {
+        'segment-in': {
+          '0%': { opacity: '0', transform: 'translateX(-4px)' },
+          '100%': { opacity: '1', transform: 'translateX(0)' },
+        },
+      },
+      animation: {
+        'segment-in': 'segment-in 200ms ease-out both',
+      },
     },
   },
   plugins: [],

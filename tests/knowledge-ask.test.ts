@@ -36,6 +36,8 @@ interface AskEvent {
   reason?: string;
   text?: string;
   matches?: Array<{ id: string; question: string; topic: string | null; score: number }>;
+  section?: string;
+  ms?: number;
 }
 
 /** Read the NDJSON stream to completion and parse the events. */
@@ -104,7 +106,22 @@ describe('knowledge ask (test sandbox)', () => {
 
     const events = await askEvents('refund please');
     const types = events.map((e) => e.type);
-    expect(types).toEqual(['phase', 'phase', 'matches', 'phase', 'answer', 'done']);
+    // Timings stream incrementally: searching after matches, generating before
+    // the answer, so the UI can grow the ribbon as the run progresses.
+    expect(types).toEqual([
+      'phase',
+      'phase',
+      'matches',
+      'timing',
+      'phase',
+      'timing',
+      'answer',
+      'done',
+    ]);
+
+    const timings = events.filter((e) => e.type === 'timing');
+    expect(timings.map((e) => e.section).sort()).toEqual(['generating', 'searching']);
+    expect(timings.every((e) => typeof e.ms === 'number')).toBe(true);
 
     expect(events[0]).toMatchObject({ type: 'phase', phase: 'embedding' });
     expect(events[1]).toMatchObject({ type: 'phase', phase: 'searching' });
@@ -129,8 +146,15 @@ describe('knowledge ask (test sandbox)', () => {
     setStubVector('what is the meaning of life', [0, 1, 0]);
 
     const events = await askEvents('what is the meaning of life');
-    // No 'generating' phase — we short-circuit before calling the model.
-    expect(events.map((e) => e.type)).toEqual(['phase', 'phase', 'matches', 'answer', 'done']);
+    // No 'generating' phase or timing — we short-circuit before the model.
+    expect(events.map((e) => e.type)).toEqual([
+      'phase',
+      'phase',
+      'matches',
+      'timing',
+      'answer',
+      'done',
+    ]);
     expect(events.find((e) => e.type === 'matches')!.matches).toEqual([]);
     expect(events.find((e) => e.type === 'answer')).toMatchObject({
       text: 'Let me connect you to a teammate.',

@@ -34,6 +34,17 @@ export interface AskMatch {
   score: number;
 }
 
+/** A user-facing timing section. `searching` covers embedding + vector
+ *  search; `generating` is "Answering". Each is emitted as a `timing` event
+ *  the moment that stage finishes, so the UI can grow the ribbon progressively.
+ *  Sections that don't run (e.g. no translation for a same-language question,
+ *  no generation on a zero-match short-circuit) simply never emit. */
+export type TimingSection =
+  | 'translating_question'
+  | 'searching'
+  | 'generating'
+  | 'translating_answer';
+
 export type AskEvent =
   | {
       type: 'phase';
@@ -41,6 +52,7 @@ export type AskEvent =
     }
   | { type: 'matches'; matches: AskMatch[] }
   | { type: 'answer'; text: string }
+  | { type: 'timing'; section: TimingSection; ms: number }
   | { type: 'error'; reason: 'no_embedding' | 'no_generation' | 'embedding_failed' | 'generation_failed' }
   | { type: 'done' };
 
@@ -64,7 +76,9 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
   let searchText = question;
   if (foreign && detected) {
     await emit({ type: 'phase', phase: 'translating_question' });
+    const start = Date.now();
     const translated = await translateText(question, detected, defaultLang);
+    await emit({ type: 'timing', section: 'translating_question', ms: Date.now() - start });
     if (translated) searchText = translated;
   }
 
@@ -74,9 +88,14 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
   const localize = async (text: string): Promise<string> => {
     if (!foreign || !detected) return text;
     await emit({ type: 'phase', phase: 'translating_answer' });
-    return (await translateText(text, defaultLang, detected)) ?? text;
+    const start = Date.now();
+    const translated = await translateText(text, defaultLang, detected);
+    await emit({ type: 'timing', section: 'translating_answer', ms: Date.now() - start });
+    return translated ?? text;
   };
 
+  // "Searching" = embedding + vector search, timed together.
+  const searchStart = Date.now();
   await emit({ type: 'phase', phase: 'embedding' });
   let vector: readonly number[] | undefined;
   try {
@@ -103,6 +122,7 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
       score: h.similarity,
     })),
   });
+  await emit({ type: 'timing', section: 'searching', ms: Date.now() - searchStart });
 
   // Strict KB grounding: nothing cleared the strictness floor, so don't call
   // the model (it would answer from general knowledge). Return the configured
@@ -123,6 +143,7 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
   await emit({ type: 'phase', phase: 'generating' });
   const prompt = buildResponsePrompt(hits.map(matchToResponseHit), defaultLang);
   try {
+    const genStart = Date.now();
     const result = await generation.generate({
       messages: [
         { role: 'system', content: prompt },
@@ -133,6 +154,7 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
       modelTier: 'reasoning',
       purpose: 'response_generation',
     });
+    await emit({ type: 'timing', section: 'generating', ms: Date.now() - genStart });
     await emit({ type: 'answer', text: await localize(result.content) });
   } catch (err) {
     logger.warn({ err }, 'kb ask: generation failed');
