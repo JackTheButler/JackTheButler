@@ -25,6 +25,12 @@ export const conversations = sqliteTable(
       .notNull()
       .default('open'),
     assignedAgentId: text('assigned_agent_id').references(() => staff.id),
+    /** AI→human escalation flag: true when Jane fell back ("connect a human")
+     *  and no agent has stepped in yet. Set by the pipeline, cleared on
+     *  takeover / status change. Drives the inbox "needs a human" badge and the
+     *  handoff broadcast. Current state only — not a history (reporting will use
+     *  a dedicated events table later). */
+    needsHuman: integer('needs_human', { mode: 'boolean' }).notNull().default(false),
     /** Last detected customer language for this thread (BCP-47). The detect
      *  stage writes here so a one-turn detection failure ("ok", "thanks")
      *  can fall back to the persisted value instead of misrouting. */

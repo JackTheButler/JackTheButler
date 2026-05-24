@@ -7,6 +7,7 @@ const badge = cva('inline-flex items-center gap-1.5 font-semibold', {
       primary: 'bg-accent text-on-accent',
       accent: 'bg-accent-soft text-accent',
       staff: 'bg-staff-soft text-staff',
+      warning: 'bg-amber-500/15 text-amber-700 dark:text-amber-300',
       muted: 'bg-surface text-muted ring-1 ring-line',
     },
     shape: {

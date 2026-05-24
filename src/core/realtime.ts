@@ -41,6 +41,7 @@ function forward<K extends keyof EventMap>(type: K): void {
 forward('message.created');
 forward('message.updated');
 forward('message.knowledge');
+forward('handoff.requested');
 forward('assistant.typing');
 forward('job.progress');
 

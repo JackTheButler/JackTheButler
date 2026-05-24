@@ -127,6 +127,13 @@
       "when": 1779606173842,
       "tag": "0017_add_message_knowledge_hits",
       "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1779621833619,
+      "tag": "0018_add_needs_human",
+      "breakpoints": true
     }
   ]
 }

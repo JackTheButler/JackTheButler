@@ -57,10 +57,21 @@ export interface MessageKnowledge {
   knowledgeHits: KnowledgeHitDTO[];
 }
 
+/** AI→human escalation: Jane fell back ("connect a human") on a thread no
+ *  agent owns yet. Fired once per escalation (on the false→true transition).
+ *  The push layer broadcasts it to active staff; the dashboard highlights the
+ *  thread. */
+export interface HandoffRequested {
+  conversationId: string;
+  channel: string;
+  channelExternalId: string;
+}
+
 export interface EventMap {
   'message.created': MessageCreated;
   'message.updated': MessageUpdated;
   'message.knowledge': MessageKnowledge;
+  'handoff.requested': HandoffRequested;
   'assistant.typing': TypingSignal;
   'staff.typing': TypingSignal;
   'job.progress': Job;

@@ -1,0 +1,1 @@
+ALTER TABLE `conversations` ADD `needs_human` integer DEFAULT false NOT NULL;

@@ -62,6 +62,7 @@ import {
 import type { GenerationMessage } from '@janetheoperator/shared/contracts';
 import type { KnowledgeHitDTO } from '@janetheoperator/shared';
 import { buildResponsePrompt } from '@/modules/knowledge/answer.js';
+import { getAssistant } from '@/modules/assistant/service.js';
 import { db } from '@/db/client.js';
 import {
   conversations,
@@ -284,7 +285,12 @@ const intentProvider: IntentProvider = {
  *  and the standalone `translateText` helper below so staff-reply translation
  *  matches AI-pipeline translation exactly. */
 function translatorPrompt(from: string, to: string): string {
-  return `You are a professional translator. Translate the user message from ${from} to ${to}. Preserve meaning, tone, register, and any formatting. Do not add commentary. Do not include the original text. Output only the translation.`;
+  return [
+    `You are a translation engine. Translate the user's message from ${from} to ${to}.`,
+    `Translate literally — if it is a question or request, output the translated question or request, never an answer or reply.`,
+    `Preserve meaning, tone, and formatting; add nothing of your own; do not include the original.`,
+    `Output only the ${to} translation.`,
+  ].join(' ');
 }
 
 /** Language-detector system prompt — shared by the pipeline's detectLanguage
@@ -591,6 +597,48 @@ const persistKnowledgeHits: Stage = async (ctx, _env) => {
   });
 };
 
+/** Normalise for loose matching: lowercase, strip punctuation/emoji, collapse
+ *  whitespace. Lets us match the fallback even when the model rewrites casing,
+ *  drops a period, or adds an emoji. */
+function normalizeForMatch(s: string): string {
+  return s
+    .toLowerCase()
+    .replace(/[^\p{L}\p{N}\s]/gu, ' ')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+/**
+ * AI→human escalation. When Jane's reply contains the configured fallback (she
+ * couldn't answer from the KB, or hit a topic to avoid), flag the thread as
+ * needing a human and announce it — once, on the false→true transition, so a
+ * multi-turn dead end doesn't spam. The model usually wraps the fallback in
+ * extra words/emoji, so we check *containment* on normalised text (not exact
+ * equality) against the pre-translation reply. Clears on takeover / status change.
+ */
+const flagHandoff: Stage = async (ctx, _env) => {
+  if (!ctx.conversation || !ctx.aiResponse) return;
+  const fallback = normalizeForMatch(getAssistant().fallback);
+  if (!fallback || !normalizeForMatch(ctx.aiResponse.content).includes(fallback)) return;
+
+  const row = db
+    .select({ needsHuman: conversations.needsHuman })
+    .from(conversations)
+    .where(eq(conversations.id, ctx.conversation.id))
+    .get();
+  if (!row || row.needsHuman) return; // already escalated — don't re-fire
+
+  db.update(conversations)
+    .set({ needsHuman: true })
+    .where(eq(conversations.id, ctx.conversation.id))
+    .run();
+  events.emit('handoff.requested', {
+    conversationId: ctx.conversation.id,
+    channel: ctx.conversation.channel,
+    channelExternalId: ctx.conversation.channelId,
+  });
+};
+
 /* ── The pipeline ─────────────────────────────────────────────── */
 
 function buildPipeline(): Pipeline {
@@ -623,6 +671,9 @@ function buildPipeline(): Pipeline {
       loadKnowledge,
       generateResponse,
       logGeneratedResponse,
+      // Escalate to a human if Jane fell back (before translation, so the
+      // reply is still in the default language for the fallback comparison).
+      flagHandoff,
       translateOutbound,
       saveOutboundMessage,
       // After the reply row exists, attach + announce the entries it used.

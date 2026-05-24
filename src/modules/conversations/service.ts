@@ -175,7 +175,7 @@ export function ingestInboundMessage(
       // for the UI / pipeline / analytics.
       if (convo.status === 'closed') {
         db.update(conversations)
-          .set({ status: 'open', mode: 'ai', assignedAgentId: null })
+          .set({ status: 'open', mode: 'ai', assignedAgentId: null, needsHuman: false })
           .where(eq(conversations.id, convo.id))
           .run();
         db.insert(messages)
@@ -293,6 +293,7 @@ export function listConversations(status?: 'open' | 'closed'): ConversationSumma
       customerName: customer?.name ?? null,
       snippet: last?.content ?? '',
       needsReply: c.status === 'open' && last?.author === 'customer',
+      needsHuman: c.needsHuman,
       lastMessageAt: ms(c.lastMessageAt),
     };
   });
@@ -425,7 +426,7 @@ export function takeover(id: string, agentId: string): ConversationDetail {
   const c = getOrThrow(id);
   if (c.mode !== 'ai') throw new AppError('invalid_transition', 409);
   db.update(conversations)
-    .set({ mode: 'human', assignedAgentId: agentId })
+    .set({ mode: 'human', assignedAgentId: agentId, needsHuman: false })
     .where(eq(conversations.id, id))
     .run();
   return getConversation(id);
@@ -443,6 +444,7 @@ export function handback(id: string): ConversationDetail {
 
 export function setStatus(id: string, status: 'open' | 'closed'): ConversationDetail {
   getOrThrow(id);
-  db.update(conversations).set({ status }).where(eq(conversations.id, id)).run();
+  // Any status change ends the current escalation (resolved, or reopened fresh).
+  db.update(conversations).set({ status, needsHuman: false }).where(eq(conversations.id, id)).run();
   return getConversation(id);
 }

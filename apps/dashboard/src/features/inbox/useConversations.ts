@@ -84,6 +84,12 @@ export function useInboxRealtime() {
     qc.invalidateQueries({ queryKey: ['conversation', data?.conversationId] });
   });
 
+  // AI escalated a thread to a human — refresh the list so the "Needs human"
+  // badge appears live.
+  useRealtimeEvent<{ conversationId: string }>('handoff.requested', () => {
+    qc.invalidateQueries({ queryKey: ['conversations'] });
+  });
+
   useRealtimeEvent<{
     conversationId: string;
     messageId: string;

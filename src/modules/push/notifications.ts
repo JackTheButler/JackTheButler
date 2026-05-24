@@ -1,6 +1,6 @@
 import { events } from '@/core/events.js';
 import { getConversationMeta } from '@/modules/conversations/service.js';
-import { sendToStaff } from '@/modules/push/service.js';
+import { sendToStaff, broadcastToActiveStaff } from '@/modules/push/service.js';
 
 /**
  * Domain wiring for push notifications: subscribes to bus events and maps each
@@ -42,9 +42,18 @@ export function registerPushNotifications(): void {
       // Owned thread → ping the assigned agent.
       void sendToStaff(meta.assignedAgentId, payload);
     }
-    // FUTURE: when an AI→human handoff/escalation event exists, alert the whole
-    // team via the already-exported broadcast helper, e.g.:
-    //   events.on('conversation.handoff', (e) =>
-    //     broadcastToActiveStaff({ title: 'Needs a human', body: …, tag: e.conversationId }));
+  });
+
+  // AI→human escalation: Jane gave up on a thread no agent owns yet. Alert the
+  // whole active team. Distinct `tag` so it doesn't collapse with new-message
+  // notifications for the same thread.
+  events.on('handoff.requested', (e) => {
+    void broadcastToActiveStaff({
+      title: 'A chat needs a human',
+      body: 'Jane handed off a conversation. Tap to take over.',
+      tag: `handoff:${e.conversationId}`,
+      url: `/?c=${e.conversationId}`,
+      data: { conversationId: e.conversationId },
+    });
   });
 }

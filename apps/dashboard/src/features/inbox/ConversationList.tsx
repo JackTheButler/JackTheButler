@@ -68,6 +68,7 @@ export function ConversationList({
                 <span className="flex-1 truncate text-sm font-semibold">
                   {customerLabel(c.customerName)}
                 </span>
+                {c.needsHuman && <Badge tone="warning">Needs human</Badge>}
                 {c.mode === 'human' && <Badge tone="staff">Human</Badge>}
                 <span className="shrink-0 text-xs text-muted">
                   {relativeTime(c.lastMessageAt)}

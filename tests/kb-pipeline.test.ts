@@ -9,7 +9,7 @@ runMigrations();
 const { app } = await import('../src/app.js');
 const { setAppModules } = await import('../src/modules/apps/registry.js');
 const { events } = await import('../src/core/events.js');
-const { stubGenerationModule, stubAiCalls, resetStubAi, lastResponderCall } =
+const { stubGenerationModule, stubAiCalls, resetStubAi, setStubAiReply, lastResponderCall } =
   await import('./fixtures/stub-generation-app.js');
 const { stubEmbeddingModule, setStubVector, resetStubEmbed } = await import(
   './fixtures/stub-embedding-app.js'
@@ -192,5 +192,44 @@ describe('KB → AI pipeline (RAG)', () => {
     const publicMsgs = getPublicHistory('webchat', 'sess-kb-transparency');
     expect(publicMsgs.some((m) => m.author === 'ai')).toBe(true);
     expect(publicMsgs.every((m) => m.knowledgeHits === undefined)).toBe(true);
+  });
+
+  it('escalates to a human when Jane returns the fallback, and clears on takeover', async () => {
+    const FALLBACK = 'Let me connect you to a teammate.';
+    await authed('/api/app/assistant', {
+      method: 'PUT',
+      body: JSON.stringify({ fallback: FALLBACK }),
+    });
+    // The model wraps the fallback in extra words + emoji (a subset match, not
+    // verbatim) — the trigger must still catch it.
+    setStubAiReply(`I'm not sure I can help. ${FALLBACK} 😊 Would you like that?`);
+    setStubVector('unrelated xyz', [0, 1, 0]); // no KB hit
+
+    const handoff = new Promise<{ conversationId: string }>((resolve, reject) => {
+      const off = events.on('handoff.requested', (p) => {
+        clearTimeout(t);
+        off();
+        resolve(p);
+      });
+      const t = setTimeout(() => {
+        off();
+        reject(new Error('no handoff.requested event'));
+      }, 600);
+    });
+    await ingest('webchat', 'sess-handoff', 'unrelated xyz');
+    const evt = await handoff;
+
+    const find = async () => {
+      const list = (await (await authed('/api/app/conversations')).json()) as {
+        conversations: Array<{ id: string; needsHuman: boolean }>;
+      };
+      return list.conversations.find((c) => c.id === evt.conversationId);
+    };
+
+    expect((await find())?.needsHuman).toBe(true);
+
+    // Taking over clears the flag.
+    await authed(`/api/app/conversations/${evt.conversationId}/takeover`, { method: 'POST' });
+    expect((await find())?.needsHuman).toBe(false);
   });
 });

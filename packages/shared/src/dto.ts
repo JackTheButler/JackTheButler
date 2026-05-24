@@ -164,6 +164,8 @@ export interface ConversationSummary {
   customerName: string | null;
   snippet: string;
   needsReply: boolean;
+  /** AI escalated this thread to a human and no agent has taken over yet. */
+  needsHuman: boolean;
   lastMessageAt: number;
 }
 
