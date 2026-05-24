@@ -1,5 +1,6 @@
 import { useState, type KeyboardEvent } from 'react';
-import { ChevronRight, ChevronDown } from 'lucide-react';
+import { Link } from 'react-router-dom';
+import { ChevronRight, ChevronDown, SlidersHorizontal, ArrowRight } from 'lucide-react';
 import { MarkdownBody } from '@janetheoperator/widget-ui';
 import {
   Alert,
@@ -13,6 +14,7 @@ import {
 } from '@/components/ui';
 import { JaneLogo } from '@/components/JaneLogo';
 import { JaneLoader } from '@/components/JaneLoader';
+import { useSession } from '@/features/auth/useAuth';
 
 /** "Ask Jane" — test the knowledge base. Streams progress from the backend
  *  (POST /knowledge/ask, NDJSON): phase → matches → answer. Mirrors live chat. */
@@ -25,7 +27,12 @@ interface AskMatch {
   score: number;
 }
 
-type Phase = 'embedding' | 'searching' | 'generating';
+type Phase =
+  | 'translating_question'
+  | 'embedding'
+  | 'searching'
+  | 'generating'
+  | 'translating_answer';
 
 type AskEvent =
   | { type: 'phase'; phase: Phase }
@@ -35,9 +42,11 @@ type AskEvent =
   | { type: 'done' };
 
 const PHASE_TEXT: Record<Phase, string> = {
+  translating_question: 'Translating your question…',
   embedding: 'Embedding your question…',
   searching: 'Searching your knowledge base…',
   generating: 'Composing the answer…',
+  translating_answer: 'Translating the answer…',
 };
 
 const ERROR_TEXT: Record<string, string> = {
@@ -50,10 +59,13 @@ const ERROR_TEXT: Record<string, string> = {
 };
 
 export function KbTestPanel() {
+  const { user } = useSession();
+  const isAdmin = user?.role === 'admin';
   const [q, setQ] = useState('');
   const [streaming, setStreaming] = useState(false);
   const [phase, setPhase] = useState<Phase | null>(null);
   const [matches, setMatches] = useState<AskMatch[]>([]);
+  const [searched, setSearched] = useState(false);
   const [answer, setAnswer] = useState('');
   const [error, setError] = useState<string | null>(null);
   const [expanded, setExpanded] = useState<Set<string>>(new Set());
@@ -72,6 +84,7 @@ export function KbTestPanel() {
     setStreaming(true);
     setPhase(null);
     setMatches([]);
+    setSearched(false);
     setAnswer('');
     setError(null);
     setExpanded(new Set());
@@ -94,7 +107,10 @@ export function KbTestPanel() {
         if (!line.trim()) return;
         const event = JSON.parse(line) as AskEvent;
         if (event.type === 'phase') setPhase(event.phase);
-        else if (event.type === 'matches') setMatches(event.matches);
+        else if (event.type === 'matches') {
+          setMatches(event.matches);
+          setSearched(true);
+        }
         else if (event.type === 'answer') setAnswer(event.text);
         else if (event.type === 'error') setError(event.reason);
       };
@@ -152,7 +168,10 @@ export function KbTestPanel() {
         </div>
 
       {active && (
-        <div className="space-y-3 rounded-xl border border-line bg-surface p-3">
+        // No inner card — the results sit directly on the panel, separated from
+        // the input by a divider, so we don't stack card-in-card padding. Drop
+        // the parent's space-y margin (!mt-0) so only the divider's pt-4 spaces it.
+        <div className="space-y-3 border-t border-ink/10 pt-4 !mt-0">
           {/* Answer — loader + phase while working, then Jane's reply. */}
           {(answer || working) && (
             <div className="flex gap-3">
@@ -185,11 +204,11 @@ export function KbTestPanel() {
 
           {/* Retrieved entries — appear as soon as matches arrive. */}
           {matches.length > 0 && (
-            <div className={answer || working || error ? 'border-t border-line pt-3' : undefined}>
+            <div className={answer || working || error ? 'border-t border-ink/10 pt-3' : undefined}>
               <div className="mb-1.5 text-xs font-medium text-muted">
                 Retrieved from {matches.length} {matches.length === 1 ? 'entry' : 'entries'}
               </div>
-              <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line">
+              <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
                 {matches.map((m) => {
                   const open = expanded.has(m.id);
                   return (
@@ -228,6 +247,35 @@ export function KbTestPanel() {
                   );
                 })}
               </ul>
+            </div>
+          )}
+
+          {/* Once a search has run (any result count), point the operator at the
+              retrieval settings — strictness + how many entries Jane considers —
+              so they can tune what matched here. Admin-only page, so non-admins
+              get a plain note instead of a dead link. */}
+          {searched && (
+            <div className="flex items-start gap-2 border-t border-ink/10 pt-3 text-xs leading-relaxed text-muted">
+              <SlidersHorizontal size={14} className="mt-0.5 shrink-0" />
+              {isAdmin ? (
+                <p>
+                  Your retrieval settings control which entries match, including match strictness and
+                  how many entries Jane considers.{' '}
+                  <Link
+                    to="/settings/knowledge"
+                    className="inline-flex items-center gap-0.5 font-medium text-accent hover:underline"
+                  >
+                    Adjust settings
+                    <ArrowRight size={12} />
+                  </Link>
+                </p>
+              ) : (
+                <p>
+                  The workspace retrieval settings control which entries match, including match
+                  strictness and how many entries Jane considers. An admin can adjust them in
+                  Settings.
+                </p>
+              )}
             </div>
           )}
         </div>

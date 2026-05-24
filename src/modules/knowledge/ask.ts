@@ -35,7 +35,10 @@ export interface AskMatch {
 }
 
 export type AskEvent =
-  | { type: 'phase'; phase: 'embedding' | 'searching' | 'generating' }
+  | {
+      type: 'phase';
+      phase: 'translating_question' | 'embedding' | 'searching' | 'generating' | 'translating_answer';
+    }
   | { type: 'matches'; matches: AskMatch[] }
   | { type: 'answer'; text: string }
   | { type: 'error'; reason: 'no_embedding' | 'no_generation' | 'embedding_failed' | 'generation_failed' }
@@ -60,15 +63,19 @@ export async function askKnowledge(question: string, emit: Emit): Promise<void> 
   const foreign = !!detected && !sameLanguage(detected, defaultLang);
   let searchText = question;
   if (foreign && detected) {
+    await emit({ type: 'phase', phase: 'translating_question' });
     const translated = await translateText(question, detected, defaultLang);
     if (translated) searchText = translated;
   }
 
   // Deliver outbound text (answer / fallback) in the asker's language —
   // generation always happens in the default language, this is the
-  // translateOutbound equivalent.
-  const localize = async (text: string): Promise<string> =>
-    foreign && detected ? ((await translateText(text, defaultLang, detected)) ?? text) : text;
+  // translateOutbound equivalent. Surfaces the same 'translating' phase.
+  const localize = async (text: string): Promise<string> => {
+    if (!foreign || !detected) return text;
+    await emit({ type: 'phase', phase: 'translating_answer' });
+    return (await translateText(text, defaultLang, detected)) ?? text;
+  };
 
   await emit({ type: 'phase', phase: 'embedding' });
   let vector: readonly number[] | undefined;

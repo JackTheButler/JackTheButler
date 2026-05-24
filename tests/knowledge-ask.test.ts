@@ -150,6 +150,9 @@ describe('knowledge ask (test sandbox)', () => {
     stubEmbedCalls.length = 0;
     const events = await askEvents('چطور پولم را پس بگیرم؟');
 
+    // The UI is told a translation stage ran (inbound, before embedding).
+    expect(events.some((e) => e.type === 'phase' && e.phase === 'translating_question')).toBe(true);
+
     // We embedded the English translation, not the raw Farsi question.
     const askEmbed = stubEmbedCalls.at(-1);
     expect(askEmbed?.texts).toEqual(['How do I get a refund?']);
