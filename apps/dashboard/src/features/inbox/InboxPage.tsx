@@ -29,6 +29,9 @@ export function InboxPage() {
   const [knowledgeHits, setKnowledgeHits] = useState<KnowledgeHitDTO[]>([]);
   const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const [copilotOpen, setCopilotOpen] = useState(false);
+  // The text the copilot search opens with — the customer's last message by
+  // default, or a specific message when launched from its sparkle shortcut.
+  const [copilotQuery, setCopilotQuery] = useState('');
   // Copilot-generated reply to drop into the composer (new object each time).
   const [composerPrefill, setComposerPrefill] = useState<{ text: string } | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -111,7 +114,10 @@ export function InboxPage() {
               setKnowledgeHits(hits);
               setKnowledgeOpen(true);
             }}
-            onAskCopilot={() => setCopilotOpen(true)}
+            onAskCopilot={(query) => {
+              setCopilotQuery(query ?? copilotPrefill ?? '');
+              setCopilotOpen(true);
+            }}
             composerPrefill={composerPrefill}
           />
           <ContextPanel
@@ -127,7 +133,7 @@ export function InboxPage() {
           <CopilotPanel
             open={copilotOpen}
             onClose={() => setCopilotOpen(false)}
-            lastCustomerMessage={copilotPrefill}
+            lastCustomerMessage={copilotQuery}
             onGenerate={(text) => {
               setComposerPrefill({ text });
               setCopilotOpen(false);

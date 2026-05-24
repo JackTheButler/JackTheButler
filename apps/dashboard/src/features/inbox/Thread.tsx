@@ -1,5 +1,14 @@
-import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Bot, User, BookOpen, ChevronRight, ChevronLeft, ChevronDown, Languages } from 'lucide-react';
+import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import {
+  Bot,
+  User,
+  BookOpen,
+  Sparkles,
+  ChevronRight,
+  ChevronLeft,
+  ChevronDown,
+  Languages,
+} from 'lucide-react';
 import type { ConversationDetail, KnowledgeHitDTO, MessageDTO } from '@janetheoperator/shared';
 import { MarkdownBody } from '@janetheoperator/widget-ui';
 import { useIsWide } from '@/lib/useMediaQuery';
@@ -68,11 +77,16 @@ function Bubble({
   defaultLang,
   conversationLanguage,
   onShowKnowledge,
+  recentCustomer = false,
+  onAskCopilot,
 }: {
   msg: MessageDTO;
   defaultLang: string;
   conversationLanguage: string | null;
   onShowKnowledge?: (hits: KnowledgeHitDTO[]) => void;
+  /** True for the most recent few customer messages — shows a copilot shortcut. */
+  recentCustomer?: boolean;
+  onAskCopilot?: (query: string) => void;
 }) {
   // Per-bubble disclosure: the default-language version is always visible;
   // clicking "Show original" reveals the original underneath in the same
@@ -123,7 +137,7 @@ function Bubble({
   const muteClass = isCustomer ? 'text-muted' : 'opacity-70';
 
   return (
-    <div className={cn('flex', isCustomer ? 'justify-start' : 'justify-end')}>
+    <div className={cn('flex items-end gap-1.5', isCustomer ? 'justify-start' : 'justify-end')}>
       <div className={cn('max-w-[min(95%,600px)] rounded-xl px-3.5 py-2.5 text-sm', toneClass)}>
         {!isCustomer && (
           <div className="mb-1 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide opacity-80">
@@ -179,6 +193,19 @@ function Bubble({
           <span>{relativeTime(msg.createdAt)}</span>
         </div>
       </div>
+
+      {/* Ask Copilot about this message (recent customer turns only). */}
+      {isCustomer && recentCustomer && onAskCopilot && (
+        <button
+          type="button"
+          onClick={() => onAskCopilot(msg.translation ?? msg.content)}
+          aria-label="Ask Copilot about this message"
+          title="Ask Copilot"
+          className="mb-0.5 grid h-7 w-7 shrink-0 place-items-center rounded-md text-muted transition-colors hover:bg-surface hover:text-accent"
+        >
+          <Sparkles size={14} />
+        </button>
+      )}
     </div>
   );
 }
@@ -232,7 +259,8 @@ export function Thread({
   onReopen: () => void;
   onClose: () => void;
   onShowKnowledge?: (hits: KnowledgeHitDTO[]) => void;
-  onAskCopilot?: () => void;
+  /** Opens the copilot, optionally prefilled with a specific message. */
+  onAskCopilot?: (query?: string) => void;
   composerPrefill?: { text: string } | null;
 }) {
   const isWide = useIsWide();
@@ -243,6 +271,15 @@ export function Thread({
   // dashboard shows by default. Falls back to 'en' before the query lands.
   const business = useBusiness();
   const defaultLang = business.data?.defaultLanguage ?? 'en';
+
+  // The most recent few customer messages get a "Ask Copilot about this" shortcut.
+  const recentCustomerIds = useMemo(() => {
+    const ids = convo.messages
+      .filter((m) => m.author === 'customer' && !m.event)
+      .slice(-3)
+      .map((m) => m.id);
+    return new Set(ids);
+  }, [convo.messages]);
 
   // Same scroll model as the widget — stay pinned to the newest message
   // unless the operator is reading history, in which case the floating
@@ -373,6 +410,8 @@ export function Thread({
               defaultLang={defaultLang}
               conversationLanguage={convo.language}
               onShowKnowledge={onShowKnowledge}
+              recentCustomer={recentCustomerIds.has(m.id)}
+              onAskCopilot={onAskCopilot}
             />
           ))}
           {aiTyping && <TypingBubble />}

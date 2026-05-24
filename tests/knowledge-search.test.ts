@@ -65,7 +65,7 @@ describe('knowledge search (copilot)', () => {
       body: JSON.stringify({ query: 'refund' }),
     });
     const data = (await res.json()) as SearchResponse;
-    expect(data).toEqual({ matches: [], error: 'no_embedding' });
+    expect(data).toMatchObject({ matches: [], error: 'no_embedding' });
   });
 
   it('returns ranked matches once an embedding provider is active', async () => {

@@ -41,6 +41,8 @@ export function CopilotPanel({
   const [searching, setSearching] = useState(false);
   const [searched, setSearched] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  // Chat-grounding strictness floor; matches below it are flagged as weak.
+  const [threshold, setThreshold] = useState(0);
   const [generating, setGenerating] = useState(false);
   const [genError, setGenError] = useState<string | null>(null);
 
@@ -55,11 +57,12 @@ export function CopilotPanel({
     setSearching(true);
     setError(null);
     try {
-      const res = await api.post<{ matches: KnowledgeHitDTO[]; error?: string }>(
+      const res = await api.post<{ matches: KnowledgeHitDTO[]; threshold: number; error?: string }>(
         '/api/app/knowledge/search',
         { query },
       );
       setMatches(res.error ? [] : res.matches);
+      setThreshold(res.threshold ?? 0);
       setError(res.error ?? null);
     } catch {
       setMatches([]);
@@ -176,6 +179,7 @@ export function CopilotPanel({
                     key={e.id}
                     entry={e}
                     selected
+                    warn={threshold > 0 && e.similarity < threshold}
                     open={expanded.has(e.id)}
                     onToggle={() => toggleSelect(e)}
                     onExpand={() => toggleExpand(e.id)}
@@ -208,6 +212,7 @@ export function CopilotPanel({
                     key={e.id}
                     entry={e}
                     selected={false}
+                    warn={threshold > 0 && e.similarity < threshold}
                     open={expanded.has(e.id)}
                     onToggle={() => toggleSelect(e)}
                     onExpand={() => toggleExpand(e.id)}
@@ -253,18 +258,21 @@ export function CopilotPanel({
 function Row({
   entry,
   selected,
+  warn,
   open,
   onToggle,
   onExpand,
 }: {
   entry: KnowledgeHitDTO;
   selected: boolean;
+  /** Below the chat-grounding strictness floor — flagged with a warning tint. */
+  warn?: boolean;
   open: boolean;
   onToggle: () => void;
   onExpand: () => void;
 }) {
   return (
-    <li>
+    <li className={cn(warn && 'bg-amber-500/[0.06]')} title={warn ? 'Below your match strictness' : undefined}>
       <div className="flex items-start gap-2 px-3 py-2">
         <button
           type="button"

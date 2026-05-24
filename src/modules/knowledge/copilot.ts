@@ -5,6 +5,7 @@ import { knowledgeEntries } from '@/db/schema/index.js';
 import { getActiveEmbeddingInstance, getActiveGenerationInstance } from '@/modules/apps/service.js';
 import { getBusiness } from '@/modules/business/service.js';
 import { searchKnowledge } from '@/modules/knowledge/search.js';
+import { getKbMinSimilarity } from '@/modules/knowledge/service.js';
 import { buildResponsePrompt, type ResponseHit } from '@/modules/knowledge/answer.js';
 import { logger } from '@/core/logger.js';
 
@@ -27,9 +28,12 @@ export type KbSearchError = 'no_embedding' | 'embedding_failed';
 
 export async function searchKnowledgeByText(
   query: string,
-): Promise<{ matches: KnowledgeHitDTO[]; error?: KbSearchError }> {
+): Promise<{ matches: KnowledgeHitDTO[]; threshold: number; error?: KbSearchError }> {
+  // The chat-grounding strictness floor — returned so the UI can flag matches
+  // below it (the copilot itself searches with floor 0 to stay browse-friendly).
+  const threshold = getKbMinSimilarity();
   const embedding = getActiveEmbeddingInstance();
-  if (!embedding) return { matches: [], error: 'no_embedding' };
+  if (!embedding) return { matches: [], threshold, error: 'no_embedding' };
 
   let vector: readonly number[] | undefined;
   try {
@@ -38,11 +42,12 @@ export async function searchKnowledgeByText(
   } catch (err) {
     logger.warn({ err }, 'copilot kb search: embedding failed');
   }
-  if (!vector || vector.length === 0) return { matches: [], error: 'embedding_failed' };
+  if (!vector || vector.length === 0) return { matches: [], threshold, error: 'embedding_failed' };
 
   // Rank all approved+embedded entries, return the top slice (floor 0).
   const { hits } = searchKnowledge(vector, COPILOT_LIMIT, 0);
   return {
+    threshold,
     matches: hits.map((h) => ({
       id: h.id,
       question: h.question,

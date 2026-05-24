@@ -238,7 +238,7 @@ export function Composer({
           {onAskCopilot && (
             <button
               type="button"
-              onClick={onAskCopilot}
+              onClick={() => onAskCopilot()}
               className="inline-flex shrink-0 items-center gap-1 font-semibold text-staff transition-colors hover:underline"
             >
               <Sparkles size={12} />
