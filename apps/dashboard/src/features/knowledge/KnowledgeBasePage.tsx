@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState, type ReactNode } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { useQueryClient } from '@tanstack/react-query';
 import {
   Plus,
@@ -168,6 +169,39 @@ function EntriesTab() {
   const [importOpen, setImportOpen] = useState(false);
 
   const entries = data?.entries ?? [];
+
+  // The `?edit=<id>` query param is the source of truth for the edit dialog, so
+  // the URL is shareable and survives refresh/back. Opening (here or via a row's
+  // Edit button) sets the param; the dialog mirrors it. The `editing?.id === id`
+  // guard means a list refetch while editing won't re-hydrate (and wipe) the
+  // open form.
+  const [searchParams, setSearchParams] = useSearchParams();
+  const editId = searchParams.get('edit');
+  const clearEditParam = () =>
+    setSearchParams(
+      (p) => {
+        p.delete('edit');
+        return p;
+      },
+      { replace: true },
+    );
+
+  useEffect(() => {
+    if (!editId) {
+      if (editing) setEditing(null); // closed via back button / cleared param
+      return;
+    }
+    if (!data || editing?.id === editId) return;
+    const entry = data.entries.find((e) => e.id === editId);
+    if (entry) setEditing(entry);
+    else {
+      toast.error('That knowledge entry was not found. It may have been deleted.');
+      clearEditParam();
+    }
+    // clearEditParam is stable enough (setSearchParams identity); intentional deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [editId, data, editing]);
+
   const embeddingAppActive = status.data?.providers.embedding.connected ?? false;
   const missingCount = counts.data?.missing ?? 0;
   const totalCount = counts.data?.total ?? 0;
@@ -349,7 +383,16 @@ function EntriesTab() {
               <div className="overflow-hidden rounded-xl border border-line bg-panel">
                 <ul className="divide-y divide-line">
                   {paged.map((entry) => (
-                    <EntryRow key={entry.id} entry={entry} onEdit={() => setEditing(entry)} />
+                    <EntryRow
+                      key={entry.id}
+                      entry={entry}
+                      onEdit={() =>
+                        setSearchParams((p) => {
+                          p.set('edit', entry.id);
+                          return p;
+                        })
+                      }
+                    />
                   ))}
                 </ul>
               </div>
@@ -369,7 +412,12 @@ function EntriesTab() {
       <EntryDialog open={adding} onOpenChange={setAdding} topics={topics} />
       <EntryDialog
         open={!!editing}
-        onOpenChange={(o) => !o && setEditing(null)}
+        onOpenChange={(o) => {
+          if (!o) {
+            setEditing(null);
+            clearEditParam();
+          }
+        }}
         topics={topics}
         existing={editing}
       />
@@ -478,7 +526,13 @@ function EntryDialog({
         answer: existing?.answer ?? '',
         topic: existing?.topic ?? null,
       });
+      // The dialog stays mounted, so a prior save leaves the mutation in its
+      // success state — reset on open so SaveButton shows its idle label.
+      add.reset();
+      update.reset();
     }
+    // Runs on open transitions only; the mutation objects aren't stable deps.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [open, existing]);
 
   const set = <K extends keyof EntryInput>(k: K, v: EntryInput[K]) =>
@@ -512,7 +566,8 @@ function EntryDialog({
     <Dialog open={open} onOpenChange={onOpenChange}>
       <DialogContent
         title={isEdit ? 'Edit knowledge entry' : 'New knowledge entry'}
-        className="max-w-xl"
+        className="md:max-w-xl"
+        dividers={false}
       >
         <p className="text-xs text-muted">
           The AI matches a customer's question against the <strong>Question</strong> and replies
@@ -540,7 +595,7 @@ function EntryDialog({
             />
           </Field>
 
-          <Field label="Topic" optional hint="Optional. Pick an existing topic or type a new one.">
+          <Field label="Topic" optional hint="Pick an existing topic or type a new one.">
             <SearchableSelect
               value={form.topic ?? ''}
               onValueChange={(v) => set('topic', v || null)}

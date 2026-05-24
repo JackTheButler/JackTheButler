@@ -1,9 +1,11 @@
 import { useEffect, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
+import type { KnowledgeHitDTO } from '@janetheoperator/shared';
 import { Loading } from '@/components/Loading';
 import { ConversationList } from './ConversationList';
 import { Thread } from './Thread';
 import { ContextPanel } from './ContextPanel';
+import { KnowledgePanel } from './KnowledgePanel';
 import {
   useConversationList,
   useConversation,
@@ -20,6 +22,11 @@ type MobileView = 'list' | 'thread' | 'profile';
 export function InboxPage() {
   const [activeId, setActiveId] = useState<string | null>(null);
   const [mobileView, setMobileView] = useState<MobileView>('list');
+  // Retrieval-transparency panel: the entries of the AI message whose knowledge
+  // trigger was tapped. `hits` is retained while closing so the slide-out keeps
+  // its content.
+  const [knowledgeHits, setKnowledgeHits] = useState<KnowledgeHitDTO[]>([]);
+  const [knowledgeOpen, setKnowledgeOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const list = useConversationList(undefined);
@@ -45,6 +52,9 @@ export function InboxPage() {
   useEffect(() => {
     if (!activeId && items.length) setActiveId(items[0].id);
   }, [activeId, items]);
+
+  // Close the knowledge panel when switching conversations (its hits are stale).
+  useEffect(() => setKnowledgeOpen(false), [activeId]);
 
   const detail = useConversation(activeId);
   const convo = detail.data;
@@ -79,11 +89,20 @@ export function InboxPage() {
             onTyping={() => activeId && notifyTyping(activeId)}
             onReopen={() => activeId && reopen.mutate(activeId)}
             onClose={() => activeId && close.mutate(activeId)}
+            onShowKnowledge={(hits) => {
+              setKnowledgeHits(hits);
+              setKnowledgeOpen(true);
+            }}
           />
           <ContextPanel
             convo={convo}
             mobileShow={mobileView === 'profile'}
             onBack={() => setMobileView('thread')}
+          />
+          <KnowledgePanel
+            hits={knowledgeHits}
+            open={knowledgeOpen}
+            onClose={() => setKnowledgeOpen(false)}
           />
         </>
       ) : (

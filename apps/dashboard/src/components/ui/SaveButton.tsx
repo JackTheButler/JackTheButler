@@ -26,7 +26,12 @@ export function SaveButton({
   const [showSaved, setShowSaved] = useState(false);
 
   useEffect(() => {
-    if (!isSuccess) return;
+    // Clear immediately when the mutation is reset (e.g. a dialog reopening),
+    // not just after the timeout — otherwise the button stays "Saved".
+    if (!isSuccess) {
+      setShowSaved(false);
+      return;
+    }
     setShowSaved(true);
     const t = setTimeout(() => setShowSaved(false), successDuration);
     return () => clearTimeout(t);

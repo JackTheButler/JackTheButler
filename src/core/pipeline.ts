@@ -32,7 +32,7 @@
  * business service calls `rebuildPipeline()` so the next turn picks it
  * up without a restart.
  */
-import { and, asc, desc, eq, isNull, ne } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, ne } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
 import {
   computeEmbedding,
@@ -60,9 +60,16 @@ import {
   type Stage,
 } from '@thebutler/pipeline';
 import type { GenerationMessage } from '@janetheoperator/shared/contracts';
+import type { KnowledgeHitDTO } from '@janetheoperator/shared';
 import { buildResponsePrompt } from '@/modules/knowledge/answer.js';
 import { db } from '@/db/client.js';
-import { conversations, customers, messages, type Message } from '@/db/schema/index.js';
+import {
+  conversations,
+  customers,
+  knowledgeEntries,
+  messages,
+  type Message,
+} from '@/db/schema/index.js';
 import { events } from '@/core/events.js';
 import { logger as appLogger } from '@/core/logger.js';
 import { getBusiness } from '@/modules/business/service.js';
@@ -531,6 +538,59 @@ const logGeneratedResponse: Stage = async (ctx, _env) => {
   );
 };
 
+/**
+ * Retrieval transparency. After the AI reply is saved (so `ctx.outbound.id`
+ * exists), snapshot the knowledge entries it used onto that message row and
+ * announce them via `message.knowledge` so the dashboard can show "answered
+ * from N entries". We re-read question/answer/topic from the entries by id —
+ * the same instant as retrieval, so identical to what the model saw — which
+ * keeps KB-consistent field names and avoids parsing the combined prompt title
+ * (a ':' in a topic could otherwise corrupt a split). No-ops when there were no
+ * hits (e.g. the strict-grounding fallback path).
+ */
+const persistKnowledgeHits: Stage = async (ctx, _env) => {
+  const messageId = ctx.outbound?.id;
+  const hits = ctx.knowledgeHits ?? [];
+  if (!messageId || !ctx.conversation || hits.length === 0) return;
+
+  const rows = db
+    .select({
+      id: knowledgeEntries.id,
+      question: knowledgeEntries.question,
+      answer: knowledgeEntries.answer,
+      topic: knowledgeEntries.topic,
+    })
+    .from(knowledgeEntries)
+    .where(
+      inArray(
+        knowledgeEntries.id,
+        hits.map((h) => h.id),
+      ),
+    )
+    .all();
+  const byId = new Map(rows.map((r) => [r.id, r]));
+
+  // Preserve retrieval order + similarity; skip any entry deleted in between.
+  const snapshot: KnowledgeHitDTO[] = hits.flatMap((h) => {
+    const e = byId.get(h.id);
+    return e
+      ? [{ id: e.id, question: e.question, answer: e.answer, topic: e.topic, similarity: h.similarity }]
+      : [];
+  });
+  if (snapshot.length === 0) return;
+
+  db.update(messages)
+    .set({ knowledgeHits: JSON.stringify(snapshot) })
+    .where(eq(messages.id, messageId))
+    .run();
+
+  events.emit('message.knowledge', {
+    conversationId: ctx.conversation.id,
+    messageId,
+    knowledgeHits: snapshot,
+  });
+};
+
 /* ── The pipeline ─────────────────────────────────────────────── */
 
 function buildPipeline(): Pipeline {
@@ -565,6 +625,8 @@ function buildPipeline(): Pipeline {
       logGeneratedResponse,
       translateOutbound,
       saveOutboundMessage,
+      // After the reply row exists, attach + announce the entries it used.
+      persistKnowledgeHits,
     ],
   });
 }

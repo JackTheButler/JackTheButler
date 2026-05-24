@@ -20,6 +20,7 @@ export { SegmentedControl } from './SegmentedControl';
 export { Collapsible, CollapsibleTrigger, CollapsibleContent } from './Collapsible';
 export { Switch } from './Switch';
 export { Dialog, DialogTrigger, DialogClose, DialogContent } from './Dialog';
+export { Drawer } from './Drawer';
 export {
   DropdownMenu,
   DropdownMenuTrigger,

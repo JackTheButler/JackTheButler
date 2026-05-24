@@ -1,0 +1,1 @@
+ALTER TABLE `messages` ADD `knowledge_hits` text;

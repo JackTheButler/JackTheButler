@@ -30,6 +30,13 @@ export const messages = sqliteTable(
     translation: text('translation'),
     /** Set on lifecycle markers (e.g. 'reopened'); null for real messages. */
     event: text('event'),
+    /** Retrieval transparency: JSON snapshot of the knowledge entries the AI
+     *  used to compose this reply, captured at generation time so it survives
+     *  later edits/deletes of the entry. Shape: KnowledgeHitDTO[]
+     *  ({ id, question, answer, topic, similarity }). Only set on `ai` rows
+     *  that retrieved entries; null otherwise. Dashboard-only (never exposed to
+     *  the public widget history). */
+    knowledgeHits: text('knowledge_hits'),
     createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
   },
   (t) => ({

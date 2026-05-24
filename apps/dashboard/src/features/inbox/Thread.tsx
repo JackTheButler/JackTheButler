@@ -1,6 +1,6 @@
 import { useEffect, useLayoutEffect, useRef, useState } from 'react';
-import { Bot, User, ChevronRight, ChevronLeft, ChevronDown, Languages } from 'lucide-react';
-import type { ConversationDetail, MessageDTO } from '@janetheoperator/shared';
+import { Bot, User, BookOpen, ChevronRight, ChevronLeft, ChevronDown, Languages } from 'lucide-react';
+import type { ConversationDetail, KnowledgeHitDTO, MessageDTO } from '@janetheoperator/shared';
 import { MarkdownBody } from '@janetheoperator/widget-ui';
 import { useIsWide } from '@/lib/useMediaQuery';
 import { Button, cn } from '@/components/ui';
@@ -67,10 +67,12 @@ function Bubble({
   msg,
   defaultLang,
   conversationLanguage,
+  onShowKnowledge,
 }: {
   msg: MessageDTO;
   defaultLang: string;
   conversationLanguage: string | null;
+  onShowKnowledge?: (hits: KnowledgeHitDTO[]) => void;
 }) {
   // Per-bubble disclosure: the default-language version is always visible;
   // clicking "Show original" reveals the original underneath in the same
@@ -124,8 +126,23 @@ function Bubble({
     <div className={cn('flex', isCustomer ? 'justify-start' : 'justify-end')}>
       <div className={cn('max-w-[min(95%,600px)] rounded-xl px-3.5 py-2.5 text-sm', toneClass)}>
         {!isCustomer && (
-          <div className="mb-1 flex items-center gap-1 text-[10px] font-semibold uppercase tracking-wide opacity-80">
-            {isAi ? <Bot size={11} /> : <User size={11} />} {isAi ? 'Jane AI' : 'You'}
+          <div className="mb-1 flex items-center justify-between gap-2 text-[10px] font-semibold uppercase tracking-wide opacity-80">
+            <span className="flex items-center gap-1">
+              {isAi ? <Bot size={11} /> : <User size={11} />} {isAi ? 'Jane AI' : 'You'}
+            </span>
+            {/* Retrieval transparency: open the entries this reply was grounded in. */}
+            {isAi && msg.knowledgeHits && msg.knowledgeHits.length > 0 && onShowKnowledge && (
+              <button
+                type="button"
+                onClick={() => onShowKnowledge(msg.knowledgeHits!)}
+                className="inline-flex items-center gap-1 rounded opacity-90 transition-opacity hover:opacity-100"
+                aria-label={`Knowledge used: ${msg.knowledgeHits.length} ${msg.knowledgeHits.length === 1 ? 'entry' : 'entries'}`}
+                title="Knowledge used"
+              >
+                <BookOpen size={11} />
+                {msg.knowledgeHits.length}
+              </button>
+            )}
           </div>
         )}
 
@@ -200,6 +217,7 @@ export function Thread({
   onTyping,
   onReopen,
   onClose,
+  onShowKnowledge,
 }: {
   convo: ConversationDetail;
   mobileActive?: boolean;
@@ -211,6 +229,7 @@ export function Thread({
   onTyping?: () => void;
   onReopen: () => void;
   onClose: () => void;
+  onShowKnowledge?: (hits: KnowledgeHitDTO[]) => void;
 }) {
   const isWide = useIsWide();
   const human = convo.mode === 'human';
@@ -349,6 +368,7 @@ export function Thread({
               msg={m}
               defaultLang={defaultLang}
               conversationLanguage={convo.language}
+              onShowKnowledge={onShowKnowledge}
             />
           ))}
           {aiTyping && <TypingBubble />}

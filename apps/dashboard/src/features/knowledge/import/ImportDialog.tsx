@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import { useQueryClient } from '@tanstack/react-query';
-import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
+import { Upload, FileSpreadsheet, AlertCircle, CheckCircle2, Loader2, X } from 'lucide-react';
 import {
   Alert,
   Badge,
@@ -10,6 +10,7 @@ import {
   Select,
   SelectItem,
   Switch,
+  cn,
   toast,
 } from '@/components/ui';
 import { useJob } from '@/lib/useJob';
@@ -46,6 +47,9 @@ export function ImportDialog({
   const [skipSimilar, setSkipSimilar] = useState(false);
   const [progress, setProgress] = useState({ processed: 0, total: 0 });
   const [inserted, setInserted] = useState(0);
+  // Rows the operator removed from the preview before importing. Indices into
+  // `pairs` (stable across re-mapping; reset on a new file / close).
+  const [removed, setRemoved] = useState<Set<number>>(new Set());
 
   const headers = grid?.[0] ?? [];
   const { pairs, invalid } = useMemo(
@@ -66,6 +70,7 @@ export function ImportDialog({
     setProgress({ processed: 0, total: 0 });
     setInserted(0);
     setJobId(null);
+    setRemoved(new Set());
   }, [open]);
 
   // Step 2 finished (or failed): the embed job left 'running' → show Done.
@@ -105,6 +110,7 @@ export function ImportDialog({
       setGrid(g);
       setFileName(file.name);
       setMap(detectColumns(g[0]));
+      setRemoved(new Set());
       setPhase('review');
     } catch (e) {
       setError(e instanceof UnsupportedFileError ? e.message : 'Could not read this file.');
@@ -129,18 +135,22 @@ export function ImportDialog({
     let exists = 0;
     let similar = 0;
     let fresh = 0;
-    for (const s of statuses) {
+    statuses.forEach((s, i) => {
+      if (removed.has(i)) return;
       if (s === 'exists') exists++;
       else if (s === 'similar') similar++;
       else fresh++;
-    }
+    });
     return { exists, similar, fresh };
-  }, [statuses]);
+  }, [statuses, removed]);
 
   const importable = useMemo(
     () =>
-      pairs.filter((_, i) => statuses[i] === 'new' || (statuses[i] === 'similar' && !skipSimilar)),
-    [pairs, statuses, skipSimilar],
+      pairs.filter(
+        (_, i) =>
+          !removed.has(i) && (statuses[i] === 'new' || (statuses[i] === 'similar' && !skipSimilar)),
+      ),
+    [pairs, statuses, skipSimilar, removed],
   );
 
   const mappingReady = map.question >= 0 && map.answer >= 0 && pairs.length > 0;
@@ -218,6 +228,14 @@ export function ImportDialog({
               counts={counts}
               skipSimilar={skipSimilar}
               setSkipSimilar={setSkipSimilar}
+              removed={removed}
+              onRemove={(i) =>
+                setRemoved((prev) => {
+                  const next = new Set(prev);
+                  next.add(i);
+                  return next;
+                })
+              }
               disabled={phase === 'importing'}
               onChangeFile={() => setPhase('select')}
             />
@@ -319,6 +337,8 @@ function Review({
   counts,
   skipSimilar,
   setSkipSimilar,
+  removed,
+  onRemove,
   disabled,
   onChangeFile,
 }: {
@@ -334,6 +354,8 @@ function Review({
   counts: { exists: number; similar: number; fresh: number };
   skipSimilar: boolean;
   setSkipSimilar: (v: boolean) => void;
+  removed: Set<number>;
+  onRemove: (index: number) => void;
   disabled: boolean;
   onChangeFile: () => void;
 }) {
@@ -354,6 +376,10 @@ function Review({
       ))}
     </Select>
   );
+
+  // Carry the original index so status/check lookups and removal stay aligned
+  // to `pairs` even after rows are removed from the view.
+  const visible = pairs.map((p, i) => ({ p, i })).filter(({ i }) => !removed.has(i));
 
   return (
     <div className={disabled ? 'pointer-events-none opacity-60' : ''}>
@@ -411,35 +437,57 @@ function Review({
               <th className="px-3 py-2 font-medium">Question</th>
               <th className="px-3 py-2 font-medium">Answer</th>
               <th className="w-32 px-3 py-2 font-medium">Topic</th>
+              <th className="w-10 px-2 py-2" aria-label="Remove" />
             </tr>
           </thead>
           <tbody className="divide-y divide-line">
-            {pairs.slice(0, PREVIEW_LIMIT).map((p, i) => {
+            {visible.slice(0, PREVIEW_LIMIT).map(({ p, i }) => {
               const s = statuses[i];
+              // Already-in-KB rows can't be imported — flag them with the same
+              // amber/warning tint as the warning Alert so it's clear at a glance
+              // (the badge alone read too soft).
+              const isExists = s === 'exists';
               return (
-                <tr key={i} className={s === 'exists' ? 'text-muted' : ''}>
+                <tr key={i} className={cn(isExists && 'bg-amber-500/[0.06]')}>
                   <td className="px-3 py-2 align-top">
                     <StatusBadge status={s} score={check?.results[i]?.similar?.score} />
                   </td>
                   <td className="max-w-0 truncate px-3 py-2 align-top">{p.question}</td>
                   <td className="max-w-0 truncate px-3 py-2 align-top text-muted">{p.answer}</td>
                   <td className="truncate px-3 py-2 align-top text-muted">{p.topic ?? '—'}</td>
+                  <td className="px-2 py-2 align-top">
+                    <button
+                      type="button"
+                      onClick={() => onRemove(i)}
+                      aria-label="Remove this row"
+                      title="Remove from import"
+                      className="grid h-6 w-6 place-items-center rounded text-muted transition-colors hover:bg-line/60 hover:text-ink"
+                    >
+                      <X size={14} />
+                    </button>
+                  </td>
                 </tr>
               );
             })}
           </tbody>
         </table>
-        {pairs.length > PREVIEW_LIMIT && (
+        {visible.length > PREVIEW_LIMIT && (
           <div className="border-t border-line px-3 py-2 text-center text-xs text-muted">
-            + {pairs.length - PREVIEW_LIMIT} more rows (all valid rows import)
+            + {visible.length - PREVIEW_LIMIT} more rows (all valid rows import)
           </div>
         )}
-        {pairs.length === 0 && (
+        {pairs.length === 0 ? (
           <div className="px-3 py-6 text-center text-sm text-muted">
             {map.question < 0 || map.answer < 0
               ? 'Map the Question and Answer columns to preview.'
               : 'No valid rows. Every row is missing a question or answer.'}
           </div>
+        ) : (
+          visible.length === 0 && (
+            <div className="px-3 py-6 text-center text-sm text-muted">
+              You removed every row. Change the file to start over.
+            </div>
+          )
         )}
       </div>
 

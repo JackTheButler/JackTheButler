@@ -123,6 +123,18 @@ export type ConversationMode = 'ai' | 'human';
 export type ConversationStatus = 'open' | 'closed';
 export type MessageAuthor = 'customer' | 'agent' | 'ai' | 'system';
 
+/** A knowledge entry the AI used to compose a reply, snapshotted at generation
+ *  time. Field names mirror the knowledge_entries table for consistency; `id`
+ *  links back to the live KB entry (for a future "edit in Knowledge" link).
+ *  `similarity` is the cosine relevancy 0..1. */
+export interface KnowledgeHitDTO {
+  id: string;
+  question: string;
+  answer: string;
+  topic: string | null;
+  similarity: number;
+}
+
 export interface MessageDTO {
   id: string;
   author: MessageAuthor;
@@ -137,6 +149,10 @@ export interface MessageDTO {
   /** Set on lifecycle markers (e.g. 'reopened'); null for real messages. */
   event: string | null;
   createdAt: number;
+  /** Knowledge entries this AI reply was grounded in (retrieval transparency).
+   *  Present only on `ai` messages that retrieved entries, and only on the
+   *  dashboard read path — never populated for the public widget history. */
+  knowledgeHits?: KnowledgeHitDTO[];
 }
 
 export interface ConversationSummary {

@@ -14,6 +14,15 @@ const { stubGenerationModule, stubAiCalls, resetStubAi, lastResponderCall } =
 const { stubEmbeddingModule, setStubVector, resetStubEmbed } = await import(
   './fixtures/stub-embedding-app.js'
 );
+const { db } = await import('../src/db/client.js');
+const { knowledgeEntries } = await import('../src/db/schema/index.js');
+const { getPublicHistory } = await import('../src/modules/conversations/service.js');
+
+interface KnowledgeEvt {
+  conversationId: string;
+  messageId: string;
+  knowledgeHits: Array<{ id: string; question: string; answer: string; topic: string | null; similarity: number }>;
+}
 
 // Both a generation app (replies) and an embedding app (KB search) active.
 setAppModules([stubGenerationModule, stubEmbeddingModule]);
@@ -137,5 +146,51 @@ describe('KB → AI pipeline (RAG)', () => {
     expect(reply.content).toBeTruthy();
     // Embedding was computed (embed app active) — there was a utility/embed call path.
     expect(stubAiCalls.length).toBeGreaterThan(0);
+  });
+
+  it('snapshots retrieved entries onto the AI message and announces them', async () => {
+    // Isolate from entries other tests added (all embed to the default vector).
+    db.delete(knowledgeEntries).run();
+
+    const Q = 'Where is my package?';
+    const ASK = 'tracking my order';
+    setStubVector(ASK, [1, 0, 0]); // matches the entry's default content vector
+
+    await authed('/api/app/knowledge/entries', {
+      method: 'POST',
+      body: JSON.stringify({ question: Q, answer: 'Track it from the link in your email.', topic: 'Shipping' }),
+    });
+
+    // The transparency event fires just after the reply row is saved.
+    const knowledge = new Promise<KnowledgeEvt>((resolve, reject) => {
+      const off = events.on('message.knowledge', (p) => {
+        clearTimeout(t);
+        off();
+        resolve(p as KnowledgeEvt);
+      });
+      const t = setTimeout(() => {
+        off();
+        reject(new Error('no message.knowledge event'));
+      }, 500);
+    });
+    await ingest('webchat', 'sess-kb-transparency', ASK);
+    const evt = await knowledge;
+
+    // Announced with the structured, KB-consistent snapshot.
+    expect(evt.knowledgeHits).toHaveLength(1);
+    expect(evt.knowledgeHits[0]).toMatchObject({ question: Q, topic: 'Shipping' });
+    expect(evt.knowledgeHits[0].answer).toContain('Track it from the link');
+    expect(evt.knowledgeHits[0].similarity).toBeGreaterThan(0.99);
+
+    // Persisted and served on the dashboard read path.
+    const detail = await (await authed(`/api/app/conversations/${evt.conversationId}`)).json();
+    const ai = detail.messages.find((m: { author: string }) => m.author === 'ai');
+    expect(ai.knowledgeHits).toHaveLength(1);
+    expect(ai.knowledgeHits[0]).toMatchObject({ question: Q, topic: 'Shipping' });
+
+    // Privacy: the public widget history must never expose the grounding.
+    const publicMsgs = getPublicHistory('webchat', 'sess-kb-transparency');
+    expect(publicMsgs.some((m) => m.author === 'ai')).toBe(true);
+    expect(publicMsgs.every((m) => m.knowledgeHits === undefined)).toBe(true);
   });
 });

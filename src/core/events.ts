@@ -1,5 +1,5 @@
 import { EventEmitter } from 'node:events';
-import type { MessageDTO } from '@janetheoperator/shared';
+import type { KnowledgeHitDTO, MessageDTO } from '@janetheoperator/shared';
 import type { Job } from '@/core/jobs.js';
 
 /**
@@ -46,9 +46,21 @@ export interface TypingSignal {
   channelExternalId: string;
 }
 
+/** Retrieval transparency: the knowledge entries an AI reply was grounded in,
+ *  emitted just after the reply is saved (the AI message row already exists, so
+ *  consumers patch their cached copy by `messageId`). Kept separate from
+ *  `message.updated` so it can't clobber the language/translation patch.
+ *  Dashboard-only — not forwarded to the public widget. */
+export interface MessageKnowledge {
+  conversationId: string;
+  messageId: string;
+  knowledgeHits: KnowledgeHitDTO[];
+}
+
 export interface EventMap {
   'message.created': MessageCreated;
   'message.updated': MessageUpdated;
+  'message.knowledge': MessageKnowledge;
   'assistant.typing': TypingSignal;
   'staff.typing': TypingSignal;
   'job.progress': Job;

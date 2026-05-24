@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
-import { AtSign, Hash, MessageSquare, ChevronLeft } from 'lucide-react';
+import { AtSign, Hash, MessageSquare } from 'lucide-react';
 import type { ConversationDetail } from '@janetheoperator/shared';
-import { Avatar, Button, cn } from '@/components/ui';
+import { Avatar, Drawer } from '@/components/ui';
 import { channelLabel } from './channel';
 import { customerLabel } from './format';
 
@@ -55,34 +55,21 @@ export function ContextPanel({
 }) {
   return (
     <>
+      {/* Wide screens: a persistent column. Below xl: a contextual drawer. */}
       <aside className="hidden w-72 shrink-0 overflow-y-auto border-l border-line bg-panel xl:block">
         <ContextBody convo={convo} />
       </aside>
 
-      <div
-        onClick={onBack}
-        className={cn(
-          'fixed inset-0 z-40 hidden bg-black/40 transition-opacity duration-300 md:block xl:hidden',
-          mobileShow ? 'opacity-100' : 'pointer-events-none opacity-0',
-        )}
-      />
-
-      <div
-        className={cn(
-          'fixed inset-y-0 right-0 z-50 flex w-full flex-col bg-panel transition-transform duration-300 ease-out md:w-[26rem] md:border-l md:border-line xl:hidden',
-          mobileShow ? 'translate-x-0' : 'pointer-events-none translate-x-full',
-        )}
+      <Drawer
+        open={mobileShow}
+        onClose={onBack ?? (() => {})}
+        title="Customer details"
+        widthClass="md:w-[26rem]"
+        closeLabel="Back to conversation"
+        className="xl:hidden"
       >
-        <header className="flex items-center gap-2 border-b border-line px-3 py-3">
-          <Button variant="ghost" size="icon" onClick={onBack} aria-label="Back to conversation">
-            <ChevronLeft size={20} />
-          </Button>
-          <span className="text-sm font-semibold">Customer details</span>
-        </header>
-        <div className="flex-1 overflow-y-auto">
-          <ContextBody convo={convo} />
-        </div>
-      </div>
+        <ContextBody convo={convo} />
+      </Drawer>
     </>
   );
 }

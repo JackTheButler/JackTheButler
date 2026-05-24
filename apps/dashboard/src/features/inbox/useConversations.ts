@@ -1,6 +1,10 @@
 import { useEffect, useRef, useState } from 'react';
 import { useQueryClient, useQuery, useMutation } from '@tanstack/react-query';
-import type { ConversationDetail, ConversationSummary } from '@janetheoperator/shared';
+import type {
+  ConversationDetail,
+  ConversationSummary,
+  KnowledgeHitDTO,
+} from '@janetheoperator/shared';
 import { api } from '@/lib/api';
 import { useRealtimeEvent } from '@/lib/realtime';
 
@@ -97,6 +101,25 @@ export function useInboxRealtime() {
               m.id === data.messageId
                 ? { ...m, language: data.language, translation: data.translation }
                 : m,
+            ),
+          }
+        : prev,
+    );
+  });
+
+  useRealtimeEvent<{
+    conversationId: string;
+    messageId: string;
+    knowledgeHits: KnowledgeHitDTO[];
+  }>('message.knowledge', (data) => {
+    // Retrieval transparency attached just after the AI reply was saved. Patch
+    // the cached message so its "knowledge used" trigger appears live.
+    qc.setQueryData<ConversationDetail>(['conversation', data?.conversationId], (prev) =>
+      prev
+        ? {
+            ...prev,
+            messages: prev.messages.map((m) =>
+              m.id === data.messageId ? { ...m, knowledgeHits: data.knowledgeHits } : m,
             ),
           }
         : prev,

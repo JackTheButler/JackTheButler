@@ -49,8 +49,9 @@ export function DialogContent({
             ? 'inset-0 data-[state=open]:animate-[fade-in_150ms_ease-out]'
             : cn(
                 'shadow-xl',
-                // mobile: bottom sheet
-                'inset-x-0 bottom-0 max-h-[90vh] rounded-t-xl',
+                // mobile: bottom sheet. `mx-auto` centers it if a caller caps
+                // the width (e.g. md:max-w-*); harmless when it's full-width.
+                'inset-x-0 bottom-0 mx-auto max-h-[90vh] rounded-t-xl',
                 // desktop: centered modal
                 'md:inset-x-auto md:bottom-auto md:left-1/2 md:top-1/2 md:max-h-[85vh] md:w-full md:max-w-lg md:-translate-x-1/2 md:-translate-y-1/2 md:rounded-xl',
                 'data-[state=open]:animate-[dialog-in_180ms_ease-out]',

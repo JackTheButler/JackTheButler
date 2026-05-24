@@ -3,6 +3,7 @@ import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import type {
   ConversationDetail,
   ConversationSummary,
+  KnowledgeHitDTO,
   MessageDTO,
 } from '@janetheoperator/shared';
 import { db } from '@/db/client.js';
@@ -54,6 +55,19 @@ function toMessageDTO(row: {
     event: row.event,
     createdAt: row.createdAt.getTime(),
   };
+}
+
+/** Parse the stored knowledge-hits snapshot. Returns undefined when absent so
+ *  the DTO field is simply omitted (and stays off the public history path,
+ *  which never reads this column). */
+function parseKnowledgeHits(json: string | null): KnowledgeHitDTO[] | undefined {
+  if (!json) return undefined;
+  try {
+    const hits = JSON.parse(json) as KnowledgeHitDTO[];
+    return hits.length ? hits : undefined;
+  } catch {
+    return undefined;
+  }
 }
 
 function getOrThrow(id: string): Conversation {
@@ -306,7 +320,12 @@ export function getConversation(id: string): ConversationDetail {
       ? { id: customer.id, name: customer.name, contact: customer.contact }
       : null,
     language: c.language,
-    messages: msgs.map(toMessageDTO),
+    // Dashboard read path attaches retrieval transparency; the public history
+    // (getPublicHistory) deliberately uses toMessageDTO without it.
+    messages: msgs.map((m) => ({
+      ...toMessageDTO(m),
+      knowledgeHits: parseKnowledgeHits(m.knowledgeHits),
+    })),
   };
 }
 

@@ -1,10 +1,9 @@
 import { useState, type KeyboardEvent } from 'react';
 import { Link } from 'react-router-dom';
-import { ChevronRight, ChevronDown, SlidersHorizontal, ArrowRight, Send, Loader2 } from 'lucide-react';
+import { ChevronDown, SlidersHorizontal, ArrowRight, Send, Loader2 } from 'lucide-react';
 import { MarkdownBody } from '@janetheoperator/widget-ui';
 import {
   Alert,
-  Badge,
   Collapsible,
   CollapsibleContent,
   CollapsibleTrigger,
@@ -15,6 +14,7 @@ import { JaneLogo } from '@/components/JaneLogo';
 import { JaneLoader } from '@/components/JaneLoader';
 import { useSession } from '@/features/auth/useAuth';
 import { TimingRibbon, type AskTimings } from './TimingRibbon';
+import { KnowledgeHitList } from './KnowledgeHitList';
 
 /** "Ask Jane" — test the knowledge base. Streams progress from the backend
  *  (POST /knowledge/ask, NDJSON): phase → matches → answer. Mirrors live chat. */
@@ -72,15 +72,6 @@ export function KbTestPanel() {
   // arrive, so the ribbon grows segment-by-segment during the stream.
   const [timings, setTimings] = useState<AskTimings>({});
   const [error, setError] = useState<string | null>(null);
-  const [expanded, setExpanded] = useState<Set<string>>(new Set());
-
-  const toggle = (id: string) =>
-    setExpanded((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) next.delete(id);
-      else next.add(id);
-      return next;
-    });
 
   const ask = async () => {
     const question = q.trim();
@@ -92,7 +83,6 @@ export function KbTestPanel() {
     setAnswer('');
     setTimings({});
     setError(null);
-    setExpanded(new Set());
 
     try {
       const res = await fetch('/api/app/knowledge/ask', {
@@ -223,51 +213,22 @@ export function KbTestPanel() {
             </Alert>
           )}
 
-          {/* Retrieved entries — appear as soon as matches arrive. */}
+          {/* Retrieved entries — appear as soon as matches arrive. Shares the
+              KnowledgeHitList component with the inbox transparency panel. */}
           {matches.length > 0 && (
             <div className={answer || working || error ? 'border-t border-ink/10 pt-3' : undefined}>
               <div className="mb-1.5 text-xs font-medium text-muted">
                 Retrieved from {matches.length} {matches.length === 1 ? 'entry' : 'entries'}
               </div>
-              <ul className="divide-y divide-line overflow-hidden rounded-lg border border-line bg-surface">
-                {matches.map((m) => {
-                  const open = expanded.has(m.id);
-                  return (
-                    <li key={m.id}>
-                      <button
-                        type="button"
-                        onClick={() => toggle(m.id)}
-                        aria-expanded={open}
-                        className="flex w-full items-center gap-2 px-3 py-2 text-left hover:bg-panel"
-                      >
-                        <ChevronRight
-                          size={14}
-                          className={cn(
-                            'shrink-0 text-muted transition-transform',
-                            open && 'rotate-90',
-                          )}
-                        />
-                        <span className="truncate text-sm font-medium text-ink" dir="auto">
-                          {m.question}
-                        </span>
-                        {m.topic && (
-                          <Badge tone="muted" shape="tag" className="shrink-0">
-                            {m.topic}
-                          </Badge>
-                        )}
-                        <span className="ml-auto shrink-0 rounded-full bg-accent-soft px-2 py-0.5 text-[11px] font-semibold tabular-nums text-ink">
-                          {Math.round(m.score * 100)}% match
-                        </span>
-                      </button>
-                      {open && (
-                        <p className="px-3 pb-3 pl-[1.625rem] text-sm text-muted" dir="auto">
-                          {m.answer}
-                        </p>
-                      )}
-                    </li>
-                  );
-                })}
-              </ul>
+              <KnowledgeHitList
+                hits={matches.map((m) => ({
+                  id: m.id,
+                  question: m.question,
+                  answer: m.answer,
+                  topic: m.topic,
+                  similarity: m.score,
+                }))}
+              />
             </div>
           )}
 
