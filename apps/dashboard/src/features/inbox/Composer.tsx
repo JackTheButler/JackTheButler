@@ -42,6 +42,7 @@ export function Composer({
   prefill?: { text: string } | null;
 }) {
   const trackRef = useRef<HTMLDivElement | null>(null);
+  const textareaRef = useRef<HTMLTextAreaElement | null>(null);
   const startX = useRef(0);
   const [x, setX] = useState(0);
   const [dragging, setDragging] = useState(false);
@@ -58,6 +59,16 @@ export function Composer({
   useEffect(() => {
     if (prefill) setDraft(prefill.text);
   }, [prefill]);
+
+  // Auto-grow the textarea with its content (up to a cap, then it scrolls) so a
+  // multi-line reply — especially a copilot draft — is readable, not a single
+  // scrolling line.
+  useEffect(() => {
+    const el = textareaRef.current;
+    if (!el) return;
+    el.style.height = 'auto';
+    el.style.height = `${Math.min(el.scrollHeight, 160)}px`;
+  }, [draft, human]);
 
   // Throttle the typing broadcast — one ping per keystroke burst, not per
   // keypress. The widget's own timeout clears the indicator after a pause.
@@ -159,23 +170,26 @@ export function Composer({
         </div>
       </div>
 
-      <div ref={trackRef} className="relative flex h-11 items-center bg-panel">
+      <div ref={trackRef} className="relative flex min-h-[2.75rem] items-center bg-panel">
         {human ? (
-          <input
+          <textarea
+            ref={textareaRef}
             autoFocus
+            rows={1}
             value={draft}
             onChange={(e) => {
               setDraft(e.target.value);
               pingTyping();
             }}
             onKeyDown={(e) => {
+              // Enter sends; Shift+Enter inserts a newline.
               if (e.key === 'Enter' && !e.shiftKey) {
                 e.preventDefault();
                 send();
               }
             }}
             placeholder="Type a reply…"
-            className="h-full flex-1 bg-transparent pl-3 pr-12 text-sm outline-none placeholder:text-muted"
+            className="flex-1 resize-none bg-transparent py-2.5 pl-3 pr-12 text-sm leading-snug outline-none placeholder:text-muted"
           />
         ) : (
           <span
@@ -192,11 +206,15 @@ export function Composer({
           onClick={human ? send : undefined}
           onPointerDown={onPointerDown}
           className={cn(
-            'absolute left-1 top-1/2 grid h-8 w-8 touch-none place-items-center rounded-lg bg-accent text-on-accent',
+            'absolute left-1 grid h-8 w-8 touch-none place-items-center rounded-lg bg-accent text-on-accent',
+            // Bottom-aligned in human mode (so a tall draft keeps Send reachable);
+            // vertically centred while sliding to take over. For a one-line draft
+            // the two coincide, so takeover stays smooth.
+            human ? 'bottom-1.5' : 'top-1/2',
             !dragging && animate && 'transition-transform duration-200 ease-out',
             human ? 'cursor-pointer' : 'cursor-grab active:cursor-grabbing',
           )}
-          style={{ transform: `translate(${x}px, -50%)` }}
+          style={{ transform: human ? `translateX(${x}px)` : `translate(${x}px, -50%)` }}
         >
           {human ? <Send size={15} /> : <ChevronsRight size={16} />}
         </button>
