@@ -4,6 +4,7 @@ import {
   MessageCircle,
   MessageCircleDashed,
   BookOpen,
+  Activity,
   BarChart3,
   Blocks,
   Bot,
@@ -41,6 +42,7 @@ import { JaneLogo } from '@/components/JaneLogo';
 // Settings for agents (who don't see Assistant/Apps) — so it never disappears.
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
+  { to: '/analytics', label: 'Analytics', icon: Activity },
   { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
   { to: '/team', label: 'Team', icon: Users, adminOnly: true },

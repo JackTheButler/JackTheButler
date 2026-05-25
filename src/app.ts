@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import { createNodeWebSocket } from '@hono/node-ws';
 import { onError } from '@/core/http.js';
 import { authRoutes } from '@/modules/auth/routes.js';
+import { analyticsRoutes } from '@/modules/analytics/routes.js';
 import { appsRoutes } from '@/modules/apps/routes.js';
 import { assistantRoutes } from '@/modules/assistant/routes.js';
 import { businessRoutes } from '@/modules/business/routes.js';
@@ -52,6 +53,7 @@ registerDashboardSocket(app, upgradeWebSocket);
 // Demo protected route — proves the auth gate. Replaced by real modules.
 app.get('/api/app/ping', (c) => c.json({ message: 'pong', user: c.get('user') }));
 
+app.route('/api/app/analytics', analyticsRoutes);
 app.route('/api/app/apps', appsRoutes);
 app.route('/api/app/assistant', assistantRoutes);
 app.route('/api/app/business', businessRoutes);
