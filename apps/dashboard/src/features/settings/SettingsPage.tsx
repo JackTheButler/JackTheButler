@@ -233,6 +233,8 @@ function AccountTab() {
         </div>
       </Card>
 
+      <NotificationsCard />
+
       <Card title="Change password">
         <div className="grid gap-4 sm:grid-cols-3">
           <Field label="Current password">
@@ -270,8 +272,6 @@ function AccountTab() {
           </Button>
         </div>
       </Card>
-
-      <NotificationsCard />
     </div>
   );
 }

@@ -26,8 +26,8 @@ export function NotificationsCard() {
   return (
     <Card title="Notifications">
       <SwitchField
-        label="Desktop notifications"
-        desc="Get notified about new messages assigned to you, even when this tab isn't focused. Applies to this device."
+        label="Push notifications"
+        desc="Get notified about new messages assigned to you, even when the app isn't open. Applies to this device."
         checked={push.subscribed}
         onCheckedChange={onToggle}
         disabled={!push.supported || !push.enabled || push.busy}
