@@ -53,8 +53,8 @@ export function setStubDetectedLanguage(lang: string) {
 }
 
 /** Configure the stub translator to return `text` for a specific direction.
- *  Pass `from` / `to` as BCP-47 codes matching what the package's translator
- *  prompt embeds ("Translate from X to Y …"). */
+ *  Pass `from` / `to` as BCP-47 codes matching what the translator prompt
+ *  embeds ("probably in {from} … translate it into {to}"). */
 export function setStubTranslation(from: string, to: string, text: string) {
   stubTranslations[`${from}->${to}`] = text;
 }
@@ -91,11 +91,12 @@ export const stubGenerationModule: AppModule<StubAiConfig> = {
           return { content: stubDetectedLanguage, usage: { inputTokens: 1, outputTokens: 1 } };
         }
         if (request.purpose === 'translation') {
-          // Parse direction out of the system prompt: "… from {from} to {to} …".
-          // BCP-47 codes are letters + optional region (e.g. en, en-US, fa).
+          // Parse direction out of the system prompt: "… probably in {from} …
+          // translate it into {to} …". Codes are letters + optional region.
           const system = request.messages.find((m) => m.role === 'system')?.content ?? '';
-          const m = /from\s+([a-zA-Z-]+)\s+to\s+([a-zA-Z-]+)/.exec(system);
-          const key = m ? `${m[1]}->${m[2]}` : '';
+          const from = /probably in ([a-zA-Z-]+)/.exec(system)?.[1];
+          const to = /into ([a-zA-Z-]+)/.exec(system)?.[1];
+          const key = from && to ? `${from}->${to}` : '';
           const content = stubTranslations[key] ?? '[translated]';
           return { content, usage: { inputTokens: 1, outputTokens: 1 } };
         }

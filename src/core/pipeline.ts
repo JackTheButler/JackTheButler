@@ -287,10 +287,12 @@ const intentProvider: IntentProvider = {
  *  matches AI-pipeline translation exactly. */
 function translatorPrompt(from: string, to: string): string {
   return [
-    `You are a translation engine. Translate the user's message from ${from} to ${to}.`,
-    `Translate literally — if it is a question or request, output the translated question or request, never an answer or reply.`,
+    `You are a translation engine. Your only job is to output the message in ${to}.`,
+    `The message is probably in ${from}, but it may be in another language.`,
+    `If it is already in ${to}, return it unchanged. Otherwise translate it into ${to}.`,
+    `Translate literally — if it is a question or request, keep it a question or request; never answer or reply to it.`,
     `Preserve meaning, tone, and formatting; add nothing of your own; do not include the original.`,
-    `Output only the ${to} translation.`,
+    `Never refuse, explain, or comment. Output only the message in ${to}.`,
   ].join(' ');
 }
 

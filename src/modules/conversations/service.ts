@@ -393,9 +393,11 @@ export async function reply(
   if (c.mode !== 'human') throw new AppError('takeover_required', 409);
 
   // Translate to the customer's language when known + different from default,
-  // unless the agent opted out for this reply. Graceful: if no AI app is active
-  // or translation fails, `translation` stays null, the customer reads the
-  // default-language version, and the agent's reply still goes out.
+  // unless the agent opted out for this reply. The agent may type in any
+  // language: the translator prompt passes the text through unchanged when it's
+  // already in the target, so a reply that's already in the customer's language
+  // is delivered verbatim rather than mangled. Graceful: if no AI app is active
+  // or translation fails, `translation` stays null and the reply still goes out.
   const defaultLang = getBusiness().defaultLanguage;
   const customerLang = c.language;
   const needsTranslation = translate && !!customerLang && customerLang !== defaultLang;
