@@ -190,3 +190,36 @@ describe('KPI metrics', () => {
     expect(b.heatmap.every((row) => row.length === 24)).toBe(true);
   });
 });
+
+describe('active agents (presence)', () => {
+  const admin = { id: '', role: 'admin' as const };
+  const setSeen = (at: Date | null) =>
+    db.update(schema.staff).set({ lastSeenAt: at }).where(eq(schema.staff.id, agentId)).run();
+  beforeAll(() => {
+    admin.id = agentId;
+  });
+
+  it('excludes staff with no heartbeat yet', () => {
+    setSeen(null);
+    expect(analytics.getLiveStats(admin).activeAgents).toBe(0);
+  });
+
+  it('counts staff seen within the window (team scope)', () => {
+    setSeen(new Date());
+    const live = analytics.getLiveStats(admin);
+    expect(live.scope).toBe('team');
+    expect(live.activeAgents).toBe(1);
+  });
+
+  it('drops staff whose heartbeat is older than the window', () => {
+    setSeen(new Date(Date.now() - 10 * 60_000)); // window is 5 min
+    expect(analytics.getLiveStats(admin).activeAgents).toBe(0);
+  });
+
+  it('is null in agent scope', () => {
+    setSeen(new Date());
+    const mine = analytics.getLiveStats(admin, agentId);
+    expect(mine.scope).toBe('agent');
+    expect(mine.activeAgents).toBeNull();
+  });
+});

@@ -50,6 +50,7 @@ export async function createInitialAdmin(input: {
     status: 'active',
     inviteToken: null,
     lastLoginAt: now,
+    lastSeenAt: null,
     createdAt: now,
   };
   db.insert(staff).values(row).run();

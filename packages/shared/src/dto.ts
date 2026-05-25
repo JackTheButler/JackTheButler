@@ -212,14 +212,17 @@ export interface PushNotificationPayload {
  * server: admins get the team view (`scope: 'team'`), agents get their own
  * (`scope: 'agent'`). Fields not relevant to a scope are null.
  *
- * All values are derivable from the current schema with no migration —
- * "agents online" and "resolved today" are intentionally excluded until
- * presence tracking and a close-event/closedAt land.
+ * Most values are derivable from the live tables with no extra bookkeeping.
+ * `activeAgents` is the one presence-backed field: it reads `staff.lastSeenAt`,
+ * refreshed by the dashboard socket heartbeat (see core/realtime.ts).
  */
 export interface LiveStats {
   scope: 'team' | 'agent';
   /** Open conversations with no assignee (team scope only). */
   unassigned: number | null;
+  /** Staff seen via the dashboard socket within the presence window (team
+   *  scope only; null in agent scope). A best-effort "who's around now". */
+  activeAgents: number | null;
   /** The viewer's own open conversations (agent scope only). */
   myOpen: number | null;
   /** Open conversations whose latest message is from the customer — i.e.

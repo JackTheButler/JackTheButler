@@ -50,6 +50,22 @@ function awaitingStats(open: { id: string; lastMessageAt: Date; needsHuman: bool
   return { awaitingReply, oldestWaitMinutes: Math.floor(oldestWaitMs / 60_000) };
 }
 
+/** How recently a staff row's `lastSeenAt` must be for them to count as
+ *  "active now". The dashboard heartbeat fires every ~45s, so this tolerates a
+ *  few missed beats (a brief network blip) without dropping the agent. */
+const ACTIVE_AGENT_WINDOW_MS = 5 * 60_000;
+
+/** Count of active-status staff whose presence heartbeat is within the window. */
+function activeAgentCount(): number {
+  const cutoff = new Date(Date.now() - ACTIVE_AGENT_WINDOW_MS);
+  const row = db
+    .select({ count: sql<number>`count(*)` })
+    .from(staff)
+    .where(and(eq(staff.status, 'active'), gte(staff.lastSeenAt, cutoff)))
+    .get();
+  return Number(row?.count ?? 0);
+}
+
 /**
  * Point-in-time queue stats, scoped to the viewer's role.
  *
@@ -75,6 +91,7 @@ export function getLiveStats(
     return {
       scope: 'team',
       unassigned: open.filter((c) => !c.assignedAgentId).length,
+      activeAgents: activeAgentCount(),
       myOpen: null,
       ...awaitingStats(open),
     };
@@ -85,6 +102,7 @@ export function getLiveStats(
   return {
     scope: 'agent',
     unassigned: null,
+    activeAgents: null,
     myOpen: mine.length,
     ...awaitingStats(mine),
   };

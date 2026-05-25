@@ -147,9 +147,12 @@ Consequences of the projection model:
   `from`/`to` date window (inclusive `YYYY-MM-DD`); the dashboard drives it with
   a reusable `DateRangePicker` primitive and persists `from`/`to`/`agent` in the
   URL. Labels adapt to the selected scope (team / person's name / "you").
+- **Active agents:** the live strip shows a presence-backed count (team scope),
+  staff whose dashboard socket heartbeat (`staff.lastSeenAt`, refreshed by
+  core/realtime.ts) is within the last 5 minutes.
 - **Planned:** CSAT (needs a ratings table + a post-chat widget prompt). Blocked
   for lack of data: top topics (tagging), detailed handoff reasons (escalation
-  reason), agents-online (presence).
+  reason).
 
 Note: the projection only runs in the live process (the scheduler is started
 from `index.ts`, not `app.ts`), so tests and a just-migrated DB start with an

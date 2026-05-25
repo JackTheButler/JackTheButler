@@ -20,6 +20,10 @@ export const staff = sqliteTable('staff', {
     .default('active'),
   inviteToken: text('invite_token'),
   lastLoginAt: integer('last_login_at', { mode: 'timestamp' }),
+  // Best-effort presence: refreshed while a dashboard socket is open (login
+  // touches it once; `lastLoginAt` only marks session start). Use a recency
+  // window (e.g. last 5 min) to derive "active agents".
+  lastSeenAt: integer('last_seen_at', { mode: 'timestamp' }),
   createdAt: integer('created_at', { mode: 'timestamp' }).notNull(),
 });
 

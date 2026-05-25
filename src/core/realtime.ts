@@ -1,6 +1,10 @@
 import type { Env, Hono } from 'hono';
 import type { UpgradeWebSocket } from 'hono/ws';
+import { eq } from 'drizzle-orm';
 import { events, type EventMap } from '@/core/events.js';
+import { db } from '@/db/client.js';
+import { staff } from '@/db/schema/staff.js';
+import type { AuthUser } from '@/modules/auth/middleware.js';
 
 /**
  * Authenticated dashboard event channel. One WebSocket per agent tab,
@@ -46,19 +50,48 @@ forward('assistant.typing');
 forward('customer.typing');
 forward('job.progress');
 
+/**
+ * Best-effort agent presence. Every open dashboard socket refreshes the
+ * staff row's `lastSeenAt`; an analytics view derives "active agents" from a
+ * recency window. DB writes are throttled per agent so the client heartbeat
+ * (a `ping` every ~45s, plus the connect) can't hammer SQLite — accuracy is
+ * unaffected since we always stamp a fresh-enough `now`.
+ */
+const PRESENCE_WRITE_MS = 30_000;
+const lastPresenceWrite = new Map<string, number>();
+
+function touchPresence(staffId: string): void {
+  const now = Date.now();
+  if (now - (lastPresenceWrite.get(staffId) ?? 0) < PRESENCE_WRITE_MS) return;
+  lastPresenceWrite.set(staffId, now);
+  try {
+    db.update(staff).set({ lastSeenAt: new Date() }).where(eq(staff.id, staffId)).run();
+  } catch {
+    /* presence is best-effort; a failed write just means a stale lastSeenAt */
+  }
+}
+
 export function registerDashboardSocket<E extends Env>(
   app: Hono<E>,
   upgradeWebSocket: UpgradeWebSocket,
 ): void {
   app.get(
     '/api/app/realtime',
-    upgradeWebSocket(() => {
+    upgradeWebSocket((c) => {
+      // Set by `requireAuth` on the /api/app/* wildcard guarding this upgrade.
+      const staffId = (c.get('user') as AuthUser | undefined)?.id;
       let remove = () => {};
       return {
         onOpen(_evt, ws) {
           const sink: Sink = (d) => ws.send(d);
           agents.add(sink);
           remove = () => agents.delete(sink);
+          if (staffId) touchPresence(staffId);
+        },
+        // The client sends a periodic `ping`; any inbound frame counts as
+        // liveness and refreshes presence (throttled in touchPresence).
+        onMessage() {
+          if (staffId) touchPresence(staffId);
         },
         onClose() {
           remove();

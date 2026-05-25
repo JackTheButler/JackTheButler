@@ -21,6 +21,7 @@ function tilesFor(s: LiveStats, subject?: Subject): { label: string; value: numb
   const oldest = { label: 'Oldest wait', value: waitLabel(s.oldestWaitMinutes, s.awaitingReply > 0) };
   if (s.scope === 'team') {
     return [
+      { label: 'Active agents', value: s.activeAgents ?? 0 },
       { label: 'Unassigned', value: s.unassigned ?? 0 },
       { label: 'Awaiting reply', value: s.awaitingReply },
       oldest,

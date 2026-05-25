@@ -50,6 +50,14 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
     const connect = () => {
       const proto = location.protocol === 'https:' ? 'wss' : 'ws';
       ws = new WebSocket(`${proto}://${location.host}/api/app/realtime`);
+      // Liveness heartbeat: refreshes this agent's server-side presence
+      // (lastSeenAt) while the tab stays open. Started on open, stopped on close.
+      let ping: ReturnType<typeof setInterval> | undefined;
+      ws.onopen = () => {
+        ping = setInterval(() => {
+          if (ws?.readyState === WebSocket.OPEN) ws.send(JSON.stringify({ type: 'ping' }));
+        }, 45_000);
+      };
       ws.onmessage = (e) => {
         try {
           const { type, data } = JSON.parse(e.data);
@@ -59,6 +67,7 @@ export function RealtimeProvider({ children }: { children: ReactNode }) {
         }
       };
       ws.onclose = () => {
+        clearInterval(ping);
         if (alive) setTimeout(connect, 2000);
       };
     };

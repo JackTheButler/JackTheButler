@@ -64,6 +64,7 @@ export function inviteStaff(email: string, role: StaffRole): InviteResult {
     status: 'invited',
     inviteToken: token,
     lastLoginAt: null,
+    lastSeenAt: null,
     createdAt: new Date(),
   };
   db.insert(staff).values(row).run();
