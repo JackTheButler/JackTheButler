@@ -243,8 +243,8 @@ export const queue = {
  * Volume heatmap: rows = weekday (Mon–Sun), cols = hour (0–23), value = relative
  * intensity 0–1. Peaks late morning and mid-afternoon on weekdays.
  */
-export function heatmap(): number[][] {
-  const r = rng(99);
+export function heatmap(seed = 99): number[][] {
+  const r = rng(seed);
   const rows: number[][] = [];
   for (let d = 0; d < 7; d += 1) {
     const row: number[] = [];
@@ -261,3 +261,257 @@ export function heatmap(): number[][] {
 }
 
 export const WEEKDAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+
+/* ── Agent-scoped (operational) data ───────────────────────────────────
+ * Surfaced when a specific agent is selected. Seeded by the agent's name so
+ * each teammate gets stable-but-distinct numbers. */
+
+function strSeed(s: string): number {
+  let h = 2166136261;
+  for (let i = 0; i < s.length; i += 1) {
+    h ^= s.charCodeAt(i);
+    h = Math.imul(h, 16777619);
+  }
+  return h >>> 0;
+}
+
+/** Live snapshot for one agent (the top strip in agent mode). */
+export function agentQueue(agent: Agent) {
+  const r = rng(strSeed(agent));
+  const open = 3 + Math.round(r() * 6);
+  return {
+    open,
+    awaitingReply: Math.max(1, open - Math.round(r() * 3)),
+    oldestWaitMin: 8 + Math.round(r() * 40),
+    resolvedToday: 10 + Math.round(r() * 14),
+  };
+}
+
+/** Personal KPI tiles. Reuses the Kpi shape; `hint` carries the team-average
+ *  comparison so an agent sees how they stack up. */
+export function agentKpis(agent: Agent): Kpi[] {
+  const r = rng(strSeed(agent) ^ 0x9e3779b9);
+  const q = agentQueue(agent);
+  const frtSec = 75 + Math.round(r() * 50); // 1m15s–2m05s
+  const csat = +(4.4 + r() * 0.5).toFixed(1);
+  const reopened = 2 + Math.round(r() * 5);
+  const fmt = (s: number) => `${Math.floor(s / 60)}m ${String(s % 60).padStart(2, '0')}s`;
+  return [
+    {
+      id: 'my-open',
+      label: 'My open',
+      value: String(q.open),
+      delta: Math.round((r() - 0.5) * 20),
+      goodWhenUp: false,
+      hint: `Oldest ${q.oldestWaitMin}m ago`,
+    },
+    {
+      id: 'pending-me',
+      label: 'Pending on me',
+      value: String(Math.max(1, q.open - 2)),
+      delta: Math.round((r() - 0.5) * 20),
+      goodWhenUp: false,
+      hint: `${2 + Math.round(r() * 3)} pending on customer`,
+    },
+    {
+      id: 'resolved-today',
+      label: 'Resolved today',
+      value: String(q.resolvedToday),
+      delta: Math.round(r() * 18),
+      goodWhenUp: true,
+      hint: 'Team avg 17',
+    },
+    {
+      id: 'my-frt',
+      label: 'My first response',
+      value: fmt(frtSec),
+      delta: -Math.round(r() * 18),
+      goodWhenUp: false,
+      hint: 'Team 1m 48s',
+    },
+    {
+      id: 'my-csat',
+      label: 'My CSAT',
+      value: `${csat.toFixed(1)} / 5`,
+      delta: +(r() * 4).toFixed(1),
+      goodWhenUp: true,
+      hint: 'Team 4.6',
+    },
+    {
+      id: 'reopened',
+      label: 'Reopened',
+      value: `${reopened}%`,
+      delta: Math.round((r() - 0.6) * 12),
+      goodWhenUp: false,
+      hint: 'Team 5%',
+    },
+  ];
+}
+
+export type SlaState = 'ok' | 'at-risk' | 'breached';
+
+export interface MyConversation {
+  id: string;
+  customer: string;
+  snippet: string;
+  channel: string;
+  waitingMin: number;
+  sla: SlaState;
+}
+
+const CUSTOMERS = [
+  'Aisha Rahman',
+  'Daniel Brooks',
+  'Priya Nair',
+  'Marcus Webb',
+  'Elena Sokolova',
+  'Kenji Watanabe',
+  'Nora Lindgren',
+  'Hugo Martín',
+];
+const SNIPPETS = [
+  'I still haven’t received my refund…',
+  'Can you check the status of order #4821?',
+  'The discount code isn’t applying at checkout.',
+  'How do I change the email on my account?',
+  'Package says delivered but I never got it.',
+  'Need to update my billing address.',
+  'Is the warranty transferable?',
+  'App keeps logging me out.',
+];
+const CHANNELS = ['Web chat', 'Email', 'WhatsApp', 'Telegram'];
+
+function slaFor(min: number): SlaState {
+  if (min >= 30) return 'breached';
+  if (min >= 15) return 'at-risk';
+  return 'ok';
+}
+
+/** This agent's open conversations, oldest-first, with SLA state flagged. */
+export function myOpenConversations(agent: Agent): MyConversation[] {
+  const r = rng(strSeed(agent) ^ 0x5bd1e995);
+  const n = agentQueue(agent).open;
+  const out: MyConversation[] = [];
+  for (let i = 0; i < n; i += 1) {
+    const waitingMin = 1 + Math.round(r() * 44);
+    out.push({
+      id: `c${i}`,
+      customer: CUSTOMERS[Math.floor(r() * CUSTOMERS.length)],
+      snippet: SNIPPETS[Math.floor(r() * SNIPPETS.length)],
+      channel: CHANNELS[Math.floor(r() * CHANNELS.length)],
+      waitingMin,
+      sla: slaFor(waitingMin),
+    });
+  }
+  return out.sort((a, b) => b.waitingMin - a.waitingMin);
+}
+
+export interface AgentCsatPoint {
+  date: string;
+  mine: number;
+  team: number;
+}
+
+/** This agent's CSAT vs. the team average over the selected range. */
+export function agentCsatTrend(agent: Agent, range: Range): AgentCsatPoint[] {
+  const days = RANGE_DAYS[range];
+  const step = days > 30 ? 7 : days > 7 ? 3 : 1;
+  const labels = dayLabels(days);
+  const r = rng(strSeed(agent) ^ (days * 31));
+  const out: AgentCsatPoint[] = [];
+  for (let i = 0; i < days; i += step) {
+    out.push({
+      date: labels[i],
+      mine: +(4.4 + Math.sin(i / 5) * 0.25 + r() * 0.25).toFixed(2),
+      team: +(4.6 + Math.cos(i / 6) * 0.12).toFixed(2),
+    });
+  }
+  return out;
+}
+
+export interface AgentVolumePoint {
+  date: string;
+  you: number;
+  team: number;
+}
+
+/** This agent's daily handled volume vs. the rest of the team combined. */
+export function agentVolume(agent: Agent, range: Range): AgentVolumePoint[] {
+  const days = RANGE_DAYS[range];
+  const step = days > 30 ? 7 : 1;
+  const labels = dayLabels(days);
+  const r = rng(strSeed(agent) ^ 0xa5a5);
+  const out: AgentVolumePoint[] = [];
+  for (let i = 0; i < days; i += step) {
+    const you = Math.round((14 + Math.sin(i / 3) * 5 + r() * 8) * (step > 1 ? 4 : 1));
+    out.push({ date: labels[i], you, team: Math.round(you * (2.4 + r())) });
+  }
+  return out;
+}
+
+/** This agent's resolution rate (% of their chats they closed without escalating). */
+export function agentResolutionTrend(agent: Agent, range: Range): RatePoint[] {
+  const days = RANGE_DAYS[range];
+  const step = days > 30 ? 7 : days > 7 ? 3 : 1;
+  const labels = dayLabels(days);
+  const r = rng(strSeed(agent) ^ 0x1234);
+  const out: RatePoint[] = [];
+  for (let i = 0; i < days; i += step) {
+    out.push({ date: labels[i], rate: Math.round(74 + Math.sin(i / 4) * 6 + r() * 8) });
+  }
+  return out;
+}
+
+function scaleCounts(base: NamedCount[], factor: number, r: () => number): NamedCount[] {
+  return base
+    .map((d) => ({
+      name: d.name,
+      count: Math.max(1, Math.round(d.count * factor * (0.6 + r() * 0.8))),
+    }))
+    .sort((a, b) => b.count - a.count);
+}
+
+/** Why this agent's chats reached them (their slice of the team's handoffs). */
+export function agentHandoffReasons(agent: Agent): NamedCount[] {
+  return scaleCounts(handoffReasons, 0.22, rng(strSeed(agent) ^ 0x2222));
+}
+
+/** This agent's most common conversation topics. */
+export function agentTopTopics(agent: Agent): NamedCount[] {
+  return scaleCounts(topTopics, 0.25, rng(strSeed(agent) ^ 0x3333));
+}
+
+export interface AgentDayLoad {
+  date: string;
+  resolved: number;
+}
+
+/** This agent's conversations handled per day across the range. */
+export function agentWorkloadDaily(agent: Agent, range: Range): AgentDayLoad[] {
+  const days = RANGE_DAYS[range];
+  const step = days > 30 ? 7 : 1;
+  const labels = dayLabels(days);
+  const r = rng(strSeed(agent) ^ 0x4444);
+  const out: AgentDayLoad[] = [];
+  for (let i = 0; i < days; i += step) {
+    out.push({
+      date: labels[i],
+      resolved: Math.round((10 + Math.sin(i / 3) * 4 + r() * 6) * (step > 1 ? 4 : 1)),
+    });
+  }
+  return out;
+}
+
+/** This agent's conversation volume by source channel. */
+export function agentChannels(agent: Agent): ChannelSlice[] {
+  const r = rng(strSeed(agent) ^ 0x5555);
+  return channels.map((c) => ({
+    name: c.name,
+    value: Math.max(10, Math.round(c.value * 0.2 * (0.5 + r()))),
+  }));
+}
+
+/** This agent's activity heatmap — when they handle conversations. */
+export function agentHeatmap(agent: Agent): number[][] {
+  return heatmap(strSeed(agent));
+}
