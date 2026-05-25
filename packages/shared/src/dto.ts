@@ -229,3 +229,82 @@ export interface LiveStats {
    *  nothing is awaiting a reply. */
   oldestWaitMinutes: number;
 }
+
+/**
+ * Historical KPI metrics over a date range, derived from the `episodes`
+ * projection. Role-scoped like LiveStats; `previous` is the same-length
+ * preceding period so the client can show deltas. Raw numbers only — the client
+ * formats, labels, and colours.
+ */
+/** A closed date window, inclusive of both ends. `YYYY-MM-DD`, server-local. */
+export interface DateRange {
+  from: string;
+  to: string;
+}
+
+export interface KpiMetrics {
+  /** Episodes closed in the period (scoped). */
+  episodes: number;
+  /** 0–1 share closed with no takeover and no escalation. */
+  aiDeflectionRate: number;
+  /** 0–1 share that involved a human takeover. */
+  handoffRate: number;
+  /** 0–1 share that began as a reopen. */
+  reopenedRate: number;
+  /** Median seconds to first human reply; null if none had one. */
+  medianFirstResponseSec: number | null;
+  /** Median seconds open→close; null if no episodes. */
+  medianResolutionSec: number | null;
+}
+
+export interface KpiStats {
+  scope: 'team' | 'agent';
+  current: KpiMetrics;
+  previous: KpiMetrics;
+}
+
+/**
+ * Time-bucketed trend series for the Analytics charts, derived from `episodes`.
+ * Role-scoped like KpiStats. Buckets are daily (7d/30d) or weekly (90d); each
+ * point's `date` is the ISO bucket start. Rates/medians are null for empty
+ * buckets so the client can render gaps rather than fake zeros.
+ */
+export interface TrendPoint {
+  date: string; // YYYY-MM-DD (bucket start)
+  aiResolved: number;
+  human: number;
+  deflectionRate: number | null; // 0–1
+  medianResolutionSec: number | null;
+}
+
+export interface TrendStats {
+  scope: 'team' | 'agent';
+  points: TrendPoint[];
+}
+
+/**
+ * Aggregate breakdowns for the Analytics page, over a date range and role-scoped
+ * like KpiStats. All derived from the closed `episodes` in the period.
+ */
+export interface AgentWorkload {
+  agentId: string;
+  name: string;
+  resolved: number;
+  medianFirstResponseSec: number | null;
+}
+
+export interface ChannelVolume {
+  channel: string;
+  count: number;
+}
+
+export interface Breakdowns {
+  scope: 'team' | 'agent';
+  /** Episodes resolved per agent, busiest first (only agent-closed episodes). */
+  workload: AgentWorkload[];
+  /** Episode volume by source channel, largest first. */
+  channels: ChannelVolume[];
+  /** Counts by weekday (row 0 = Monday … 6 = Sunday) × hour (0–23) of when the
+   *  episode opened — i.e. when conversations arrive. */
+  heatmap: number[][];
+}

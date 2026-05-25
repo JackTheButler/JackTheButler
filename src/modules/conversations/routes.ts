@@ -3,13 +3,14 @@ import { AppError } from '@/core/errors.js';
 import type { AuthEnv } from '@/modules/auth/middleware.js';
 import { ingestBody, replyBody, statusQuery } from '@/modules/conversations/schema.js';
 import {
+  closeConversation,
   getConversation,
   handback,
   ingestInboundMessage,
   listConversations,
   notifyStaffTyping,
+  reopenConversation,
   reply,
-  setStatus,
   takeover,
 } from '@/modules/conversations/service.js';
 
@@ -45,11 +46,17 @@ conversationRoutes.post('/:id/takeover', (c) =>
   c.json(takeover(c.req.param('id'), c.get('user').id)),
 );
 
-conversationRoutes.post('/:id/handback', (c) => c.json(handback(c.req.param('id'))));
+conversationRoutes.post('/:id/handback', (c) =>
+  c.json(handback(c.req.param('id'), c.get('user').id)),
+);
 
-conversationRoutes.post('/:id/close', (c) => c.json(setStatus(c.req.param('id'), 'closed')));
+conversationRoutes.post('/:id/close', (c) =>
+  c.json(closeConversation(c.req.param('id'), c.get('user').id)),
+);
 
-conversationRoutes.post('/:id/reopen', (c) => c.json(setStatus(c.req.param('id'), 'open')));
+conversationRoutes.post('/:id/reopen', (c) =>
+  c.json(reopenConversation(c.req.param('id'), c.get('user').id)),
+);
 
 // Dev driver now; the public webchat path reuses ingestInboundMessage in slice 3.
 conversationRoutes.post('/ingest', async (c) => {

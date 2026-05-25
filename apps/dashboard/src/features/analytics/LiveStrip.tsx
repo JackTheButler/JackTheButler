@@ -10,10 +10,14 @@ function waitLabel(minutes: number, anyWaiting: boolean): string {
   return m ? `${h}h ${m}m` : `${h}h`;
 }
 
-/** Build the tiles for the viewer's scope. `own` makes the agent-scope labels
- *  possessive (the agent looking at themselves) vs. neutral (an admin viewing
- *  someone else's queue). */
-function tilesFor(s: LiveStats, own: boolean): { label: string; value: number | string }[] {
+interface Subject {
+  label: string; // "you", or a person's name
+  self: boolean;
+}
+
+/** Build the tiles for the viewer's scope. In agent scope the labels are
+ *  possessive: "My …" when it's the viewer, otherwise "{Name}'s …". */
+function tilesFor(s: LiveStats, subject?: Subject): { label: string; value: number | string }[] {
   const oldest = { label: 'Oldest wait', value: waitLabel(s.oldestWaitMinutes, s.awaitingReply > 0) };
   if (s.scope === 'team') {
     return [
@@ -22,9 +26,13 @@ function tilesFor(s: LiveStats, own: boolean): { label: string; value: number | 
       oldest,
     ];
   }
+  const open = subject?.self ? 'My open' : `${subject?.label ?? 'Agent'}'s open`;
+  const awaiting = subject?.self
+    ? 'Awaiting my reply'
+    : `Awaiting ${subject?.label ?? 'agent'}'s reply`;
   return [
-    { label: own ? 'My open' : 'Open', value: s.myOpen ?? 0 },
-    { label: own ? 'Awaiting my reply' : 'Awaiting reply', value: s.awaitingReply },
+    { label: open, value: s.myOpen ?? 0 },
+    { label: awaiting, value: s.awaitingReply },
     oldest,
   ];
 }
@@ -40,9 +48,9 @@ function Stat({ label, value }: { label: string; value: number | string }) {
 
 /** Live queue snapshot strip, backed by the analytics/live endpoint. Shows
  *  placeholder dashes until the first fetch resolves. */
-export function LiveStrip({ stats, own = true }: { stats?: LiveStats; own?: boolean }) {
+export function LiveStrip({ stats, subject }: { stats?: LiveStats; subject?: Subject }) {
   const tiles = stats
-    ? tilesFor(stats, own)
+    ? tilesFor(stats, subject)
     : [
         { label: 'Awaiting reply', value: '—' },
         { label: 'Oldest wait', value: '—' },

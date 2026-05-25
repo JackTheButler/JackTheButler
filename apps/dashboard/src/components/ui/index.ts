@@ -8,6 +8,7 @@ export { ColorInput } from './ColorInput';
 export { Toaster, toast } from './toast';
 export { Select, SelectItem } from './Select';
 export { SearchableSelect, type SearchableSelectOption } from './SearchableSelect';
+export { DateRangePicker, type DateRangeValue } from './DateRangePicker';
 export { Textarea } from './Textarea';
 export { Avatar } from './Avatar';
 export { Field } from './Field';

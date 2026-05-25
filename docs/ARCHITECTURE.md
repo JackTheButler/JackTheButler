@@ -95,6 +95,25 @@ visitor's sockets (`connections.ts` registry). No socket/hono code ever
 enters a `service.ts`. The same bus will feed the agent inbox (slice 5) and
 other channels.
 
+## Background work
+
+Two primitives, single-replica. Both expect **idempotent** work (the DB is the
+source of truth; a restart re-derives state), so neither persists run state —
+see each file's header for the contract.
+
+- **`core/jobs.ts`** — one-off detached work that reports progress (e.g. a
+  knowledge import). `startJob` returns immediately so the request never blocks;
+  progress is emitted on the event bus. Use when a user kicks off long work and
+  watches it.
+- **`core/scheduler.ts`** — recurring work on a fixed interval (inactivity
+  auto-close, the episodes projection). Registered in `index.ts` only (never
+  `app.ts`, so tests stay side-effect-free); each task is error-isolated, runs a
+  catch-up tick on boot, and has an overlap guard. Use for periodic maintenance.
+
+Going multi-replica, or adding a non-idempotent / exactly-once / precise-time
+task, is the trigger to add a persisted `scheduled_jobs` table with leasing —
+not before. The recurring tasks themselves live in `docs/CONVERSATIONS.md`.
+
 ## Error handling
 
 Services throw `AppError(code, status)`. `core/http.ts` `onError` is the only

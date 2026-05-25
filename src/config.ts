@@ -37,6 +37,17 @@ function resolveVapid(): { publicKey: string; privateKey: string; subject: strin
   };
 }
 
+/** A positive-millisecond env override if set, else the (production-safe)
+ *  default. Shortening is always an explicit env choice, never inferred from
+ *  the environment — so production is correct regardless of `NODE_ENV`. */
+function envMsOrDefault(name: string, defaultMs: number): number {
+  const v = Number(process.env[name]);
+  return Number.isFinite(v) && v > 0 ? v : defaultMs;
+}
+
+const DAY = 24 * 60 * 60 * 1000;
+const MIN = 60 * 1000;
+
 export const config = {
   nodeEnv: NODE_ENV,
   isProduction,
@@ -53,4 +64,16 @@ export const config = {
   sessionTtlMs: 5 * 24 * 60 * 60 * 1000,
   /** Re-issue the cookie once the token is older than 1 day (rolling session). */
   sessionRenewAfterMs: 24 * 60 * 60 * 1000,
+
+  /** A conversation reopened within this of its last close resumes the *same*
+   *  episode (case); a reopen later starts a new episode. Default 24h.
+   *  Override (e.g. for local testing): EPISODE_REOPEN_WINDOW_MS. */
+  episodeReopenWindowMs: envMsOrDefault('EPISODE_REOPEN_WINDOW_MS', DAY),
+  /** Auto-close an open conversation after this much silence. Distinct concern
+   *  from the reopen window. Default 24h. Override: INACTIVITY_AUTOCLOSE_MS. */
+  inactivityAutoCloseMs: envMsOrDefault('INACTIVITY_AUTOCLOSE_MS', DAY),
+  /** How often the scheduler runs auto-close + the episodes projection (the
+   *  windows above only matter once a tick fires). Default hourly.
+   *  Override: SCHEDULER_TICK_MS. */
+  schedulerTickMs: envMsOrDefault('SCHEDULER_TICK_MS', 60 * MIN),
 } as const;

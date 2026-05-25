@@ -31,6 +31,11 @@ export const conversations = sqliteTable(
      *  handoff broadcast. Current state only — not a history (reporting will use
      *  a dedicated events table later). */
     needsHuman: integer('needs_human', { mode: 'boolean' }).notNull().default(false),
+    /** The currently/most-recently open episode (a "case"). Minted at episode
+     *  open, reused on a reopen within the 24h window, replaced on a later one.
+     *  Pairs with `status` to tag lifecycle events; `conversation_events` is the
+     *  history. Null only before the first message. */
+    currentEpisodeId: text('current_episode_id'),
     /** Last detected customer language for this thread (BCP-47). The detect
      *  stage writes here so a one-turn detection failure ("ok", "thanks")
      *  can fall back to the persisted value instead of misrouting. */

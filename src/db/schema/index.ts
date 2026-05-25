@@ -6,6 +6,8 @@ export * from './staff.js';
 export * from './customers.js';
 export * from './customer_identities.js';
 export * from './conversations.js';
+export * from './conversation_events.js';
+export * from './episodes.js';
 export * from './messages.js';
 export * from './app_configs.js';
 export * from './assistant_profile.js';

@@ -43,7 +43,6 @@ import { JaneLogo } from '@/components/JaneLogo';
 const NAV = [
   { to: '/', label: 'Inbox', icon: Inbox, end: true },
   { to: '/analytics', label: 'Analytics', icon: Activity },
-  { to: '/reports', label: 'Reports', icon: BarChart3 },
   { to: '/knowledge', label: 'Knowledge', icon: BookOpen },
   { to: '/team', label: 'Team', icon: Users, adminOnly: true },
   { to: '/assistant', label: 'Assistant', icon: Bot, adminOnly: true, bottomGroup: true },

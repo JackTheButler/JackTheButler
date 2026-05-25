@@ -72,6 +72,7 @@ import {
   type Message,
 } from '@/db/schema/index.js';
 import { events } from '@/core/events.js';
+import { appendConversationEvent } from '@/modules/analytics/log.js';
 import { logger as appLogger } from '@/core/logger.js';
 import { getBusiness } from '@/modules/business/service.js';
 import { getKbMinSimilarity, getKbTopK } from '@/modules/knowledge/service.js';
@@ -622,7 +623,10 @@ const flagHandoff: Stage = async (ctx, _env) => {
   if (!fallback || !normalizeForMatch(ctx.aiResponse.content).includes(fallback)) return;
 
   const row = db
-    .select({ needsHuman: conversations.needsHuman })
+    .select({
+      needsHuman: conversations.needsHuman,
+      currentEpisodeId: conversations.currentEpisodeId,
+    })
     .from(conversations)
     .where(eq(conversations.id, ctx.conversation.id))
     .get();
@@ -632,6 +636,14 @@ const flagHandoff: Stage = async (ctx, _env) => {
     .set({ needsHuman: true })
     .where(eq(conversations.id, ctx.conversation.id))
     .run();
+  if (row.currentEpisodeId) {
+    // AI-driven escalation: no acting agent.
+    appendConversationEvent({
+      conversationId: ctx.conversation.id,
+      episodeId: row.currentEpisodeId,
+      type: 'escalated',
+    });
+  }
   events.emit('handoff.requested', {
     conversationId: ctx.conversation.id,
     channel: ctx.conversation.channel,

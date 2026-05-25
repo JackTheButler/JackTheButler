@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { and, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, isNull, lt, sql } from 'drizzle-orm';
 import type {
   ConversationDetail,
   ConversationSummary,
@@ -14,8 +14,10 @@ import {
   messages,
   type Conversation,
 } from '@/db/schema/index.js';
+import { config } from '@/config.js';
 import { AppError } from '@/core/errors.js';
 import { events } from '@/core/events.js';
+import { appendConversationEvent, lastEpisodeCloseAt } from '@/modules/analytics/log.js';
 import { runAiPipeline, translateText } from '@/core/pipeline.js';
 import { getActiveGenerationInstance } from '@/modules/apps/service.js';
 import { getBusiness } from '@/modules/business/service.js';
@@ -155,6 +157,7 @@ export function ingestInboundMessage(
         .from(conversations)
         .get();
       const id = randomUUID();
+      const episodeId = randomUUID();
       db.insert(conversations)
         .values({
           id,
@@ -164,18 +167,29 @@ export function ingestInboundMessage(
           customerId,
           mode: 'ai',
           status: 'open',
+          currentEpisodeId: episodeId,
           createdAt: now,
           lastMessageAt: now,
         })
         .run();
+      appendConversationEvent({ conversationId: id, episodeId, type: 'episode_opened', at: now });
       convo = getOrThrow(id);
     } else {
       // Continuous conversation: reopen if closed. Reopen re-binds takeover
       // to the new episode (mode→ai, unassigned) and drops a segment marker
       // for the UI / pipeline / analytics.
       if (convo.status === 'closed') {
+        // Resume the same episode if within the reopen window, else start a new
+        // one (customer-driven reopen → no acting agent).
+        const episodeId = resolveReopenEpisodeId(convo, now);
         db.update(conversations)
-          .set({ status: 'open', mode: 'ai', assignedAgentId: null, needsHuman: false })
+          .set({
+            status: 'open',
+            mode: 'ai',
+            assignedAgentId: null,
+            needsHuman: false,
+            currentEpisodeId: episodeId,
+          })
           .where(eq(conversations.id, convo.id))
           .run();
         db.insert(messages)
@@ -188,6 +202,7 @@ export function ingestInboundMessage(
             createdAt: now,
           })
           .run();
+        appendConversationEvent({ conversationId: convo.id, episodeId, type: 'reopened', at: now });
       }
       if (customerId && !convo.customerId) {
         // Promotion: an anonymous conversation later identified.
@@ -422,6 +437,17 @@ export async function reply(
   return getConversation(id);
 }
 
+/** Episode id to use when reopening `convo`: the existing one if reopened
+ *  within the window (same case), otherwise a fresh id (new case). */
+function resolveReopenEpisodeId(convo: Conversation, now: Date): string {
+  const lastClose = lastEpisodeCloseAt(convo.id);
+  const withinWindow =
+    lastClose !== null &&
+    convo.currentEpisodeId !== null &&
+    now.getTime() - lastClose.getTime() < config.episodeReopenWindowMs;
+  return withinWindow ? convo.currentEpisodeId! : randomUUID();
+}
+
 export function takeover(id: string, agentId: string): ConversationDetail {
   const c = getOrThrow(id);
   if (c.mode !== 'ai') throw new AppError('invalid_transition', 409);
@@ -429,22 +455,86 @@ export function takeover(id: string, agentId: string): ConversationDetail {
     .set({ mode: 'human', assignedAgentId: agentId, needsHuman: false })
     .where(eq(conversations.id, id))
     .run();
+  if (c.currentEpisodeId) {
+    appendConversationEvent({
+      conversationId: id,
+      episodeId: c.currentEpisodeId,
+      type: 'taken_over',
+      actorAgentId: agentId,
+    });
+  }
   return getConversation(id);
 }
 
-export function handback(id: string): ConversationDetail {
+export function handback(id: string, agentId: string): ConversationDetail {
   const c = getOrThrow(id);
   if (c.mode !== 'human') throw new AppError('invalid_transition', 409);
   db.update(conversations)
     .set({ mode: 'ai', assignedAgentId: null })
     .where(eq(conversations.id, id))
     .run();
+  if (c.currentEpisodeId) {
+    appendConversationEvent({
+      conversationId: id,
+      episodeId: c.currentEpisodeId,
+      type: 'handed_back',
+      actorAgentId: agentId,
+    });
+  }
   return getConversation(id);
 }
 
-export function setStatus(id: string, status: 'open' | 'closed'): ConversationDetail {
-  getOrThrow(id);
-  // Any status change ends the current escalation (resolved, or reopened fresh).
-  db.update(conversations).set({ status, needsHuman: false }).where(eq(conversations.id, id)).run();
+/** Close an episode. `agentId` is the closing agent (manual close) or null
+ *  (inactivity auto-close). No-op if already closed. */
+export function closeConversation(id: string, agentId: string | null): ConversationDetail {
+  const c = getOrThrow(id);
+  if (c.status === 'closed') return getConversation(id);
+  db.update(conversations)
+    .set({ status: 'closed', needsHuman: false })
+    .where(eq(conversations.id, id))
+    .run();
+  if (c.currentEpisodeId) {
+    appendConversationEvent({
+      conversationId: id,
+      episodeId: c.currentEpisodeId,
+      type: 'closed',
+      actorAgentId: agentId,
+    });
+  }
+  return getConversation(id);
+}
+
+/** Close conversations idle longer than the inactivity window (system close,
+ *  no acting agent). Idempotent — `closeConversation` skips already-closed.
+ *  Returns how many were closed. Driven by the scheduler. */
+export function autoCloseIdleConversations(now: Date = new Date()): number {
+  const cutoff = new Date(now.getTime() - config.inactivityAutoCloseMs);
+  const idle = db
+    .select({ id: conversations.id })
+    .from(conversations)
+    .where(and(eq(conversations.status, 'open'), lt(conversations.lastMessageAt, cutoff)))
+    .all();
+  for (const c of idle) closeConversation(c.id, null);
+  return idle.length;
+}
+
+/** Reopen a closed episode (agent's Reopen button). Resumes the same episode
+ *  within the reopen window, else starts a new one. No-op if already open. */
+export function reopenConversation(id: string, agentId: string | null): ConversationDetail {
+  const c = getOrThrow(id);
+  if (c.status === 'open') return getConversation(id);
+  const now = new Date();
+  const episodeId = resolveReopenEpisodeId(c, now);
+  db.update(conversations)
+    .set({ status: 'open', needsHuman: false, currentEpisodeId: episodeId })
+    .where(eq(conversations.id, id))
+    .run();
+  appendConversationEvent({
+    conversationId: id,
+    episodeId,
+    type: 'reopened',
+    actorAgentId: agentId,
+    at: now,
+  });
   return getConversation(id);
 }
