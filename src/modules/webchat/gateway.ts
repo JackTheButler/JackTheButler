@@ -2,7 +2,7 @@ import type { Env, Hono } from 'hono';
 import type { UpgradeWebSocket } from 'hono/ws';
 import { AppError } from '@/core/errors.js';
 import { events } from '@/core/events.js';
-import { ingestInboundMessage } from '@/modules/conversations/service.js';
+import { ingestInboundMessage, notifyCustomerTyping } from '@/modules/conversations/service.js';
 import { assertWidgetAccess } from '@/modules/webchat/service.js';
 import { addConnection, pushToVisitor } from '@/modules/webchat/connections.js';
 
@@ -56,6 +56,11 @@ export function registerWebchatSocket<E extends Env>(
         onMessage(evt) {
           try {
             const data = JSON.parse(String(evt.data));
+            // Visitor is composing → let the agent's inbox show the indicator.
+            if (data?.type === 'typing') {
+              notifyCustomerTyping('webchat', visitorId);
+              return;
+            }
             if (typeof data?.content === 'string' && data.content.trim()) {
               ingestInboundMessage({
                 channel: 'webchat',

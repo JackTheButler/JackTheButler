@@ -43,6 +43,7 @@ forward('message.updated');
 forward('message.knowledge');
 forward('handoff.requested');
 forward('assistant.typing');
+forward('customer.typing');
 forward('job.progress');
 
 export function registerDashboardSocket<E extends Env>(

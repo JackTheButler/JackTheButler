@@ -37,6 +37,10 @@ function App() {
   const [typing, setTyping] = useState(false);
   const ws = useRef<WebSocket | null>(null);
   const typingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  // Throttle outbound "I'm typing" pings so a fast typist sends at most one
+  // every 2.5s (matches the agent-side composer); the agent's indicator
+  // self-clears on a pause.
+  const lastTypingPing = useRef(0);
 
   useEffect(() => {
     fetch(`/widget/config?${q}`)
@@ -124,6 +128,13 @@ function App() {
           { id: `local-${Date.now()}`, author: 'customer', content: text },
         ]);
         ws.current?.send(JSON.stringify({ content: text }));
+      }}
+      onTyping={() => {
+        const now = Date.now();
+        if (now - lastTypingPing.current < 2500) return;
+        if (ws.current?.readyState !== WebSocket.OPEN) return;
+        lastTypingPing.current = now;
+        ws.current.send(JSON.stringify({ type: 'typing' }));
       }}
     />
   );

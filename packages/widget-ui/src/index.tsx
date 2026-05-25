@@ -161,6 +161,9 @@ export interface ChatWidgetProps {
   open: boolean;
   onToggle: () => void;
   onSend: (text: string) => void;
+  /** The visitor is composing — fired on each keystroke. The runtime throttles
+   *  before notifying the server, which forwards it to the agent's inbox. */
+  onTyping?: () => void;
   /** Preview mode: position within the parent instead of the viewport. */
   inline?: boolean;
   /** Fullscreen panel layout. The widget runs inside an iframe whose own
@@ -223,6 +226,7 @@ export function ChatWidget({
   open,
   onToggle,
   onSend,
+  onTyping,
   inline = false,
   mobile = false,
 }: ChatWidgetProps) {
@@ -477,7 +481,10 @@ export function ChatWidget({
         >
           <input
             value={draft}
-            onChange={(e) => setDraft(e.target.value)}
+            onChange={(e) => {
+              setDraft(e.target.value);
+              if (e.target.value) onTyping?.();
+            }}
             placeholder="Type a message…"
             style={{
               flex: 1,

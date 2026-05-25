@@ -35,11 +35,13 @@ export interface MessageUpdated {
  *  realtime.ts to surface a new event type to the UI. */
 /** Someone is composing a reply — drives a "typing…" indicator. No explicit
  *  "stop": the eventual `message.created` ends it (plus a client-side safety
- *  timeout). Two sources:
+ *  timeout). Three sources:
  *   - `assistant.typing`: the AI pipeline, before the slow generation call →
  *     shown in both the widget and the dashboard inbox.
  *   - `staff.typing`: an agent typing in the inbox composer (human mode) →
- *     forwarded to the widget so the customer sees the agent composing. */
+ *     forwarded to the widget so the customer sees the agent composing.
+ *   - `customer.typing`: a visitor typing in the widget composer →
+ *     forwarded to the dashboard so the agent sees the customer composing. */
 export interface TypingSignal {
   conversationId: string;
   channel: string;
@@ -74,6 +76,7 @@ export interface EventMap {
   'handoff.requested': HandoffRequested;
   'assistant.typing': TypingSignal;
   'staff.typing': TypingSignal;
+  'customer.typing': TypingSignal;
   'job.progress': Job;
 }
 

@@ -174,3 +174,40 @@ export function useAssistantTyping(conversationId: string | null): boolean {
 
   return typing;
 }
+
+/** Whether the customer is currently composing a message in `conversationId` —
+ *  driven by the widget's `customer.typing` ping. Cleared when their message
+ *  lands, on conversation switch, or after a safety timeout (they may type then
+ *  stop without sending). Mirrors {@link useAssistantTyping} for the inbound
+ *  direction. */
+export function useCustomerTyping(conversationId: string | null): boolean {
+  const [typing, setTyping] = useState(false);
+  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const stop = () => {
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = null;
+    setTyping(false);
+  };
+
+  useRealtimeEvent<{ conversationId: string }>('customer.typing', (data) => {
+    if (!conversationId || data?.conversationId !== conversationId) return;
+    setTyping(true);
+    if (timer.current) clearTimeout(timer.current);
+    timer.current = setTimeout(() => setTyping(false), 10000);
+  });
+
+  useRealtimeEvent<{ conversationId: string; message?: { author?: string } }>(
+    'message.created',
+    (data) => {
+      if (data?.conversationId !== conversationId) return;
+      if (data?.message?.author !== 'customer') return; // their message landed
+      stop();
+    },
+  );
+
+  // Reset when switching conversations.
+  useEffect(() => stop, [conversationId]);
+
+  return typing;
+}

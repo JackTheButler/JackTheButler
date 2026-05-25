@@ -382,6 +382,29 @@ export function notifyStaffTyping(id: string): void {
   });
 }
 
+/** Broadcast that a visitor is composing a message, so the agent's inbox shows
+ *  a typing indicator. Resolves the conversation from the channel identity
+ *  (the widget socket only knows its visitorId). Fire-and-forget, throttled by
+ *  the caller (the widget composer). No-op when there's no open conversation. */
+export function notifyCustomerTyping(channel: string, externalId: string): void {
+  const convo = db
+    .select()
+    .from(conversations)
+    .where(
+      and(
+        eq(conversations.channel, channel),
+        eq(conversations.channelExternalId, externalId),
+      ),
+    )
+    .get();
+  if (!convo || convo.status === 'closed') return;
+  events.emit('customer.typing', {
+    conversationId: convo.id,
+    channel: convo.channel,
+    channelExternalId: convo.channelExternalId,
+  });
+}
+
 export async function reply(
   id: string,
   agentId: string,

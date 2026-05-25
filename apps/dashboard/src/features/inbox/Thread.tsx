@@ -17,7 +17,7 @@ import { useBusiness } from '@/features/settings/useBusiness';
 import { ChannelIcon, channelLabel } from './channel';
 import { Composer } from './Composer';
 import { relativeTime, customerLabel } from './format';
-import { useAssistantTyping } from './useConversations';
+import { useAssistantTyping, useCustomerTyping } from './useConversations';
 
 /** BCP-47 → readable language name. Falls back to the raw code when
  *  unknown — the toggle label still reads sensibly. */
@@ -233,6 +233,24 @@ function TypingBubble() {
   );
 }
 
+/** "Customer is composing" indicator — mirrors the customer bubble (left side,
+ *  surface) with bouncing dots. Shown while the visitor types in the widget. */
+function CustomerTypingBubble() {
+  return (
+    <div className="flex justify-start">
+      <div className="flex items-center gap-1 rounded-xl rounded-tl-sm bg-surface px-3.5 py-3 text-ink ring-1 ring-line">
+        {[0, 150, 300].map((d) => (
+          <span
+            key={d}
+            className="h-1.5 w-1.5 animate-bounce rounded-full bg-current opacity-60"
+            style={{ animationDelay: `${d}ms` }}
+          />
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export function Thread({
   convo,
   mobileActive = false,
@@ -266,6 +284,7 @@ export function Thread({
   const isWide = useIsWide();
   const human = convo.mode === 'human';
   const aiTyping = useAssistantTyping(convo.id);
+  const customerTyping = useCustomerTyping(convo.id);
   const name = customerLabel(convo.customer?.name);
   // Business default language drives which side of a bilingual bubble the
   // dashboard shows by default. Falls back to 'en' before the query lands.
@@ -415,6 +434,7 @@ export function Thread({
             />
           ))}
           {aiTyping && <TypingBubble />}
+          {customerTyping && <CustomerTypingBubble />}
         </div>
 
         {showJumpDown && (
