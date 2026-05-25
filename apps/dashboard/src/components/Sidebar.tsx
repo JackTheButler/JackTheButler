@@ -35,6 +35,7 @@ import {
   DropdownMenuItem,
 } from '@/components/ui';
 import { JaneLogo } from '@/components/JaneLogo';
+import { JaneMenuIcon } from '@/components/JaneMenuIcon';
 
 // `bottomGroup` items (Assistant, Apps, Settings) form the config section. A
 // divider is drawn before the FIRST *visible* one — Assistant for admins,
@@ -255,7 +256,7 @@ function MobileSidebar() {
           aria-label="Open menu"
           className="grid h-9 w-9 shrink-0 place-items-center rounded-xl bg-accent text-on-accent"
         >
-          <JaneLogo size={20} />
+          <JaneMenuIcon autoLoop loops={2} size={20} />
         </button>
         <NavLink
           to="/"

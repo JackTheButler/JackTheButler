@@ -30,6 +30,8 @@ const addDays = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth(), 
 const addMonths = (d: Date, n: number) => new Date(d.getFullYear(), d.getMonth() + n, 1);
 const sameDay = (a: Date, b: Date) => iso(a) === iso(b);
 const fmt = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+// Year-less variant for the cramped footer on the smallest screens.
+const fmtShort = (d: Date) => d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
 
 function monthCells(month: Date): (Date | null)[] {
   const first = startOfMonth(month);
@@ -78,7 +80,7 @@ function Month({
   const hi = from && end ? (from <= end ? end : from) : null;
 
   return (
-    <div className="w-56">
+    <div className="w-full">
       <div className="mb-2 text-center text-xs font-semibold text-ink">
         {month.toLocaleDateString('en-US', { month: 'long', year: 'numeric' })}
       </div>
@@ -195,22 +197,23 @@ export function DateRangePicker({
           className="z-50 max-w-[calc(100vw-1rem)] overflow-auto rounded-xl border border-line bg-panel p-3 shadow-lg ring-1 ring-black/5"
         >
           <div className="flex flex-col gap-3 sm:flex-row">
-            {/* Presets */}
-            <div className="flex shrink-0 flex-row flex-wrap gap-1 sm:w-32 sm:flex-col">
+            {/* Presets: horizontal scrolling row on mobile, vertical sidebar from sm. */}
+            <div className="no-scrollbar flex shrink-0 flex-row flex-nowrap gap-1 overflow-x-auto sm:w-32 sm:flex-col sm:overflow-visible">
               {presets(today).map((p) => (
                 <button
                   key={p.label}
                   type="button"
                   onClick={() => applyPreset(p)}
-                  className="rounded-md px-2.5 py-1.5 text-left text-xs text-ink transition-colors hover:bg-surface"
+                  className="shrink-0 whitespace-nowrap rounded-md px-2.5 py-1.5 text-left text-xs text-ink transition-colors hover:bg-surface"
                 >
                   {p.label}
                 </button>
               ))}
             </div>
 
-            {/* Calendars */}
-            <div onMouseLeave={() => setHovered(null)}>
+            {/* Calendars — fill the popover width on mobile (months stretch to
+                fill), content-sized beside the preset sidebar from sm. */}
+            <div className="w-full sm:w-fit" onMouseLeave={() => setHovered(null)}>
               <div className="mb-2 flex items-center justify-between">
                 <button
                   type="button"
@@ -230,16 +233,20 @@ export function DateRangePicker({
                 </button>
               </div>
               <div className="flex gap-4">
-                <Month
-                  month={leftMonth}
-                  from={from}
-                  to={to}
-                  hovered={hovered}
-                  today={today}
-                  onPick={pick}
-                  onHover={setHovered}
-                />
-                <div className="hidden sm:block">
+                {/* Earlier month: drops out below xs, leaving the to-month visible.
+                    Months grow to fill on mobile; fixed-width from sm. */}
+                <div className="hidden min-w-0 flex-1 xs:block sm:w-56 sm:flex-none">
+                  <Month
+                    month={leftMonth}
+                    from={from}
+                    to={to}
+                    hovered={hovered}
+                    today={today}
+                    onPick={pick}
+                    onHover={setHovered}
+                  />
+                </div>
+                <div className="min-w-0 flex-1 sm:w-56 sm:flex-none">
                   <Month
                     month={addMonths(leftMonth, 1)}
                     from={from}
@@ -256,10 +263,18 @@ export function DateRangePicker({
 
           {/* Footer */}
           <div className="mt-3 flex items-center justify-between gap-3 border-t border-line pt-3">
-            <span className="text-xs text-muted">
-              {from && to ? `${fmt(from)} – ${fmt(to)}` : 'Select a range'}
+            <span className="min-w-0 truncate text-xs text-muted">
+              {from && to ? (
+                <>
+                  {/* Drop the year below xs where the footer is tightest. */}
+                  <span className="xs:hidden">{`${fmtShort(from)} – ${fmtShort(to)}`}</span>
+                  <span className="hidden xs:inline">{`${fmt(from)} – ${fmt(to)}`}</span>
+                </>
+              ) : (
+                'Select a range'
+              )}
             </span>
-            <div className="flex gap-2">
+            <div className="flex shrink-0 gap-2">
               <Button variant="ghost" size="sm" onClick={() => setOpen(false)}>
                 Cancel
               </Button>

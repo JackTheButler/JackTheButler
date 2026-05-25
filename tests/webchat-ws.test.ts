@@ -43,6 +43,21 @@ const nextMessage = (ws: WebSocket) =>
     });
   });
 
+// Resolve on the first frame whose envelope `type` matches — tolerates stray
+// events (e.g. an AI typing/reply) arriving on the same socket first.
+const waitForType = (ws: WebSocket, type: string) =>
+  new Promise<{ type: string; data: Record<string, unknown> }>((resolve, reject) => {
+    const t = setTimeout(() => reject(new Error(`no ${type} frame`)), 2000);
+    const onMsg = (d: WebSocket.RawData) => {
+      const frame = JSON.parse(d.toString());
+      if (frame.type !== type) return;
+      clearTimeout(t);
+      ws.off('message', onMsg);
+      resolve(frame);
+    };
+    ws.on('message', onMsg);
+  });
+
 beforeAll(async () => {
   await new Promise<void>((resolve) => {
     server = serve({ fetch: app.fetch, port: 0 }, (info) => {
@@ -121,6 +136,34 @@ describe('webchat WS gateway', () => {
     expect(frame.type).toBe('message');
     expect(frame.message).toMatchObject({ author: 'agent', content: 'agent here' });
     ws.close();
+  });
+
+  it('a visitor typing frame is forwarded to the dashboard as customer.typing', async () => {
+    // Open a conversation for this visitor so the typing ping resolves to one.
+    const widget = connect('v-typing', 'https://example.com');
+    expect(await waitOpen(widget)).toBe('open');
+    widget.send(JSON.stringify({ content: 'about to ask something' }));
+    await new Promise((r) => setTimeout(r, 100));
+
+    const { conversations } = await (await authed('/api/app/conversations')).json();
+    const conv = conversations.find(
+      (x: { snippet: string }) => x.snippet === 'about to ask something',
+    );
+
+    // An agent's inbox is listening on the dashboard channel.
+    const dash = new WebSocket(`ws://127.0.0.1:${port}/api/app/realtime`, {
+      headers: { cookie: `${COOKIE}=${cookie}` },
+    });
+    expect(await waitOpen(dash)).toBe('open');
+
+    const typing = waitForType(dash, 'customer.typing');
+    widget.send(JSON.stringify({ type: 'typing' }));
+
+    const frame = await typing;
+    expect(frame.data.conversationId).toBe(conv.id);
+
+    widget.close();
+    dash.close();
   });
 
   it('history endpoint returns customer-visible messages', async () => {
