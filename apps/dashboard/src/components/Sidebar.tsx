@@ -5,7 +5,6 @@ import {
   MessageCircleDashed,
   BookOpen,
   Activity,
-  BarChart3,
   Blocks,
   Bot,
   Users,
