@@ -91,7 +91,7 @@ async function upsertReservation(normalized: NormalizedReservation, guestId: str
       .set({
         guestId,
         roomNumber: normalized.roomNumber ?? null,
-        roomType: normalized.roomType,
+        roomType: normalized.roomType.trim() || 'Unknown',
         arrivalDate: normalized.arrivalDate,
         departureDate: normalized.departureDate,
         status: normalized.status,
@@ -119,7 +119,7 @@ async function upsertReservation(normalized: NormalizedReservation, guestId: str
     confirmationNumber: normalized.confirmationNumber,
     externalId: normalized.externalId,
     roomNumber: normalized.roomNumber ?? null,
-    roomType: normalized.roomType,
+    roomType: normalized.roomType.trim() || 'Unknown',
     arrivalDate: normalized.arrivalDate,
     departureDate: normalized.departureDate,
     status: normalized.status,

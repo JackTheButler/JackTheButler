@@ -183,7 +183,7 @@ export class PMSSyncService {
         .set({
           guestId: guest.id,
           roomNumber: pmsRes.roomNumber ?? null,
-          roomType: pmsRes.roomType,
+          roomType: pmsRes.roomType.trim() || 'Unknown',
           arrivalDate: pmsRes.arrivalDate,
           departureDate: pmsRes.departureDate,
           status,
@@ -233,7 +233,7 @@ export class PMSSyncService {
       confirmationNumber: pmsRes.confirmationNumber,
       externalId: pmsRes.externalId,
       roomNumber: pmsRes.roomNumber ?? null,
-      roomType: pmsRes.roomType,
+      roomType: pmsRes.roomType.trim() || 'Unknown',
       arrivalDate: pmsRes.arrivalDate,
       departureDate: pmsRes.departureDate,
       status,

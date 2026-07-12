@@ -341,7 +341,7 @@ describe('websocket-bridge', () => {
       expect((activity!.payload as { data: object }).data).not.toHaveProperty('roomNumber');
     });
 
-    it('only replaces the first underscore when building the label (characterization)', async () => {
+    it('replaces every underscore when building the label', async () => {
       const taskId = await insertTask({ type: 'a_b_c', priority: 'standard' });
 
       events.emit({
@@ -355,8 +355,7 @@ describe('websocket-bridge', () => {
       await flush();
 
       const activity = callsOfType('activity:event').find((c) => (c.payload as { id: string }).id === `task-${taskId}`);
-      // "a_b_c".replace('_', ' ') => "a b_c" — only the first underscore is replaced.
-      expect(activity!.payload).toMatchObject({ text: 'A b_c task created' });
+      expect(activity!.payload).toMatchObject({ text: 'A b c task created' });
     });
 
     it('does not broadcast an activity item when the task no longer exists', async () => {
@@ -616,7 +615,7 @@ describe('websocket-bridge', () => {
       expect((activity!.payload as { data: object }).data).toEqual({ guestName: 'Alan Turing' });
     });
 
-    it('characterization: whitespace-only room type is shown in detail but dropped from data', async () => {
+    it('drops a whitespace-only room type from both detail and data', async () => {
       const guestId = await insertGuest({ firstName: 'Katherine', lastName: 'Johnson' });
       const reservationId = await insertReservation(guestId, { roomType: '   ' });
 
@@ -630,10 +629,29 @@ describe('websocket-bridge', () => {
       await flush();
 
       const activity = callsOfType('activity:event').find((c) => (c.payload as { id: string }).id === `res-in-${reservationId}`);
-      // typeLabel isn't trim-checked, so the whitespace string passes filter(Boolean) into detail...
-      expect(activity!.payload).toMatchObject({ detail: '   ' });
-      // ...but the `data` block is separately trim-checked, so roomType is dropped there.
+      expect(activity!.payload).toMatchObject({ detail: 'Guest stay' });
       expect((activity!.payload as { data: object }).data).toEqual({ guestName: 'Katherine Johnson' });
+    });
+
+    it('trims a padded room type in both detail and data', async () => {
+      const guestId = await insertGuest({ firstName: 'Dorothy', lastName: 'Vaughan' });
+      const reservationId = await insertReservation(guestId, { roomType: '  Deluxe King  ' });
+
+      events.emit({
+        type: EventTypes.RESERVATION_CHECKED_IN,
+        timestamp: new Date(),
+        reservationId,
+        guestId,
+        roomNumber: '',
+      } as ReservationCheckedInEvent);
+      await flush();
+
+      const activity = callsOfType('activity:event').find((c) => (c.payload as { id: string }).id === `res-in-${reservationId}`);
+      expect(activity!.payload).toMatchObject({ detail: 'Deluxe King' });
+      expect((activity!.payload as { data: object }).data).toEqual({
+        guestName: 'Dorothy Vaughan',
+        roomType: 'Deluxe King',
+      });
     });
 
     it('does not broadcast when the guest no longer exists', async () => {

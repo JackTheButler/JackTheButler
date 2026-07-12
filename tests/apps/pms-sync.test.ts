@@ -121,6 +121,22 @@ describe('PMSSyncService', () => {
       expect(storedRes[0]!.status).toBe('confirmed');
     });
 
+    it('trims roomType on ingestion and stores Unknown when it is whitespace-only', async () => {
+      const padded = makeNormalizedReservation({ roomType: '  Deluxe King  ' });
+      const blank = makeNormalizedReservation({ confirmationNumber: 'CONF-BLANK', externalId: 'ext-blank', roomType: '   ' });
+      const adapter = makeAdapter({
+        getModifiedReservations: vi.fn().mockResolvedValue([padded, blank]),
+      });
+      mockRegistry(adapter);
+
+      await pmsSyncService.syncReservations(new Date());
+
+      const [storedPadded] = await db.select().from(reservations).where(eq(reservations.confirmationNumber, 'CONF-0001'));
+      expect(storedPadded!.roomType).toBe('Deluxe King');
+      const [storedBlank] = await db.select().from(reservations).where(eq(reservations.confirmationNumber, 'CONF-BLANK'));
+      expect(storedBlank!.roomType).toBe('Unknown');
+    });
+
     it('defaults to a 24h lookback window when no since date is given', async () => {
       const adapter = makeAdapter({
         getModifiedReservations: vi.fn().mockResolvedValue([]),

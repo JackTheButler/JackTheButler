@@ -93,7 +93,7 @@ export function setupWebSocketBridge() {
     try {
       const [task] = await db.select().from(tasks).where(eq(tasks.id, event.taskId)).limit(1);
       if (!task) return;
-      const label = task.type.replace('_', ' ');
+      const label = task.type.replaceAll('_', ' ');
       const text = `${label.charAt(0).toUpperCase() + label.slice(1)} task created`;
       const detail = [task.roomNumber ? `Room ${task.roomNumber}` : null, task.priority !== 'standard' ? capitalize(task.priority) : null]
         .filter(Boolean)
@@ -151,7 +151,8 @@ export function setupWebSocketBridge() {
       if (!guest) return;
       const [res] = await db.select().from(reservations).where(eq(reservations.id, event.reservationId)).limit(1);
       const roomLabel = event.roomNumber ? `Room ${event.roomNumber}` : null;
-      const typeLabel = res?.roomType && res.roomType.toLowerCase() !== 'unknown' ? res.roomType : null;
+      const roomType = res?.roomType?.trim();
+      const typeLabel = roomType && roomType.toLowerCase() !== 'unknown' ? roomType : null;
       const detail = [roomLabel, typeLabel].filter(Boolean).join(' · ') || 'Guest stay';
       broadcastActivity({
         id: `res-in-${event.reservationId}`,
@@ -159,7 +160,7 @@ export function setupWebSocketBridge() {
         text: `${guest.firstName} ${guest.lastName} checked in`,
         detail,
         ts: Date.now(),
-        data: { guestName: `${guest.firstName} ${guest.lastName}`, ...(event.roomNumber ? { roomNumber: event.roomNumber } : {}), ...((res?.roomType && res.roomType.toLowerCase() !== 'unknown' && res.roomType.trim() !== '') ? { roomType: res.roomType } : {}) },
+        data: { guestName: `${guest.firstName} ${guest.lastName}`, ...(event.roomNumber ? { roomNumber: event.roomNumber } : {}), ...(typeLabel ? { roomType: typeLabel } : {}) },
       });
     } catch (error) {
       log.error({ error }, 'Failed to broadcast check-in activity');
