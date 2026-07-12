@@ -234,6 +234,35 @@ describe('Scheduler', () => {
       expect(JSON.parse(pmsRow!.details!).errors).toBe(2);
     });
 
+    it('reports lastResult "error" when every reservation in the sync failed', async () => {
+      // errors > 0 and zero successes (created/updated/unchanged all 0) means the whole
+      // sync run failed, unlike the partial-failure case above which still succeeds.
+      mockActivePMS();
+      vi.mocked(pmsSyncService.syncReservations).mockResolvedValue({
+        created: 0,
+        updated: 0,
+        unchanged: 0,
+        errors: 3,
+        errorDetails: [
+          { id: 'res-1', error: 'bad data' },
+          { id: 'res-2', error: 'bad data' },
+          { id: 'res-3', error: 'bad data' },
+        ],
+      });
+
+      scheduler = new Scheduler();
+      scheduler.start();
+      await vi.advanceTimersByTimeAsync(0);
+
+      const pmsJob = scheduler.getStatus().jobs.find((j) => j.name === 'pms-sync');
+      expect(pmsJob?.lastResult).toBe('error');
+      expect(pmsJob?.isRunning).toBe(false);
+
+      const rows = await db.select().from(activityLog).where(eq(activityLog.eventType, 'scheduler.outcome'));
+      const pmsRow = rows.find((r) => r.details?.includes('pms-sync'));
+      expect(pmsRow?.status).toBe('failed');
+    });
+
     it('purges activity_log and app_logs rows older than 30 days', async () => {
       mockNoPMS();
       const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
@@ -490,29 +519,36 @@ describe('Scheduler', () => {
 
     it('does not invoke the handler when the job is already marked as running', async () => {
       mockActivePMS();
+      let resolveSync!: (v: Awaited<ReturnType<typeof pmsSyncService.syncReservations>>) => void;
+      vi.mocked(pmsSyncService.syncReservations).mockImplementation(
+        () =>
+          new Promise((resolve) => {
+            resolveSync = resolve;
+          })
+      );
+
       scheduler = new Scheduler();
       scheduler.start();
+      // The immediate run on start() stays in flight — syncReservations never resolves yet —
+      // so job.isRunning is true via the public start()/getStatus() surface, no private
+      // reach-in required.
       await vi.advanceTimersByTimeAsync(0);
-      vi.mocked(pmsSyncService.syncReservations).mockClear();
-
-      // CHARACTERIZATION: triggerJob() only *checks* job.isRunning — it never sets it
-      // itself, because it calls the private run*() methods directly instead of going
-      // through scheduleJob()'s wrappedHandler (which is the only code path that sets
-      // isRunning/lastRun/lastResult and writes the activity_log row). We reach into the
-      // private `jobs` map to simulate the guard condition, since nothing in the public
-      // triggerJob() API can set isRunning to true on its own.
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      (scheduler as any).jobs.get('pms-sync').isRunning = true;
+      expect(pmsSyncService.syncReservations).toHaveBeenCalledTimes(1);
+      const midFlight = scheduler.getStatus().jobs.find((j) => j.name === 'pms-sync');
+      expect(midFlight?.isRunning).toBe(true);
 
       await scheduler.triggerJob('pms-sync');
+      expect(pmsSyncService.syncReservations).toHaveBeenCalledTimes(1);
 
-      expect(pmsSyncService.syncReservations).not.toHaveBeenCalled();
+      // Let the in-flight run resolve so the scheduler can be torn down cleanly.
+      resolveSync({ created: 0, updated: 0, unchanged: 0, errors: 0, errorDetails: [] });
+      await vi.advanceTimersByTimeAsync(0);
     });
 
-    it('CHARACTERIZATION: manual triggers do not update lastRun/lastResult or write an activity_log row', async () => {
-      // This documents a likely bug: triggerJob() bypasses scheduleJob()'s wrappedHandler,
-      // so manually-triggered runs are invisible to getStatus() and the activity_log audit
-      // trail, unlike scheduled runs of the same job.
+    it('manual triggers update lastRun/lastResult and write an activity_log row, same as a scheduled run', async () => {
+      // triggerJob() now routes through the same wrappedHandler that scheduled runs use,
+      // so manually-triggered runs are visible to getStatus() and the activity_log audit
+      // trail exactly like scheduled runs of the same job.
       mockActivePMS();
       scheduler = new Scheduler();
       scheduler.start();
@@ -524,6 +560,9 @@ describe('Scheduler', () => {
         .from(activityLog)
         .where(eq(activityLog.eventType, 'scheduler.outcome'));
 
+      // Advance the (fake) clock so the manual run's lastRun timestamp differs from the
+      // immediate on-start run's timestamp.
+      await vi.advanceTimersByTimeAsync(1000);
       await scheduler.triggerJob('pms-sync');
 
       const after = scheduler.getStatus().jobs.find((j) => j.name === 'pms-sync');
@@ -533,8 +572,10 @@ describe('Scheduler', () => {
         .where(eq(activityLog.eventType, 'scheduler.outcome'));
 
       expect(pmsSyncService.syncReservations).toHaveBeenCalledTimes(2); // once on start(), once manual
-      expect(after?.lastRun).toBe(before?.lastRun); // unchanged despite the manual run
-      expect(rowsAfter.length).toBe(rowsBefore.length); // no new audit row for the manual run
+      expect(after?.lastRun).not.toBe(before?.lastRun); // updated by the manual run
+      expect(after?.lastResult).toBe('success');
+      expect(after?.isRunning).toBe(false);
+      expect(rowsAfter.length).toBe(rowsBefore.length + 1); // new audit row for the manual run
     });
   });
 

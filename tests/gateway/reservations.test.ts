@@ -463,6 +463,13 @@ describe('Reservations API', () => {
       const conversationId = generateId('conversation');
       const taskId = generateId('task');
 
+      // Other-guest fixtures: a second guest with their own conversation and
+      // task, used to prove related tasks are scoped to the *correct* guest
+      // and not leaked across guests.
+      const otherGuestId = generateId('guest');
+      const otherConversationId = generateId('conversation');
+      const otherTaskId = generateId('task');
+
       await db.insert(conversations).values({
         id: conversationId,
         guestId,
@@ -475,30 +482,50 @@ describe('Reservations API', () => {
         updatedAt: now(),
       });
 
-      // Characterization / suspected bug: the route looks up related tasks via
-      // `eq(tasks.conversationId, id)` where `id` is the *reservation* id, not
-      // an actual conversation id (see src/gateway/routes/reservations.ts
-      // around line 349). Tasks are normally linked to a conversation, not a
-      // reservation directly, so this only ever matches if a task's
-      // conversationId happens to equal the reservation id. We insert a dummy
-      // conversation row whose id equals the reservation id purely to satisfy
-      // the tasks.conversationId foreign key and reproduce that behavior.
+      // Tasks link to conversations, not reservations directly. Related
+      // tasks for a reservation are found via the guest's conversations
+      // (reservation -> guest -> conversations -> tasks), so this task is
+      // linked through `conversationId`, not the reservation id.
+      await db.insert(tasks).values({
+        id: taskId,
+        conversationId,
+        type: 'housekeeping',
+        department: 'housekeeping',
+        description: 'Extra towels',
+        status: 'pending',
+        priority: 'standard',
+        createdAt: now(),
+        updatedAt: now(),
+      });
+
+      // A different guest with their own conversation and task — this task
+      // must NOT show up in the first guest's reservation related tasks.
+      await db.insert(guests).values({
+        id: otherGuestId,
+        firstName: 'Grace',
+        lastName: 'Hopper',
+        email: 'grace-reservations-test@example.com',
+        createdAt: now(),
+        updatedAt: now(),
+      });
+
       await db.insert(conversations).values({
-        id: todayArrivalResId,
+        id: otherConversationId,
+        guestId: otherGuestId,
         channelType: 'webchat',
-        channelId: 'dummy-fk-satisfier',
-        state: 'closed',
+        channelId: `session_${otherGuestId}`,
+        state: 'active',
         metadata: '{}',
         createdAt: now(),
         updatedAt: now(),
       });
 
       await db.insert(tasks).values({
-        id: taskId,
-        conversationId: todayArrivalResId,
+        id: otherTaskId,
+        conversationId: otherConversationId,
         type: 'housekeeping',
         department: 'housekeeping',
-        description: 'Extra towels',
+        description: 'Should not appear',
         status: 'pending',
         priority: 'standard',
         createdAt: now(),
@@ -516,10 +543,13 @@ describe('Reservations API', () => {
       expect(json.guest.preferences).toEqual(['quiet room']);
       expect(json._related.conversations.some((c: { id: string }) => c.id === conversationId)).toBe(true);
       expect(json._related.tasks.some((t: { id: string }) => t.id === taskId)).toBe(true);
+      expect(json._related.tasks.some((t: { id: string }) => t.id === otherTaskId)).toBe(false);
 
       await db.delete(tasks).where(eq(tasks.id, taskId));
+      await db.delete(tasks).where(eq(tasks.id, otherTaskId));
       await db.delete(conversations).where(eq(conversations.id, conversationId));
-      await db.delete(conversations).where(eq(conversations.id, todayArrivalResId));
+      await db.delete(conversations).where(eq(conversations.id, otherConversationId));
+      await db.delete(guests).where(eq(guests.id, otherGuestId));
     });
 
     it('returns 404 for a non-existent reservation', async () => {

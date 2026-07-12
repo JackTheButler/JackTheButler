@@ -22,6 +22,8 @@ interface ScheduledJob {
   lastRun: Date | null;
   lastResult: 'success' | 'error' | null;
   isRunning: boolean;
+  /** The same wrapped handler used by the interval timer — invoked directly by triggerJob() so manual and scheduled runs share identical bookkeeping (isRunning/lastRun/lastResult/activity_log). */
+  wrappedHandler: () => Promise<void>;
 }
 
 /**
@@ -114,6 +116,10 @@ export class Scheduler {
 
   /**
    * Manually trigger a job
+   *
+   * Routes through the same wrapped handler used by the interval timer, so a
+   * manual trigger sets isRunning, updates lastRun/lastResult, and writes the
+   * scheduler.outcome activity_log row exactly like a scheduled run does.
    */
   async triggerJob(name: string): Promise<void> {
     const job = this.jobs.get(name);
@@ -128,29 +134,7 @@ export class Scheduler {
 
     log.info({ name }, 'Manually triggering job');
 
-    if (name === 'pms-sync') {
-      await this.runPMSSync();
-    } else if (name === 'log-purge') {
-      const cutoff = new Date();
-      cutoff.setDate(cutoff.getDate() - 30);
-      const cutoffISO = cutoff.toISOString();
-      sqlite.prepare('DELETE FROM activity_log WHERE created_at < ?').run(cutoffISO);
-      sqlite.prepare('DELETE FROM app_logs WHERE created_at < ?').run(cutoffISO);
-    } else if (name === 'conversation-idle-timeout') {
-      await this.runConversationIdleTimeout();
-    } else if (name === 'webchat-session-cleanup') {
-      const { webchatSessionService } = await import('@/apps/channels/webchat/session.js');
-      const count = await webchatSessionService.cleanupExpired();
-      if (count > 0) {
-        log.info({ deleted: count }, 'Cleaned up expired webchat sessions');
-      }
-
-      const { cleanupRateLimitMaps } = await import('@/apps/channels/webchat/actions.js');
-      const rateLimitCleaned = cleanupRateLimitMaps();
-      if (rateLimitCleaned > 0) {
-        log.info({ cleaned: rateLimitCleaned }, 'Cleaned up stale rate-limit entries');
-      }
-    }
+    await job.wrappedHandler();
   }
 
   /**
@@ -164,6 +148,7 @@ export class Scheduler {
       lastRun: null,
       lastResult: null,
       isRunning: false,
+      wrappedHandler: async () => {},
     };
 
     const wrappedHandler = async (): Promise<void> => {
@@ -202,6 +187,7 @@ export class Scheduler {
       }
     };
 
+    job.wrappedHandler = wrappedHandler;
     job.timer = setInterval(wrappedHandler, intervalMs);
     this.jobs.set(name, job);
 
@@ -256,6 +242,14 @@ export class Scheduler {
 
     if (result.errors > 0) {
       log.warn({ errorCount: result.errors, errors: result.errorDetails }, 'PMS sync had errors');
+    }
+
+    // Only treat the job as failed when every item failed (errors > 0 and zero
+    // successes). Partial failures still count as success — see warn log above.
+    // Zero items synced with zero errors is also success (nothing to do).
+    const successCount = result.created + result.updated + result.unchanged;
+    if (result.errors > 0 && successCount === 0) {
+      throw new Error(`PMS sync failed: all ${result.errors} reservation(s) failed to sync`);
     }
 
     return {

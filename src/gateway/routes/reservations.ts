@@ -7,7 +7,7 @@
  */
 
 import { Hono } from 'hono';
-import { eq, desc, sql, and, gte } from 'drizzle-orm';
+import { eq, desc, sql, and, gte, inArray } from 'drizzle-orm';
 import { db, reservations, guests, conversations, tasks } from '@/db/index.js';
 import { settingsService } from '@/services/settings.js';
 import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
@@ -342,14 +342,28 @@ reservationRoutes.get('/:id', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), 
     .orderBy(desc(conversations.lastMessageAt))
     .all();
 
-  // Get related tasks
-  const relatedTasks = await db
-    .select()
-    .from(tasks)
-    .where(eq(tasks.conversationId, id))
-    .orderBy(desc(tasks.createdAt))
-    .limit(10)
+  // Get related tasks via the guest's conversations. Tasks link to
+  // conversations, not reservations directly, so we first find the
+  // conversation IDs belonging to this reservation's guest, then fetch
+  // tasks scoped to that set.
+  const guestConversations = await db
+    .select({ id: conversations.id })
+    .from(conversations)
+    .where(eq(conversations.guestId, result.reservation.guestId))
     .all();
+
+  const guestConversationIds = guestConversations.map((c) => c.id);
+
+  const relatedTasks =
+    guestConversationIds.length > 0
+      ? await db
+          .select()
+          .from(tasks)
+          .where(inArray(tasks.conversationId, guestConversationIds))
+          .orderBy(desc(tasks.createdAt))
+          .limit(10)
+          .all()
+      : [];
 
   return c.json({
     ...result.reservation,

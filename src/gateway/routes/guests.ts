@@ -15,11 +15,12 @@ import { db, guests, reservations, conversations, guestMemories } from '@/db/ind
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { validateBody, requireAuth, requirePermission } from '@/gateway/middleware/index.js';
-import { normalizePhone } from '@/services/guest.js';
+import { normalizePhone, guestService } from '@/services/guest.js';
 import { now } from '@/utils/time.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 import { memoryService } from '@/services/memory.js';
 import { getAppRegistry } from '@/apps/index.js';
+import { ConflictError } from '@/errors/index.js';
 
 const log = createLogger('routes:guests');
 
@@ -454,6 +455,21 @@ guestRoutes.post('/:id/memories/:memoryId/embed', requirePermission(PERMISSIONS.
 guestRoutes.post('/', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBody(createGuestSchema), async (c) => {
   const data = c.get('validatedBody') as z.infer<typeof createGuestSchema>;
 
+  if (data.email) {
+    const existingByEmail = await guestService.findByEmail(data.email);
+    if (existingByEmail) {
+      throw new ConflictError('A guest with this email already exists', { field: 'email' });
+    }
+  }
+
+  const normalizedPhone = data.phone ? normalizePhone(data.phone) : null;
+  if (normalizedPhone) {
+    const existingByPhone = await guestService.findByPhone(normalizedPhone);
+    if (existingByPhone) {
+      throw new ConflictError('A guest with this phone number already exists', { field: 'phone' });
+    }
+  }
+
   const id = generateId('guest');
 
   await db
@@ -463,7 +479,7 @@ guestRoutes.post('/', requirePermission(PERMISSIONS.GUESTS_MANAGE), validateBody
       firstName: data.firstName,
       lastName: data.lastName,
       email: data.email || null,
-      phone: data.phone ? normalizePhone(data.phone) : null,
+      phone: normalizedPhone,
       language: data.language,
       loyaltyTier: data.loyaltyTier || null,
       vipStatus: data.vipStatus || null,

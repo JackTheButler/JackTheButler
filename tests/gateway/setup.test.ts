@@ -182,9 +182,6 @@ describe('Setup API', () => {
 
   describe('POST /api/v1/setup/bootstrap', () => {
     it('completes the bootstrap step and moves to welcome', async () => {
-      // NOTE: completeStep() issues a DB UPDATE keyed on the 'setup' row, which is a
-      // silent no-op if that row doesn't exist yet (only POST /start INSERTs it).
-      // Must start the wizard first so the row exists.
       await app.request('/api/v1/setup/start', { method: 'POST' });
 
       const res = await app.request('/api/v1/setup/bootstrap', { method: 'POST' });
@@ -194,6 +191,24 @@ describe('Setup API', () => {
       expect(json.currentStep).toBe('welcome');
       expect(json.completedSteps).toContain('bootstrap');
       expect(json.status).toBe('in_progress');
+    });
+
+    it('persists correctly even if the setup_state row is missing (e.g. right after POST /reset)', async () => {
+      // completeStep() now upserts the 'setup' row instead of issuing a plain UPDATE,
+      // so this no longer silently no-ops when called before POST /start has ever
+      // INSERTed the row.
+      const res = await app.request('/api/v1/setup/bootstrap', { method: 'POST' });
+
+      expect(res.status).toBe(200);
+      const json = await res.json();
+      expect(json.currentStep).toBe('welcome');
+      expect(json.completedSteps).toContain('bootstrap');
+      expect(json.status).toBe('in_progress');
+
+      const stateRes = await app.request('/api/v1/setup/state');
+      const stateJson = await stateRes.json();
+      expect(stateJson.currentStep).toBe('welcome');
+      expect(stateJson.completedSteps).toContain('bootstrap');
     });
   });
 

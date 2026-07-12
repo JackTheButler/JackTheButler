@@ -56,6 +56,9 @@ describe('SetupService', () => {
     await db.delete(knowledgeBase);
     await db.delete(staff).where(eq(staff.id, 'staff-admin-butler'));
     await db.delete(staff).where(eq(staff.email, 'new-admin@test.com'));
+    // The default-admin-email-takeover test creates a *new* staff row (fresh id) that
+    // ends up owning this email, which the id-keyed delete above doesn't catch.
+    await db.delete(staff).where(eq(staff.email, 'default-admin@test.com'));
     await settingsService.delete(HOTEL_PROFILE_KEY);
   });
 
@@ -64,6 +67,9 @@ describe('SetupService', () => {
     await db.delete(knowledgeBase);
     await db.delete(staff).where(eq(staff.id, 'staff-admin-butler'));
     await db.delete(staff).where(eq(staff.email, 'new-admin@test.com'));
+    // The default-admin-email-takeover test creates a *new* staff row (fresh id) that
+    // ends up owning this email, which the id-keyed delete above doesn't catch.
+    await db.delete(staff).where(eq(staff.email, 'default-admin@test.com'));
     await settingsService.delete(HOTEL_PROFILE_KEY);
   });
 
@@ -174,6 +180,30 @@ describe('SetupService', () => {
 
       expect(state.status).toBe('completed');
       expect(state.currentStep).toBeNull();
+    });
+
+    it('should persist state even when the setup_state row is missing (e.g. after reset)', async () => {
+      // No service.start() here — simulates calling a step method against a fresh
+      // install / post-reset DB where the 'setup' row hasn't been INSERTed yet.
+      // A plain UPDATE keyed on id='setup' would silently no-op in that case.
+      const row = await db.select().from(setupState).where(eq(setupState.id, 'setup')).get();
+      expect(row).toBeUndefined();
+
+      const state = await service.completeStep('bootstrap', 'welcome');
+
+      expect(state.currentStep).toBe('welcome');
+      expect(state.completedSteps).toContain('bootstrap');
+      expect(state.status).toBe('in_progress');
+
+      // Verify it was actually persisted to the DB, not just returned in memory.
+      const persisted = await db
+        .select()
+        .from(setupState)
+        .where(eq(setupState.id, 'setup'))
+        .get();
+      expect(persisted).toBeDefined();
+      expect(persisted?.currentStep).toBe('welcome');
+      expect(persisted?.completedSteps).toContain('bootstrap');
     });
   });
 
@@ -347,13 +377,12 @@ describe('SetupService', () => {
       await db.delete(staff).where(eq(staff.id, 'staff-existing-user'));
     });
 
-    it('BUG: reusing the default admin email fails on a UNIQUE constraint even though the id check allows it through', async () => {
+    it('allows the new admin to take over the default admin email atomically', async () => {
       // createAdminAccount() special-cases existingUser.id === 'staff-admin-butler' to allow
-      // "re-using" the default admin's email address. But it then INSERTs a brand-new staff
-      // row with that same email *before* disabling/removing the old default-admin row, and
-      // staff.email has a UNIQUE constraint. So in practice this path always fails with a
-      // UNIQUE constraint violation, caught by the try/catch and surfaced as a generic error
-      // rather than the intended "in use" validation message. Documenting current behavior.
+      // "re-using" the default admin's email address. The takeover renames/disables the
+      // default admin's email inside a transaction before inserting the new admin row, so
+      // the UNIQUE constraint on staff.email no longer blocks account creation, and the two
+      // writes succeed or fail together.
       const passwordHash = await authService.hashPassword('defaultpw123');
       await db.insert(staff).values({
         id: 'staff-admin-butler',
@@ -371,8 +400,30 @@ describe('SetupService', () => {
         'New Admin'
       );
 
-      expect(result.success).toBe(false);
-      expect(result.error).toContain('UNIQUE constraint failed');
+      expect(result.success).toBe(true);
+      expect(result.error).toBeUndefined();
+
+      // The new admin was created with the reused email.
+      const newAdmin = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.email, 'default-admin@test.com'))
+        .get();
+      expect(newAdmin).toBeDefined();
+      expect(newAdmin?.id).not.toBe('staff-admin-butler');
+      expect(newAdmin?.name).toBe('New Admin');
+      expect(newAdmin?.status).toBe('active');
+      expect(newAdmin?.roleId).toBe(SYSTEM_ROLE_IDS.ADMIN);
+
+      // The default admin row was renamed off the reused email and disabled.
+      const defaultAdmin = await db
+        .select()
+        .from(staff)
+        .where(eq(staff.id, 'staff-admin-butler'))
+        .get();
+      expect(defaultAdmin).toBeDefined();
+      expect(defaultAdmin?.status).toBe('inactive');
+      expect(defaultAdmin?.email).not.toBe('default-admin@test.com');
     });
 
     it('should return a failure result when an error occurs during creation', async () => {

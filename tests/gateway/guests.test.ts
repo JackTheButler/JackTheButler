@@ -722,11 +722,10 @@ describe('Guests API', () => {
       expect(res.status).toBe(400);
     });
 
-    // Documents current behavior: the route does not pre-check for duplicate
-    // email/phone before insert. The unique index on guests.email causes the
-    // insert to throw, which is caught by the global error handler and
-    // surfaced as a generic 500 instead of a friendly 400 "already exists".
-    it('BUG: duplicate email causes a raw 500 instead of a handled 400', async () => {
+    // The route pre-checks for an existing guest by email/phone before insert,
+    // so duplicates are rejected with a friendly 409 Conflict instead of
+    // surfacing the underlying UNIQUE constraint as a raw 500.
+    it('rejects duplicate email with 409 and a clear error message', async () => {
       const email = `dupe-${generateId('guest')}@example.com`;
       const first = await app.request('/api/v1/guests', {
         method: 'POST',
@@ -742,7 +741,36 @@ describe('Guests API', () => {
         headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
         body: JSON.stringify({ firstName: 'Second', lastName: 'Two', email }),
       });
-      expect(second.status).toBe(500);
+      expect(second.status).toBe(409);
+      const secondJson = await second.json();
+      expect(secondJson.error.code).toBe('CONFLICT');
+      expect(secondJson.error.message).toMatch(/email/i);
+      expect(secondJson.error.details).toMatchObject({ field: 'email' });
+    });
+
+    it('rejects duplicate phone with 409 and a clear error message', async () => {
+      const phone = '+14155552672';
+      const first = await app.request('/api/v1/guests', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: 'First', lastName: 'Phone', phone }),
+      });
+      expect(first.status).toBe(201);
+      const firstJson = await first.json();
+      createdGuestIds.push(firstJson.id);
+
+      // Submit a differently-formatted but equivalent phone number to verify
+      // the duplicate check compares against the normalized value.
+      const second = await app.request('/api/v1/guests', {
+        method: 'POST',
+        headers: { Authorization: `Bearer ${adminToken}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ firstName: 'Second', lastName: 'Phone', phone: '+1 415-555-2672' }),
+      });
+      expect(second.status).toBe(409);
+      const secondJson = await second.json();
+      expect(secondJson.error.code).toBe('CONFLICT');
+      expect(secondJson.error.message).toMatch(/phone/i);
+      expect(secondJson.error.details).toMatchObject({ field: 'phone' });
     });
   });
 

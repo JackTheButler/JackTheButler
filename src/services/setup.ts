@@ -140,35 +140,10 @@ export class SetupService {
    */
   async start(): Promise<SetupStateRecord> {
 
-    // Check if state exists
-    const existing = await this.getStateRecord();
-
-    if (existing) {
-      // Update existing state
-      await db
-        .update(setupState)
-        .set({
-          status: 'in_progress',
-          currentStep: 'bootstrap',
-          updatedAt: now(),
-        })
-        .where(eq(setupState.id, 'setup'))
-        .run();
-    } else {
-      // Create new state
-      await db
-        .insert(setupState)
-        .values({
-          id: 'setup',
-          status: 'in_progress',
-          currentStep: 'bootstrap',
-          completedSteps: '[]',
-          context: '{}',
-          createdAt: now(),
-          updatedAt: now(),
-        })
-        .run();
-    }
+    await this.upsertState({
+      status: 'in_progress',
+      currentStep: 'bootstrap',
+    });
 
     // Enable Local AI provider
     await this.enableLocalAI();
@@ -202,16 +177,11 @@ export class SetupService {
 
     const newStatus: SetupStatus = nextStep ? 'in_progress' : 'completed';
 
-    await db
-      .update(setupState)
-      .set({
-        status: newStatus,
-        currentStep: nextStep,
-        completedSteps: JSON.stringify(completedSteps),
-        updatedAt: now(),
-      })
-      .where(eq(setupState.id, 'setup'))
-      .run();
+    await this.upsertState({
+      status: newStatus,
+      currentStep: nextStep,
+      completedSteps: JSON.stringify(completedSteps),
+    });
 
     log.info({ step, nextStep, status: newStatus }, 'Setup step completed');
 
@@ -228,15 +198,7 @@ export class SetupService {
       propertyName: name,
     };
 
-
-    await db
-      .update(setupState)
-      .set({
-        context: JSON.stringify(context),
-        updatedAt: now(),
-      })
-      .where(eq(setupState.id, 'setup'))
-      .run();
+    await this.upsertState({ context: JSON.stringify(context) });
 
     return this.completeStep('property_name', 'property_type');
   }
@@ -270,14 +232,7 @@ export class SetupService {
       propertyType: type,
     };
 
-    await db
-      .update(setupState)
-      .set({
-        context: JSON.stringify(context),
-        updatedAt: now(),
-      })
-      .where(eq(setupState.id, 'setup'))
-      .run();
+    await this.upsertState({ context: JSON.stringify(context) });
 
     log.info({ name, type }, 'Property info saved to hotel_profile');
 
@@ -310,14 +265,7 @@ export class SetupService {
       aiConfigured: true,
     };
 
-    await db
-      .update(setupState)
-      .set({
-        context: JSON.stringify(context),
-        updatedAt: now(),
-      })
-      .where(eq(setupState.id, 'setup'))
-      .run();
+    await this.upsertState({ context: JSON.stringify(context) });
 
     log.info({ provider }, 'AI provider configured');
 
@@ -361,36 +309,55 @@ export class SetupService {
       // Generate a unique ID for the new admin
       const adminId = `staff-${Date.now()}-${Math.random().toString(36).substring(2, 9)}`;
 
-      // Create the new admin account
+      // Create the new admin account. Password hashing is async, so it must happen
+      // before the (synchronous) better-sqlite3 transaction below.
       const passwordHash = await authService.hashPassword(password);
-      await db
-        .insert(staff)
-        .values({
-          id: adminId,
-          email: email.toLowerCase().trim(),
-          name: name.trim(),
-          roleId: SYSTEM_ROLE_IDS.ADMIN,
-          permissions: JSON.stringify(['*']),
-          status: 'active',
-          passwordHash,
-          createdAt: now(),
-          updatedAt: now(),
-        })
-        .run();
 
-      log.info({ adminId, email }, 'New admin account created');
+      // Takeover of the default admin's email must be atomic: if the new admin
+      // is reusing 'staff-admin-butler''s email, that row's email has to be freed
+      // up (renamed) BEFORE the new row is inserted, or the UNIQUE constraint on
+      // staff.email rejects the insert. Both writes happen in one transaction so
+      // a failure partway through cannot leave the account in a half-applied
+      // state that would lock the operator out of login.
+      db.transaction((tx) => {
+        if (existingUser && existingUser.id === 'staff-admin-butler') {
+          tx.update(staff)
+            .set({
+              email: `disabled-${existingUser.id}-${Date.now()}@invalid.local`,
+              status: 'inactive',
+              updatedAt: now(),
+            })
+            .where(eq(staff.id, 'staff-admin-butler'))
+            .run();
+        }
 
-      // Disable the default admin account
-      await db
-        .update(staff)
-        .set({
-          status: 'inactive',
-          updatedAt: now(),
-        })
-        .where(eq(staff.id, 'staff-admin-butler'))
-        .run();
+        tx.insert(staff)
+          .values({
+            id: adminId,
+            email: email.toLowerCase().trim(),
+            name: name.trim(),
+            roleId: SYSTEM_ROLE_IDS.ADMIN,
+            permissions: JSON.stringify(['*']),
+            status: 'active',
+            passwordHash,
+            createdAt: now(),
+            updatedAt: now(),
+          })
+          .run();
 
-      log.info('Default admin account disabled');
+        // Always ensure the default admin ends up disabled — covers the common
+        // case where it exists under a different email and wasn't touched above.
+        // A no-op if the row doesn't exist or was already renamed/disabled.
+        tx.update(staff)
+          .set({
+            status: 'inactive',
+            updatedAt: now(),
+          })
+          .where(eq(staff.id, 'staff-admin-butler'))
+          .run();
+      });
+
+      log.info({ adminId, email }, 'New admin account created, default admin disabled');
 
       // Update context with admin info
       const state = await this.getState();
@@ -399,14 +366,7 @@ export class SetupService {
         adminCreated: true,
       };
 
-      await db
-        .update(setupState)
-        .set({
-          context: JSON.stringify(context),
-          updatedAt: now(),
-        })
-        .where(eq(setupState.id, 'setup'))
-        .run();
+      await this.upsertState({ context: JSON.stringify(context) });
 
       // Complete setup
       const finalState = await this.completeStep('create_admin', null);
@@ -585,33 +545,10 @@ export class SetupService {
    */
   async skip(): Promise<SetupStateRecord> {
 
-    // Check if state exists
-    const existing = await this.getStateRecord();
-
-    if (existing) {
-      await db
-        .update(setupState)
-        .set({
-          status: 'completed',
-          currentStep: null,
-          updatedAt: now(),
-        })
-        .where(eq(setupState.id, 'setup'))
-        .run();
-    } else {
-      await db
-        .insert(setupState)
-        .values({
-          id: 'setup',
-          status: 'completed',
-          currentStep: null,
-          completedSteps: '[]',
-          context: '{}',
-          createdAt: now(),
-          updatedAt: now(),
-        })
-        .run();
-    }
+    await this.upsertState({
+      status: 'completed',
+      currentStep: null,
+    });
 
     log.info('Setup skipped');
 
@@ -698,6 +635,36 @@ export class SetupService {
       .from(setupState)
       .where(eq(setupState.id, 'setup'))
       .get();
+  }
+
+  /**
+   * Insert-or-update the 'setup' state row.
+   *
+   * Every step method needs to persist a partial patch of state, but a plain
+   * `db.update(...).where(id = 'setup')` silently no-ops if the row doesn't
+   * exist yet (e.g. right after POST /reset deletes it). Upserting guarantees
+   * the patch always lands, matching the insert-or-update behavior `start()`
+   * already relied on.
+   */
+  private async upsertState(
+    patch: Partial<
+      Pick<typeof setupState.$inferInsert, 'status' | 'currentStep' | 'completedSteps' | 'context'>
+    >
+  ): Promise<void> {
+    const updatedAt = now();
+
+    await db
+      .insert(setupState)
+      .values({
+        id: 'setup',
+        ...patch,
+        updatedAt,
+      })
+      .onConflictDoUpdate({
+        target: setupState.id,
+        set: { ...patch, updatedAt },
+      })
+      .run();
   }
 
   /**
