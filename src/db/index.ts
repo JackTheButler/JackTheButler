@@ -3,7 +3,21 @@
  *
  * SQLite database connection with Drizzle ORM.
  * Configured with WAL mode for better concurrency.
- * Automatically runs migrations on startup.
+ *
+ * Connection, sqlite-vec loading, and migrations are performed lazily:
+ * the first time `db` or `sqlite` is touched (or when `initDb()` is called
+ * explicitly), this module reads the current config and connects. This
+ * avoids "import order magic" — a module importing `{ db }` no longer
+ * decides, by virtue of being the first importer, what env the DB was
+ * created under. Callers get a live connection whenever they actually use
+ * it, initialized against whatever env is active at that moment.
+ *
+ * `initDb()` is exported for callers that want deterministic timing (the
+ * composition root in src/index.ts, and tests/setup.ts) and is idempotent
+ * — safe to call more than once.
+ *
+ * This module is intentionally domain-free: it does not seed any
+ * application data (e.g. default roles). See src/core/permissions/seed.ts.
  *
  * @see docs/03-architecture/data-model.md
  */
@@ -12,18 +26,19 @@ import { mkdirSync } from 'node:fs';
 import { dirname, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import Database, { type Database as DatabaseType } from 'better-sqlite3';
-import { drizzle } from 'drizzle-orm/better-sqlite3';
+import { drizzle, type BetterSQLite3Database } from 'drizzle-orm/better-sqlite3';
 import * as sqliteVec from 'sqlite-vec';
-import { eq } from 'drizzle-orm';
 import { migrate } from 'drizzle-orm/better-sqlite3/migrator';
 import * as schema from './schema.js';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
-import { DEFAULT_ROLES } from '@/core/permissions/defaults.js';
-import { now } from '@/utils/time.js';
 
 const log = createLogger('db');
-const config = loadConfig();
+
+type DrizzleDb = BetterSQLite3Database<typeof schema>;
+
+let sqliteInstance: DatabaseType | null = null;
+let dbInstance: DrizzleDb | null = null;
 
 /**
  * Ensure the data directory exists
@@ -36,39 +51,24 @@ function ensureDataDirectory(dbPath: string): void {
 /**
  * Create and configure SQLite connection
  */
-function createSqliteConnection(dbPath: string): Database.Database {
+function createSqliteConnection(dbPath: string): DatabaseType {
   ensureDataDirectory(dbPath);
 
-  const sqlite = new Database(dbPath);
+  const connection = new Database(dbPath);
 
   // Configure for performance and reliability
-  sqlite.pragma('journal_mode = WAL'); // Write-Ahead Logging for concurrency
-  sqlite.pragma('busy_timeout = 5000'); // Wait up to 5 seconds for locks
-  sqlite.pragma('synchronous = NORMAL'); // Balance between safety and performance
-  sqlite.pragma('foreign_keys = ON'); // Enforce foreign key constraints
+  connection.pragma('journal_mode = WAL'); // Write-Ahead Logging for concurrency
+  connection.pragma('busy_timeout = 5000'); // Wait up to 5 seconds for locks
+  connection.pragma('synchronous = NORMAL'); // Balance between safety and performance
+  connection.pragma('foreign_keys = ON'); // Enforce foreign key constraints
 
-  return sqlite;
+  return connection;
 }
 
 /**
- * Raw SQLite connection (for direct queries if needed)
+ * Run database migrations automatically
  */
-export const sqlite: DatabaseType = createSqliteConnection(config.database.path);
-
-// Load sqlite-vec extension for vector similarity search
-sqliteVec.load(sqlite);
-
-/**
- * Drizzle ORM instance with schema
- */
-export const db = drizzle(sqlite, { schema });
-
-log.info({ path: config.database.path }, 'Database connected');
-
-/**
- * Run database migrations automatically on startup
- */
-function runMigrations(): void {
+function runMigrations(connection: DatabaseType, drizzleDb: DrizzleDb): void {
   try {
     // Get migrations folder path (relative to project root)
     const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -76,9 +76,9 @@ function runMigrations(): void {
 
     // Temporarily disable FK checks — some migrations reference rows
     // (e.g. role IDs) that are seeded after migrations complete.
-    sqlite.pragma('foreign_keys = OFF');
-    migrate(db, { migrationsFolder });
-    sqlite.pragma('foreign_keys = ON');
+    connection.pragma('foreign_keys = OFF');
+    migrate(drizzleDb, { migrationsFolder });
+    connection.pragma('foreign_keys = ON');
     log.info('Database migrations applied');
   } catch (error) {
     log.error({ error }, 'Failed to run migrations');
@@ -86,50 +86,103 @@ function runMigrations(): void {
   }
 }
 
-// Run migrations on module load
-runMigrations();
-
 /**
- * Seed default roles if they don't exist
- * This runs automatically after migrations
+ * Initialize the database connection: connect, load sqlite-vec, run
+ * migrations. Idempotent — subsequent calls are no-ops as long as the
+ * connection is still open.
  */
-function seedDefaultRoles(): void {
-  try {
-    for (const role of DEFAULT_ROLES) {
-      // Check if role already exists
-      const existing = db.select().from(schema.roles).where(eq(schema.roles.id, role.id)).get();
-
-      if (!existing) {
-        db.insert(schema.roles)
-          .values({
-            id: role.id,
-            name: role.name,
-            description: role.description,
-            permissions: JSON.stringify(role.permissions),
-            isSystem: role.isSystem,
-            createdAt: now(),
-            updatedAt: now(),
-          })
-          .run();
-        log.info({ roleId: role.id, roleName: role.name }, 'Created default role');
-      }
-    }
-    log.info('Default roles verified');
-  } catch (error) {
-    log.error({ error }, 'Failed to seed default roles');
-    throw error;
+export function initDb(): void {
+  if (dbInstance && sqliteInstance) {
+    return;
   }
+
+  const config = loadConfig();
+
+  const connection = createSqliteConnection(config.database.path);
+  sqliteVec.load(connection);
+  const drizzleDb = drizzle(connection, { schema });
+
+  log.info({ path: config.database.path }, 'Database connected');
+
+  runMigrations(connection, drizzleDb);
+
+  sqliteInstance = connection;
+  dbInstance = drizzleDb;
 }
 
-// Seed default roles after migrations
-seedDefaultRoles();
+/**
+ * Bind a function-valued property to its real owner so native bindings
+ * (better-sqlite3) and internal `this` usage keep working when accessed
+ * through the lazy proxies below.
+ */
+function createLazyProxy<T extends object>(getTarget: () => T): T {
+  return new Proxy({} as T, {
+    get(_target, prop, _receiver) {
+      const target = getTarget();
+      const value = Reflect.get(target, prop, target);
+      return typeof value === 'function' ? value.bind(target) : value;
+    },
+    set(_target, prop, value) {
+      const target = getTarget();
+      return Reflect.set(target, prop, value, target);
+    },
+    has(_target, prop) {
+      return Reflect.has(getTarget(), prop);
+    },
+    ownKeys(_target) {
+      return Reflect.ownKeys(getTarget());
+    },
+    getOwnPropertyDescriptor(_target, prop) {
+      return Reflect.getOwnPropertyDescriptor(getTarget(), prop);
+    },
+    // Without these two traps, `Object.defineProperty`/`delete` (e.g. from
+    // `vi.spyOn`/`vi.restoreAllMocks` in tests) would silently apply to this
+    // Proxy's own inert internal target instead of the real db/sqlite
+    // instance, so mocks would appear to install but never actually run.
+    defineProperty(_target, prop, descriptor) {
+      return Reflect.defineProperty(getTarget(), prop, descriptor);
+    },
+    deleteProperty(_target, prop) {
+      return Reflect.deleteProperty(getTarget(), prop);
+    },
+    getPrototypeOf(_target) {
+      return Reflect.getPrototypeOf(getTarget());
+    },
+  });
+}
+
+/**
+ * Raw SQLite connection (for direct queries if needed).
+ * Auto-initializes (connect + sqlite-vec + migrate) on first access.
+ */
+export const sqlite: DatabaseType = createLazyProxy<DatabaseType>(() => {
+  if (!sqliteInstance) {
+    initDb();
+  }
+  return sqliteInstance!;
+});
+
+/**
+ * Drizzle ORM instance with schema.
+ * Auto-initializes (connect + sqlite-vec + migrate) on first access.
+ */
+export const db: DrizzleDb = createLazyProxy<DrizzleDb>(() => {
+  if (!dbInstance) {
+    initDb();
+  }
+  return dbInstance!;
+});
 
 /**
  * Close the database connection (for graceful shutdown)
  */
 export function closeDatabase(): void {
-  sqlite.close();
-  log.info('Database connection closed');
+  if (sqliteInstance) {
+    sqliteInstance.close();
+    log.info('Database connection closed');
+  }
+  sqliteInstance = null;
+  dbInstance = null;
 }
 
 /**

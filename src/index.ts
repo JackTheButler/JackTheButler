@@ -7,7 +7,8 @@
 import { createServer } from 'node:http';
 import { loadConfig, getEnv } from '@/config/index.js';
 import { logger } from '@/utils/logger.js';
-import { closeDatabase, isDatabaseHealthy } from '@/db/index.js';
+import { initDb, closeDatabase, isDatabaseHealthy } from '@/db/index.js';
+import { seedDefaultRoles } from '@/core/permissions/seed.js';
 import { app, setupWebSocket } from '@/gateway/index.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/scheduler/index.js';
@@ -39,6 +40,11 @@ async function main(): Promise<void> {
     ╚════════════════════════════════════════╝\n\n`);
 
   startupLog.info({ env: getEnv(), port: config.port }, 'Starting Jack The Butler');
+
+  // Explicitly initialize the database (connect, load sqlite-vec, migrate)
+  // and seed default roles before anything else touches the DB.
+  initDb();
+  seedDefaultRoles();
 
   // Verify database is healthy
   if (!isDatabaseHealthy()) {

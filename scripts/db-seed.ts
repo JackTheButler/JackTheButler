@@ -5,51 +5,25 @@
  * The admin user is created by the migration.
  * Sample/demo data is loaded separately via the UI (POST /api/v1/seed/demo).
  *
+ * This is a standalone CLI script (like the other files in scripts/), so it
+ * lives outside src/ — it isn't part of the kernel/adapter layering that
+ * governs src/db/**, src/core/**, etc., and isn't covered by `pnpm lint`,
+ * `pnpm lint:deps`, or `pnpm typecheck` (which only scan/compile src/).
+ *
  * Run with: pnpm db:seed
  */
 
-import { eq } from 'drizzle-orm';
-import { db, settings, roles } from './index.js';
-import { DEFAULT_ROLES } from '@/core/permissions/defaults.js';
-import { createLogger } from '@/utils/logger.js';
-import { now } from '@/utils/time.js';
+import { db, settings } from '../src/db/index.js';
+import { seedDefaultRoles } from '../src/core/permissions/seed.js';
+import { createLogger } from '../src/utils/logger.js';
 
 const log = createLogger('seed');
-
-/**
- * Seed default roles into the database
- */
-async function seedRoles(): Promise<number> {
-  let seededCount = 0;
-
-  for (const role of DEFAULT_ROLES) {
-    // Check if role already exists
-    const existing = await db.select().from(roles).where(eq(roles.id, role.id)).limit(1);
-
-    if (existing.length === 0) {
-      await db.insert(roles).values({
-        id: role.id,
-        name: role.name,
-        description: role.description,
-        permissions: JSON.stringify(role.permissions),
-        isSystem: role.isSystem,
-        createdAt: now(),
-        updatedAt: now(),
-      });
-      seededCount++;
-      log.info({ roleId: role.id, roleName: role.name }, 'Created default role');
-    }
-  }
-
-  return seededCount;
-}
 
 async function seed() {
   log.info('Starting database seed...');
 
   // 1. Seed default roles (always run, idempotent)
-  const rolesSeeded = await seedRoles();
-  log.info({ count: rolesSeeded }, 'Seeded roles');
+  seedDefaultRoles();
 
   // 2. Check if settings already seeded
   const existing = await db.select().from(settings).limit(1);
@@ -74,9 +48,6 @@ async function seed() {
 
   log.info('Database seed complete!');
 }
-
-// Export for programmatic use
-export { seedRoles };
 
 seed().catch((error) => {
   log.error({ error }, 'Seed failed');

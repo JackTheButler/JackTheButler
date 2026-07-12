@@ -303,23 +303,6 @@
       }
     },
     {
-      "//": "GRANDFATHERED (rule 5): src/db/index.ts and src/db/seed.ts -> @/core/permissions/defaults.js (DEFAULT_ROLES), tracked for the interface-inversion refactor. Do not add new files here — fix the underlying import instead.",
-      "files": ["**/src/db/index.ts", "**/src/db/seed.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": ["@/gateway/**", "@/gateway"],
-                "message": "Layering violation: src/db/** must not import @/gateway."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
       "//": "GRANDFATHERED (rule 3, not in the original known-violations list — discovered while wiring this guardrail; flagged for follow-up, see PR description): src/apps/tools/site-scraper/routes.ts -> @/gateway/middleware. Do not add new files here — fix the underlying import instead.",
       "files": ["**/src/apps/tools/site-scraper/routes.ts"],
       "rules": {

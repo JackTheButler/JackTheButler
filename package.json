@@ -28,7 +28,7 @@
     "db:migrate": "drizzle-kit migrate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx --env-file=.env.development src/db/seed.ts",
+    "db:seed": "tsx --env-file=.env.development scripts/db-seed.ts",
     "docs": "npx @redocly/cli preview-docs docs/04-specs/api/openapi.yaml",
     "docs:lint": "npx @redocly/cli lint docs/04-specs/api/openapi.yaml"
   },
