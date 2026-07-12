@@ -18,17 +18,21 @@ import type {
   AutomationRuleDefinition,
   ExecutionContext,
   ExecutionResult,
+  RuleTestResult,
   TimeTriggerConfig,
+  TriggerType,
+  ActionType,
 } from './types.js';
 import { matchesTrigger, getTargetDateForTrigger, matchesTriggerTime } from './triggers.js';
-import { executeAction } from './actions.js';
+import { executeAction, getAvailableTemplates } from './actions.js';
 import { executeActionChain, convertLegacyAction } from './chain-executor.js';
 import { processPendingRetries, createExecution, scheduleRetry, updateExecutionStatus } from './retry-handler.js';
 import type { ActionDefinition } from './types.js';
 import { createLogger } from '@/utils/logger.js';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
-import { pmsSyncService } from '@/apps/pms/sync.js';
+import { getPMSSync } from '@/core/interfaces/pms-sync.js';
+import { ValidationError } from '@/errors/index.js';
 
 const log = createLogger('automation');
 
@@ -155,7 +159,7 @@ export class AutomationEngine {
 
     // Ensure local reservation data is fresh before evaluating triggers
     try {
-      await pmsSyncService.syncReservations(this.lastPreTriggerSync ?? undefined);
+      await getPMSSync().syncReservations(this.lastPreTriggerSync ?? undefined);
       this.lastPreTriggerSync = new Date();
     } catch (err) {
       log.warn({ err }, 'Pre-trigger PMS sync failed, proceeding with local data');
@@ -367,6 +371,68 @@ export class AutomationEngine {
    */
   async toggleRule(id: string, enabled: boolean): Promise<AutomationRule | null> {
     return this.updateRule(id, { enabled });
+  }
+
+  /**
+   * Validate a rule's stored trigger/action configuration (dry run).
+   * Returns null if the rule does not exist.
+   */
+  async testRule(id: string): Promise<RuleTestResult | null> {
+    const rule = await this.getRule(id);
+    if (!rule) {
+      return null;
+    }
+
+    try {
+      const triggerConfig = JSON.parse(rule.triggerConfig) as Record<string, unknown>;
+      const actionConfig = JSON.parse(rule.actionConfig) as Record<string, unknown>;
+
+      // Validate trigger config based on type
+      if (rule.triggerType === 'time_based') {
+        if (!triggerConfig.type) {
+          throw new ValidationError('Time-based trigger missing type');
+        }
+      } else if (rule.triggerType === 'event_based') {
+        if (!triggerConfig.eventType) {
+          throw new ValidationError('Event-based trigger missing eventType');
+        }
+      }
+
+      // Validate action config based on type
+      if (rule.actionType === 'send_message') {
+        if (!actionConfig.template) {
+          throw new ValidationError('Send message action missing template');
+        }
+        const templates = getAvailableTemplates();
+        if (!templates.includes(actionConfig.template as string)) {
+          throw new ValidationError(`Unknown template: ${actionConfig.template}`);
+        }
+      } else if (rule.actionType === 'webhook') {
+        if (!actionConfig.url) {
+          throw new ValidationError('Webhook action missing URL');
+        }
+      }
+
+      log.info({ ruleId: id }, 'Automation rule test passed');
+
+      return {
+        success: true,
+        message: 'Rule configuration is valid',
+        details: {
+          triggerType: rule.triggerType as TriggerType,
+          triggerConfig,
+          actionType: rule.actionType as ActionType,
+          actionConfig,
+        },
+      };
+    } catch (error) {
+      const message = error instanceof Error ? error.message : 'Unknown error';
+
+      return {
+        success: false,
+        message: `Rule configuration invalid: ${message}`,
+      };
+    }
   }
 
   // Private helper methods

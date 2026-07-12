@@ -12,6 +12,8 @@ import { app, setupWebSocket } from '@/gateway/index.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/scheduler/index.js';
 import { appConfigService } from '@/apps/config.js';
+import { pmsSyncService } from '@/apps/pms/sync.js';
+import { registerPMSSync } from '@/core/interfaces/pms-sync.js';
 import { getAutomationEngine } from '@/core/automation/index.js';
 import { subscribeAutomationToEvents } from '@/core/automation/event-subscriber.js';
 import { subscribeActivityLogToEvents } from '@/services/activity-log.js';
@@ -44,6 +46,11 @@ async function main(): Promise<void> {
     process.exit(1);
   }
   startupLog.info('Database health check passed');
+
+  // Register the PMS sync implementation for the kernel (src/core) to use
+  // via the PMSSync interface. Must happen before the scheduler starts and
+  // before the automation engine / guest-context code paths run.
+  registerPMSSync(pmsSyncService);
 
   // Load enabled extensions from database. The new pipeline's
   // `aiProvider` adapter calls `getActiveAIProvider()` on every request,

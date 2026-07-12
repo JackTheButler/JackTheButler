@@ -5,11 +5,7 @@
  */
 
 import { Hono } from 'hono';
-import { ValidationError } from '@/errors/index.js';
 import { z } from 'zod';
-import { eq, desc } from 'drizzle-orm';
-import { db } from '@/db/index.js';
-import { automationLogs } from '@/db/schema.js';
 import {
   getAutomationEngine,
   getAvailableTemplates,
@@ -19,9 +15,9 @@ import {
   type TriggerConfig,
   type ActionConfig,
 } from '@/core/automation/index.js';
+import { automationService } from '@/services/automation.js';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/index.js';
-import { generateId } from '@/utils/id.js';
 import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';
 
@@ -324,12 +320,7 @@ automationRoutes.get('/rules/:ruleId/logs', requirePermission(PERMISSIONS.AUTOMA
     return c.json({ error: 'Rule not found' }, 404);
   }
 
-  const logs = await db
-    .select()
-    .from(automationLogs)
-    .where(eq(automationLogs.ruleId, ruleId))
-    .orderBy(desc(automationLogs.createdAt))
-    .limit(Math.min(limit, 100));
+  const logs = await automationService.getLogsForRule(ruleId, limit);
 
   return c.json({
     logs: logs.map((logEntry) => ({
@@ -356,21 +347,7 @@ automationRoutes.get('/logs', requirePermission(PERMISSIONS.AUTOMATIONS_VIEW), a
   const limit = parseInt(c.req.query('limit') ?? '50', 10);
   const status = c.req.query('status'); // Optional filter
 
-  let logs;
-  if (status === 'success' || status === 'failed') {
-    logs = await db
-      .select()
-      .from(automationLogs)
-      .where(eq(automationLogs.status, status))
-      .orderBy(desc(automationLogs.createdAt))
-      .limit(Math.min(limit, 100));
-  } else {
-    logs = await db
-      .select()
-      .from(automationLogs)
-      .orderBy(desc(automationLogs.createdAt))
-      .limit(Math.min(limit, 100));
-  }
+  const logs = await automationService.getLogs({ status, limit });
 
   return c.json({
     logs: logs.map((logEntry) => ({
@@ -398,64 +375,13 @@ automationRoutes.post('/rules/:ruleId/test', requirePermission(PERMISSIONS.AUTOM
   const { ruleId } = c.req.param();
 
   const engine = getAutomationEngine();
-  const rule = await engine.getRule(ruleId);
+  const result = await engine.testRule(ruleId);
 
-  if (!rule) {
+  if (!result) {
     return c.json({ error: 'Rule not found' }, 404);
   }
 
-  // For now, just validate the rule configuration
-  // In a full implementation, this would do a dry-run execution
-  try {
-    const triggerConfig = JSON.parse(rule.triggerConfig) as Record<string, unknown>;
-    const actionConfig = JSON.parse(rule.actionConfig) as Record<string, unknown>;
-
-    // Validate trigger config based on type
-    if (rule.triggerType === 'time_based') {
-      if (!triggerConfig.type) {
-        throw new ValidationError('Time-based trigger missing type');
-      }
-    } else if (rule.triggerType === 'event_based') {
-      if (!triggerConfig.eventType) {
-        throw new ValidationError('Event-based trigger missing eventType');
-      }
-    }
-
-    // Validate action config based on type
-    if (rule.actionType === 'send_message') {
-      if (!actionConfig.template) {
-        throw new ValidationError('Send message action missing template');
-      }
-      const templates = getAvailableTemplates();
-      if (!templates.includes(actionConfig.template as string)) {
-        throw new ValidationError(`Unknown template: ${actionConfig.template}`);
-      }
-    } else if (rule.actionType === 'webhook') {
-      if (!actionConfig.url) {
-        throw new ValidationError('Webhook action missing URL');
-      }
-    }
-
-    log.info({ ruleId }, 'Automation rule test passed');
-
-    return c.json({
-      success: true,
-      message: 'Rule configuration is valid',
-      details: {
-        triggerType: rule.triggerType,
-        triggerConfig,
-        actionType: rule.actionType,
-        actionConfig,
-      },
-    });
-  } catch (error) {
-    const message = error instanceof Error ? error.message : 'Unknown error';
-
-    return c.json({
-      success: false,
-      message: `Rule configuration invalid: ${message}`,
-    });
-  }
+  return c.json(result);
 });
 
 // ==================
@@ -488,122 +414,32 @@ automationRoutes.post('/generate', requirePermission(PERMISSIONS.AUTOMATIONS_MAN
       return c.json({ error: 'No AI provider available' }, 503);
     }
 
-    const systemPrompt = `You are an automation rule generator for a hotel management system called Jack The Butler.
-Given a natural language description, generate a JSON automation rule.
+    const result = await automationService.generateRuleFromPrompt(prompt, aiProvider);
 
-Available trigger types:
-- time_based: {type: 'before_arrival'|'after_arrival'|'before_departure'|'after_departure', offsetDays: number, time: 'HH:MM'}
-  - before_arrival: offsetDays is how many days before arrival (e.g., 3 = 3 days before)
-  - after_arrival: offsetDays is how many days after arrival (e.g., 1 = 1 day after check-in)
-  - before_departure: offsetDays is how many days before departure (e.g., 0 = checkout day)
-  - after_departure: offsetDays is how many days after departure (e.g., 1 = 1 day after checkout)
-- event_based: {eventType: 'reservation.created'|'reservation.checked_in'|'reservation.checked_out'|'conversation.escalated'|'task.created'|'task.completed'}
-
-Available action types (can chain multiple):
-- send_message: {template: 'custom'|'pre_arrival_welcome'|'checkout_reminder'|'post_stay_thank_you', message?: string, channel: 'preferred'|'sms'|'email'|'whatsapp'}
-  - Use template: 'custom' with message field for custom messages
-- create_task: {type: 'housekeeping'|'maintenance'|'concierge'|'room_service'|'other', department: string, description: string, priority?: 'low'|'standard'|'high'|'urgent'}
-- notify_staff: {role?: string, staffId?: string, message: string, priority?: 'low'|'standard'|'high'|'urgent'}
-- webhook: {url: string, method: 'GET'|'POST', bodyTemplate?: string, headers?: object}
-
-Action chaining: The "actions" array contains multiple actions with order (1,2,3...). Each action can have:
-- id: unique identifier for the action
-- type: action type
-- config: action-specific config
-- order: execution order
-- continueOnError: boolean (optional, continue chain if this action fails)
-- condition: {type: 'previous_success'|'previous_failed'|'always'} (optional, when to run)
-
-Retry config (optional):
-- retryConfig: {enabled: true, maxAttempts: 3, backoffType: 'exponential'|'fixed', initialDelayMs: 60000, maxDelayMs: 3600000}
-
-Variables available in messages/descriptions: {{firstName}}, {{lastName}}, {{roomNumber}}, {{arrivalDate}}, {{departureDate}}
-Chain variables: {{actions.ACTION_ID.output.FIELD}} to reference previous action outputs (e.g., {{actions.send_welcome.output.messageId}})
-
-Output format:
-{
-  "name": "Rule name",
-  "description": "Brief description",
-  "triggerType": "time_based" or "event_based",
-  "triggerConfig": { ... },
-  "actions": [
-    { "id": "action_1", "type": "send_message", "config": { ... }, "order": 1 },
-    { "id": "action_2", "type": "create_task", "config": { ... }, "order": 2, "condition": { "type": "previous_success" } }
-  ],
-  "retryConfig": { "enabled": true, "maxAttempts": 3, "backoffType": "exponential", "initialDelayMs": 60000, "maxDelayMs": 3600000 }
-}
-
-For simple single-action rules, also include legacy fields for backwards compatibility:
-  "actionType": "send_message",
-  "actionConfig": { ... }
-
-Return ONLY valid JSON, no explanation or markdown.`;
-
-    const response = await aiProvider.complete({
-      messages: [
-        { role: 'system', content: systemPrompt },
-        { role: 'user', content: prompt },
-      ],
-      maxTokens: 1500,
-      temperature: 0.3,
-    });
-
-    // Parse the AI response
-    let generatedRule;
-    try {
-      // Extract JSON from the response (handle markdown code blocks)
-      let jsonStr = response.content.trim();
-      if (jsonStr.startsWith('```json')) {
-        jsonStr = jsonStr.slice(7);
+    if (!result.ok) {
+      if (result.kind === 'parse_error') {
+        return c.json(
+          {
+            error: 'Failed to parse generated rule',
+            details: 'The AI response was not valid JSON',
+            raw: result.raw,
+          },
+          422
+        );
       }
-      if (jsonStr.startsWith('```')) {
-        jsonStr = jsonStr.slice(3);
-      }
-      if (jsonStr.endsWith('```')) {
-        jsonStr = jsonStr.slice(0, -3);
-      }
-      generatedRule = JSON.parse(jsonStr.trim());
-    } catch (parseError) {
-      log.error({ response: response.content, error: parseError }, 'Failed to parse AI-generated rule');
-      return c.json({
-        error: 'Failed to parse generated rule',
-        details: 'The AI response was not valid JSON',
-        raw: response.content,
-      }, 422);
-    }
 
-    // Validate the generated rule has required fields
-    if (!generatedRule.name || !generatedRule.triggerType || !generatedRule.triggerConfig) {
-      return c.json({
-        error: 'Invalid generated rule',
-        details: 'Missing required fields (name, triggerType, triggerConfig)',
-        rule: generatedRule,
-      }, 422);
+      return c.json(
+        {
+          error: 'Invalid generated rule',
+          details: 'Missing required fields (name, triggerType, triggerConfig)',
+          rule: result.rule,
+        },
+        422
+      );
     }
-
-    // Ensure actions array exists (convert legacy if needed)
-    if (!generatedRule.actions && generatedRule.actionType && generatedRule.actionConfig) {
-      generatedRule.actions = [{
-        id: generateId('action'),
-        type: generatedRule.actionType,
-        config: generatedRule.actionConfig,
-        order: 1,
-      }];
-    }
-
-    // Generate IDs for actions if missing
-    if (generatedRule.actions) {
-      for (const action of generatedRule.actions) {
-        if (!action.id) {
-          action.id = generateId('action');
-        }
-      }
-    }
-
-    log.info({ prompt, ruleName: generatedRule.name }, 'Generated automation rule from natural language');
 
     return c.json({
-      rule: generatedRule,
+      rule: result.rule,
       prompt,
     });
   } catch (error) {

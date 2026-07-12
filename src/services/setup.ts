@@ -74,6 +74,124 @@ export type PropertyType = 'hotel' | 'bnb' | 'vacation_rental' | 'other';
 export type AIProviderType = 'local' | 'anthropic' | 'openai';
 
 /**
+ * Step configuration for AI-assisted message processing during setup
+ */
+interface StepConfig {
+  purpose: string;
+  expectedAnswer: string;
+  canSkip: boolean;
+  skipNextStep?: string;
+  validation?: (value: string) => { valid: boolean; normalized?: string; error?: string };
+}
+
+const stepConfigs: Record<string, StepConfig> = {
+  ask_website: {
+    purpose: 'Collect the property website URL to learn about the property',
+    expectedAnswer: 'A website URL (e.g., grandhotel.com or https://grandhotel.com)',
+    canSkip: true,
+    skipNextStep: 'ask_manual_checkin',
+    validation: (value: string) => {
+      let url = value.trim();
+      if (!url.startsWith('http://') && !url.startsWith('https://')) {
+        url = 'https://' + url;
+      }
+      try {
+        new URL(url);
+        return { valid: true, normalized: url };
+      } catch {
+        return { valid: false, error: 'Invalid URL format' };
+      }
+    },
+  },
+  ask_manual_checkin: {
+    purpose: 'Collect check-in and check-out times for the property',
+    expectedAnswer: 'Check-in and check-out times (e.g., "Check-in: 3pm, Check-out: 11am")',
+    canSkip: false,
+  },
+  ask_manual_room: {
+    purpose: 'Collect information about room types at the property',
+    expectedAnswer: 'Room type description (name, features, price range)',
+    canSkip: false,
+  },
+  ask_manual_contact: {
+    purpose: 'Collect contact information for the property',
+    expectedAnswer: 'Contact details (phone, email, or address)',
+    canSkip: false,
+  },
+  ask_manual_location: {
+    purpose: 'Collect the property location and address',
+    expectedAnswer: 'Property address or location description',
+    canSkip: false,
+  },
+};
+
+/**
+ * Build the AI prompt used to interpret a guest's/operator's reply during a setup step
+ */
+function buildProcessMessagePrompt(
+  message: string,
+  stepConfig: StepConfig,
+  propertyName: string,
+  propertyType: string,
+  question: string
+): string {
+  return `You are Jack, an AI assistant helping set up a hospitality management system for "${propertyName}" (a ${propertyType}).
+
+CURRENT STEP: ${stepConfig.purpose}
+QUESTION ASKED: "${question}"
+EXPECTED ANSWER: ${stepConfig.expectedAnswer}
+CAN SKIP: ${stepConfig.canSkip ? 'Yes - user can skip this step' : 'No - this information is required'}
+
+USER'S MESSAGE: "${message}"
+
+Analyze the user's message and determine their intent:
+
+1. **answer** - They provided the requested information (even if informal like "3pm to 11am" for check-in times)
+2. **question** - They're asking for clarification or more information
+3. **skip** - They want to skip this step or don't have the information${stepConfig.canSkip ? '' : ' (not allowed for this step)'}
+4. **unclear** - The message is unclear or off-topic
+
+Respond with a JSON object:
+{
+  "intent": "answer" | "question" | "skip" | "unclear",
+  "response": "Your helpful response to the user",
+  "extractedValue": "The value extracted from their answer (only for intent=answer)"
+}
+
+Guidelines:
+- Be friendly and conversational, not robotic
+- For "question" intent: Explain what you need and why, offer examples
+- For "skip" intent${stepConfig.canSkip ? ': Confirm you\'ll proceed without this info' : ': Politely explain this info is needed and ask again'}
+- For "unclear" intent: Ask a clarifying question to get back on track
+- For "answer" intent: Extract the actual value they provided
+- Keep responses concise (1-2 sentences max)
+
+JSON only, no markdown:`;
+}
+
+/**
+ * Input to SetupService.processMessage()
+ */
+export interface ProcessMessageInput {
+  message: string;
+  step: string;
+  propertyName: string;
+  propertyType: string;
+  question: string;
+}
+
+/**
+ * Result of SetupService.processMessage(), mapped directly to the HTTP response body
+ */
+export interface ProcessMessageResult {
+  action: 'proceed' | 'retry' | 'show_message' | 'skip';
+  message: string | null;
+  data: { value: string } | null;
+  stayOnStep?: boolean;
+  nextStep?: string | null;
+}
+
+/**
  * Setup state record
  */
 export interface SetupStateRecord {
@@ -465,6 +583,122 @@ export class SetupService {
     log.info('Hotel profile synced from knowledge base');
 
     return profile;
+  }
+
+  /**
+   * Process a user message during a setup step with AI to determine intent and action.
+   * Falls back to direct validation (or pass-through) when no AI provider is configured
+   * or the AI call/response fails.
+   */
+  async processMessage(input: ProcessMessageInput): Promise<ProcessMessageResult> {
+    const { message, step, propertyName, propertyType, question } = input;
+    const stepConfig = stepConfigs[step];
+
+    // If no step config, treat as direct answer (for steps without AI processing)
+    if (!stepConfig) {
+      return { action: 'proceed', message: null, data: { value: message } };
+    }
+
+    // Get AI provider
+    const registry = getAppRegistry();
+    const aiProvider = registry.getActiveAIProvider();
+
+    if (!aiProvider) {
+      log.warn('No AI provider available for message processing, falling back to direct processing');
+      // Fallback: try validation if available, otherwise proceed
+      if (stepConfig.validation) {
+        const result = stepConfig.validation(message);
+        if (result.valid) {
+          return { action: 'proceed', message: null, data: { value: result.normalized || message } };
+        } else {
+          return { action: 'retry', message: result.error || 'Please try again with a valid value.', data: null };
+        }
+      }
+      return { action: 'proceed', message: null, data: { value: message } };
+    }
+
+    try {
+      const prompt = buildProcessMessagePrompt(message, stepConfig, propertyName, propertyType, question);
+
+      const response = await aiProvider.complete({
+        messages: [{ role: 'user', content: prompt }],
+        maxTokens: 500,
+        temperature: 0.3,
+      });
+
+      // Parse JSON response
+      const jsonMatch = response.content.match(/\{[\s\S]*\}/);
+      if (!jsonMatch) {
+        log.warn('Failed to parse AI response, falling back');
+        return { action: 'proceed', message: null, data: { value: message } };
+      }
+
+      const aiResult = JSON.parse(jsonMatch[0]) as {
+        intent: 'answer' | 'question' | 'skip' | 'unclear';
+        response: string;
+        extractedValue?: string;
+      };
+
+      log.info({ step, intent: aiResult.intent }, 'Processed setup message');
+
+      // Map AI intent to frontend action
+      switch (aiResult.intent) {
+        case 'answer': {
+          const value = aiResult.extractedValue || message;
+
+          // Run validation if available
+          if (stepConfig.validation) {
+            const validationResult = stepConfig.validation(value);
+            if (!validationResult.valid) {
+              return {
+                action: 'retry',
+                message: aiResult.response || validationResult.error || 'Please check your input and try again.',
+                data: null,
+              };
+            }
+            return {
+              action: 'proceed',
+              message: aiResult.response || null,
+              data: { value: validationResult.normalized || value },
+            };
+          }
+
+          return { action: 'proceed', message: aiResult.response || null, data: { value } };
+        }
+
+        case 'question':
+          return { action: 'show_message', message: aiResult.response, data: null, stayOnStep: true };
+
+        case 'skip':
+          if (stepConfig.canSkip) {
+            return {
+              action: 'skip',
+              message: aiResult.response,
+              data: null,
+              nextStep: stepConfig.skipNextStep || null,
+            };
+          } else {
+            // Can't skip this step
+            return { action: 'show_message', message: aiResult.response, data: null, stayOnStep: true };
+          }
+
+        case 'unclear':
+        default:
+          return { action: 'show_message', message: aiResult.response, data: null, stayOnStep: true };
+      }
+    } catch (error) {
+      log.error({ error, step }, 'Failed to process message with AI');
+
+      // Fallback: try direct validation or proceed
+      if (stepConfig.validation) {
+        const result = stepConfig.validation(message);
+        if (result.valid) {
+          return { action: 'proceed', message: null, data: { value: result.normalized || message } };
+        }
+      }
+
+      return { action: 'retry', message: 'I had trouble understanding that. Could you try again?', data: null };
+    }
   }
 
   /**

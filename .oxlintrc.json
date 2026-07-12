@@ -1,0 +1,357 @@
+{
+  "$schema": "./node_modules/oxlint/configuration_schema.json",
+  "plugins": ["react", "unicorn", "typescript", "oxc"],
+  "categories": {},
+  "rules": {
+    "no-constant-condition": "warn",
+    "oxc/bad-array-method-on-arguments": "warn",
+    "no-import-assign": "warn",
+    "no-useless-catch": "warn",
+    "react/jsx-key": "warn",
+    "typescript/no-duplicate-enum-values": "warn",
+    "valid-typeof": "warn",
+    "oxc/bad-replace-all-arg": "warn",
+    "no-loss-of-precision": "warn",
+    "typescript/no-useless-empty-export": "warn",
+    "no-empty-character-class": "warn",
+    "no-this-before-super": "warn",
+    "unicorn/no-empty-file": "warn",
+    "unicorn/no-unnecessary-await": "warn",
+    "unicorn/no-useless-spread": "warn",
+    "no-eval": "warn",
+    "no-unsafe-finally": "warn",
+    "no-constant-binary-expression": "warn",
+    "react/no-string-refs": "warn",
+    "require-yield": "warn",
+    "no-global-assign": "warn",
+    "no-unused-vars": "warn",
+    "no-delete-var": "warn",
+    "no-self-assign": "warn",
+    "use-isnan": "warn",
+    "oxc/bad-object-literal-comparison": "warn",
+    "react/jsx-no-undef": "warn",
+    "typescript/no-extra-non-null-assertion": "warn",
+    "unicorn/no-document-cookie": "warn",
+    "no-caller": "warn",
+    "no-new-native-nonconstructor": "warn",
+    "oxc/missing-throw": "warn",
+    "react/no-danger-with-children": "warn",
+    "typescript/no-non-null-asserted-optional-chain": "warn",
+    "no-const-assign": "warn",
+    "typescript/no-unsafe-declaration-merging": "warn",
+    "no-func-assign": "warn",
+    "no-unused-private-class-members": "warn",
+    "no-debugger": "warn",
+    "oxc/bad-min-max-func": "warn",
+    "react/jsx-no-target-blank": "warn",
+    "no-useless-rename": "warn",
+    "no-duplicate-case": "warn",
+    "typescript/triple-slash-reference": "warn",
+    "unicorn/no-useless-length-check": "warn",
+    "react/no-children-prop": "warn",
+    "react/no-render-return-value": "warn",
+    "no-unused-labels": "warn",
+    "no-control-regex": "warn",
+    "oxc/uninvoked-array-callback": "warn",
+    "unicorn/no-invalid-fetch-options": "warn",
+    "oxc/bad-comparison-sequence": "warn",
+    "no-irregular-whitespace": "warn",
+    "no-useless-escape": "warn",
+    "no-dupe-keys": "warn",
+    "no-sparse-arrays": "warn",
+    "typescript/prefer-as-const": "warn",
+    "oxc/erasing-op": "warn",
+    "unicorn/no-await-in-promise-methods": "warn",
+    "unicorn/no-thenable": "warn",
+    "no-empty-static-block": "warn",
+    "unicorn/no-invalid-remove-event-listener": "warn",
+    "unicorn/no-useless-fallback-in-spread": "warn",
+    "no-cond-assign": "warn",
+    "no-obj-calls": "warn",
+    "react/no-is-mounted": "warn",
+    "no-extra-boolean-cast": "warn",
+    "unicorn/no-new-array": "warn",
+    "unicorn/prefer-set-size": "warn",
+    "oxc/only-used-in-recursion": "warn",
+    "oxc/bad-char-at-comparison": "warn",
+    "no-invalid-regexp": "warn",
+    "react/jsx-no-duplicate-props": "warn",
+    "typescript/no-wrapper-object-types": "warn",
+    "no-dupe-else-if": "warn",
+    "no-shadow-restricted-names": "warn",
+    "no-async-promise-executor": "warn",
+    "oxc/double-comparisons": "warn",
+    "react/void-dom-elements-no-children": "warn",
+    "typescript/no-misused-new": "warn",
+    "no-empty-pattern": "warn",
+    "no-compare-neg-zero": "warn",
+    "no-nonoctal-decimal-escape": "warn",
+    "react/no-find-dom-node": "warn",
+    "typescript/no-this-alias": "warn",
+    "no-unsafe-optional-chaining": "warn",
+    "oxc/number-arg-out-of-range": "warn",
+    "unicorn/no-single-promise-in-promise-methods": "warn",
+    "for-direction": "warn",
+    "no-dupe-class-members": "warn",
+    "no-setter-return": "warn",
+    "oxc/const-comparisons": "warn",
+    "react/jsx-props-no-spread-multi": "warn",
+    "no-with": "warn",
+    "unicorn/prefer-string-starts-ends-with": "warn",
+    "no-class-assign": "warn",
+    "react/no-direct-mutation-state": "warn",
+    "no-ex-assign": "warn",
+    "no-unsafe-negation": "warn",
+    "no-restricted-imports": "off"
+  },
+  "settings": {
+    "jsx-a11y": {
+      "polymorphicPropName": null,
+      "components": {}
+    },
+    "next": {
+      "rootDir": []
+    },
+    "react": {
+      "formComponents": [],
+      "linkComponents": []
+    },
+    "jsdoc": {
+      "ignorePrivate": false,
+      "ignoreInternal": false,
+      "ignoreReplacesDocs": true,
+      "overrideReplacesDocs": true,
+      "augmentsExtendsReplacesDocs": false,
+      "implementsReplacesDocs": false,
+      "exemptDestructuredRootsFromChecks": false,
+      "tagNamePreference": {}
+    }
+  },
+  "env": {
+    "builtin": true
+  },
+  "globals": {},
+  "ignorePatterns": [],
+  "overrides": [
+    {
+      "//": "Rule 6 (baseline): nothing outside src/gateway/ and src/index.ts may import @/gateway. More specific overrides below layer additional restrictions on top for core/services/apps/db/monitoring/scheduler, and events gets a dedicated allowlist override.",
+      "files": ["**/src/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/gateway/**", "@/gateway"],
+                "message": "Layering violation: only src/gateway/** and src/index.ts may import @/gateway (kernel/adapter architecture, see CLAUDE.md)."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "Rule 1: src/core/** must not import @/apps or @/gateway.",
+      "files": ["**/src/core/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/apps/**", "@/apps", "@/gateway/**", "@/gateway"],
+                "message": "Layering violation: src/core/** (kernel) must not import @/apps or @/gateway (adapters). See CLAUDE.md kernel/adapter architecture."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "Rule 2: src/services/** must not import @/gateway. (@/apps is allowed — e.g. email service uses the app registry.)",
+      "files": ["**/src/services/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/gateway/**", "@/gateway"],
+                "message": "Layering violation: src/services/** must not import @/gateway."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "Rule 3: src/apps/** must not import @/gateway or @/core. (@/services is allowed for now — e.g. webchat.)",
+      "files": ["**/src/apps/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/core/**", "@/core", "@/gateway/**", "@/gateway"],
+                "message": "Layering violation: src/apps/** (adapters) must not import @/core or @/gateway. See CLAUDE.md kernel/adapter architecture."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "Rule 4: src/events/** may only import from @/types and @/utils (plus relative/external imports, which are unaffected).",
+      "files": ["**/src/events/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": [
+                  "@/apps/**",
+                  "@/apps",
+                  "@/auth/**",
+                  "@/auth",
+                  "@/config/**",
+                  "@/config",
+                  "@/core/**",
+                  "@/core",
+                  "@/db/**",
+                  "@/db",
+                  "@/errors/**",
+                  "@/errors",
+                  "@/gateway/**",
+                  "@/gateway",
+                  "@/locales/**",
+                  "@/locales",
+                  "@/monitoring/**",
+                  "@/monitoring",
+                  "@/scheduler/**",
+                  "@/scheduler",
+                  "@/services/**",
+                  "@/services"
+                ],
+                "message": "Layering violation: src/events/** may only import from @/types and @/utils."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "Rule 5: src/db/** must not import @/core (plus rule 6: must not import @/gateway either).",
+      "files": ["**/src/db/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/core/**", "@/core", "@/gateway/**", "@/gateway"],
+                "message": "Layering violation: src/db/** must not import @/core or @/gateway."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "Rule 7: src/monitoring/** and src/scheduler/** must not import @/gateway or @/core.",
+      "files": ["**/src/monitoring/**", "**/src/scheduler/**"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/core/**", "@/core", "@/gateway/**", "@/gateway"],
+                "message": "Layering violation: src/monitoring/** and src/scheduler/** must not import @/core or @/gateway."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "Rule 6 exception: src/gateway/** and src/index.ts are the only places allowed to import @/gateway.",
+      "files": ["**/src/gateway/**", "**/src/index.ts"],
+      "rules": {
+        "no-restricted-imports": "off"
+      }
+    },
+    {
+      "//": "GRANDFATHERED (rule 1): src/core/** -> @/apps, tracked for the interface-inversion refactor (see docs/refactoring backlog). Do not add new files here — fix the underlying import instead.",
+      "files": [
+        "**/src/core/pipeline/adapters.ts",
+        "**/src/core/memory/event-subscriber.ts"
+      ],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/gateway/**", "@/gateway"],
+                "message": "Layering violation: src/core/** (kernel) must not import @/gateway (adapters). See CLAUDE.md kernel/adapter architecture."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "GRANDFATHERED (rule 5): src/db/index.ts and src/db/seed.ts -> @/core/permissions/defaults.js (DEFAULT_ROLES), tracked for the interface-inversion refactor. Do not add new files here — fix the underlying import instead.",
+      "files": ["**/src/db/index.ts", "**/src/db/seed.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/gateway/**", "@/gateway"],
+                "message": "Layering violation: src/db/** must not import @/gateway."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "GRANDFATHERED (rule 3, not in the original known-violations list — discovered while wiring this guardrail; flagged for follow-up, see PR description): src/apps/tools/site-scraper/routes.ts -> @/gateway/middleware. Do not add new files here — fix the underlying import instead.",
+      "files": ["**/src/apps/tools/site-scraper/routes.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/core/**", "@/core"],
+                "message": "Layering violation: src/apps/** (adapters) must not import @/core."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "//": "GRANDFATHERED (rule 3, not in the original known-violations list — discovered while wiring this guardrail; flagged for follow-up, see PR description): src/apps/channels/webchat/index.ts -> @/core/pipeline. Do not add new files here — fix the underlying import instead.",
+      "files": ["**/src/apps/channels/webchat/index.ts"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["@/gateway/**", "@/gateway"],
+                "message": "Layering violation: src/apps/** (adapters) must not import @/gateway."
+              }
+            ]
+          }
+        ]
+      }
+    }
+  ]
+}

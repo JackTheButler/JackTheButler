@@ -24,6 +24,7 @@ import {
   getAutomationEngine,
   resetAutomationEngine,
 } from '@/core/automation/index.js';
+import { registerPMSSync, resetPMSSync, type PMSSync } from '@/core/interfaces/pms-sync.js';
 import type {
   AutomationEvent,
   AutomationRuleDefinition,
@@ -35,12 +36,10 @@ vi.mock('@/apps/registry.js', () => ({
   getAppRegistry: vi.fn(),
 }));
 
-vi.mock('@/apps/pms/sync.js', () => ({
-  pmsSyncService: {
-    syncReservations: vi.fn().mockResolvedValue({ created: 0, updated: 0, unchanged: 0, errors: 0, errorDetails: [] }),
-  },
-  getPMSSyncConfig: vi.fn(),
-}));
+// Fake PMSSync implementation registered via the kernel seam
+// (src/core/interfaces/pms-sync.js) instead of mocking the concrete
+// @/apps/pms/sync.js module — proves the dependency-inversion seam works.
+let mockPMSSync: { [K in keyof PMSSync]: ReturnType<typeof vi.fn> };
 
 // Mirrors the local-midnight math in triggers.ts#getTargetDateForTrigger
 // exactly (zero out time-of-day before adding days) so date-string
@@ -131,6 +130,11 @@ describe('AutomationEngine', () => {
 
   beforeEach(async () => {
     vi.resetAllMocks();
+    mockPMSSync = {
+      syncReservations: vi.fn().mockResolvedValue({ created: 0, updated: 0, unchanged: 0, errors: 0, errorDetails: [] }),
+      refreshIfStale: vi.fn().mockResolvedValue(null),
+    };
+    registerPMSSync(mockPMSSync);
     // Full isolation between tests: deleting automationRules cascades to
     // automation_logs / automation_executions (FK onDelete: 'cascade'), and
     // reservations/tasks are cleared explicitly so a reservation inserted
@@ -146,6 +150,7 @@ describe('AutomationEngine', () => {
   afterEach(() => {
     engine.stopScheduler();
     resetAutomationEngine();
+    resetPMSSync();
     vi.useRealTimers();
   });
 
@@ -369,8 +374,7 @@ describe('AutomationEngine', () => {
     });
 
     it('continues evaluating rules even when the pre-trigger PMS sync throws', async () => {
-      const { pmsSyncService } = await import('@/apps/pms/sync.js');
-      vi.mocked(pmsSyncService.syncReservations).mockRejectedValueOnce(new Error('PMS unavailable'));
+      mockPMSSync.syncReservations.mockRejectedValueOnce(new Error('PMS unavailable'));
 
       const guestId = await insertGuest();
       const arrivalDate = todayPlusDays(5);

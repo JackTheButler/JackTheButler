@@ -174,6 +174,20 @@ export interface ExecutionResult {
   executionTimeMs: number;
 }
 
+/**
+ * Result of a rule configuration dry-run (see AutomationEngine.testRule)
+ */
+export interface RuleTestResult {
+  success: boolean;
+  message: string;
+  details?: {
+    triggerType: TriggerType;
+    triggerConfig: Record<string, unknown>;
+    actionType: ActionType;
+    actionConfig: Record<string, unknown>;
+  };
+}
+
 // ===================
 // Action Chaining (Phase 20)
 // ===================

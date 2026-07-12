@@ -8,7 +8,7 @@
  * Instantiate without a provider for read-only operations (list, get, delete).
  */
 
-import { eq, desc, sql } from 'drizzle-orm';
+import { eq, desc, sql, isNull } from 'drizzle-orm';
 import { db, sqlite, guestMemories } from '@/db/index.js';
 import type { GuestMemory } from '@/db/schema.js';
 import type { AIProvider } from '@/core/ai/types.js';
@@ -225,6 +225,19 @@ export class MemoryService {
     return row;
   }
 
+  /**
+   * Get a single memory by ID, scoped to a guest.
+   * Throws NotFoundError if the memory is missing OR belongs to a different
+   * guest (cross-guest safety — deliberately indistinguishable from "missing").
+   */
+  async getByIdForGuest(guestId: string, memoryId: string): Promise<GuestMemory> {
+    const memory = await this.getById(memoryId);
+    if (memory.guestId !== guestId) {
+      throw new NotFoundError('GuestMemory', memoryId);
+    }
+    return memory;
+  }
+
   // ---------------------------------------------------------------------------
   // Update
   // ---------------------------------------------------------------------------
@@ -256,6 +269,18 @@ export class MemoryService {
     return row!;
   }
 
+  /**
+   * Update a memory, scoped to a guest (cross-guest safety enforced).
+   */
+  async updateForGuest(
+    guestId: string,
+    memoryId: string,
+    patch: { category?: MemoryFact['category']; content?: string },
+  ): Promise<GuestMemory> {
+    await this.getByIdForGuest(guestId, memoryId);
+    return this.update(memoryId, patch);
+  }
+
   // ---------------------------------------------------------------------------
   // Delete
   // ---------------------------------------------------------------------------
@@ -267,6 +292,67 @@ export class MemoryService {
     await this.getById(id);
     await db.delete(guestMemories).where(eq(guestMemories.id, id));
     log.info({ memoryId: id }, 'Deleted guest memory');
+  }
+
+  /**
+   * Delete a memory, scoped to a guest (cross-guest safety enforced).
+   */
+  async deleteForGuest(guestId: string, memoryId: string): Promise<void> {
+    await this.getByIdForGuest(guestId, memoryId);
+    await this.delete(memoryId);
+  }
+
+  // ---------------------------------------------------------------------------
+  // Embedding
+  // ---------------------------------------------------------------------------
+
+  /**
+   * Generate and store an embedding for a single memory, scoped to a guest
+   * (cross-guest safety enforced).
+   */
+  async embedForGuest(guestId: string, memoryId: string, provider: AIProvider): Promise<void> {
+    const existing = await this.getByIdForGuest(guestId, memoryId);
+    const { embedding } = await provider.embed({ text: existing.content, purpose: 'store' });
+    await this.updateEmbedding(memoryId, embedding);
+  }
+
+  /**
+   * List memories that have no embedding yet (id + content only).
+   */
+  async listWithoutEmbedding(): Promise<Array<{ id: string; content: string }>> {
+    return db
+      .select({ id: guestMemories.id, content: guestMemories.content })
+      .from(guestMemories)
+      .where(isNull(guestMemories.embedding));
+  }
+
+  /**
+   * Embed every memory that currently has no embedding.
+   * Failures are logged and counted, not thrown — a single bad memory
+   * should not abort the whole backfill run.
+   */
+  async backfillEmbeddings(provider: AIProvider): Promise<{ total: number; success: number; failed: number }> {
+    const unembedded = await this.listWithoutEmbedding();
+
+    log.info({ count: unembedded.length }, 'Starting memory embedding backfill');
+
+    let success = 0;
+    let failed = 0;
+
+    for (const memory of unembedded) {
+      try {
+        const { embedding } = await provider.embed({ text: memory.content, purpose: 'store' });
+        await this.updateEmbedding(memory.id, embedding);
+        success++;
+      } catch (err) {
+        log.warn({ id: memory.id, error: err }, 'Failed to embed memory');
+        failed++;
+      }
+    }
+
+    log.info({ success, failed }, 'Memory embedding backfill completed');
+
+    return { total: unembedded.length, success, failed };
   }
 
   // ---------------------------------------------------------------------------
