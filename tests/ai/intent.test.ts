@@ -1,32 +1,22 @@
 /**
- * Intent Classification Tests
+ * Intent Catalog Tests
+ *
+ * Hospitality intent catalog (`src/core/pipeline/intents.ts`): the
+ * `IntentDefinitions` record plus the `intentProvider` adapter that
+ * projects definitions into the pipeline package's `Intent` shape.
+ *
+ * LLM-driven classification itself (JSON parsing, confidence clamping,
+ * malformed responses, provider errors) is generic pipeline behavior,
+ * already covered by packages/pipeline/tests/stages.test.ts's
+ * "classifyIntent — JSON parsing" suite — not duplicated here.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { IntentClassifier } from '@/core/ai/intent-classifier.js';
-import { IntentTaxonomy, getIntentDefinition, getIntentNames } from '@/core/ai/intent/taxonomy.js';
-import type { LLMProvider, CompletionResponse } from '@/core/ai/types.js';
+import { describe, it, expect } from 'vitest';
+import { IntentDefinitions, getIntentDefinition, intentProvider } from '@/core/pipeline/intents.js';
 
-/**
- * Create a mock LLM provider
- */
-function createMockProvider(response: string): LLMProvider {
-  return {
-    name: 'mock',
-    complete: vi.fn().mockResolvedValue({
-      content: response,
-      usage: { inputTokens: 10, outputTokens: 5 },
-    } as CompletionResponse),
-    embed: vi.fn().mockResolvedValue({
-      embedding: new Array(1536).fill(0.1),
-      usage: { inputTokens: 5, outputTokens: 0 },
-    }),
-  };
-}
-
-describe('Intent Taxonomy', () => {
+describe('Intent Catalog', () => {
   it('should have required intents defined', () => {
-    const intentNames = getIntentNames();
+    const intentNames = Object.keys(IntentDefinitions);
 
     expect(intentNames).toContain('request.housekeeping.towels');
     expect(intentNames).toContain('inquiry.checkout');
@@ -42,13 +32,13 @@ describe('Intent Taxonomy', () => {
     expect(definition?.requiresAction).toBe(false);
   });
 
-  it('should return undefined for unknown intent', () => {
+  it('should return undefined for unknown intent name', () => {
     const definition = getIntentDefinition('nonexistent.intent');
     expect(definition).toBeUndefined();
   });
 
-  it('should have examples for each intent', () => {
-    for (const [name, def] of Object.entries(IntentTaxonomy)) {
+  it('should have examples for each intent except unknown', () => {
+    for (const [name, def] of Object.entries(IntentDefinitions)) {
       if (name !== 'unknown') {
         expect(def.examples.length).toBeGreaterThan(0);
       }
@@ -56,111 +46,25 @@ describe('Intent Taxonomy', () => {
   });
 });
 
-describe('IntentClassifier', () => {
-  let classifier: IntentClassifier;
+describe('intentProvider', () => {
+  it('lists every catalog intent, projecting routing metadata', () => {
+    const intents = intentProvider.list();
 
-  beforeEach(() => {
-    vi.clearAllMocks();
+    expect(intents.length).toBe(Object.keys(IntentDefinitions).length);
+
+    const towels = intents.find((i) => i.name === 'request.housekeeping.towels');
+    expect(towels).toBeDefined();
+    expect(towels?.metadata?.department).toBe('housekeeping');
+    expect(towels?.metadata?.requiresAction).toBe(true);
   });
 
-  describe('classify', () => {
-    it('should classify checkout inquiry', async () => {
-      const mockResponse = JSON.stringify({
-        intent: 'inquiry.checkout',
-        confidence: 0.95,
-        reasoning: 'Guest is asking about checkout time',
-      });
+  it('gets a single intent by name', () => {
+    const intent = intentProvider.get('greeting');
+    expect(intent?.name).toBe('greeting');
+    expect(intent?.metadata?.department).toBeNull();
+  });
 
-      const provider = createMockProvider(mockResponse);
-      classifier = new IntentClassifier(provider);
-
-      const result = await classifier.classify('What time is checkout?');
-
-      expect(result.intent).toBe('inquiry.checkout');
-      expect(result.confidence).toBe(0.95);
-      expect(result.department).toBeNull();
-      expect(result.requiresAction).toBe(false);
-    });
-
-    it('should classify housekeeping request', async () => {
-      const mockResponse = JSON.stringify({
-        intent: 'request.housekeeping.towels',
-        confidence: 0.92,
-        reasoning: 'Guest needs towels',
-      });
-
-      const provider = createMockProvider(mockResponse);
-      classifier = new IntentClassifier(provider);
-
-      const result = await classifier.classify('I need more towels please');
-
-      expect(result.intent).toBe('request.housekeeping.towels');
-      expect(result.department).toBe('housekeeping');
-      expect(result.requiresAction).toBe(true);
-    });
-
-    it('should handle greeting', async () => {
-      const mockResponse = JSON.stringify({
-        intent: 'greeting',
-        confidence: 0.99,
-        reasoning: 'Simple greeting',
-      });
-
-      const provider = createMockProvider(mockResponse);
-      classifier = new IntentClassifier(provider);
-
-      const result = await classifier.classify('Hello');
-
-      expect(result.intent).toBe('greeting');
-      expect(result.department).toBeNull();
-    });
-
-    it('should cap confidence at 1.0', async () => {
-      const mockResponse = JSON.stringify({
-        intent: 'greeting',
-        confidence: 1.5, // Invalid high value
-      });
-
-      const provider = createMockProvider(mockResponse);
-      classifier = new IntentClassifier(provider);
-
-      const result = await classifier.classify('Hi');
-
-      expect(result.confidence).toBe(1.0);
-    });
-
-    it('should handle malformed JSON response', async () => {
-      const provider = createMockProvider('Not valid JSON');
-      classifier = new IntentClassifier(provider);
-
-      const result = await classifier.classify('Test message');
-
-      expect(result.intent).toBe('unknown');
-      expect(result.confidence).toBe(0);
-    });
-
-    it('should handle provider error', async () => {
-      const provider = createMockProvider('');
-      provider.complete = vi.fn().mockRejectedValue(new Error('API Error'));
-
-      classifier = new IntentClassifier(provider);
-
-      const result = await classifier.classify('Test message');
-
-      expect(result.intent).toBe('unknown');
-      expect(result.confidence).toBe(0);
-    });
-
-    it('should extract JSON from response with extra text', async () => {
-      const mockResponse = 'Here is the classification: {"intent":"greeting","confidence":0.9}';
-
-      const provider = createMockProvider(mockResponse);
-      classifier = new IntentClassifier(provider);
-
-      const result = await classifier.classify('Hi there');
-
-      expect(result.intent).toBe('greeting');
-      expect(result.confidence).toBe(0.9);
-    });
+  it('returns null for an unknown intent name', () => {
+    expect(intentProvider.get('nonexistent.intent')).toBeNull();
   });
 });

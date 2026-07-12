@@ -187,10 +187,10 @@ describe('System Status API', () => {
       const data = await res.json();
 
       expect(data.apps).toBeDefined();
-      expect(typeof data.apps.ai).toBe('number');
-      expect(typeof data.apps.channel).toBe('number');
-      expect(typeof data.apps.pms).toBe('number');
-      expect(typeof data.apps.tool).toBe('number');
+      expect(Array.isArray(data.apps.ai)).toBe(true);
+      expect(Array.isArray(data.apps.channel)).toBe(true);
+      expect(Array.isArray(data.apps.pms)).toBe(true);
+      expect(Array.isArray(data.apps.tool)).toBe(true);
     });
   });
 

@@ -99,7 +99,7 @@ describe('MemoryService', () => {
       const provider = makeProvider({
         complete: vi.fn().mockResolvedValue({ content: 'CONFIRMS', usage: { inputTokens: 5, outputTokens: 1 } }),
       });
-      const service = new MemoryService(provider);
+      const service = new MemoryService(provider, provider);
 
       const [first] = await service.insert(guestId, null, [
         { category: 'preference', content: 'Prefers a quiet room', confidence: 0.8 },
@@ -123,7 +123,7 @@ describe('MemoryService', () => {
       const provider = makeProvider({
         complete: vi.fn().mockResolvedValue({ content: 'CONFIRMS', usage: { inputTokens: 5, outputTokens: 1 } }),
       });
-      const service = new MemoryService(provider);
+      const service = new MemoryService(provider, provider);
 
       await service.insert(guestId, null, [{ category: 'preference', content: 'Quiet room', confidence: 1.0 }]);
       await service.insert(guestId, null, [{ category: 'preference', content: 'Quiet room please', confidence: 1.0 }]);
@@ -136,7 +136,7 @@ describe('MemoryService', () => {
       const provider = makeProvider({
         complete: vi.fn().mockResolvedValue({ content: 'CONTRADICTS', usage: { inputTokens: 5, outputTokens: 1 } }),
       });
-      const service = new MemoryService(provider);
+      const service = new MemoryService(provider, provider);
 
       await service.insert(guestId, null, [
         { category: 'preference', content: 'Prefers a quiet room', confidence: 0.9 },
@@ -155,7 +155,7 @@ describe('MemoryService', () => {
       const provider = makeProvider({
         complete: vi.fn().mockResolvedValue({ content: 'DIFFERENT', usage: { inputTokens: 5, outputTokens: 1 } }),
       });
-      const service = new MemoryService(provider);
+      const service = new MemoryService(provider, provider);
 
       await service.insert(guestId, null, [
         { category: 'preference', content: 'Prefers quiet rooms', confidence: 0.9 },
@@ -176,7 +176,7 @@ describe('MemoryService', () => {
         .mockResolvedValueOnce({ embedding: SIMILAR_VEC })
         .mockResolvedValueOnce({ embedding: DIFFERENT_VEC });
 
-      const service = new MemoryService(provider);
+      const service = new MemoryService(provider, provider);
 
       await service.insert(guestId, null, [{ category: 'preference', content: 'Quiet room', confidence: 0.9 }]);
       await service.insert(guestId, null, [{ category: 'personal', content: 'Travelling with a dog', confidence: 1.0 }]);
@@ -188,7 +188,8 @@ describe('MemoryService', () => {
     });
 
     it('stores embedding blob on new insert', async () => {
-      const service = new MemoryService(makeProvider());
+      const provider = makeProvider();
+      const service = new MemoryService(provider, provider);
       const [mem] = await service.insert(guestId, null, [
         { category: 'preference', content: 'Prefers quiet room', confidence: 0.9 },
       ]);
@@ -203,7 +204,7 @@ describe('MemoryService', () => {
       const provider = makeProvider({
         embed: vi.fn().mockRejectedValue(new Error('Embedding service down')),
       });
-      const service = new MemoryService(provider);
+      const service = new MemoryService(provider, provider);
 
       const [mem] = await service.insert(guestId, null, [
         { category: 'preference', content: 'Prefers quiet room', confidence: 0.9 },
@@ -218,7 +219,7 @@ describe('MemoryService', () => {
       const provider = makeProvider({
         complete: vi.fn().mockRejectedValue(new Error('AI down')),
       });
-      const service = new MemoryService(provider);
+      const service = new MemoryService(provider, provider);
 
       // Both facts get the same embedding → near-match found → classify called → fails → DIFFERENT → two rows
       await service.insert(guestId, null, [{ category: 'preference', content: 'Quiet room', confidence: 0.9 }]);

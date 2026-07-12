@@ -263,7 +263,9 @@ describe('MewsPMSAdapter', () => {
         'resourceCategories/getAll': { ResourceCategories: [MOCK_RESOURCE_CATEGORY] },
       });
 
-      const since = new Date('2026-02-14T00:00:00Z');
+      // Use a relative date well within the 3-month max window so this test
+      // doesn't rot as real time passes (the adapter clamps `since` beyond that).
+      const since = new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
       const results = await adapter.getModifiedReservations(since);
 
       expect(results).toHaveLength(1);

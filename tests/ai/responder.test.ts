@@ -1,183 +1,142 @@
 /**
- * AIResponder Tests
+ * Responder Prompt Tests
  *
- * Key contract for Stage 3: when knowledgeResults are pre-computed and passed in,
- * the responder must use them directly and skip its internal knowledge search
- * (i.e. must not call the embedding provider again).
+ * `responderPrompt` (src/core/pipeline/prompts.ts) builds the system
+ * prompt for response generation — pure assembly from `ctx`/`env`, no LLM
+ * call (that's owned by the package's `generateResponse` stage). Covers
+ * the guest-memory block, the trickiest conditional section: present when
+ * `memoryHits` are supplied, absent when empty or undefined.
  */
 
-import { describe, it, expect, vi, beforeEach } from 'vitest';
+import { describe, it, expect, vi } from 'vitest';
+import { responderPrompt } from '@/core/pipeline/prompts.js';
+import type { ButlerContext } from '@/core/pipeline/index.js';
+import type { Env } from '@thebutler/pipeline';
 
-// Mock conversation service so responder doesn't hit the DB for history
-vi.mock('@/services/conversation.js', () => ({
-  ConversationService: vi.fn().mockImplementation(() => ({
-    getMessages: vi.fn().mockResolvedValue([]),
-  })),
-  conversationService: {
-    getMessages: vi.fn().mockResolvedValue([]),
-  },
-}));
-
-import { AIResponder } from '@/core/ai/responder.js';
-import type { LLMProvider } from '@/core/ai/types.js';
-import type { Conversation, GuestMemory } from '@/db/schema.js';
-import type { InboundMessage } from '@/types/message.js';
-import type { KnowledgeSearchResult } from '@/core/ai/knowledge/index.js';
-
-function createMockProvider(): LLMProvider {
+function makeEnv(overrides: Partial<Env<ButlerContext>> = {}): Env<ButlerContext> {
   return {
-    name: 'mock',
-    complete: vi.fn().mockResolvedValue({
-      content: 'How can I help you today?',
-      usage: { inputTokens: 10, outputTokens: 8 },
-    }),
-    embed: vi.fn().mockResolvedValue({
-      embedding: new Array(1536).fill(0.1),
-      usage: { inputTokens: 5, outputTokens: 0 },
-    }),
+    intents: { list: vi.fn(() => []), get: vi.fn(() => null) },
+    prompts: {
+      classifier: vi.fn(() => ''),
+      responder: vi.fn(async () => ''),
+      detector: vi.fn(() => ''),
+      translator: vi.fn(() => ''),
+    },
+    services: {
+      entities: { resolve: vi.fn(async () => null), findById: vi.fn(async () => null) },
+      ai: { name: 'stub', complete: vi.fn(async () => ({ content: '' })), embed: vi.fn(async () => ({ embedding: [] })) },
+      conversation: {
+        findOrCreate: vi.fn(),
+        findById: vi.fn(async () => null),
+        addMessage: vi.fn(),
+        getRecentMessages: vi.fn(async () => []),
+        setLanguage: vi.fn(async () => {}),
+      },
+      logger: { debug: vi.fn(), info: vi.fn(), warn: vi.fn(), error: vi.fn() },
+    },
+    systemLanguage: 'en',
+    ...overrides,
+  } as Env<ButlerContext>;
+}
+
+function makeCtx(overrides: Partial<ButlerContext> = {}): ButlerContext {
+  return {
+    inbound: {
+      id: 'msg-test-001',
+      channel: 'webchat',
+      channelId: 'session-001',
+      content: 'What time is checkout?',
+      createdAt: new Date(),
+    },
+    startTime: Date.now(),
+    entity: null,
+    ...overrides,
   };
 }
 
-const testConversation: Conversation = {
-  id: 'conv-test-001',
-  channel: 'webchat',
-  channelId: 'session-001',
-  state: 'active',
-  guestId: null,
-  guestLanguage: 'en',
-  lastMessageAt: new Date().toISOString(),
-  createdAt: new Date().toISOString(),
-  updatedAt: new Date().toISOString(),
-  resolvedAt: null,
-  metadata: null,
-};
-
-const testInbound: InboundMessage = {
-  id: 'msg-test-001',
-  channel: 'webchat',
-  channelId: 'session-001',
-  content: 'What time is checkout?',
-  contentType: 'text',
-  timestamp: new Date(),
-};
-
-describe('AIResponder', () => {
-  let provider: LLMProvider;
-  let responder: AIResponder;
-
-  beforeEach(() => {
-    provider = createMockProvider();
-    responder = new AIResponder({ provider, enableCache: false });
+describe('responderPrompt', () => {
+  it('includes the butler persona', async () => {
+    const prompt = await responderPrompt(makeCtx(), makeEnv());
+    expect(prompt).toContain('You are Jack');
   });
 
-  describe('generate (without pre-computed knowledge)', () => {
-    it('should call the embedding provider to search knowledge', async () => {
-      await responder.generate(testConversation, testInbound);
-      expect(provider.embed).toHaveBeenCalled();
-    });
+  it('adds a language directive when the system language is not English', async () => {
+    const promptEn = await responderPrompt(makeCtx(), makeEnv({ systemLanguage: 'en' }));
+    const promptFr = await responderPrompt(makeCtx(), makeEnv({ systemLanguage: 'fr' }));
 
-    it('should return a response with content and intent', async () => {
-      const result = await responder.generate(testConversation, testInbound);
-      expect(result.content).toBeDefined();
-      expect(typeof result.content).toBe('string');
-      expect(result.confidence).toBeGreaterThanOrEqual(0);
-    });
+    expect(promptEn).not.toContain('Respond in fr');
+    expect(promptFr).toContain('Respond in fr');
   });
 
-  describe('generate (with pre-computed knowledgeResults)', () => {
-    const precomputedResults: KnowledgeSearchResult[] = [
-      {
-        id: 'kb-001',
-        category: 'faq',
-        title: 'Checkout Time',
-        content: 'Checkout is at 11am.',
-        keywords: null,
-        priority: 0,
-        status: 'active',
-        similarity: 0.92,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
-      },
+  describe('guest memory block', () => {
+    const memoryHits = [
+      { key: 'preference', value: 'Prefers feather-free pillows' },
+      { key: 'habit', value: 'Always requests a late checkout' },
     ];
 
-    it('should NOT call the embedding provider when knowledgeResults are provided', async () => {
-      await responder.generate(testConversation, testInbound, undefined, undefined, precomputedResults);
-      expect(provider.embed).not.toHaveBeenCalled();
+    it('includes the memory block when memoryHits are provided', async () => {
+      const prompt = await responderPrompt(makeCtx({ memoryHits }), makeEnv());
+
+      expect(prompt).toContain('What Jack Knows About This Guest');
+      expect(prompt).toContain('preference: Prefers feather-free pillows');
+      expect(prompt).toContain('habit: Always requests a late checkout');
     });
 
-    it('should use the provided knowledge results in the response', async () => {
-      const result = await responder.generate(testConversation, testInbound, undefined, undefined, precomputedResults);
-      expect(result.content).toBeDefined();
-      // Knowledge context should be reflected in metadata
-      const knowledgeContext = result.metadata?.knowledgeContext as Array<{ id: string }> | undefined;
-      expect(knowledgeContext).toBeDefined();
-      expect(knowledgeContext?.[0]?.id).toBe('kb-001');
+    it('omits the memory block when memoryHits is empty', async () => {
+      const prompt = await responderPrompt(makeCtx({ memoryHits: [] }), makeEnv());
+      expect(prompt).not.toContain('What Jack Knows About This Guest');
+    });
+
+    it('omits the memory block when memoryHits is undefined (anonymous / first-time guest)', async () => {
+      const prompt = await responderPrompt(makeCtx({ memoryHits: undefined }), makeEnv());
+      expect(prompt).not.toContain('What Jack Knows About This Guest');
     });
   });
 
-  describe('generate (with guest memories)', () => {
-    const mockMemories: GuestMemory[] = [
-      {
-        id: 'mem-001',
-        guestId: 'gst-001',
-        conversationId: 'conv-001',
-        category: 'preference',
-        content: 'Prefers feather-free pillows',
-        source: 'ai_extracted',
-        confidence: 0.95,
-        embedding: null,
-        createdAt: new Date().toISOString(),
-        lastReinforcedAt: new Date().toISOString(),
-      },
-      {
-        id: 'mem-002',
-        guestId: 'gst-001',
-        conversationId: 'conv-001',
-        category: 'habit',
-        content: 'Always requests a late checkout',
-        source: 'ai_extracted',
-        confidence: 0.9,
-        embedding: null,
-        createdAt: new Date().toISOString(),
-        lastReinforcedAt: new Date().toISOString(),
-      },
+  describe('knowledge hits', () => {
+    const knowledgeHits = [
+      { id: 'kb-001', title: 'Checkout Time', content: 'Checkout is at 11am.', similarity: 0.92 },
     ];
 
-    it('includes memory block in system prompt when memories are provided', async () => {
-      await responder.generate(testConversation, testInbound, undefined, undefined, [], mockMemories);
+    it('includes matched knowledge in the system prompt', async () => {
+      const prompt = await responderPrompt(makeCtx({ knowledgeHits }), makeEnv());
 
-      // Find the generation call by looking for the one whose system message contains
-      // the butler prompt marker — robust regardless of how many complete() calls are made.
-      const calls = vi.mocked(provider.complete).mock.calls;
-      const generationCall = calls
-        .map((c) => c[0].messages[0]!)
-        .find((m) => m.role === 'system' && m.content.includes('You are Jack'));
-      expect(generationCall).toBeDefined();
-      expect(generationCall!.content).toContain('What Jack Knows About This Guest');
-      expect(generationCall!.content).toContain('preference: Prefers feather-free pillows');
-      expect(generationCall!.content).toContain('habit: Always requests a late checkout');
+      expect(prompt).toContain('Relevant Hotel Information');
+      expect(prompt).toContain('Checkout Time');
+      expect(prompt).toContain('Checkout is at 11am.');
     });
 
-    it('omits memory block when memories is empty', async () => {
-      await responder.generate(testConversation, testInbound, undefined, undefined, [], []);
+    it('omits the knowledge section when there are no hits', async () => {
+      const prompt = await responderPrompt(makeCtx({ knowledgeHits: [] }), makeEnv());
+      expect(prompt).not.toContain('Relevant Hotel Information');
+    });
+  });
 
-      const calls = vi.mocked(provider.complete).mock.calls;
-      const generationCall = calls
-        .map((c) => c[0].messages[0]!)
-        .find((m) => m.role === 'system' && m.content.includes('You are Jack'));
-      expect(generationCall).toBeDefined();
-      expect(generationCall!.content).not.toContain('What Jack Knows About This Guest');
+  describe('detected intent', () => {
+    it('surfaces the department and an action note for actionable intents', async () => {
+      const env = makeEnv({
+        intents: {
+          list: vi.fn(() => []),
+          get: vi.fn((name: string) =>
+            name === 'request.housekeeping.towels'
+              ? { name, description: 'Towels', metadata: { department: 'housekeeping', requiresAction: true } }
+              : null
+          ),
+        },
+      });
+      const ctx = makeCtx({ classification: { intent: 'request.housekeeping.towels', confidence: 0.9 } });
+
+      const prompt = await responderPrompt(ctx, env);
+
+      expect(prompt).toContain('Detected Intent: request.housekeeping.towels');
+      expect(prompt).toContain('Department: housekeeping');
+      expect(prompt).toContain('may require creating a task');
     });
 
-    it('omits memory block when memories is undefined (anonymous guest / first-time guest)', async () => {
-      await responder.generate(testConversation, testInbound, undefined, undefined, [], undefined);
-
-      const calls = vi.mocked(provider.complete).mock.calls;
-      const generationCall = calls
-        .map((c) => c[0].messages[0]!)
-        .find((m) => m.role === 'system' && m.content.includes('You are Jack'));
-      expect(generationCall).toBeDefined();
-      expect(generationCall!.content).not.toContain('What Jack Knows About This Guest');
+    it('omits the detected-intent section for the unknown intent', async () => {
+      const ctx = makeCtx({ classification: { intent: 'unknown', confidence: 0 } });
+      const prompt = await responderPrompt(ctx, makeEnv());
+      expect(prompt).not.toContain('Detected Intent');
     });
   });
 });

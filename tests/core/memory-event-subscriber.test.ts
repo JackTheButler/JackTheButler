@@ -99,7 +99,11 @@ describe('runExtraction', () => {
     ]);
 
     const { getAppRegistry } = await import('@/apps/registry.js');
-    vi.mocked(getAppRegistry).mockReturnValue({ getActiveAIProvider: () => makeMockProvider() } as never);
+    const mockProvider = makeMockProvider();
+    vi.mocked(getAppRegistry).mockReturnValue({
+      getActiveAIProvider: () => mockProvider,
+      getEmbeddingProvider: () => mockProvider,
+    } as never);
 
     await runExtraction(makeClosedEvent(conversationId, guestId));
 
@@ -148,7 +152,10 @@ describe('runExtraction', () => {
 
     const { getAppRegistry } = await import('@/apps/registry.js');
     const mockProvider = makeMockProvider();
-    vi.mocked(getAppRegistry).mockReturnValue({ getActiveAIProvider: () => mockProvider } as never);
+    vi.mocked(getAppRegistry).mockReturnValue({
+      getActiveAIProvider: () => mockProvider,
+      getEmbeddingProvider: () => mockProvider,
+    } as never);
 
     await runExtraction(makeClosedEvent(conversationId, guestId));
 
@@ -162,7 +169,11 @@ describe('runExtraction', () => {
     ]);
 
     const { getAppRegistry } = await import('@/apps/registry.js');
-    vi.mocked(getAppRegistry).mockReturnValue({ getActiveAIProvider: () => makeMockProvider('[]') } as never);
+    const mockProvider = makeMockProvider('[]');
+    vi.mocked(getAppRegistry).mockReturnValue({
+      getActiveAIProvider: () => mockProvider,
+      getEmbeddingProvider: () => mockProvider,
+    } as never);
 
     await runExtraction(makeClosedEvent(conversationId, guestId));
 
@@ -180,7 +191,10 @@ describe('runExtraction', () => {
     provider.embed.mockRejectedValue(new Error('Embedding service unavailable'));
 
     const { getAppRegistry } = await import('@/apps/registry.js');
-    vi.mocked(getAppRegistry).mockReturnValue({ getActiveAIProvider: () => provider } as never);
+    vi.mocked(getAppRegistry).mockReturnValue({
+      getActiveAIProvider: () => provider,
+      getEmbeddingProvider: () => provider,
+    } as never);
 
     await runExtraction(makeClosedEvent(conversationId, guestId));
 

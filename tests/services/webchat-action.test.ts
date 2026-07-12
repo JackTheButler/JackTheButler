@@ -8,7 +8,7 @@
 import { describe, it, expect, beforeEach, vi } from 'vitest';
 import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
-import { db, webchatSessions, guests } from '@/db/index.js';
+import { db, webchatSessions, guests, reservations } from '@/db/index.js';
 import { WebChatActionService } from '@/apps/channels/webchat/actions.js';
 import { webchatSessionService } from '@/apps/channels/webchat/session.js';
 import { guestService } from '@/services/guest.js';
@@ -18,10 +18,9 @@ import type { NormalizedReservation } from '@/core/interfaces/pms.js';
 // vi.mock factories are hoisted to the top of the file, so variables used inside
 // them must be defined with vi.hoisted() to avoid "cannot access before init" errors.
 
-const { mockSend, mockGetActivePMSAdapter, mockGetAppConfig } = vi.hoisted(() => ({
+const { mockSend, mockGetActivePMSAdapter } = vi.hoisted(() => ({
   mockSend: vi.fn(),
   mockGetActivePMSAdapter: vi.fn(() => null as unknown),
-  mockGetAppConfig: vi.fn(async () => null as unknown),
 }));
 
 vi.mock('@/apps/channels/webchat/index.js', () => ({
@@ -33,10 +32,6 @@ vi.mock('@/apps/registry.js', () => ({
   getAppRegistry: () => ({ getActivePMSAdapter: mockGetActivePMSAdapter }),
 }));
 
-vi.mock('@/apps/config.js', () => ({
-  appConfigService: { getAppConfig: mockGetAppConfig },
-}));
-
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
 /** Unique suffix per test run to avoid cross-test data collisions */
@@ -44,6 +39,22 @@ const RUN = Date.now();
 
 function uid(label: string) {
   return `${label}-${RUN}-${Math.random().toString(36).slice(2)}`;
+}
+
+/** ISO date (YYYY-MM-DD) N days from now — avoids hardcoded calendar dates rotting. */
+function daysFromNow(days: number): string {
+  return new Date(Date.now() + days * 24 * 60 * 60 * 1000).toISOString().split('T')[0]!;
+}
+
+/**
+ * All fixture reservations in this file share the confirmation number 'BK-TEST'
+ * (the makeReservation() default). completeVerification() upserts a local
+ * `reservations` row keyed by confirmationNumber, so any test that drives a
+ * successful verification must delete that row before deleting the guest it
+ * points at, or the FK constraint on reservations.guestId trips.
+ */
+async function cleanupBkTestReservation() {
+  await db.delete(reservations).where(eq(reservations.confirmationNumber, 'BK-TEST'));
 }
 
 function makeReservation(overrides: Partial<NormalizedReservation> = {}): NormalizedReservation {
@@ -86,23 +97,18 @@ describe('WebChatActionService', () => {
     mockSend.mockClear();
     mockGetActivePMSAdapter.mockReset();
     mockGetActivePMSAdapter.mockReturnValue(null);
-    mockGetAppConfig.mockReset();
-    mockGetAppConfig.mockResolvedValue(null);
   });
 
   // ── getActions ──────────────────────────────────────────────────────────────
 
   describe('getActions', () => {
-    it('returns all 5 defined actions', () => {
+    it('returns the verify-reservation action', () => {
+      // Only verify-reservation remains after the "simplify webchat actions"
+      // refactor (commit 0321dc6) removed extend-stay/request-service/
+      // order-room-service/book-spa from src/apps/channels/webchat/actions.ts.
       const actions = service.getActions();
-      expect(actions).toHaveLength(5);
-      expect(actions.map((a) => a.id)).toEqual([
-        'verify-reservation',
-        'extend-stay',
-        'request-service',
-        'order-room-service',
-        'book-spa',
-      ]);
+      expect(actions).toHaveLength(1);
+      expect(actions.map((a) => a.id)).toEqual(['verify-reservation']);
     });
 
     it('strips endpoint from returned actions', () => {
@@ -112,84 +118,38 @@ describe('WebChatActionService', () => {
     });
   });
 
-  // ── getEnabledActions ───────────────────────────────────────────────────────
-
-  describe('getEnabledActions', () => {
-    it('returns all actions when no filter is configured', async () => {
-      const actions = await service.getEnabledActions();
-      expect(actions).toHaveLength(5);
-    });
-
-    it('filters to the configured subset', async () => {
-      mockGetAppConfig.mockResolvedValueOnce({
-        appId: 'channel-webchat',
-        config: { enabledActions: 'order-room-service' },
-      } as never);
-
-      const ids = (await service.getEnabledActions()).map((a) => a.id);
-      expect(ids).toContain('order-room-service');
-      expect(ids).not.toContain('extend-stay');
-      expect(ids).not.toContain('book-spa');
-    });
-
-    it('auto-includes verify-reservation when a verification-requiring action is enabled', async () => {
-      mockGetAppConfig.mockResolvedValueOnce({
-        appId: 'channel-webchat',
-        config: { enabledActions: 'book-spa' },
-      } as never);
-
-      const ids = (await service.getEnabledActions()).map((a) => a.id);
-      expect(ids).toContain('verify-reservation');
-      expect(ids).toContain('book-spa');
-    });
-  });
-
   // ── execute() pre-flight guards ─────────────────────────────────────────────
+  //
+  // NOTE: getEnabledActions()/isActionEnabled() and the action_disabled /
+  // verification_required checks that depended on them were removed from
+  // src/apps/channels/webchat/actions.ts in commit 0321dc6 ("simplify webchat
+  // actions"), along with the extend-stay/request-service/order-room-service/
+  // book-spa actions. Those tests are gone too — there is no method left to
+  // call and, since verify-reservation is the only remaining action and it has
+  // requiresVerification: false, the verification_required branch in
+  // execute() is currently unreachable through any registered action. That
+  // looks like dead code left over from the simplification, not something to
+  // paper over here — see final report.
 
   describe('execute() pre-flight', () => {
-    it('returns action_disabled for a disabled action', async () => {
-      const { appConfigService } = await import('@/apps/config.js');
-      mockGetAppConfig.mockResolvedValue({
-        appId: 'channel-webchat',
-        config: { enabledActions: 'request-service' },
-      } as never);
-
-      const result = await service.execute('book-spa', 'any-token', {});
-      expect(result.success).toBe(false);
-      expect(result.error).toBe('action_disabled');
-    });
-
     it('returns invalid_session for an unknown token', async () => {
       const result = await service.execute('verify-reservation', 'bad-token-xyz', {});
       expect(result.success).toBe(false);
       expect(result.error).toBe('invalid_session');
     });
 
-    it('returns verification_required when action requires verification and session is anonymous', async () => {
-      const session = await webchatSessionService.create();
-      try {
-        const result = await service.execute('extend-stay', session.token, {});
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('verification_required');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-      }
-    });
-
     it('returns input_too_long when a field exceeds 500 characters', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
       const session = await webchatSessionService.create();
-      await webchatSessionService.verify(session.id, guest.id, 'res-x', '2026-04-01', '2026-05-01');
-      const verified = await webchatSessionService.findById(session.id);
       try {
-        const result = await service.execute('extend-stay', verified!.token, {
-          newCheckoutDate: 'a'.repeat(501),
+        const result = await service.execute('verify-reservation', session.token, {
+          method: 'booking-name',
+          confirmationNumber: 'BK-123',
+          lastName: 'a'.repeat(501),
         });
         expect(result.success).toBe(false);
         expect(result.error).toBe('input_too_long');
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
       }
     });
   });
@@ -311,6 +271,7 @@ describe('WebChatActionService', () => {
         expect(result.success).toBe(true);
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.email, email));
       }
     });
@@ -333,6 +294,7 @@ describe('WebChatActionService', () => {
         expect(updated?.verificationStatus).toBe('verified');
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.email, email));
       }
     });
@@ -388,6 +350,7 @@ describe('WebChatActionService', () => {
         expect(result.success).toBe(true);
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.email, email));
       }
     });
@@ -409,6 +372,7 @@ describe('WebChatActionService', () => {
         expect(updated?.verificationStatus).toBe('verified');
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.email, email));
       }
     });
@@ -430,7 +394,11 @@ describe('WebChatActionService', () => {
       }
     });
 
-    it('returns no_pms when no PMS adapter is configured', async () => {
+    it('returns not_found when no PMS adapter is configured and no local guest matches', async () => {
+      // src/services/verification.ts has no distinct "no PMS" error: when
+      // getActivePMSAdapter() returns null, lookupReservationsByEmail() falls
+      // straight through to the local-DB fallback (see the module docstring),
+      // and an unknown email there just yields not_found.
       const session = await webchatSessionService.create();
       mockGetActivePMSAdapter.mockReturnValue(null);
       try {
@@ -439,7 +407,7 @@ describe('WebChatActionService', () => {
           email: uid('nopms') + '@test.com',
         });
         expect(result.success).toBe(false);
-        expect(result.error).toBe('no_pms');
+        expect(result.error).toBe('not_found');
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
       }
@@ -585,7 +553,7 @@ describe('WebChatActionService', () => {
       }
     });
 
-    it('returns no_pms when correct code but no PMS adapter', async () => {
+    it('returns not_found when correct code but no PMS adapter and no local match', async () => {
       const session = await webchatSessionService.create();
       const code = '112233';
       const hash = createHash('sha256').update(code).digest('hex');
@@ -602,7 +570,7 @@ describe('WebChatActionService', () => {
           code,
         });
         expect(result.success).toBe(false);
-        expect(result.error).toBe('no_pms');
+        expect(result.error).toBe('not_found');
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
       }
@@ -618,10 +586,16 @@ describe('WebChatActionService', () => {
         hash,
         new Date(Date.now() + 600_000).toISOString(),
       );
+      const checkIn = daysFromNow(10);
+      const checkOut = daysFromNow(14);
       mockGetActivePMSAdapter.mockReturnValue({
         getReservationByConfirmation: vi.fn(),
         searchReservations: vi.fn(async () => [
-          makeReservation({ guest: { externalId: 'g7', source: 'mock', firstName: 'Bob', lastName: 'Jones', email } }),
+          makeReservation({
+            guest: { externalId: 'g7', source: 'mock', firstName: 'Bob', lastName: 'Jones', email },
+            arrivalDate: checkIn,
+            departureDate: checkOut,
+          }),
         ]),
       });
       try {
@@ -631,12 +605,13 @@ describe('WebChatActionService', () => {
           code,
         });
         expect(result.success).toBe(true);
-        expect(result.data?.checkIn).toBe('2026-04-01');
-        expect(result.data?.checkOut).toBe('2026-04-05');
+        expect(result.data?.checkIn).toBe(checkIn);
+        expect(result.data?.checkOut).toBe(checkOut);
         const updated = await webchatSessionService.findById(session.id);
         expect(updated?.verificationStatus).toBe('verified');
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.email, email));
       }
     });
@@ -663,6 +638,7 @@ describe('WebChatActionService', () => {
         expect(created?.lastName).toBe('Person');
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.email, email));
       }
     });
@@ -684,6 +660,7 @@ describe('WebChatActionService', () => {
         expect(updated?.guestId).toBe(existing.id);
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.id, existing.id));
       }
     });
@@ -708,6 +685,7 @@ describe('WebChatActionService', () => {
         });
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.email, email));
       }
     });
@@ -729,6 +707,7 @@ describe('WebChatActionService', () => {
         expect(updated?.reservationId).toBeTruthy();
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.email, email));
       }
     });
@@ -738,8 +717,11 @@ describe('WebChatActionService', () => {
   // Exercised indirectly through verifyEmailCodeStep2 which calls searchReservations.
 
   describe('pickBestReservation', () => {
-    async function runWithReservations(reservations: NormalizedReservation[]) {
-      const email = uid('pick') + '@test.com';
+    // Takes `email` as a parameter (rather than generating its own) so the
+    // cleanup below actually targets the guest that verification creates —
+    // it previously used an unrelated uid('pick') email, so the delete
+    // matched nothing and the created guest/reservation silently leaked.
+    async function runWithReservations(email: string, reservations: NormalizedReservation[]) {
       const session = await webchatSessionService.create();
       const code = '333333';
       const hash = createHash('sha256').update(code).digest('hex');
@@ -760,199 +742,43 @@ describe('WebChatActionService', () => {
         });
       } finally {
         await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
+        await cleanupBkTestReservation();
         await db.delete(guests).where(eq(guests.email, email));
       }
     }
 
     it('returns not_found gracefully when list is empty', async () => {
-      const result = await runWithReservations([]);
+      const email = uid('pick-empty') + '@test.com';
+      const result = await runWithReservations(email, []);
       expect(result.success).toBe(false);
       expect(result.error).toBe('not_found');
     });
 
     it('prefers checked_in reservation over confirmed future ones', async () => {
       const email = uid('pick-checkin') + '@test.com';
-      const checkedIn = makeReservation({ externalId: 'ci', status: 'checked_in', arrivalDate: '2026-03-01', departureDate: '2026-03-10', guest: { externalId: 'gi', source: 'mock', firstName: 'CI', lastName: 'Guest', email } });
-      const upcoming = makeReservation({ externalId: 'up', status: 'confirmed', arrivalDate: '2026-05-01', departureDate: '2026-05-05', guest: { externalId: 'gi', source: 'mock', firstName: 'CI', lastName: 'Guest', email } });
-      const result = await runWithReservations([upcoming, checkedIn]);
+      const checkedIn = makeReservation({ externalId: 'ci', status: 'checked_in', arrivalDate: daysFromNow(-5), departureDate: daysFromNow(4), guest: { externalId: 'gi', source: 'mock', firstName: 'CI', lastName: 'Guest', email } });
+      const upcoming = makeReservation({ externalId: 'up', status: 'confirmed', arrivalDate: daysFromNow(20), departureDate: daysFromNow(24), guest: { externalId: 'gi', source: 'mock', firstName: 'CI', lastName: 'Guest', email } });
+      const result = await runWithReservations(email, [upcoming, checkedIn]);
       // checked_in should win — confirmed by check-in dates in result
       expect(result.success).toBe(true);
-      expect(result.data?.checkIn).toBe('2026-03-01');
+      expect(result.data?.checkIn).toBe(checkedIn.arrivalDate);
     });
 
     it('picks earliest upcoming confirmed when none checked in', async () => {
       const email = uid('pick-upcoming') + '@test.com';
-      const soon = makeReservation({ externalId: 'soon', status: 'confirmed', arrivalDate: '2026-05-01', departureDate: '2026-05-05', guest: { externalId: 'gu', source: 'mock', firstName: 'Up', lastName: 'Guest', email } });
-      const later = makeReservation({ externalId: 'later', status: 'confirmed', arrivalDate: '2026-07-01', departureDate: '2026-07-05', guest: { externalId: 'gu', source: 'mock', firstName: 'Up', lastName: 'Guest', email } });
-      const result = await runWithReservations([later, soon]);
+      const soon = makeReservation({ externalId: 'soon', status: 'confirmed', arrivalDate: daysFromNow(10), departureDate: daysFromNow(14), guest: { externalId: 'gu', source: 'mock', firstName: 'Up', lastName: 'Guest', email } });
+      const later = makeReservation({ externalId: 'later', status: 'confirmed', arrivalDate: daysFromNow(60), departureDate: daysFromNow(64), guest: { externalId: 'gu', source: 'mock', firstName: 'Up', lastName: 'Guest', email } });
+      const result = await runWithReservations(email, [later, soon]);
       expect(result.success).toBe(true);
-      expect(result.data?.checkIn).toBe('2026-05-01');
+      expect(result.data?.checkIn).toBe(soon.arrivalDate);
     });
   });
 
-  // ── action handlers ───────────────────────────────────────────────────────────
-
-  describe('handleExtendStay', () => {
-    it('returns missing_fields when newCheckoutDate is absent', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
-      const session = await webchatSessionService.create();
-      await webchatSessionService.verify(session.id, guest.id, 'res-1', '2026-03-01', '2026-05-01');
-      const verified = await webchatSessionService.findById(session.id);
-      try {
-        const result = await service.execute('extend-stay', verified!.token, {});
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('missing_fields');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
-      }
-    });
-
-    it('returns no_reservation when session has no reservationId', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
-      const session = await webchatSessionService.create();
-      // verify with empty reservationId
-      await webchatSessionService.verify(session.id, guest.id, '', '', '');
-      const verified = await webchatSessionService.findById(session.id);
-      try {
-        const result = await service.execute('extend-stay', verified!.token, {
-          newCheckoutDate: '2026-05-10',
-        });
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('no_reservation');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
-      }
-    });
-
-    it('returns success with the new checkout date and reservationId', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
-      const session = await webchatSessionService.create();
-      await webchatSessionService.verify(session.id, guest.id, 'res-extend', '2026-03-01', '2026-05-01');
-      const verified = await webchatSessionService.findById(session.id);
-      try {
-        const result = await service.execute('extend-stay', verified!.token, {
-          newCheckoutDate: '2026-05-10',
-        });
-        expect(result.success).toBe(true);
-        expect(result.data?.newCheckoutDate).toBe('2026-05-10');
-        expect(result.data?.reservationId).toBe('res-extend');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
-      }
-    });
-  });
-
-  describe('handleRequestService', () => {
-    it('returns missing_fields when serviceType is absent', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
-      const session = await webchatSessionService.create();
-      await webchatSessionService.verify(session.id, guest.id, 'res-1', '2026-03-01', '2026-05-01');
-      const verified = await webchatSessionService.findById(session.id);
-      try {
-        const result = await service.execute('request-service', verified!.token, { urgency: 'normal' });
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('missing_fields');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
-      }
-    });
-
-    it('returns success with serviceType and reservationId', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
-      const session = await webchatSessionService.create();
-      await webchatSessionService.verify(session.id, guest.id, 'res-svc', '2026-03-01', '2026-05-01');
-      const verified = await webchatSessionService.findById(session.id);
-      try {
-        const result = await service.execute('request-service', verified!.token, {
-          serviceType: 'housekeeping',
-          urgency: 'normal',
-        });
-        expect(result.success).toBe(true);
-        expect(result.data?.serviceType).toBe('housekeeping');
-        expect(result.data?.reservationId).toBe('res-svc');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
-      }
-    });
-  });
-
-  describe('handleOrderRoomService', () => {
-    it('returns missing_fields when items are absent', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
-      const session = await webchatSessionService.create();
-      await webchatSessionService.verify(session.id, guest.id, 'res-1', '2026-03-01', '2026-05-01');
-      const verified = await webchatSessionService.findById(session.id);
-      try {
-        const result = await service.execute('order-room-service', verified!.token, {});
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('missing_fields');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
-      }
-    });
-
-    it('returns success with item data', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
-      const session = await webchatSessionService.create();
-      await webchatSessionService.verify(session.id, guest.id, 'res-food', '2026-03-01', '2026-05-01');
-      const verified = await webchatSessionService.findById(session.id);
-      try {
-        const result = await service.execute('order-room-service', verified!.token, {
-          items: 'burger and fries',
-        });
-        expect(result.success).toBe(true);
-        expect(result.data?.items).toBe('burger and fries');
-        expect(result.data?.reservationId).toBe('res-food');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
-      }
-    });
-  });
-
-  describe('handleBookSpa', () => {
-    it('returns missing_fields when required fields are absent', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
-      const session = await webchatSessionService.create();
-      await webchatSessionService.verify(session.id, guest.id, 'res-1', '2026-03-01', '2026-05-01');
-      const verified = await webchatSessionService.findById(session.id);
-      try {
-        const result = await service.execute('book-spa', verified!.token, {
-          treatment: 'massage',
-          // missing preferredDate and preferredTime
-        });
-        expect(result.success).toBe(false);
-        expect(result.error).toBe('missing_fields');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
-      }
-    });
-
-    it('returns success with treatment and reservationId', async () => {
-      const guest = await guestService.create({ firstName: 'Test', lastName: 'User' });
-      const session = await webchatSessionService.create();
-      await webchatSessionService.verify(session.id, guest.id, 'res-spa', '2026-03-01', '2026-05-01');
-      const verified = await webchatSessionService.findById(session.id);
-      try {
-        const result = await service.execute('book-spa', verified!.token, {
-          treatment: 'massage',
-          preferredDate: '2026-04-01',
-          preferredTime: 'morning',
-        });
-        expect(result.success).toBe(true);
-        expect(result.data?.treatment).toBe('massage');
-        expect(result.data?.reservationId).toBe('res-spa');
-      } finally {
-        await db.delete(webchatSessions).where(eq(webchatSessions.id, session.id));
-        await db.delete(guests).where(eq(guests.id, guest.id));
-      }
-    });
-  });
+  // NOTE: this file used to end with handleExtendStay/handleRequestService/
+  // handleOrderRoomService/handleBookSpa describe blocks. Those handlers
+  // (and the extend-stay/request-service/order-room-service/book-spa actions
+  // that dispatched to them) were deleted from
+  // src/apps/channels/webchat/actions.ts in commit 0321dc6 ("simplify
+  // webchat actions") — see the note above execute() pre-flight. The tests
+  // were removed here rather than left calling actions that no longer exist.
 });

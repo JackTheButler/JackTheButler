@@ -21,8 +21,10 @@ describe('Configuration', () => {
 
   describe('loadConfig', () => {
     it('should load default configuration', async () => {
-      // Vitest sets NODE_ENV to 'test' by default, so we unset it first
+      // Vitest sets NODE_ENV to 'test' by default, and tests/setup.ts points
+      // DATABASE_PATH at a temp file — unset both to test the real defaults
       delete process.env.NODE_ENV;
+      delete process.env.DATABASE_PATH;
 
       const { loadConfig } = await import('@/config/index.js');
       const config = loadConfig();

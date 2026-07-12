@@ -15,6 +15,7 @@ export default defineWorkspace([
       name: 'auth',
       globals: true,
       environment: 'node',
+      setupFiles: ['./tests/setup.ts'],
       include: [
         'tests/gateway/auth-registration.test.ts',
         'tests/gateway/auth-enforcement.test.ts',
@@ -35,6 +36,7 @@ export default defineWorkspace([
       name: 'default',
       globals: true,
       environment: 'node',
+      setupFiles: ['./tests/setup.ts'],
       include: ['tests/**/*.test.ts'],
       exclude: [
         'tests/gateway/auth-registration.test.ts',

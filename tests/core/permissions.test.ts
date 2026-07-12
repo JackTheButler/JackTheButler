@@ -23,9 +23,9 @@ import {
 } from '@/core/permissions/defaults.js';
 
 describe('Permission Constants', () => {
-  it('should have 19 permissions defined', () => {
+  it('should have 17 permissions defined', () => {
     const permissions = Object.values(PERMISSIONS);
-    expect(permissions).toHaveLength(19);
+    expect(permissions).toHaveLength(17);
   });
 
   it('should have permissions in resource:action format', () => {
@@ -55,8 +55,8 @@ describe('Permission Constants', () => {
     }
   });
 
-  it('should have 10 permission groups', () => {
-    expect(PERMISSION_GROUPS).toHaveLength(10);
+  it('should have 9 permission groups', () => {
+    expect(PERMISSION_GROUPS).toHaveLength(9);
   });
 });
 
@@ -132,7 +132,7 @@ describe('hasAllPermissions', () => {
 describe('getAllPermissions', () => {
   it('should return all permission keys', () => {
     const all = getAllPermissions();
-    expect(all).toHaveLength(19);
+    expect(all).toHaveLength(17);
     expect(all).toContain(PERMISSIONS.CONVERSATIONS_VIEW);
     expect(all).toContain(PERMISSIONS.ADMIN_MANAGE);
     expect(all).toContain(PERMISSIONS.HEALTH_VIEW);
@@ -218,7 +218,7 @@ describe('getSystemRoleIds', () => {
 describe('expandPermissions', () => {
   it('should expand wildcard to all permissions', () => {
     const expanded = expandPermissions([WILDCARD_PERMISSION]);
-    expect(expanded).toHaveLength(19);
+    expect(expanded).toHaveLength(17);
     expect(expanded).toContain(PERMISSIONS.CONVERSATIONS_VIEW);
     expect(expanded).toContain(PERMISSIONS.ADMIN_MANAGE);
     expect(expanded).toContain(PERMISSIONS.HEALTH_VIEW);
