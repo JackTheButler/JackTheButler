@@ -13,7 +13,7 @@ import { MemoryService, memoryService } from '@/services/memory.js';
 import { createLogger } from '@/utils/logger.js';
 import { validateBody, requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { guestService } from '@/services/guest.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { NotFoundError } from '@/errors/index.js';
 

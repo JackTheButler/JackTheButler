@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import { app } from '@/gateway/server.js';
 import { db, staff, settings, authTokens } from '@/db/index.js';
 import { eq, and } from 'drizzle-orm';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { authService } from '@/auth/auth.js';
 import { authSettingsService } from '@/auth/auth-settings.js';
 import { authTokenService } from '@/auth/auth-token.js';

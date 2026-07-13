@@ -7,7 +7,7 @@ import { app } from '@/gateway/server.js';
 import { db, staff } from '@/db/index.js';
 import { automationRules, automationLogs } from '@/db/schema.js';
 import { eq } from 'drizzle-orm';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { AuthService } from '@/auth/auth.js';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
@@ -230,8 +230,8 @@ describe('Automation API', () => {
       });
       expect(res.status).toBe(400);
       const json = await res.json();
-      expect(json.error).toBe('Invalid request body');
-      expect(json.details).toBeDefined();
+      expect(json.error.message).toBe('Validation failed');
+      expect(json.error.details).toBeDefined();
     });
 
     it('rejects a missing name', async () => {

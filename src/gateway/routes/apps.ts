@@ -14,7 +14,7 @@ import { getAllManifests, getManifest } from '@/apps/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { maskConfig } from '@/utils/crypto.js';
 import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 import { logConfigChange, getAuditService } from '@/services/audit.js';
 
 const log = createLogger('api:apps');

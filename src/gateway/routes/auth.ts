@@ -7,8 +7,6 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq } from 'drizzle-orm';
-import { db, staff } from '@/db/index.js';
 import { validateBody, requireAuth, getClientIp } from '../middleware/index.js';
 import { authService } from '@/auth/auth.js';
 import { logAuthEvent } from '@/services/audit.js';
@@ -16,9 +14,7 @@ import { authSettingsService } from '@/auth/auth-settings.js';
 import { authTokenService } from '@/auth/auth-token.js';
 import { emailService } from '@/services/email.js';
 import { staffService } from '@/services/staff.js';
-import { generateId } from '@/utils/id.js';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
-import { now } from '@/utils/time.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { ForbiddenError, ValidationError, ConflictError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
 
@@ -167,15 +163,12 @@ auth.post('/register', validateBody(registerSchema), async (c) => {
 
   // Hash password and create staff record
   const passwordHash = await authService.hashPassword(password);
-  const staffId = generateId('staff');
-
-  await db.insert(staff).values({
-    id: staffId,
-    email: email.toLowerCase(),
+  const staffId = await staffService.register({
+    email,
     name,
+    passwordHash,
     roleId: authSettings.defaultRoleId || SYSTEM_ROLE_IDS.STAFF,
     status,
-    passwordHash,
     emailVerified,
     approvalStatus,
   });
@@ -243,12 +236,7 @@ auth.post('/reset-password', validateBody(resetPasswordSchema), async (c) => {
   const { staffId, tokenId } = await authTokenService.validateToken(token, 'password_reset');
 
   // Hash and update password
-  const passwordHash = await authService.hashPassword(password);
-  await db
-    .update(staff)
-    .set({ passwordHash, updatedAt: now() })
-    .where(eq(staff.id, staffId))
-    .run();
+  await staffService.updatePassword(staffId, password);
 
   // Mark token as used and invalidate other reset tokens
   await authTokenService.markUsed(tokenId);
@@ -273,38 +261,20 @@ auth.post('/verify-email', validateBody(verifyEmailSchema), async (c) => {
   // Validate token
   const { staffId, tokenId } = await authTokenService.validateToken(token, 'email_verification');
 
-  // Set emailVerified = true
-  await db
-    .update(staff)
-    .set({ emailVerified: true, updatedAt: now() })
-    .where(eq(staff.id, staffId))
-    .run();
-
-  // If account was only gated by verification (approved but inactive), activate it
-  const [user] = await db.select().from(staff).where(eq(staff.id, staffId)).limit(1);
-  if (user && user.approvalStatus === 'approved' && user.status === 'inactive') {
-    await db
-      .update(staff)
-      .set({ status: 'active', updatedAt: now() })
-      .where(eq(staff.id, staffId))
-      .run();
-  }
+  // Set emailVerified = true, activating the account if it was only gated by verification
+  const { canAutoLogin, requiresApproval } = await staffService.verifyEmail(staffId);
 
   // Mark token as used
   await authTokenService.markUsed(tokenId);
 
   log.info({ staffId }, 'Email verified');
 
-  // Re-fetch user to get updated status
-  const [updatedUser] = await db.select().from(staff).where(eq(staff.id, staffId)).limit(1);
-  const canAutoLogin = updatedUser && updatedUser.status === 'active' && updatedUser.approvalStatus === 'approved';
-
   if (canAutoLogin) {
     const tokens = await authService.generateTokensForUser(staffId);
     return c.json({ success: true, tokens });
   }
 
-  return c.json({ success: true, requiresApproval: updatedUser?.approvalStatus === 'pending' });
+  return c.json({ success: true, requiresApproval });
 });
 
 /**
@@ -317,12 +287,11 @@ auth.post('/resend-verification-email', validateBody(forgotPasswordSchema), asyn
 
   const user = await staffService.getByEmail(email);
   if (user) {
-    // Look up the raw staff record for emailVerified
-    const [raw] = await db.select().from(staff).where(eq(staff.id, user.id)).limit(1);
-    if (raw && !raw.emailVerified) {
+    const info = await staffService.getVerificationInfo(user.id);
+    if (info && !info.emailVerified) {
       await authTokenService.invalidateTokens(user.id, 'email_verification');
       const verifyToken = await authTokenService.createToken(user.id, 'email_verification');
-      await emailService.sendEmailVerificationEmail(raw.email, raw.name, verifyToken);
+      await emailService.sendEmailVerificationEmail(info.email, info.name, verifyToken);
     }
   }
 
@@ -337,12 +306,12 @@ auth.post('/resend-verification', requireAuth, async (c) => {
   const userId = c.get('userId');
 
   // Check if already verified
-  const [user] = await db.select().from(staff).where(eq(staff.id, userId)).limit(1);
-  if (!user) {
+  const info = await staffService.getVerificationInfo(userId);
+  if (!info) {
     throw new ValidationError('User not found');
   }
 
-  if (user.emailVerified) {
+  if (info.emailVerified) {
     throw new ValidationError('Email is already verified');
   }
 
@@ -351,7 +320,7 @@ auth.post('/resend-verification', requireAuth, async (c) => {
 
   // Create new token and send email
   const verifyToken = await authTokenService.createToken(userId, 'email_verification');
-  await emailService.sendEmailVerificationEmail(user.email, user.name, verifyToken);
+  await emailService.sendEmailVerificationEmail(info.email, info.name, verifyToken);
 
   return c.json({ success: true });
 });

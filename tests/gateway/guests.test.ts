@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from 'vitest';
 import { db, staff, guests, reservations, conversations, guestMemories } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { AuthService } from '@/auth/auth.js';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';

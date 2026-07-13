@@ -7,7 +7,7 @@ import { db, tasks, staff, conversations, messages } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { TaskService } from '@/services/task.js';
 import { authService } from '@/auth/auth.js';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { events } from '@/events/index.js';
 
 describe('TaskService', () => {

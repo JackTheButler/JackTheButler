@@ -5,7 +5,7 @@
  * Stores FAQ, policies, amenities, and other information with vector embeddings.
  */
 
-import { eq, and, desc, sql } from 'drizzle-orm';
+import { eq, and, desc, sql, isNull, isNotNull } from 'drizzle-orm';
 import { db, sqlite } from '@/db/index.js';
 import { NotFoundError, AppError } from '@/errors/index.js';
 import { knowledgeBase, knowledgeEmbeddings } from '@/db/schema.js';
@@ -31,6 +31,20 @@ export interface SearchOptions {
   limit?: number | undefined;
   category?: string | undefined;
   minSimilarity?: number | undefined;
+}
+
+/**
+ * Options for listing/filtering knowledge base entries (dashboard table view)
+ */
+export interface ListFilteredOptions {
+  /** Exact category match. When omitted, falls back to filtering by `status` instead. */
+  category?: string | undefined;
+  /** Case-insensitive substring match against title/content/keywords, applied in JS. */
+  search?: string | undefined;
+  source?: 'scraped' | 'manual' | undefined;
+  status?: string | undefined;
+  limit?: number | undefined;
+  offset?: number | undefined;
 }
 
 /**
@@ -65,8 +79,13 @@ export class KnowledgeService {
       ...item,
     });
 
-    // Generate and store embedding
-    await this.generateEmbedding(id, item.content);
+    // Generate and store embedding (best-effort — a missing/failing provider
+    // must not prevent the item from being created)
+    try {
+      await this.generateEmbedding(id, item.content);
+    } catch (err) {
+      log.warn({ id, error: err }, 'Failed to generate embedding for new entry');
+    }
 
     const created = await this.findById(id);
     if (!created) {
@@ -118,9 +137,13 @@ export class KnowledgeService {
       })
       .where(eq(knowledgeBase.id, id));
 
-    // Regenerate embedding if content changed
+    // Regenerate embedding if content changed (best-effort, see add())
     if (updates.content) {
-      await this.generateEmbedding(id, updates.content);
+      try {
+        await this.generateEmbedding(id, updates.content);
+      } catch (err) {
+        log.warn({ id, error: err }, 'Failed to regenerate embedding');
+      }
     }
 
     const updated = await this.findById(id);
@@ -133,12 +156,130 @@ export class KnowledgeService {
   }
 
   /**
-   * Delete a knowledge item
+   * Delete a knowledge item permanently
    */
   async delete(id: string): Promise<void> {
+    const existing = await this.findById(id);
+    if (!existing) {
+      throw new NotFoundError('KnowledgeItem', id);
+    }
+
     // Embedding is deleted automatically via cascade
     await db.delete(knowledgeBase).where(eq(knowledgeBase.id, id));
     log.info({ id }, 'Knowledge item deleted');
+  }
+
+  /**
+   * Archive a knowledge item (soft delete — keeps the row, flips status)
+   */
+  async archive(id: string): Promise<void> {
+    const existing = await this.findById(id);
+    if (!existing) {
+      throw new NotFoundError('KnowledgeItem', id);
+    }
+
+    await db
+      .update(knowledgeBase)
+      .set({ status: 'archived', updatedAt: now() })
+      .where(eq(knowledgeBase.id, id));
+    log.info({ id }, 'Knowledge item archived');
+  }
+
+  /**
+   * List knowledge items with dashboard-facing filters (category/search/source/status) and pagination.
+   * `total` counts all entries matching `status` only, independent of the other filters —
+   * matches the dashboard's "N of total" summary regardless of the active filter.
+   */
+  async listFiltered(options: ListFilteredOptions = {}): Promise<{ entries: KnowledgeItem[]; total: number }> {
+    const { category, search, source, status = 'active', limit = 100, offset = 0 } = options;
+
+    const conditions = [];
+    if (category) {
+      conditions.push(eq(knowledgeBase.category, category));
+    } else {
+      conditions.push(eq(knowledgeBase.status, status));
+    }
+
+    if (source === 'scraped') {
+      conditions.push(isNotNull(knowledgeBase.sourceUrl));
+    } else if (source === 'manual') {
+      conditions.push(isNull(knowledgeBase.sourceUrl));
+    }
+
+    const entries = await db
+      .select()
+      .from(knowledgeBase)
+      .where(and(...conditions))
+      .orderBy(desc(knowledgeBase.updatedAt))
+      .limit(limit)
+      .offset(offset)
+      .all();
+
+    // Apply search filter in JS (SQLite FTS would be better for large datasets)
+    let filtered = entries;
+    if (search) {
+      const searchLower = search.toLowerCase();
+      filtered = entries.filter(
+        (e) =>
+          e.title.toLowerCase().includes(searchLower) ||
+          e.content.toLowerCase().includes(searchLower) ||
+          (e.keywords && e.keywords.toLowerCase().includes(searchLower))
+      );
+    }
+
+    const countResult = await db
+      .select({ count: sql<number>`count(*)` })
+      .from(knowledgeBase)
+      .where(eq(knowledgeBase.status, status))
+      .get();
+
+    return { entries: filtered, total: countResult?.count ?? 0 };
+  }
+
+  /**
+   * Get entry counts per category (active entries only)
+   */
+  async getCategoryCounts(): Promise<Map<string, number>> {
+    const counts = await db
+      .select({
+        category: knowledgeBase.category,
+        count: sql<number>`count(*)`,
+      })
+      .from(knowledgeBase)
+      .where(eq(knowledgeBase.status, 'active'))
+      .groupBy(knowledgeBase.category)
+      .all();
+
+    return new Map(counts.map((c) => [c.category, c.count]));
+  }
+
+  /**
+   * Regenerate embeddings for every active knowledge entry
+   */
+  async reindexAll(): Promise<{ total: number; success: number; failed: number }> {
+    const entries = await db
+      .select()
+      .from(knowledgeBase)
+      .where(eq(knowledgeBase.status, 'active'))
+      .all();
+
+    log.info({ count: entries.length }, 'Starting knowledge base reindex');
+
+    let success = 0;
+    let failed = 0;
+
+    for (const entry of entries) {
+      try {
+        await this.generateEmbedding(entry.id, entry.content);
+        success++;
+      } catch (err) {
+        log.warn({ id: entry.id, error: err }, 'Failed to generate embedding');
+        failed++;
+      }
+    }
+
+    log.info({ success, failed }, 'Knowledge base reindex completed');
+    return { total: entries.length, success, failed };
   }
 
   /**

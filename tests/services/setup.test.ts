@@ -5,7 +5,7 @@
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
 import { db, setupState, knowledgeBase, staff } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { authService } from '@/auth/auth.js';
 import { settingsService } from '@/services/settings.js';
 

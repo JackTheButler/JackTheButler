@@ -7,7 +7,7 @@
  * src/db/index.ts's `db`/`sqlite` exports are lazy — they auto-initialize
  * (connect + sqlite-vec + migrate) on first property access, using whatever
  * env is active at that moment. Default role seeding is separate domain
- * logic (src/core/permissions/seed.ts) and isn't triggered automatically,
+ * logic (src/permissions/seed.ts) and isn't triggered automatically,
  * so we call it here explicitly once the temp DB path is set.
  *
  * Must not *statically* import any src/ module above the env var
@@ -24,5 +24,5 @@ import { join } from 'node:path';
 process.env.NODE_ENV = 'test';
 process.env.DATABASE_PATH = join(mkdtempSync(join(tmpdir(), 'jack-test-')), 'test.db');
 
-const { seedDefaultRoles } = await import('@/core/permissions/seed.js');
+const { seedDefaultRoles } = await import('@/permissions/seed.js');
 seedDefaultRoles();

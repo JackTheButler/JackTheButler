@@ -12,7 +12,7 @@ import { loadConfig } from '@/config/index.js';
 import { UnauthorizedError, NotFoundError, ForbiddenError } from '@/errors/index.js';
 import { authSettingsService } from './auth-settings.js';
 import { createLogger } from '@/utils/logger.js';
-import { WILDCARD_PERMISSION } from '@/core/permissions/index.js';
+import { WILDCARD_PERMISSION } from '@/permissions/index.js';
 import { now } from '@/utils/time.js';
 
 const log = createLogger('auth');

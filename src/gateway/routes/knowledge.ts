@@ -8,36 +8,12 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { eq, desc, sql, and, isNull, isNotNull } from 'drizzle-orm';
-import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
-import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { validateBody, requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { getAppRegistry } from '@/apps/index.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 import { KnowledgeService } from '@/core/ai/knowledge/index.js';
-import type { LLMProvider } from '@/core/ai/types.js';
-import { now } from '@/utils/time.js';
-
-/**
- * Generate and store embedding for a knowledge entry
- */
-async function generateEmbedding(id: string, content: string, provider: LLMProvider): Promise<void> {
-  const response = await provider.embed({ text: content, purpose: 'store' });
-
-  // Delete existing embedding if any
-  await db.delete(knowledgeEmbeddings).where(eq(knowledgeEmbeddings.id, id));
-
-  // Store new embedding
-  await db.insert(knowledgeEmbeddings).values({
-    id,
-    embedding: JSON.stringify(response.embedding),
-    model: provider.name,
-    dimensions: response.embedding.length,
-  });
-
-  log.debug({ id, dimensions: response.embedding.length }, 'Embedding generated');
-}
+import { NotFoundError } from '@/errors/index.js';
 
 const log = createLogger('routes:knowledge');
 
@@ -95,62 +71,32 @@ const updateEntrySchema = z.object({
  * List all knowledge base entries with optional filtering
  */
 knowledgeRoutes.get('/', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), async (c) => {
-  const category = c.req.query('category');
+  const categoryParam = c.req.query('category');
   const search = c.req.query('search');
   const source = c.req.query('source');
   const status = c.req.query('status') || 'active';
   const limit = Math.min(parseInt(c.req.query('limit') || '100', 10), 500);
   const offset = parseInt(c.req.query('offset') || '0', 10);
 
-  // Build WHERE conditions
-  const conditions = [];
+  const category =
+    categoryParam && CATEGORIES.includes(categoryParam as (typeof CATEGORIES)[number]) ? categoryParam : undefined;
 
-  if (category && CATEGORIES.includes(category as (typeof CATEGORIES)[number])) {
-    conditions.push(eq(knowledgeBase.category, category));
-  } else {
-    conditions.push(eq(knowledgeBase.status, status));
-  }
-
-  if (source === 'scraped') {
-    conditions.push(isNotNull(knowledgeBase.sourceUrl));
-  } else if (source === 'manual') {
-    conditions.push(isNull(knowledgeBase.sourceUrl));
-  }
-
-  const entries = await db
-    .select()
-    .from(knowledgeBase)
-    .where(and(...conditions))
-    .orderBy(desc(knowledgeBase.updatedAt))
-    .limit(limit)
-    .offset(offset)
-    .all();
-
-  // Apply search filter in JS (SQLite FTS would be better for large datasets)
-  let filtered = entries;
-  if (search) {
-    const searchLower = search.toLowerCase();
-    filtered = entries.filter(
-      (e) =>
-        e.title.toLowerCase().includes(searchLower) ||
-        e.content.toLowerCase().includes(searchLower) ||
-        (e.keywords && e.keywords.toLowerCase().includes(searchLower))
-    );
-  }
-
-  // Get total count
-  const countResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(knowledgeBase)
-    .where(eq(knowledgeBase.status, status))
-    .get();
+  const knowledgeService = new KnowledgeService();
+  const { entries, total } = await knowledgeService.listFiltered({
+    category,
+    search,
+    source: source === 'scraped' || source === 'manual' ? source : undefined,
+    status,
+    limit,
+    offset,
+  });
 
   return c.json({
-    entries: filtered.map((e) => ({
+    entries: entries.map((e) => ({
       ...e,
       keywords: JSON.parse(e.keywords || '[]'),
     })),
-    total: countResult?.count || 0,
+    total,
     limit,
     offset,
   });
@@ -161,17 +107,8 @@ knowledgeRoutes.get('/', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), async (c
  * Get list of valid categories with counts
  */
 knowledgeRoutes.get('/categories', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), async (c) => {
-  const counts = await db
-    .select({
-      category: knowledgeBase.category,
-      count: sql<number>`count(*)`,
-    })
-    .from(knowledgeBase)
-    .where(eq(knowledgeBase.status, 'active'))
-    .groupBy(knowledgeBase.category)
-    .all();
-
-  const countMap = new Map(counts.map((c) => [c.category, c.count]));
+  const knowledgeService = new KnowledgeService();
+  const countMap = await knowledgeService.getCategoryCounts();
 
   return c.json({
     categories: CATEGORIES.map((cat) => ({
@@ -316,33 +253,12 @@ knowledgeRoutes.post('/reindex', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE)
     );
   }
 
-  // Get all active entries
-  const entries = await db
-    .select()
-    .from(knowledgeBase)
-    .where(eq(knowledgeBase.status, 'active'))
-    .all();
-
-  log.info({ count: entries.length }, 'Starting knowledge base reindex');
-
-  let success = 0;
-  let failed = 0;
-
-  for (const entry of entries) {
-    try {
-      await generateEmbedding(entry.id, entry.content, provider);
-      success++;
-    } catch (err) {
-      log.warn({ id: entry.id, error: err }, 'Failed to generate embedding');
-      failed++;
-    }
-  }
-
-  log.info({ success, failed }, 'Knowledge base reindex completed');
+  const knowledgeService = new KnowledgeService(provider);
+  const { total, success, failed } = await knowledgeService.reindexAll();
 
   return c.json({
     message: 'Reindex completed',
-    total: entries.length,
+    total,
     success,
     failed,
   });
@@ -355,14 +271,11 @@ knowledgeRoutes.post('/reindex', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE)
 knowledgeRoutes.get('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), async (c) => {
   const id = c.req.param('id');
 
-  const entry = await db
-    .select()
-    .from(knowledgeBase)
-    .where(eq(knowledgeBase.id, id))
-    .get();
+  const knowledgeService = new KnowledgeService();
+  const entry = await knowledgeService.findById(id);
 
   if (!entry) {
-    return c.json({ error: 'Entry not found' }, 404);
+    throw new NotFoundError('KnowledgeItem', id);
   }
 
   return c.json({
@@ -378,42 +291,24 @@ knowledgeRoutes.get('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_VIEW), async
 knowledgeRoutes.post('/', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), validateBody(createEntrySchema), async (c) => {
   const data = c.get('validatedBody') as z.infer<typeof createEntrySchema>;
 
-  const id = generateId('knowledge');
-
-  await db
-    .insert(knowledgeBase)
-    .values({
-      id,
-      category: data.category,
-      title: data.title,
-      content: data.content,
-      keywords: JSON.stringify(data.keywords),
-      priority: data.priority,
-      status: 'active',
-      createdAt: now(),
-      updatedAt: now(),
-    })
-    .run();
-
-  log.info({ id, category: data.category, title: data.title }, 'Knowledge entry created');
-
-  // Generate embedding if embedding provider is available
   const registry = getAppRegistry();
-  const embeddingProvider = registry.getEmbeddingProvider();
-  if (embeddingProvider) {
-    try {
-      await generateEmbedding(id, data.content, embeddingProvider);
-    } catch (err) {
-      log.warn({ id, error: err }, 'Failed to generate embedding for new entry');
-    }
-  }
+  const embeddingProvider = registry.getEmbeddingProvider() ?? undefined;
+  const knowledgeService = new KnowledgeService(embeddingProvider);
 
-  const entry = await db.select().from(knowledgeBase).where(eq(knowledgeBase.id, id)).get();
+  const entry = await knowledgeService.add({
+    category: data.category,
+    title: data.title,
+    content: data.content,
+    keywords: JSON.stringify(data.keywords),
+    priority: data.priority,
+  });
+
+  log.info({ id: entry.id, category: data.category, title: data.title }, 'Knowledge entry created');
 
   return c.json(
     {
       ...entry,
-      keywords: JSON.parse(entry?.keywords || '[]'),
+      keywords: JSON.parse(entry.keywords || '[]'),
     },
     201
   );
@@ -427,46 +322,21 @@ knowledgeRoutes.put('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), val
   const id = c.req.param('id');
   const data = c.get('validatedBody') as z.infer<typeof updateEntrySchema>;
 
-  const existing = await db.select().from(knowledgeBase).where(eq(knowledgeBase.id, id)).get();
+  const registry = getAppRegistry();
+  const embeddingProvider = registry.getEmbeddingProvider() ?? undefined;
+  const knowledgeService = new KnowledgeService(embeddingProvider);
 
-  if (!existing) {
-    return c.json({ error: 'Entry not found' }, 404);
-  }
-
-
-  await db
-    .update(knowledgeBase)
-    .set({
-      ...(data.category && { category: data.category }),
-      ...(data.title && { title: data.title }),
-      ...(data.content && { content: data.content }),
-      ...(data.keywords && { keywords: JSON.stringify(data.keywords) }),
-      ...(data.priority !== undefined && { priority: data.priority }),
-      updatedAt: now(),
-    })
-    .where(eq(knowledgeBase.id, id))
-    .run();
-
-  log.info({ id }, 'Knowledge entry updated');
-
-  // Regenerate embedding if content changed
-  if (data.content) {
-    const registry = getAppRegistry();
-    const embeddingProvider = registry.getEmbeddingProvider();
-    if (embeddingProvider) {
-      try {
-        await generateEmbedding(id, data.content, embeddingProvider);
-      } catch (err) {
-        log.warn({ id, error: err }, 'Failed to regenerate embedding');
-      }
-    }
-  }
-
-  const entry = await db.select().from(knowledgeBase).where(eq(knowledgeBase.id, id)).get();
+  const entry = await knowledgeService.update(id, {
+    ...(data.category && { category: data.category }),
+    ...(data.title && { title: data.title }),
+    ...(data.content && { content: data.content }),
+    ...(data.keywords && { keywords: JSON.stringify(data.keywords) }),
+    ...(data.priority !== undefined && { priority: data.priority }),
+  });
 
   return c.json({
     ...entry,
-    keywords: JSON.parse(entry?.keywords || '[]'),
+    keywords: JSON.parse(entry.keywords || '[]'),
   });
 });
 
@@ -478,21 +348,13 @@ knowledgeRoutes.delete('/:id', requirePermission(PERMISSIONS.KNOWLEDGE_MANAGE), 
   const id = c.req.param('id');
   const permanent = c.req.query('permanent') === 'true';
 
-  const existing = await db.select().from(knowledgeBase).where(eq(knowledgeBase.id, id)).get();
-
-  if (!existing) {
-    return c.json({ error: 'Entry not found' }, 404);
-  }
+  const knowledgeService = new KnowledgeService();
 
   if (permanent) {
-    await db.delete(knowledgeBase).where(eq(knowledgeBase.id, id)).run();
+    await knowledgeService.delete(id);
     log.info({ id }, 'Knowledge entry permanently deleted');
   } else {
-    await db
-      .update(knowledgeBase)
-      .set({ status: 'archived', updatedAt: now() })
-      .where(eq(knowledgeBase.id, id))
-      .run();
+    await knowledgeService.archive(id);
     log.info({ id }, 'Knowledge entry archived');
   }
 

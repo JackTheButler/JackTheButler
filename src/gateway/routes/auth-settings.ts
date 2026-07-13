@@ -12,7 +12,7 @@ import { settingsService } from '@/services/settings.js';
 import { TEMPLATES_SETTINGS_KEY, type EmailTemplates } from '@/services/email.js';
 import { validateBody } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 import { logConfigChange } from '@/services/audit.js';
 
 const updateSchema = z.object({

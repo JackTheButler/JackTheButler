@@ -17,7 +17,7 @@
  * — safe to call more than once.
  *
  * This module is intentionally domain-free: it does not seed any
- * application data (e.g. default roles). See src/core/permissions/seed.ts.
+ * application data (e.g. default roles). See src/permissions/seed.ts.
  *
  * @see docs/03-architecture/data-model.md
  */

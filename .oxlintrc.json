@@ -267,7 +267,8 @@
                   "@/scheduler/**",
                   "@/scheduler",
                   "@/services/**",
-                  "@/services"
+                  "@/services",
+                  "@/permissions/**"
                 ],
                 "message": "Layering violation: src/events/** may only import from @/types and @/utils."
               }

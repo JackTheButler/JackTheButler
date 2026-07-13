@@ -10,7 +10,7 @@ import type { Staff } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { NotFoundError, ValidationError, ForbiddenError } from '@/errors/index.js';
-import { WILDCARD_PERMISSION } from '@/core/permissions/index.js';
+import { WILDCARD_PERMISSION } from '@/permissions/index.js';
 import { authService } from '../auth/auth.js';
 import { authSettingsService } from '../auth/auth-settings.js';
 import { now } from '@/utils/time.js';
@@ -48,6 +48,16 @@ export interface UpdateStaffInput {
   phone?: string | null;
   roleId?: string;
   status?: StaffStatus;
+}
+
+export interface RegisterStaffInput {
+  email: string;
+  name: string;
+  passwordHash: string;
+  roleId: string;
+  status: StaffStatus;
+  emailVerified: boolean;
+  approvalStatus: 'pending' | 'approved';
 }
 
 export interface ListStaffOptions {
@@ -256,6 +266,70 @@ export class StaffService {
     log.info({ staffId: id, email: input.email }, 'Created staff member');
 
     return this.getById(id);
+  }
+
+  /**
+   * Create a staff member from self-service registration (pre-hashed password,
+   * caller-decided status/approval/verification — see auth settings for how
+   * those are derived).
+   */
+  async register(input: RegisterStaffInput): Promise<string> {
+    const id = generateId('staff');
+
+    await db.insert(staff).values({
+      id,
+      email: input.email.toLowerCase(),
+      name: input.name,
+      roleId: input.roleId,
+      status: input.status,
+      passwordHash: input.passwordHash,
+      emailVerified: input.emailVerified,
+      approvalStatus: input.approvalStatus,
+    });
+
+    log.info({ staffId: id, email: input.email }, 'Staff registered');
+
+    return id;
+  }
+
+  /**
+   * Email + verification status, used by the resend-verification flows.
+   * Returns null if the staff member doesn't exist.
+   */
+  async getVerificationInfo(id: string): Promise<{ email: string; name: string; emailVerified: boolean } | null> {
+    const [row] = await db
+      .select({ email: staff.email, name: staff.name, emailVerified: staff.emailVerified })
+      .from(staff)
+      .where(eq(staff.id, id))
+      .limit(1);
+
+    return row ?? null;
+  }
+
+  /**
+   * Mark a staff member's email verified, activating their account if it was
+   * only gated by verification (approved but inactive).
+   */
+  async verifyEmail(id: string): Promise<{ canAutoLogin: boolean; requiresApproval: boolean }> {
+    await db.update(staff).set({ emailVerified: true, updatedAt: now() }).where(eq(staff.id, id));
+
+    const [user] = await db.select().from(staff).where(eq(staff.id, id)).limit(1);
+    if (!user) {
+      throw new NotFoundError('Staff', id);
+    }
+
+    let finalStatus = user.status;
+    if (user.approvalStatus === 'approved' && user.status === 'inactive') {
+      await db.update(staff).set({ status: 'active', updatedAt: now() }).where(eq(staff.id, id));
+      finalStatus = 'active';
+    }
+
+    log.info({ staffId: id }, 'Email verified');
+
+    return {
+      canAutoLogin: finalStatus === 'active' && user.approvalStatus === 'approved',
+      requiresApproval: user.approvalStatus === 'pending',
+    };
   }
 
   /**

@@ -7,7 +7,7 @@ import { db, staff, roles } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { StaffService } from '@/services/staff.js';
 import { authService } from '@/auth/auth.js';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 
 describe('StaffService', () => {
   const service = new StaffService();

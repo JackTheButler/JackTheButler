@@ -10,7 +10,7 @@ import { conversationService } from '@/services/conversation.js';
 import { guestContextService } from '@/core/conversation/guest-context.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 import type { ContentType, ChannelType } from '@/types/index.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { translate, getPropertyLanguage } from '@/utils/translation.js';

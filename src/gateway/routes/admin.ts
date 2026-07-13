@@ -10,7 +10,7 @@ import { scheduler } from '@/scheduler/index.js';
 import { pmsSyncService } from '@/services/pms-sync.js';
 import { createLogger } from '@/utils/logger.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 
 const log = createLogger('admin');
 

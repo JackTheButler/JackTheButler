@@ -12,7 +12,7 @@ import {
   hasAnyPermission,
   hasAllPermissions,
   getAllPermissions,
-} from '@/core/permissions/index.js';
+} from '@/permissions/index.js';
 import {
   DEFAULT_ROLES,
   SYSTEM_ROLE_IDS,
@@ -20,7 +20,7 @@ import {
   isSystemRole,
   getSystemRoleIds,
   expandPermissions,
-} from '@/core/permissions/defaults.js';
+} from '@/permissions/defaults.js';
 
 describe('Permission Constants', () => {
   it('should have 17 permissions defined', () => {

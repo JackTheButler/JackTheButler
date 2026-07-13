@@ -10,7 +10,7 @@ import { staffService } from '@/services/staff.js';
 import { emailService } from '@/services/email.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { getAuditService } from '@/services/audit.js';
 

@@ -7,7 +7,7 @@ import { app } from '@/gateway/server.js';
 import { db, staff } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { resetAppRegistry, getAppRegistry } from '@/apps/registry.js';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { AuthService, authService } from '@/auth/auth.js';
 import type { AIAppManifest } from '@/apps/types.js';
 

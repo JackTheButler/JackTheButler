@@ -6,7 +6,7 @@ import { describe, it, expect, beforeAll, afterAll, vi } from 'vitest';
 import { app } from '@/gateway/server.js';
 import { db, staff, appConfigs, appLogs } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { AuthService } from '@/auth/auth.js';
 import { getAppRegistry } from '@/apps/registry.js';
 import type { AIAppManifest } from '@/apps/types.js';

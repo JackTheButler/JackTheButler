@@ -9,7 +9,7 @@ import { jwtVerify } from 'jose';
 import { UnauthorizedError, ForbiddenError } from '@/errors/index.js';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
-import { hasPermission, hasAnyPermission, WILDCARD_PERMISSION } from '@/core/permissions/index.js';
+import { hasPermission, hasAnyPermission, WILDCARD_PERMISSION } from '@/permissions/index.js';
 
 const log = createLogger('auth');
 

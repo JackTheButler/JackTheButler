@@ -13,7 +13,7 @@ import { settingsService } from './settings.js';
 import { createLogger } from '@/utils/logger.js';
 import { appConfigService } from '@/apps/config.js';
 import { getAppRegistry, getManifest } from '@/apps/index.js';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { authService } from '../auth/auth.js';
 import { now } from '@/utils/time.js';
 

@@ -18,7 +18,7 @@ import {
   type CreateRoleInput,
   type UpdateRoleInput,
   type RoleWithStats,
-} from '@/core/permissions/index.js';
+} from '@/permissions/index.js';
 import { now } from '@/utils/time.js';
 
 const log = createLogger('role');

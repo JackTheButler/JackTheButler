@@ -6,7 +6,7 @@ import { describe, it, expect, beforeEach } from 'vitest';
 import { db, settings, roles } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { AuthSettingsService } from '@/auth/auth-settings.js';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 
 describe('AuthSettingsService', () => {
   const service = new AuthSettingsService();

@@ -7,11 +7,9 @@
  */
 
 import { Hono } from 'hono';
-import { eq, desc, sql, and, gte, inArray } from 'drizzle-orm';
-import { db, reservations, guests, conversations, tasks } from '@/db/index.js';
-import { settingsService } from '@/services/settings.js';
+import { reservationService } from '@/services/reservation.js';
 import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 import { now } from '@/utils/time.js';
 
 // Define custom variables type for Hono context
@@ -29,60 +27,8 @@ reservationRoutes.use('/*', requireAuth);
  * Get today's activity summary
  */
 reservationRoutes.get('/today', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
-  const today = new Date();
-  const todayStr: string = today.toISOString().split('T')[0]!;
-
-  // Arrivals today
-  const arrivalsResult = await db
-    .select()
-    .from(reservations)
-    .where(eq(reservations.arrivalDate, todayStr))
-    .all();
-
-  const arrivals = {
-    count: arrivalsResult.length,
-    pending: arrivalsResult.filter((r) => r.status === 'confirmed').length,
-    checkedIn: arrivalsResult.filter((r) => r.status === 'checked_in').length,
-  };
-
-  // Departures today
-  const departuresResult = await db
-    .select()
-    .from(reservations)
-    .where(eq(reservations.departureDate, todayStr))
-    .all();
-
-  const departures = {
-    count: departuresResult.length,
-    checkedOut: departuresResult.filter((r) => r.status === 'checked_out').length,
-    late: departuresResult.filter((r) => r.status === 'checked_in').length,
-  };
-
-  // In-house (checked in, departure date >= today)
-  const inHouseResult = await db
-    .select({ count: sql<number>`count(*)` })
-    .from(reservations)
-    .where(
-      and(
-        eq(reservations.status, 'checked_in'),
-        gte(reservations.departureDate, todayStr)
-      )
-    )
-    .get();
-
-  // Total rooms from hotel profile settings
-  const hotelProfile = await settingsService.get<{ totalRooms?: number } | null>('hotel_profile', null);
-  const totalRooms: number | null = hotelProfile?.totalRooms ?? null;
-  const inHouse = inHouseResult?.count || 0;
-  const occupancyRate = totalRooms ? Math.round((inHouse / totalRooms) * 100) : null;
-
-  return c.json({
-    date: todayStr,
-    arrivals,
-    departures,
-    inHouse,
-    occupancyRate,
-  });
+  const summary = await reservationService.getTodaySummary();
+  return c.json(summary);
 });
 
 /**
@@ -93,39 +39,9 @@ reservationRoutes.get('/arrivals', requirePermission(PERMISSIONS.RESERVATIONS_VI
   const date: string = c.req.query('date') ?? now().split('T')[0]!;
   const status = c.req.query('status'); // optional filter
 
-  const query = db
-    .select({
-      reservation: reservations,
-      guest: guests,
-    })
-    .from(reservations)
-    .leftJoin(guests, eq(reservations.guestId, guests.id))
-    .where(eq(reservations.arrivalDate, date));
+  const arrivals = await reservationService.getArrivals(date, status);
 
-  const results = await query.orderBy(reservations.estimatedArrival).all();
-
-  let filtered = results;
-  if (status) {
-    filtered = results.filter((r) => r.reservation.status === status);
-  }
-
-  return c.json({
-    date,
-    arrivals: filtered.map((r) => ({
-      ...r.reservation,
-      specialRequests: JSON.parse(r.reservation.specialRequests || '[]'),
-      notes: JSON.parse(r.reservation.notes || '[]'),
-      guest: r.guest
-        ? {
-            id: r.guest.id,
-            firstName: r.guest.firstName,
-            lastName: r.guest.lastName,
-            vipStatus: r.guest.vipStatus,
-            loyaltyTier: r.guest.loyaltyTier,
-          }
-        : null,
-    })),
-  });
+  return c.json({ date, arrivals });
 });
 
 /**
@@ -136,39 +52,9 @@ reservationRoutes.get('/departures', requirePermission(PERMISSIONS.RESERVATIONS_
   const date: string = c.req.query('date') ?? now().split('T')[0]!;
   const status = c.req.query('status');
 
-  const results = await db
-    .select({
-      reservation: reservations,
-      guest: guests,
-    })
-    .from(reservations)
-    .leftJoin(guests, eq(reservations.guestId, guests.id))
-    .where(eq(reservations.departureDate, date))
-    .orderBy(reservations.estimatedDeparture)
-    .all();
+  const departures = await reservationService.getDepartures(date, status);
 
-  let filtered = results;
-  if (status) {
-    filtered = results.filter((r) => r.reservation.status === status);
-  }
-
-  return c.json({
-    date,
-    departures: filtered.map((r) => ({
-      ...r.reservation,
-      specialRequests: JSON.parse(r.reservation.specialRequests || '[]'),
-      notes: JSON.parse(r.reservation.notes || '[]'),
-      guest: r.guest
-        ? {
-            id: r.guest.id,
-            firstName: r.guest.firstName,
-            lastName: r.guest.lastName,
-            vipStatus: r.guest.vipStatus,
-            loyaltyTier: r.guest.loyaltyTier,
-          }
-        : null,
-    })),
-  });
+  return c.json({ date, departures });
 });
 
 /**
@@ -176,41 +62,9 @@ reservationRoutes.get('/departures', requirePermission(PERMISSIONS.RESERVATIONS_
  * Get current in-house guests
  */
 reservationRoutes.get('/in-house', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
-  const today: string = now().split('T')[0]!;
+  const reservationList = await reservationService.getInHouse();
 
-  const results = await db
-    .select({
-      reservation: reservations,
-      guest: guests,
-    })
-    .from(reservations)
-    .leftJoin(guests, eq(reservations.guestId, guests.id))
-    .where(
-      and(
-        eq(reservations.status, 'checked_in'),
-        gte(reservations.departureDate, today)
-      )
-    )
-    .orderBy(reservations.roomNumber)
-    .all();
-
-  return c.json({
-    count: results.length,
-    reservations: results.map((r) => ({
-      ...r.reservation,
-      specialRequests: JSON.parse(r.reservation.specialRequests || '[]'),
-      notes: JSON.parse(r.reservation.notes || '[]'),
-      guest: r.guest
-        ? {
-            id: r.guest.id,
-            firstName: r.guest.firstName,
-            lastName: r.guest.lastName,
-            vipStatus: r.guest.vipStatus,
-            loyaltyTier: r.guest.loyaltyTier,
-          }
-        : null,
-    })),
-  });
+  return c.json({ count: reservationList.length, reservations: reservationList });
 });
 
 /**
@@ -229,85 +83,22 @@ reservationRoutes.get('/', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), asy
   const limit = Math.min(parseInt(c.req.query('limit') || '50', 10), 200);
   const offset = parseInt(c.req.query('offset') || '0', 10);
 
-  // Get all reservations with guest info
-  const results = await db
-    .select({
-      reservation: reservations,
-      guest: guests,
-    })
-    .from(reservations)
-    .leftJoin(guests, eq(reservations.guestId, guests.id))
-    .orderBy(desc(reservations.arrivalDate))
-    .all();
-
-  // Apply filters in JS for flexibility
-  let filtered = results;
-
-  if (search) {
-    const searchLower = search.toLowerCase();
-    filtered = filtered.filter(
-      (r) =>
-        r.reservation.confirmationNumber.toLowerCase().includes(searchLower) ||
-        (r.guest &&
-          `${r.guest.firstName} ${r.guest.lastName}`
-            .toLowerCase()
-            .includes(searchLower)) ||
-        (r.reservation.roomNumber &&
-          r.reservation.roomNumber.toLowerCase().includes(searchLower))
-    );
-  }
-
-  if (status && status !== 'all') {
-    filtered = filtered.filter((r) => r.reservation.status === status);
-  }
-
-  if (arrivalFrom) {
-    filtered = filtered.filter((r) => r.reservation.arrivalDate >= arrivalFrom);
-  }
-
-  if (arrivalTo) {
-    filtered = filtered.filter((r) => r.reservation.arrivalDate <= arrivalTo);
-  }
-
-  if (departureFrom) {
-    filtered = filtered.filter(
-      (r) => r.reservation.departureDate >= departureFrom
-    );
-  }
-
-  if (departureTo) {
-    filtered = filtered.filter((r) => r.reservation.departureDate <= departureTo);
-  }
-
-  if (roomNumber) {
-    filtered = filtered.filter(
-      (r) => r.reservation.roomNumber === roomNumber
-    );
-  }
-
-  if (guestId) {
-    filtered = filtered.filter((r) => r.reservation.guestId === guestId);
-  }
-
-  const total = filtered.length;
-  const paginated = filtered.slice(offset, offset + limit);
+  const result = await reservationService.list({
+    search,
+    status,
+    arrivalFrom,
+    arrivalTo,
+    departureFrom,
+    departureTo,
+    roomNumber,
+    guestId,
+    limit,
+    offset,
+  });
 
   return c.json({
-    reservations: paginated.map((r) => ({
-      ...r.reservation,
-      specialRequests: JSON.parse(r.reservation.specialRequests || '[]'),
-      notes: JSON.parse(r.reservation.notes || '[]'),
-      guest: r.guest
-        ? {
-            id: r.guest.id,
-            firstName: r.guest.firstName,
-            lastName: r.guest.lastName,
-            vipStatus: r.guest.vipStatus,
-            loyaltyTier: r.guest.loyaltyTier,
-          }
-        : null,
-    })),
-    total,
+    reservations: result.reservations,
+    total: result.total,
     limit,
     offset,
   });
@@ -319,84 +110,8 @@ reservationRoutes.get('/', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), asy
  */
 reservationRoutes.get('/:id', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), async (c) => {
   const id = c.req.param('id');
-
-  const result = await db
-    .select({
-      reservation: reservations,
-      guest: guests,
-    })
-    .from(reservations)
-    .leftJoin(guests, eq(reservations.guestId, guests.id))
-    .where(eq(reservations.id, id))
-    .get();
-
-  if (!result) {
-    return c.json({ error: 'Reservation not found' }, 404);
-  }
-
-  // Get related conversations
-  const relatedConversations = await db
-    .select()
-    .from(conversations)
-    .where(eq(conversations.reservationId, id))
-    .orderBy(desc(conversations.lastMessageAt))
-    .all();
-
-  // Get related tasks via the guest's conversations. Tasks link to
-  // conversations, not reservations directly, so we first find the
-  // conversation IDs belonging to this reservation's guest, then fetch
-  // tasks scoped to that set.
-  const guestConversations = await db
-    .select({ id: conversations.id })
-    .from(conversations)
-    .where(eq(conversations.guestId, result.reservation.guestId))
-    .all();
-
-  const guestConversationIds = guestConversations.map((c) => c.id);
-
-  const relatedTasks =
-    guestConversationIds.length > 0
-      ? await db
-          .select()
-          .from(tasks)
-          .where(inArray(tasks.conversationId, guestConversationIds))
-          .orderBy(desc(tasks.createdAt))
-          .limit(10)
-          .all()
-      : [];
-
-  return c.json({
-    ...result.reservation,
-    specialRequests: JSON.parse(result.reservation.specialRequests || '[]'),
-    notes: JSON.parse(result.reservation.notes || '[]'),
-    guest: result.guest
-      ? {
-          id: result.guest.id,
-          firstName: result.guest.firstName,
-          lastName: result.guest.lastName,
-          email: result.guest.email,
-          phone: result.guest.phone,
-          vipStatus: result.guest.vipStatus,
-          loyaltyTier: result.guest.loyaltyTier,
-          preferences: JSON.parse(result.guest.preferences || '[]'),
-        }
-      : null,
-    _related: {
-      conversations: relatedConversations.map((c) => ({
-        id: c.id,
-        channelType: c.channelType,
-        state: c.state,
-        lastMessageAt: c.lastMessageAt,
-      })),
-      tasks: relatedTasks.map((t) => ({
-        id: t.id,
-        type: t.type,
-        description: t.description,
-        status: t.status,
-        priority: t.priority,
-      })),
-    },
-  });
+  const reservation = await reservationService.getById(id);
+  return c.json(reservation);
 });
 
 export { reservationRoutes };

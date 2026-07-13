@@ -6,8 +6,8 @@ import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from
 import { app } from '@/gateway/server.js';
 import { db, staff, roles } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 import { AuthService } from '@/auth/auth.js';
 
 describe('Staff API', () => {

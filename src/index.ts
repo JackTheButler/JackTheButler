@@ -8,7 +8,7 @@ import { createServer } from 'node:http';
 import { loadConfig, getEnv } from '@/config/index.js';
 import { logger } from '@/utils/logger.js';
 import { initDb, closeDatabase, isDatabaseHealthy } from '@/db/index.js';
-import { seedDefaultRoles } from '@/core/permissions/seed.js';
+import { seedDefaultRoles } from '@/permissions/seed.js';
 import { app, setupWebSocket } from '@/gateway/index.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/scheduler/index.js';

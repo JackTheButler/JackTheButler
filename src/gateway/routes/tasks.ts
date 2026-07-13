@@ -9,7 +9,7 @@ import { z } from 'zod';
 import { taskService } from '@/services/task.js';
 import { validateBody, validateQuery } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 
 const listQuerySchema = z.object({
   status: z.enum(['pending', 'assigned', 'in_progress', 'completed', 'cancelled']).optional(),

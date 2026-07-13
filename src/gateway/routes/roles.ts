@@ -15,7 +15,7 @@ import {
   PERMISSION_GROUPS,
   getAllPermissions,
   WILDCARD_PERMISSION,
-} from '@/core/permissions/index.js';
+} from '@/permissions/index.js';
 import { getAuditService } from '@/services/audit.js';
 
 const createBodySchema = z.object({

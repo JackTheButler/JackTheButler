@@ -6,8 +6,8 @@ import { describe, it, expect, beforeEach, afterEach } from 'vitest';
 import { db, roles, staff } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { RoleService } from '@/services/role.js';
-import { PERMISSIONS, WILDCARD_PERMISSION } from '@/core/permissions/index.js';
-import { SYSTEM_ROLE_IDS } from '@/core/permissions/defaults.js';
+import { PERMISSIONS, WILDCARD_PERMISSION } from '@/permissions/index.js';
+import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { NotFoundError, ValidationError, ForbiddenError } from '@/errors/index.js';
 
 describe('RoleService', () => {

@@ -18,15 +18,15 @@ import {
 import { automationService } from '@/services/automation.js';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry } from '@/apps/index.js';
-import { requireAuth, requirePermission } from '@/gateway/middleware/index.js';
-import { PERMISSIONS } from '@/core/permissions/index.js';
+import { requireAuth, requirePermission, validateBody } from '@/gateway/middleware/index.js';
+import { PERMISSIONS } from '@/permissions/index.js';
 
 const log = createLogger('api:automation');
 
 /**
  * Automation routes
  */
-export const automationRoutes = new Hono();
+export const automationRoutes = new Hono<{ Variables: { validatedBody: unknown } }>();
 
 // Apply auth to all routes
 automationRoutes.use('/*', requireAuth);
@@ -141,25 +141,20 @@ const createRuleSchema = z.object({
  * POST /api/v1/automation/rules
  * Create a new automation rule
  */
-automationRoutes.post('/rules', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), async (c) => {
-  const body = await c.req.json();
-  const parsed = createRuleSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: 'Invalid request body', details: parsed.error.issues }, 400);
-  }
+automationRoutes.post('/rules', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), validateBody(createRuleSchema), async (c) => {
+  const data = c.get('validatedBody') as z.infer<typeof createRuleSchema>;
 
   const engine = getAutomationEngine();
   const definition: AutomationRuleDefinition = {
-    name: parsed.data.name,
-    triggerType: parsed.data.triggerType as TriggerType,
-    triggerConfig: parsed.data.triggerConfig as unknown as TriggerConfig,
-    actionType: parsed.data.actionType as ActionType,
-    actionConfig: parsed.data.actionConfig as unknown as ActionConfig,
-    enabled: parsed.data.enabled ?? true,
+    name: data.name,
+    triggerType: data.triggerType as TriggerType,
+    triggerConfig: data.triggerConfig as unknown as TriggerConfig,
+    actionType: data.actionType as ActionType,
+    actionConfig: data.actionConfig as unknown as ActionConfig,
+    enabled: data.enabled ?? true,
   };
-  if (parsed.data.description) {
-    definition.description = parsed.data.description;
+  if (data.description) {
+    definition.description = data.description;
   }
 
   const rule = await engine.createRule(definition);
@@ -200,15 +195,9 @@ const updateRuleSchema = z.object({
  * PUT /api/v1/automation/rules/:ruleId
  * Update an automation rule
  */
-automationRoutes.put('/rules/:ruleId', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), async (c) => {
+automationRoutes.put('/rules/:ruleId', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), validateBody(updateRuleSchema), async (c) => {
   const { ruleId } = c.req.param();
-
-  const body = await c.req.json();
-  const parsed = updateRuleSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: 'Invalid request body', details: parsed.error.issues }, 400);
-  }
+  const data = c.get('validatedBody') as z.infer<typeof updateRuleSchema>;
 
   const engine = getAutomationEngine();
 
@@ -219,13 +208,13 @@ automationRoutes.put('/rules/:ruleId', requirePermission(PERMISSIONS.AUTOMATIONS
   }
 
   const updates: Partial<AutomationRuleDefinition> = {};
-  if (parsed.data.name !== undefined) updates.name = parsed.data.name;
-  if (parsed.data.description !== undefined) updates.description = parsed.data.description;
-  if (parsed.data.triggerType !== undefined) updates.triggerType = parsed.data.triggerType as TriggerType;
-  if (parsed.data.triggerConfig !== undefined) updates.triggerConfig = parsed.data.triggerConfig as unknown as TriggerConfig;
-  if (parsed.data.actionType !== undefined) updates.actionType = parsed.data.actionType as ActionType;
-  if (parsed.data.actionConfig !== undefined) updates.actionConfig = parsed.data.actionConfig as unknown as ActionConfig;
-  if (parsed.data.enabled !== undefined) updates.enabled = parsed.data.enabled;
+  if (data.name !== undefined) updates.name = data.name;
+  if (data.description !== undefined) updates.description = data.description;
+  if (data.triggerType !== undefined) updates.triggerType = data.triggerType as TriggerType;
+  if (data.triggerConfig !== undefined) updates.triggerConfig = data.triggerConfig as unknown as TriggerConfig;
+  if (data.actionType !== undefined) updates.actionType = data.actionType as ActionType;
+  if (data.actionConfig !== undefined) updates.actionConfig = data.actionConfig as unknown as ActionConfig;
+  if (data.enabled !== undefined) updates.enabled = data.enabled;
 
   const rule = await engine.updateRule(ruleId, updates);
 
@@ -396,15 +385,8 @@ const generateRuleSchema = z.object({
  * POST /api/v1/automation/generate
  * Generate an automation rule from natural language description
  */
-automationRoutes.post('/generate', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), async (c) => {
-  const body = await c.req.json();
-  const parsed = generateRuleSchema.safeParse(body);
-
-  if (!parsed.success) {
-    return c.json({ error: 'Invalid request body', details: parsed.error.issues }, 400);
-  }
-
-  const { prompt } = parsed.data;
+automationRoutes.post('/generate', requirePermission(PERMISSIONS.AUTOMATIONS_MANAGE), validateBody(generateRuleSchema), async (c) => {
+  const { prompt } = c.get('validatedBody') as z.infer<typeof generateRuleSchema>;
 
   try {
     const registry = getAppRegistry();
