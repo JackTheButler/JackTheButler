@@ -8,12 +8,8 @@ import { guests, conversations, messages, guestMemories } from '@/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
-import { runExtraction } from '@/core/memory/event-subscriber.js';
+import { runExtraction, type MemoryEventSubscriberDeps } from '@/core/memory/event-subscriber.js';
 import type { ConversationClosedEvent } from '@/types/events.js';
-
-vi.mock('@/apps/registry.js', () => ({
-  getAppRegistry: vi.fn(),
-}));
 
 const MOCK_FACTS = JSON.stringify([
   { category: 'preference', content: 'Prefers a quiet room', confidence: 0.9 },
@@ -24,6 +20,20 @@ function makeMockProvider(completionResponse = MOCK_FACTS) {
     name: 'mock',
     complete: vi.fn().mockResolvedValue({ content: completionResponse, usage: { inputTokens: 10, outputTokens: 20 } }),
     embed: vi.fn().mockResolvedValue({ embedding: [0.1, 0.2, 0.3, 0.4], usage: { inputTokens: 5, outputTokens: 0 } }),
+  };
+}
+
+// Injected in place of `getAppRegistry()` — event-subscriber.ts no longer
+// imports the app registry directly (src/core/** must not import @/apps).
+// Each getter is a thunk, matching the composition root's wiring in
+// src/index.ts, so tests can swap the returned provider per call if needed.
+function makeDeps(
+  provider: ReturnType<typeof makeMockProvider> | undefined,
+  embeddingProvider: ReturnType<typeof makeMockProvider> | undefined = provider,
+): MemoryEventSubscriberDeps {
+  return {
+    getActiveAIProvider: () => provider as never,
+    getEmbeddingProvider: () => embeddingProvider as never,
   };
 }
 
@@ -98,14 +108,9 @@ describe('runExtraction', () => {
       { guest: 'Also feather-free pillows please', ai: 'Absolutely, flagged for housekeeping.' },
     ]);
 
-    const { getAppRegistry } = await import('@/apps/registry.js');
     const mockProvider = makeMockProvider();
-    vi.mocked(getAppRegistry).mockReturnValue({
-      getActiveAIProvider: () => mockProvider,
-      getEmbeddingProvider: () => mockProvider,
-    } as never);
 
-    await runExtraction(makeClosedEvent(conversationId, guestId));
+    await runExtraction(makeClosedEvent(conversationId, guestId), makeDeps(mockProvider));
 
     const stored = await db.select().from(guestMemories).where(eq(guestMemories.guestId, guestId));
     expect(stored).toHaveLength(1);
@@ -121,11 +126,9 @@ describe('runExtraction', () => {
   });
 
   it('skips when guestId is null', async () => {
-    const { getAppRegistry } = await import('@/apps/registry.js');
     const mockProvider = makeMockProvider();
-    vi.mocked(getAppRegistry).mockReturnValue({ getActiveAIProvider: () => mockProvider } as never);
 
-    await runExtraction(makeClosedEvent(conversationId, null));
+    await runExtraction(makeClosedEvent(conversationId, null), makeDeps(mockProvider));
 
     expect(mockProvider.complete).not.toHaveBeenCalled();
     const stored = await db.select().from(guestMemories).where(eq(guestMemories.guestId, guestId));
@@ -138,10 +141,7 @@ describe('runExtraction', () => {
       { guest: 'Also feather-free pillows', ai: 'Flagged!' },
     ]);
 
-    const { getAppRegistry } = await import('@/apps/registry.js');
-    vi.mocked(getAppRegistry).mockReturnValue({ getActiveAIProvider: () => undefined } as never);
-
-    await runExtraction(makeClosedEvent(conversationId, guestId));
+    await runExtraction(makeClosedEvent(conversationId, guestId), makeDeps(undefined));
 
     const stored = await db.select().from(guestMemories).where(eq(guestMemories.guestId, guestId));
     expect(stored).toHaveLength(0);
@@ -150,14 +150,9 @@ describe('runExtraction', () => {
   it('skips when fewer than 2 guest messages', async () => {
     await insertMessages([{ guest: 'Hi', ai: 'Hey, how can I help?' }]);
 
-    const { getAppRegistry } = await import('@/apps/registry.js');
     const mockProvider = makeMockProvider();
-    vi.mocked(getAppRegistry).mockReturnValue({
-      getActiveAIProvider: () => mockProvider,
-      getEmbeddingProvider: () => mockProvider,
-    } as never);
 
-    await runExtraction(makeClosedEvent(conversationId, guestId));
+    await runExtraction(makeClosedEvent(conversationId, guestId), makeDeps(mockProvider));
 
     expect(mockProvider.complete).not.toHaveBeenCalled();
   });
@@ -168,14 +163,9 @@ describe('runExtraction', () => {
       { guest: 'Thanks!', ai: 'Of course!' },
     ]);
 
-    const { getAppRegistry } = await import('@/apps/registry.js');
     const mockProvider = makeMockProvider('[]');
-    vi.mocked(getAppRegistry).mockReturnValue({
-      getActiveAIProvider: () => mockProvider,
-      getEmbeddingProvider: () => mockProvider,
-    } as never);
 
-    await runExtraction(makeClosedEvent(conversationId, guestId));
+    await runExtraction(makeClosedEvent(conversationId, guestId), makeDeps(mockProvider));
 
     const stored = await db.select().from(guestMemories).where(eq(guestMemories.guestId, guestId));
     expect(stored).toHaveLength(0);
@@ -190,13 +180,7 @@ describe('runExtraction', () => {
     const provider = makeMockProvider();
     provider.embed.mockRejectedValue(new Error('Embedding service unavailable'));
 
-    const { getAppRegistry } = await import('@/apps/registry.js');
-    vi.mocked(getAppRegistry).mockReturnValue({
-      getActiveAIProvider: () => provider,
-      getEmbeddingProvider: () => provider,
-    } as never);
-
-    await runExtraction(makeClosedEvent(conversationId, guestId));
+    await runExtraction(makeClosedEvent(conversationId, guestId), makeDeps(provider));
 
     const stored = await db.select().from(guestMemories).where(eq(guestMemories.guestId, guestId));
     expect(stored).toHaveLength(1);

@@ -10,7 +10,7 @@
 
 import { describe, it, expect, vi } from 'vitest';
 import { responderPrompt } from '@/core/pipeline/prompts.js';
-import type { ButlerContext } from '@/core/pipeline/index.js';
+import type { ButlerContext } from '@/core/pipeline/context.js';
 import type { Env } from '@thebutler/pipeline';
 
 function makeEnv(overrides: Partial<Env<ButlerContext>> = {}): Env<ButlerContext> {

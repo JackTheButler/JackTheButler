@@ -4,12 +4,20 @@
  * Subscribes to CONVERSATION_CLOSED and runs memory extraction
  * asynchronously. Fire-and-forget — never blocks message processing.
  *
+ * Provider resolution is injected rather than pulled from the app
+ * registry directly — `src/core/**` must not import `@/apps` (kernel /
+ * adapter layering, see CLAUDE.md). The composition root
+ * (`src/index.ts`) supplies getters bound to the registry at
+ * `subscribeMemoryExtractionToEvents()` call time; each getter is called
+ * fresh per event so the active provider can change between events
+ * without needing a restart.
+ *
  * @module core/memory/event-subscriber
  */
 
 import { events, EventTypes } from '@/events/index.js';
 import type { ConversationClosedEvent } from '@/types/events.js';
-import { getAppRegistry } from '@/apps/registry.js';
+import type { AIProvider } from '@/core/ai/types.js';
 import { conversationService } from '@/services/conversation.js';
 import { MemoryService } from '@/services/memory.js';
 import { MemoryExtractor } from './extractor.js';
@@ -17,10 +25,20 @@ import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('core:memory-events');
 
-export function subscribeMemoryExtractionToEvents(): void {
+/**
+ * Provider getters supplied by the composition root. Each is a thunk
+ * (rather than a resolved value) so the active provider is re-resolved
+ * per event — matching the previous `getAppRegistry()`-per-call behavior.
+ */
+export interface MemoryEventSubscriberDeps {
+  getActiveAIProvider: () => AIProvider | undefined;
+  getEmbeddingProvider: () => AIProvider | undefined;
+}
+
+export function subscribeMemoryExtractionToEvents(deps: MemoryEventSubscriberDeps): void {
   events.on(EventTypes.CONVERSATION_CLOSED, (event: ConversationClosedEvent) => {
     // Fire-and-forget — errors must never propagate to the event emitter
-    runExtraction(event).catch((err) => {
+    runExtraction(event, deps).catch((err) => {
       log.error({ err, conversationId: event.conversationId }, 'Unhandled error in memory extraction');
     });
   });
@@ -28,7 +46,10 @@ export function subscribeMemoryExtractionToEvents(): void {
   log.info('Memory extraction subscribed to CONVERSATION_CLOSED');
 }
 
-export async function runExtraction(event: ConversationClosedEvent): Promise<void> {
+export async function runExtraction(
+  event: ConversationClosedEvent,
+  deps: MemoryEventSubscriberDeps,
+): Promise<void> {
   const { conversationId, guestId } = event;
 
   // No guest identified — nothing to attach memories to
@@ -38,13 +59,13 @@ export async function runExtraction(event: ConversationClosedEvent): Promise<voi
   }
 
   // No AI provider configured — skip silently
-  const provider = getAppRegistry().getActiveAIProvider();
+  const provider = deps.getActiveAIProvider();
   if (!provider) {
     log.debug({ conversationId }, 'Skipping memory extraction: no AI provider configured');
     return;
   }
 
-  const embeddingProvider = getAppRegistry().getEmbeddingProvider();
+  const embeddingProvider = deps.getEmbeddingProvider();
 
   const messages = await conversationService.getMessages(conversationId, { limit: 500 });
 

@@ -23,7 +23,7 @@ import {
 } from '@/services/verification.js';
 import type { HospitalityEntity } from './entity-resolver.js';
 import type { Env, Intent } from '@thebutler/pipeline';
-import type { ButlerContext } from './index.js';
+import type { ButlerContext } from './context.js';
 
 // ─── Persona ────────────────────────────────────────────────────
 

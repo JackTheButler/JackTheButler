@@ -15,7 +15,7 @@
 import { events, EventTypes } from '@/events/index.js';
 import type { Stage } from '@thebutler/pipeline';
 import type { ChannelType } from '@jackthebutler/shared';
-import type { ButlerContext } from '../index.js';
+import type { ButlerContext } from '../context.js';
 
 export const emitMessageSent: Stage<ButlerContext> = async (ctx) => {
   if (!ctx.conversation || !ctx.outbound) return;

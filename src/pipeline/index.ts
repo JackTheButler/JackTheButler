@@ -1,14 +1,21 @@
 /**
- * Message processing pipeline — Butler's wrapper around @thebutler/pipeline.
+ * Message processing pipeline — composition root for @thebutler/pipeline.
  *
- * Constructs the package's pipeline once at module load using Butler-side
- * adapters (in `./adapters.ts`), and exposes `processMessage(inbound, domain)`
- * so the channel call sites can switch over with only an import-path change.
+ * This is the assembly layer: it wires Butler's domain adapters
+ * (`@/core/pipeline/adapters.js`), the registry-dependent AI adapter
+ * (`./adapters.js`), and the domain stages (`@/core/pipeline/stages/`)
+ * into a single `Pipeline` instance, and exposes
+ * `processMessage(inbound, domain)` so channel call sites only need an
+ * import-path change.
+ *
+ * Analogous to `src/index.ts` (the boot composition root) but scoped to
+ * message processing — it's the only place allowed to bind
+ * `@thebutler/pipeline`'s provider contracts to the app registry.
  *
  * The signature matches the legacy `src/core/pipeline-legacy/index.ts` so
  * webchat / WhatsApp / SMS / Telegram can be migrated channel-by-channel.
  *
- * @module core/pipeline
+ * @module pipeline
  */
 
 import {
@@ -26,19 +33,17 @@ import {
   generateResponse,
   translateOutbound,
   saveOutboundMessage,
-  type MessageContext,
   type Pipeline,
   type Stage,
   type InboundMessage as PkgInboundMessage,
   type OutboundMessage as PkgOutboundMessage,
 } from '@thebutler/pipeline';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
-import type { VerificationState } from '@/services/verification.js';
 import { getPropertyLanguage } from '@/utils/translation.js';
 import { events, EventTypes } from '@/events/index.js';
 import { writeActivityLog } from '@/services/activity-log.js';
+import type { ButlerContext } from '@/core/pipeline/context.js';
 import {
-  aiProvider,
   conversationProvider,
   entityProvider,
   intentProvider,
@@ -46,40 +51,19 @@ import {
   loggerProvider,
   memoryProvider,
   promptProvider,
-} from './adapters.js';
-import { checkVerification } from './stages/check-verification.js';
-import { extractResponseTags } from './stages/extract-response-tags.js';
-import { emitMessageReceived } from './stages/emit-message-received.js';
-import { emitMessageSent } from './stages/emit-message-sent.js';
-import { writeProcessorOutcome, buildOutcomeDetails } from './stages/write-processor-outcome.js';
-import { routeTask } from './stages/route-task.js';
+} from '@/core/pipeline/adapters.js';
+import { checkVerification } from '@/core/pipeline/stages/check-verification.js';
+import { extractResponseTags } from '@/core/pipeline/stages/extract-response-tags.js';
+import { emitMessageReceived } from '@/core/pipeline/stages/emit-message-received.js';
+import { emitMessageSent } from '@/core/pipeline/stages/emit-message-sent.js';
+import {
+  writeProcessorOutcome,
+  buildOutcomeDetails,
+} from '@/core/pipeline/stages/write-processor-outcome.js';
+import { routeTask } from '@/core/pipeline/stages/route-task.js';
+import { aiProvider } from './adapters.js';
 
-/**
- * Butler-specific extensions to `MessageContext`.
- *
- * Fields are added as the stage-by-stage review surfaces Butler-specific
- * state that needs to flow between stages.
- */
-export interface ButlerContext extends MessageContext {
-  /**
-   * Hospitality identity-verification state for the current turn. Written
-   * by the Butler-side `checkVerification` stage and read by the responder
-   * to phrase its reply (success / partial / failed / max-attempts).
-   */
-  verification?: VerificationState;
-
-  /**
-   * True when `routeTask` created a task on this turn for the classified
-   * intent. Surfaced on the `processor.outcome` activity-log row for
-   * run-to-task correlation in the dashboard.
-   */
-  taskCreated?: boolean;
-
-  /**
-   * Id of the task row inserted by `routeTask`, if any.
-   */
-  taskId?: string;
-}
+export type { ButlerContext } from '@/core/pipeline/context.js';
 
 // The pipeline is cached by `systemLanguage`. Every `processMessage` reads
 // the current property language from settings; if it matches the cached

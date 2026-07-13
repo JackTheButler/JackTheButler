@@ -21,7 +21,7 @@
 
 import { writeActivityLog } from '@/services/activity-log.js';
 import type { Stage } from '@thebutler/pipeline';
-import type { ButlerContext } from '../index.js';
+import type { ButlerContext } from '../context.js';
 
 /**
  * Build the per-run details payload shared between the success-path stage

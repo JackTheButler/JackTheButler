@@ -24,7 +24,7 @@
  */
 
 import type { Stage } from '@thebutler/pipeline';
-import type { ButlerContext } from '../index.js';
+import type { ButlerContext } from '../context.js';
 
 const ACTION_TAG_RE = /\[ACTION:([a-z0-9-]+)\]\s*$/;
 const QUICK_REPLY_RE = /\[QUICK_REPLIES:((?:[^|\]]+\|?)+)\]\s*$/;

@@ -151,7 +151,7 @@
       }
     },
     {
-      "//": "Rule 1: src/core/** must not import @/apps or @/gateway.",
+      "//": "Rule 1: src/core/** must not import @/apps, @/gateway, or @/pipeline (assembly layer — domain must not depend on composition-root wiring).",
       "files": ["**/src/core/**"],
       "rules": {
         "no-restricted-imports": [
@@ -159,8 +159,15 @@
           {
             "patterns": [
               {
-                "group": ["@/apps/**", "@/apps", "@/gateway/**", "@/gateway"],
-                "message": "Layering violation: src/core/** (kernel) must not import @/apps or @/gateway (adapters). See CLAUDE.md kernel/adapter architecture."
+                "group": [
+                  "@/apps/**",
+                  "@/apps",
+                  "@/gateway/**",
+                  "@/gateway",
+                  "@/pipeline/**",
+                  "@/pipeline"
+                ],
+                "message": "Layering violation: src/core/** (kernel) must not import @/apps, @/gateway, or @/pipeline (adapters/assembly). See CLAUDE.md kernel/adapter architecture."
               }
             ]
           }
@@ -202,7 +209,7 @@
       }
     },
     {
-      "//": "Rule 4: src/events/** may only import from @/types and @/utils (plus relative/external imports, which are unaffected).",
+      "//": "Rule 4: src/events/** may only import from @/types and @/utils (plus relative/external imports, which are unaffected). Deny-list of all top-level src dirs — add new ones here too (e.g. @/pipeline, added alongside the src/pipeline/ assembly layer).",
       "files": ["**/src/events/**"],
       "rules": {
         "no-restricted-imports": [
@@ -229,6 +236,8 @@
                   "@/locales",
                   "@/monitoring/**",
                   "@/monitoring",
+                  "@/pipeline/**",
+                  "@/pipeline",
                   "@/scheduler/**",
                   "@/scheduler",
                   "@/services/**",
@@ -242,7 +251,7 @@
       }
     },
     {
-      "//": "Rule 5: src/db/** must not import @/core (plus rule 6: must not import @/gateway either).",
+      "//": "Rule 5: src/db/** must not import @/core (plus rule 6: must not import @/gateway either), plus @/pipeline (assembly layer).",
       "files": ["**/src/db/**"],
       "rules": {
         "no-restricted-imports": [
@@ -250,8 +259,15 @@
           {
             "patterns": [
               {
-                "group": ["@/core/**", "@/core", "@/gateway/**", "@/gateway"],
-                "message": "Layering violation: src/db/** must not import @/core or @/gateway."
+                "group": [
+                  "@/core/**",
+                  "@/core",
+                  "@/gateway/**",
+                  "@/gateway",
+                  "@/pipeline/**",
+                  "@/pipeline"
+                ],
+                "message": "Layering violation: src/db/** must not import @/core, @/gateway, or @/pipeline."
               }
             ]
           }
@@ -259,7 +275,7 @@
       }
     },
     {
-      "//": "Rule 7: src/monitoring/** and src/scheduler/** must not import @/gateway or @/core.",
+      "//": "Rule 7: src/monitoring/** and src/scheduler/** must not import @/gateway, @/core, or @/pipeline.",
       "files": ["**/src/monitoring/**", "**/src/scheduler/**"],
       "rules": {
         "no-restricted-imports": [
@@ -267,8 +283,15 @@
           {
             "patterns": [
               {
-                "group": ["@/core/**", "@/core", "@/gateway/**", "@/gateway"],
-                "message": "Layering violation: src/monitoring/** and src/scheduler/** must not import @/core or @/gateway."
+                "group": [
+                  "@/core/**",
+                  "@/core",
+                  "@/gateway/**",
+                  "@/gateway",
+                  "@/pipeline/**",
+                  "@/pipeline"
+                ],
+                "message": "Layering violation: src/monitoring/** and src/scheduler/** must not import @/core, @/gateway, or @/pipeline."
               }
             ]
           }
@@ -283,11 +306,8 @@
       }
     },
     {
-      "//": "GRANDFATHERED (rule 1): src/core/** -> @/apps, tracked for the interface-inversion refactor (see docs/refactoring backlog). Do not add new files here — fix the underlying import instead.",
-      "files": [
-        "**/src/core/pipeline/adapters.ts",
-        "**/src/core/memory/event-subscriber.ts"
-      ],
+      "//": "Rule 8: src/pipeline/** is the message-processing composition root (assembly layer) — analogous to src/index.ts. It may import @/apps, @/services, @/core, and @thebutler/pipeline, but must not import @/gateway.",
+      "files": ["**/src/pipeline/**"],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -295,7 +315,7 @@
             "patterns": [
               {
                 "group": ["@/gateway/**", "@/gateway"],
-                "message": "Layering violation: src/core/** (kernel) must not import @/gateway (adapters). See CLAUDE.md kernel/adapter architecture."
+                "message": "Layering violation: src/pipeline/** (assembly) must not import @/gateway."
               }
             ]
           }
@@ -313,23 +333,6 @@
               {
                 "group": ["@/core/**", "@/core"],
                 "message": "Layering violation: src/apps/** (adapters) must not import @/core."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "//": "GRANDFATHERED (rule 3, not in the original known-violations list — discovered while wiring this guardrail; flagged for follow-up, see PR description): src/apps/channels/webchat/index.ts -> @/core/pipeline. Do not add new files here — fix the underlying import instead.",
-      "files": ["**/src/apps/channels/webchat/index.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": ["@/gateway/**", "@/gateway"],
-                "message": "Layering violation: src/apps/** (adapters) must not import @/gateway."
               }
             ]
           }

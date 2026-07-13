@@ -19,6 +19,7 @@ import { getAutomationEngine } from '@/core/automation/index.js';
 import { subscribeAutomationToEvents } from '@/core/automation/event-subscriber.js';
 import { subscribeActivityLogToEvents } from '@/services/activity-log.js';
 import { subscribeMemoryExtractionToEvents } from '@/core/memory/event-subscriber.js';
+import { getAppRegistry } from '@/apps/index.js';
 
 const APP_NAME = 'Jack The Butler';
 const VERSION = process.env.APP_VERSION ?? process.env.npm_package_version ?? 'unknown';
@@ -154,8 +155,15 @@ async function main(): Promise<void> {
     // Subscribe activity log to system events (Layer 1)
     subscribeActivityLogToEvents();
 
-    // Subscribe memory extraction to conversation close events
-    subscribeMemoryExtractionToEvents();
+    // Subscribe memory extraction to conversation close events. Provider
+    // resolution is injected here (composition root) since
+    // src/core/memory/event-subscriber.ts must not import @/apps
+    // directly — each getter re-resolves from the registry per event so
+    // the active provider can change without a restart.
+    subscribeMemoryExtractionToEvents({
+      getActiveAIProvider: () => getAppRegistry().getActiveAIProvider(),
+      getEmbeddingProvider: () => getAppRegistry().getEmbeddingProvider(),
+    });
 
     // Note: Email is now handled via extensions (Mailgun, SendGrid, Gmail SMTP)
     // Inbound email uses webhooks instead of IMAP polling

@@ -137,7 +137,7 @@ async function handleIncomingMessage(message: TelegramMessage): Promise<void> {
   }
 
   // Process through message processor
-  const { processMessage } = await import('@/core/pipeline/index.js');
+  const { processMessage } = await import('@/pipeline/index.js');
   const { generateId } = await import('@/utils/id.js');
 
   const inbound = {

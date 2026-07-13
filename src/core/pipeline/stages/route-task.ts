@@ -23,7 +23,7 @@
 import { taskService, type TaskType } from '@/services/task.js';
 import type { Stage } from '@thebutler/pipeline';
 import type { TaskPriority } from '@jackthebutler/shared';
-import type { ButlerContext } from '../index.js';
+import type { ButlerContext } from '../context.js';
 import type { HospitalityEntity } from '../entity-resolver.js';
 
 const MIN_CONFIDENCE = 0.6;

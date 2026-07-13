@@ -1,23 +1,23 @@
 /**
- * Provider adapters for @thebutler/pipeline.
+ * Domain-only provider adapters for @thebutler/pipeline.
  *
- * Every adapter is a **stub** that throws on call — the file exists so the
- * pipeline scaffold (`./index.ts`) compiles. Real implementations get filled
- * in stage-by-stage as we walk the new pipeline against the legacy one in
- * `src/core/pipeline-legacy/`.
+ * These adapters only need `@/services` and other core modules — no app
+ * registry, no `@/apps` — so they stay in the domain layer alongside the
+ * rest of `src/core/pipeline/`. The registry-dependent `aiProvider` (which
+ * resolves the active AI provider per call) lives in the composition root
+ * at `src/pipeline/adapters.ts` instead.
  *
  * @module core/pipeline/adapters
  */
 
 import type {
-  AIProvider,
   ConversationProvider,
   KnowledgeProvider,
   Logger,
   MemoryProvider,
   PromptProvider,
 } from '@thebutler/pipeline';
-import type { ButlerContext } from './index.js';
+import type { ButlerContext } from './context.js';
 import {
   classifierPrompt,
   detectorPrompt,
@@ -27,7 +27,6 @@ import {
 import { createLogger } from '@/utils/logger.js';
 import { memoryService } from '@/services/memory.js';
 import { KnowledgeService } from '@/core/ai/knowledge/index.js';
-import { getAppRegistry } from '@/apps/index.js';
 import { conversationService } from '@/services/conversation.js';
 import type { Conversation as PkgConversation } from '@thebutler/pipeline';
 import type { Conversation as ButlerConversation } from '@/db/schema.js';
@@ -55,65 +54,6 @@ export const promptProvider: PromptProvider<ButlerContext> = {
 };
 
 // ─── Service adapters ───────────────────────────────────────────
-
-// Routes `complete` to the user-configured active AI provider and `embed`
-// to whichever provider is currently embedding-capable (Butler's registry
-// can return a different provider for embeddings — e.g. local fallback).
-// Maps the package's `modelTier: 'reasoning'` onto Butler's `'completion'`.
-// `name` is a getter so System Health logs see the active provider's id.
-export const aiProvider: AIProvider = {
-  get name() {
-    return getAppRegistry().getActiveAIProvider()?.name ?? 'unknown';
-  },
-
-  complete: async (request) => {
-    const provider = getAppRegistry().getActiveAIProvider();
-    if (!provider) throw new Error('No active AI provider configured');
-
-    const butlerTier =
-      request.modelTier === 'reasoning' ? 'completion' : request.modelTier;
-
-    const response = await provider.complete({
-      messages: request.messages.map((m) => ({ role: m.role, content: m.content })),
-      ...(request.temperature !== undefined ? { temperature: request.temperature } : {}),
-      ...(request.maxTokens !== undefined ? { maxTokens: request.maxTokens } : {}),
-      ...(butlerTier !== undefined ? { modelTier: butlerTier } : {}),
-      ...(request.purpose !== undefined ? { purpose: request.purpose } : {}),
-      // The package's `logFields` maps directly onto Butler's existing
-      // plugin-level `onComplete` hook — same signature, different name.
-      // The plugin merges the returned fields into the app_log row.
-      ...(request.logFields !== undefined
-        ? { onComplete: request.logFields }
-        : {}),
-    });
-
-    return {
-      content: response.content,
-      ...(response.usage
-        ? {
-            usage: {
-              inputTokens: response.usage.inputTokens,
-              outputTokens: response.usage.outputTokens,
-            },
-          }
-        : {}),
-    };
-  },
-
-  embed: async (request) => {
-    const provider = getAppRegistry().getEmbeddingProvider();
-    if (!provider) throw new Error('No embedding provider configured');
-
-    const response = await provider.embed({ text: request.text });
-
-    return {
-      embedding: response.embedding,
-      ...(response.usage
-        ? { usage: { inputTokens: response.usage.inputTokens } }
-        : {}),
-    };
-  },
-};
 
 // Maps a Butler `Conversation` row (SQLite TEXT columns, JSON-string
 // metadata, `guestId`/`guestLanguage` fields) to the package's

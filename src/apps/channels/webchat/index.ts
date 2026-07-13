@@ -19,7 +19,7 @@ import type {
   OutboundMessage,
   SendResult,
 } from '@jackthebutler/shared';
-import { processMessage } from '@/core/pipeline/index.js';
+import { processMessage } from '@/pipeline/index.js';
 import { appConfigService } from '@/apps/config.js';
 import { conversationService } from '@/services/conversation.js';
 import { webchatSessionService } from '@/apps/channels/webchat/session.js';

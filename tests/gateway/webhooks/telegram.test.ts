@@ -23,13 +23,13 @@ vi.mock('@/apps/index.js', () => ({
   }),
 }));
 
-vi.mock('@/core/pipeline/index.js', () => ({
+vi.mock('@/pipeline/index.js', () => ({
   processMessage: vi.fn(),
 }));
 
 import { app } from '@/gateway/server.js';
 import { appConfigService } from '@/apps/config.js';
-import { processMessage } from '@/core/pipeline/index.js';
+import { processMessage } from '@/pipeline/index.js';
 
 const mockGetAppConfig = appConfigService.getAppConfig as ReturnType<typeof vi.fn>;
 const mockProcessMessage = processMessage as ReturnType<typeof vi.fn>;

@@ -33,7 +33,7 @@ import type {
   Message,
   Stage,
 } from '@thebutler/pipeline';
-import type { ButlerContext } from '../index.js';
+import type { ButlerContext } from '../context.js';
 
 const EXTRACTION_SYSTEM_PROMPT =
   'Extract hotel guest verification credentials from the conversation below.\n' +
