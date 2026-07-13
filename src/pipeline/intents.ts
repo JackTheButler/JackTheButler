@@ -9,11 +9,11 @@
  *      projecting `IntentDefinition` rows into the package's `Intent`
  *      shape with metadata folded onto `intent.metadata`.
  *
- * Inlined here (rather than imported from `src/core/domain/hospitality/`)
+ * Inlined here
  * so the domain folder can be deleted cleanly once `pipeline-legacy/` is
  * retired.
  *
- * @module core/pipeline/intents
+ * @module pipeline/intents
  */
 
 import type { Intent, IntentProvider } from '@thebutler/pipeline';

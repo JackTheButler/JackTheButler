@@ -12,14 +12,13 @@ import { createLogger } from '@/utils/logger.js';
 import { events, EventTypes } from '@/events/index.js';
 import { NotFoundError } from '@/errors/index.js';
 import { now } from '@/utils/time.js';
+import type { ChannelType, ConversationState } from '@jackthebutler/shared';
 import type {
-  ChannelType,
-  ConversationState,
   ConversationSummary,
   ConversationDetails,
   UpdateConversationInput,
-  CreateMessageInput,
-} from '@/types/index.js';
+} from '@/types/conversation.js';
+import type { CreateMessageInput } from '@/types/message.js';
 
 const log = createLogger('conversation');
 

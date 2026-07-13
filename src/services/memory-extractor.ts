@@ -9,7 +9,7 @@
  */
 
 import type { Message } from '@/db/schema.js';
-import type { LLMProvider } from '@/core/ai/types.js';
+import type { AIProvider as LLMProvider } from '@jackthebutler/shared';
 import type { MemoryFact } from '@/services/memory.js';
 import { createLogger } from '@/utils/logger.js';
 

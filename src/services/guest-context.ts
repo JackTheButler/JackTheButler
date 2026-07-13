@@ -6,7 +6,7 @@
  *
  * Part of the kernel - this is core business logic for hospitality AI.
  *
- * @module core/conversation/guest-context
+ * @module core/guest-context
  */
 
 import { eq, and, sql } from 'drizzle-orm';

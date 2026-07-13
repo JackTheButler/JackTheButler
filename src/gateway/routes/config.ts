@@ -6,7 +6,7 @@
  */
 
 import { Hono } from 'hono';
-import { authSettingsService } from '@/auth/auth-settings.js';
+import { authSettingsService } from '@/auth/settings.js';
 import { isDemo } from '@/config/index.js';
 import { getVersion } from '@/config/version.js';
 

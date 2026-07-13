@@ -20,7 +20,7 @@
  * Channels other than webchat ignore the metadata; the extraction is
  * cheap and harmless regardless of channel.
  *
- * @module core/pipeline/stages/extract-response-tags
+ * @module pipeline/stages/extract-response-tags
  */
 
 import type { Stage } from '@thebutler/pipeline';

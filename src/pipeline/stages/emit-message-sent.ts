@@ -9,7 +9,7 @@
  * The persisted message's id is on `ctx.outbound.id` — populated by
  * `saveOutboundMessage` from the `ConversationProvider.addMessage` return.
  *
- * @module core/pipeline/stages/emit-message-sent
+ * @module pipeline/stages/emit-message-sent
  */
 
 import { events, EventTypes } from '@/events/index.js';

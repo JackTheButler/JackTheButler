@@ -161,32 +161,6 @@
       }
     },
     {
-      "//": "Rule 1: src/core/** must not import @/apps, @/gateway, or @/pipeline (assembly layer \u2014 domain must not depend on composition-root wiring).",
-      "files": [
-        "**/src/core/**"
-      ],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": [
-                  "@/apps/**",
-                  "@/apps",
-                  "@/gateway/**",
-                  "@/gateway",
-                  "@/pipeline/**",
-                  "@/pipeline"
-                ],
-                "message": "Layering violation: src/core/** (kernel) must not import @/apps, @/gateway, or @/pipeline (adapters/assembly). See CLAUDE.md kernel/adapter architecture."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
       "//": "Rule 2: src/services/** must not import @/gateway. (@/apps is allowed \u2014 e.g. email service uses the app registry.)",
       "files": [
         "**/src/services/**"
@@ -220,8 +194,6 @@
             "patterns": [
               {
                 "group": [
-                  "@/core/**",
-                  "@/core",
                   "@/gateway/**",
                   "@/gateway"
                 ],
@@ -250,8 +222,6 @@
                   "@/auth",
                   "@/config/**",
                   "@/config",
-                  "@/core/**",
-                  "@/core",
                   "@/db/**",
                   "@/db",
                   "@/errors/**",
@@ -289,8 +259,6 @@
             "patterns": [
               {
                 "group": [
-                  "@/core/**",
-                  "@/core",
                   "@/gateway/**",
                   "@/gateway",
                   "@/pipeline/**",
@@ -316,8 +284,6 @@
             "patterns": [
               {
                 "group": [
-                  "@/core/**",
-                  "@/core",
                   "@/gateway/**",
                   "@/gateway",
                   "@/pipeline/**",

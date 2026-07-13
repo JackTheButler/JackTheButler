@@ -5,8 +5,8 @@
 import { describe, it, expect, beforeAll, afterAll, beforeEach } from 'vitest';
 import { db, staff, authTokens } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
-import { AuthTokenService } from '@/auth/auth-token.js';
-import { authService } from '@/auth/auth.js';
+import { AuthTokenService } from '@/auth/tokens.js';
+import { authService } from '@/auth/index.js';
 import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 
 describe('AuthTokenService', () => {

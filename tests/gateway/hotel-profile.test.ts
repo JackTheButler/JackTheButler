@@ -7,7 +7,7 @@ import { app } from '@/gateway/server.js';
 import { db, staff, settings } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
-import { AuthService } from '@/auth/auth.js';
+import { AuthService } from '@/auth/index.js';
 
 describe('Hotel Profile API', () => {
   const authService = new AuthService();

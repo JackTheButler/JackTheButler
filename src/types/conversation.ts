@@ -4,7 +4,7 @@
  * Type definitions for conversation management.
  */
 
-import type { ChannelType } from './channel.js';
+import type { ChannelType } from '@jackthebutler/shared';
 
 // Single source of truth in @jackthebutler/shared — imported for local use and re-exported
 // so existing imports are unchanged.

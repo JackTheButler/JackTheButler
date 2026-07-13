@@ -10,10 +10,10 @@
  *   - `translatorPrompt(from, to)` — translation system prompt
  *
  * Imported by `./adapters.ts`. Everything is inlined here (no dependency
- * on `src/core/domain/`) so the domain folder can be deleted cleanly
+ *
  * once `pipeline-legacy/` is retired.
  *
- * @module core/pipeline/prompts
+ * @module pipeline/prompts
  */
 
 import { settingsService } from '@/services/settings.js';
@@ -88,7 +88,7 @@ export function translatorPrompt(from: string, to: string): string {
 
 // ─── Responder ──────────────────────────────────────────────────
 // Port of the legacy `buildPromptMessages` system-content construction
-// (`src/core/ai/responder.ts:312-504`). Sections are appended in the same
+// (the retired legacy responder). Sections are appended in the same
 // order. Pure prompt assembly — the LLM call itself is owned by the
 // package's `generateResponse` stage.
 

@@ -4,7 +4,7 @@
  * Manages authentication settings stored in the settings table.
  * Follows the same key-value pattern as hotel_profile.
  *
- * @module auth/auth-settings
+ * @module auth/settings
  */
 
 import { eq } from 'drizzle-orm';

@@ -12,7 +12,7 @@ import { createLogger } from '@/utils/logger.js';
 import { validateBody, requireAuth, requirePermission } from '@/gateway/middleware/index.js';
 import { getAppRegistry } from '@/apps/index.js';
 import { PERMISSIONS } from '@/permissions/index.js';
-import { KnowledgeService } from '@/core/ai/knowledge/index.js';
+import { KnowledgeService } from '@/services/knowledge.js';
 import { NotFoundError } from '@/errors/index.js';
 
 const log = createLogger('routes:knowledge');

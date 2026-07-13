@@ -4,7 +4,7 @@
  * Type definitions for messages flowing through the system.
  */
 
-import type { ChannelType, ContentType } from './channel.js';
+import type { ChannelType, ContentType } from '@jackthebutler/shared';
 
 /**
  * Inbound message from a channel

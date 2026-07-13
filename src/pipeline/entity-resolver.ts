@@ -14,11 +14,11 @@
  * so the domain folder can be deleted cleanly once `pipeline-legacy/` is
  * retired.
  *
- * @module core/pipeline/entity-resolver
+ * @module pipeline/entity-resolver
  */
 
 import { guestService, normalizePhone } from '@/services/guest.js';
-import { guestContextService, type GuestContext } from '@/core/conversation/guest-context.js';
+import { guestContextService, type GuestContext } from '@/services/guest-context.js';
 import { createLogger } from '@/utils/logger.js';
 import type { Entity, EntityProvider } from '@thebutler/pipeline';
 

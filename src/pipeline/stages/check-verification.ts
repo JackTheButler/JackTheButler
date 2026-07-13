@@ -19,7 +19,7 @@
  * Hospitality-coupled (uses `verifyByConfirmationAndLastName`). When other
  * verticals appear, generalize the credential shape via a domain hook.
  *
- * @module core/pipeline/stages/check-verification
+ * @module pipeline/stages/check-verification
  */
 
 import { conversationService } from '@/services/conversation.js';

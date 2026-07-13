@@ -10,7 +10,7 @@ import { db, sqlite } from '@/db/index.js';
 import { NotFoundError, AppError } from '@/errors/index.js';
 import { knowledgeBase, knowledgeEmbeddings } from '@/db/schema.js';
 import type { KnowledgeItem, NewKnowledgeItem } from '@/db/schema.js';
-import type { LLMProvider } from '../types.js';
+import type { AIProvider as LLMProvider } from '@jackthebutler/shared';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
 import { now } from '@/utils/time.js';

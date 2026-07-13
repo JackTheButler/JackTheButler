@@ -4,7 +4,7 @@
  * Type definitions for system events.
  */
 
-import type { ChannelType, ContentType } from './channel.js';
+import type { ChannelType, ContentType } from '@jackthebutler/shared';
 import type { ConversationState } from './conversation.js';
 import type { SenderType } from './message.js';
 

@@ -3,9 +3,9 @@
  *
  * Pure domain type — no dependency on the app registry or any other
  * assembly-layer concern, so it can be imported by both the domain pieces
- * in `src/core/pipeline/` and the composition root in `src/pipeline/`.
+ * in `src/pipeline/`.
  *
- * @module core/pipeline/context
+ * @module pipeline/context
  */
 
 import type { MessageContext } from '@thebutler/pipeline';

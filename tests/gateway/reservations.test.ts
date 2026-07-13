@@ -7,7 +7,7 @@ import { app } from '@/gateway/server.js';
 import { db, staff, roles, guests, reservations, conversations, tasks } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
-import { AuthService } from '@/auth/auth.js';
+import { AuthService } from '@/auth/index.js';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
 import { settingsService } from '@/services/settings.js';

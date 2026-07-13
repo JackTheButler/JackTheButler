@@ -1,9 +1,8 @@
 /**
  * Message processing pipeline — composition root for @thebutler/pipeline.
  *
- * This is the assembly layer: it wires Butler's domain adapters
- * (`@/core/pipeline/adapters.js`), the registry-dependent AI adapter
- * (`./adapters.js`), and the domain stages (`@/core/pipeline/stages/`)
+ * This is the Butler pipeline: it wires the provider adapters
+ * (`./adapters.js`) and stages (`./stages/`)
  * into a single `Pipeline` instance, and exposes
  * `processMessage(inbound, domain)` so channel call sites only need an
  * import-path change.
@@ -12,7 +11,7 @@
  * message processing — it's the only place allowed to bind
  * `@thebutler/pipeline`'s provider contracts to the app registry.
  *
- * The signature matches the legacy `src/core/pipeline-legacy/index.ts` so
+ * The signature matches the legacy `the legacy pipeline` so
  * webchat / WhatsApp / SMS / Telegram can be migrated channel-by-channel.
  *
  * @module pipeline
@@ -42,8 +41,9 @@ import type { InboundMessage, OutboundMessage } from '@/types/message.js';
 import { getPropertyLanguage } from '@/utils/translation.js';
 import { events, EventTypes } from '@/events/index.js';
 import { writeActivityLog } from '@/services/activity-log.js';
-import type { ButlerContext } from '@/core/pipeline/context.js';
+import type { ButlerContext } from './context.js';
 import {
+  aiProvider,
   conversationProvider,
   entityProvider,
   intentProvider,
@@ -51,19 +51,18 @@ import {
   loggerProvider,
   memoryProvider,
   promptProvider,
-} from '@/core/pipeline/adapters.js';
-import { checkVerification } from '@/core/pipeline/stages/check-verification.js';
-import { extractResponseTags } from '@/core/pipeline/stages/extract-response-tags.js';
-import { emitMessageReceived } from '@/core/pipeline/stages/emit-message-received.js';
-import { emitMessageSent } from '@/core/pipeline/stages/emit-message-sent.js';
+} from './adapters.js';
+import { checkVerification } from './stages/check-verification.js';
+import { extractResponseTags } from './stages/extract-response-tags.js';
+import { emitMessageReceived } from './stages/emit-message-received.js';
+import { emitMessageSent } from './stages/emit-message-sent.js';
 import {
   writeProcessorOutcome,
   buildOutcomeDetails,
-} from '@/core/pipeline/stages/write-processor-outcome.js';
-import { routeTask } from '@/core/pipeline/stages/route-task.js';
-import { aiProvider } from './adapters.js';
+} from './stages/write-processor-outcome.js';
+import { routeTask } from './stages/route-task.js';
 
-export type { ButlerContext } from '@/core/pipeline/context.js';
+export type { ButlerContext } from './context.js';
 
 // The pipeline is cached by `systemLanguage`. Every `processMessage` reads
 // the current property language from settings; if it matches the cached

@@ -10,7 +10,7 @@ import { eq } from 'drizzle-orm';
 import { db, staff, roles } from '@/db/index.js';
 import { loadConfig } from '@/config/index.js';
 import { UnauthorizedError, NotFoundError, ForbiddenError } from '@/errors/index.js';
-import { authSettingsService } from './auth-settings.js';
+import { authSettingsService } from './settings.js';
 import { createLogger } from '@/utils/logger.js';
 import { WILDCARD_PERMISSION } from '@/permissions/index.js';
 import { now } from '@/utils/time.js';

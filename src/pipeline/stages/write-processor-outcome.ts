@@ -16,7 +16,7 @@
  * The failure-path equivalent is emitted by the outer `processMessage`
  * wrapper's `catch` block — that path has access to `err.ctx`.
  *
- * @module core/pipeline/stages/write-processor-outcome
+ * @module pipeline/stages/write-processor-outcome
  */
 
 import { writeActivityLog } from '@/services/activity-log.js';

@@ -17,7 +17,7 @@
  * Minimal port — no autonomy gating, no AI-extracted items. Every task
  * lands in the queue as `status: 'pending'` for staff to claim.
  *
- * @module core/pipeline/stages/route-task
+ * @module pipeline/stages/route-task
  */
 
 import { taskService, type TaskType } from '@/services/task.js';

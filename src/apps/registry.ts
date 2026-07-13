@@ -20,7 +20,7 @@ import type {
   PluginContext,
 } from './types.js';
 import type { AIProvider, ChannelAdapter, PMSAdapter, ModelDownloadProgress } from '@jackthebutler/shared';
-import type { ChannelType } from '@/types/index.js';
+import type { ChannelType } from '@jackthebutler/shared';
 import { events, EventTypes } from '@/events/index.js';
 
 const log = createLogger('apps:registry');

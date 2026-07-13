@@ -12,7 +12,7 @@
  */
 
 import { describe, it, expect } from 'vitest';
-import { IntentDefinitions, getIntentDefinition, intentProvider } from '@/core/pipeline/intents.js';
+import { IntentDefinitions, getIntentDefinition, intentProvider } from '@/pipeline/intents.js';
 
 describe('Intent Catalog', () => {
   it('should have required intents defined', () => {

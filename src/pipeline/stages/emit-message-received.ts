@@ -11,7 +11,7 @@
  * Skips silently when prerequisites are missing — keeps the stage
  * harmless if `saveInboundMessage` was excluded from the list.
  *
- * @module core/pipeline/stages/emit-message-received
+ * @module pipeline/stages/emit-message-received
  */
 
 import { events, EventTypes } from '@/events/index.js';

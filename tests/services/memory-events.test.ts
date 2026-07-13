@@ -8,7 +8,7 @@ import { guests, conversations, messages, guestMemories } from '@/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
-import { runExtraction, type MemoryEventSubscriberDeps } from '@/core/memory/event-subscriber.js';
+import { runExtraction, type MemoryEventSubscriberDeps } from '@/services/memory-events.js';
 import type { ConversationClosedEvent } from '@/types/events.js';
 
 const MOCK_FACTS = JSON.stringify([

@@ -8,10 +8,10 @@
 import { Hono } from 'hono';
 import { z } from 'zod';
 import { validateBody, requireAuth, getClientIp } from '../middleware/index.js';
-import { authService } from '@/auth/auth.js';
+import { authService } from '@/auth/index.js';
 import { logAuthEvent } from '@/services/audit.js';
-import { authSettingsService } from '@/auth/auth-settings.js';
-import { authTokenService } from '@/auth/auth-token.js';
+import { authSettingsService } from '@/auth/settings.js';
+import { authTokenService } from '@/auth/tokens.js';
 import { emailService } from '@/services/email.js';
 import { staffService } from '@/services/staff.js';
 import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';

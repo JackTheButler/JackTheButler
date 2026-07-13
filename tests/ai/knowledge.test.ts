@@ -3,10 +3,10 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { KnowledgeService } from '@/core/ai/knowledge/index.js';
+import { KnowledgeService } from '@/services/knowledge.js';
 import { db, knowledgeBase, knowledgeEmbeddings } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
-import type { LLMProvider } from '@/core/ai/types.js';
+import type { AIProvider as LLMProvider } from '@jackthebutler/shared';
 
 /**
  * Create a mock embedding provider

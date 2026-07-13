@@ -8,7 +8,7 @@ import { db, staff, roles } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { PERMISSIONS } from '@/permissions/index.js';
-import { AuthService } from '@/auth/auth.js';
+import { AuthService } from '@/auth/index.js';
 
 describe('Roles API', () => {
   const authService = new AuthService();

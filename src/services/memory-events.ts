@@ -17,10 +17,10 @@
 
 import { events, EventTypes } from '@/events/index.js';
 import type { ConversationClosedEvent } from '@/types/events.js';
-import type { AIProvider } from '@/core/ai/types.js';
+import type { AIProvider } from '@jackthebutler/shared';
 import { conversationService } from '@/services/conversation.js';
 import { MemoryService } from '@/services/memory.js';
-import { MemoryExtractor } from './extractor.js';
+import { MemoryExtractor } from './memory-extractor.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('core:memory-events');
