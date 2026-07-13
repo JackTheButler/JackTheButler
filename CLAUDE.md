@@ -31,7 +31,6 @@ jack/
 │   ├── core/             # Kernel - business logic (v1.1.0+)
 │   │   ├── ai/           # Knowledge base (RAG) logic
 │   │   ├── conversation/ # guest-context (conversation state lives in the pipeline)
-│   │   ├── interfaces/   # Seams core consumes without importing apps (pms-sync)
 │   │   ├── memory/       # Guest memory extraction + event-subscriber
 │   │   └── pipeline/     # Domain wiring for @thebutler/pipeline (intents, prompts, entity-resolver, adapters)
 │   ├── pipeline/         # Assembly: binds registry+services into @thebutler/pipeline, exports processMessage

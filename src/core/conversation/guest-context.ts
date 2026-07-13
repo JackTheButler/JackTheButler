@@ -15,7 +15,7 @@ import type { Guest, Reservation } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
 import { guestService, normalizePhone } from '@/services/guest.js';
 import { now } from '@/utils/time.js';
-import { getPMSSync } from '@/core/interfaces/pms-sync.js';
+import { pmsSyncService } from '@/services/pms-sync.js';
 
 const log = createLogger('core:guest-context');
 
@@ -185,7 +185,7 @@ export class GuestContextService {
 
     // Refresh from PMS if stale
     if (reservation) {
-      const fresh = await getPMSSync().refreshIfStale(reservation.id);
+      const fresh = await pmsSyncService.refreshIfStale(reservation.id);
       if (fresh) reservation = fresh;
     }
 
