@@ -14,7 +14,7 @@ vi.mock('@/apps/index.js', () => ({
   getAppRegistry: vi.fn(),
 }));
 
-const { pmsSyncService, getPMSSyncConfig } = await import('@/apps/pms/sync.js');
+const { pmsSyncService, getPMSSyncConfig } = await import('@/services/pms-sync.js');
 const { getAppRegistry } = await import('@/apps/index.js');
 const { events, EventTypes } = await import('@/events/index.js');
 

@@ -13,7 +13,7 @@ import { app, setupWebSocket } from '@/gateway/index.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/scheduler/index.js';
 import { appConfigService } from '@/apps/config.js';
-import { pmsSyncService } from '@/apps/pms/sync.js';
+import { pmsSyncService } from '@/services/pms-sync.js';
 import { registerPMSSync } from '@/core/interfaces/pms-sync.js';
 import { getAutomationEngine } from '@/core/automation/index.js';
 import { subscribeAutomationToEvents } from '@/core/automation/event-subscriber.js';

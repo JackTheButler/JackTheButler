@@ -3,7 +3,7 @@
  *
  * Verifies the dependency-inversion seam in src/core/interfaces/pms-sync.ts:
  * the kernel only depends on the PMSSync interface and a module-level
- * register/get pair, never on the concrete @/apps/pms/sync.js service.
+ * register/get pair, never on the concrete @/services/pms-sync.js service.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';

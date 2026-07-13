@@ -42,7 +42,6 @@ export {
   scrapeUrls,
   parseHtml,
   processContent,
-  siteScraperRoutes,
   type ScrapeOptions,
   type ScrapeResult,
   type ParseOptions,

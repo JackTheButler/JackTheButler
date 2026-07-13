@@ -289,7 +289,7 @@ pmsWebhooks.post('/cloudbeds', async (c) => {
  */
 async function processGuestWebhook(guest: NormalizedGuest): Promise<void> {
   // Import dynamically to avoid circular dependencies
-  const { pmsSyncService } = await import('@/apps/pms/sync.js');
+  const { pmsSyncService } = await import('@/services/pms-sync.js');
   await pmsSyncService.upsertGuest(guest);
 }
 
@@ -297,7 +297,7 @@ async function processGuestWebhook(guest: NormalizedGuest): Promise<void> {
  * Process reservation webhook - sync to database
  */
 async function processReservationWebhook(reservation: NormalizedReservation): Promise<void> {
-  const { pmsSyncService } = await import('@/apps/pms/sync.js');
+  const { pmsSyncService } = await import('@/services/pms-sync.js');
   await pmsSyncService.upsertReservation(reservation);
 }
 
@@ -305,7 +305,7 @@ async function processReservationWebhook(reservation: NormalizedReservation): Pr
  * Process event webhook - handle various event types
  */
 async function processEventWebhook(event: PMSEvent): Promise<void> {
-  const { pmsSyncService } = await import('@/apps/pms/sync.js');
+  const { pmsSyncService } = await import('@/services/pms-sync.js');
 
   switch (event.type) {
     case 'reservation.created':

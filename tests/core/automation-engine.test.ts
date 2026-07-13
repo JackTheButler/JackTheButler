@@ -38,7 +38,7 @@ vi.mock('@/apps/registry.js', () => ({
 
 // Fake PMSSync implementation registered via the kernel seam
 // (src/core/interfaces/pms-sync.js) instead of mocking the concrete
-// @/apps/pms/sync.js module — proves the dependency-inversion seam works.
+// @/services/pms-sync.js module — proves the dependency-inversion seam works.
 let mockPMSSync: { [K in keyof PMSSync]: ReturnType<typeof vi.fn> };
 
 // Mirrors the local-midnight math in triggers.ts#getTargetDateForTrigger

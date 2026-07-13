@@ -7,7 +7,7 @@
 
 import { NotFoundError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
-import { pmsSyncService, getPMSSyncConfig } from '@/apps/pms/sync.js';
+import { pmsSyncService, getPMSSyncConfig } from '@/services/pms-sync.js';
 import { writeActivityLog } from '../services/activity-log.js';
 import { sqlite } from '@/db/index.js';
 import { getAppRegistry } from '@/apps/registry.js';

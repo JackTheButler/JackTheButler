@@ -12,7 +12,7 @@ import { conversationService } from '@/services/conversation.js';
 
 vi.mock('@/apps/registry.js', () => ({ getAppRegistry: vi.fn() }));
 
-vi.mock('@/apps/pms/sync.js', () => ({
+vi.mock('@/services/pms-sync.js', () => ({
   pmsSyncService: { syncReservations: vi.fn() },
   getPMSSyncConfig: vi.fn(),
 }));
@@ -27,7 +27,7 @@ vi.mock('@/apps/channels/webchat/actions.js', () => ({
 
 const { Scheduler } = await import('@/scheduler/index.js');
 const { getAppRegistry } = await import('@/apps/registry.js');
-const { pmsSyncService, getPMSSyncConfig } = await import('@/apps/pms/sync.js');
+const { pmsSyncService, getPMSSyncConfig } = await import('@/services/pms-sync.js');
 const { webchatSessionService } = await import('@/services/webchat-session.js');
 const { cleanupRateLimitMaps } = await import('@/apps/channels/webchat/actions.js');
 

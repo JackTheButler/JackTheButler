@@ -1,6 +1,11 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": ["react", "unicorn", "typescript", "oxc"],
+  "plugins": [
+    "react",
+    "unicorn",
+    "typescript",
+    "oxc"
+  ],
   "categories": {},
   "rules": {
     "no-constant-condition": "warn",
@@ -135,14 +140,19 @@
   "overrides": [
     {
       "//": "Rule 6 (baseline): nothing outside src/gateway/ and src/index.ts may import @/gateway. More specific overrides below layer additional restrictions on top for core/services/apps/db/monitoring/scheduler, and events gets a dedicated allowlist override.",
-      "files": ["**/src/**"],
+      "files": [
+        "**/src/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "group": ["@/gateway/**", "@/gateway"],
+                "group": [
+                  "@/gateway/**",
+                  "@/gateway"
+                ],
                 "message": "Layering violation: only src/gateway/** and src/index.ts may import @/gateway (kernel/adapter architecture, see CLAUDE.md)."
               }
             ]
@@ -151,8 +161,10 @@
       }
     },
     {
-      "//": "Rule 1: src/core/** must not import @/apps, @/gateway, or @/pipeline (assembly layer — domain must not depend on composition-root wiring).",
-      "files": ["**/src/core/**"],
+      "//": "Rule 1: src/core/** must not import @/apps, @/gateway, or @/pipeline (assembly layer \u2014 domain must not depend on composition-root wiring).",
+      "files": [
+        "**/src/core/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -175,15 +187,20 @@
       }
     },
     {
-      "//": "Rule 2: src/services/** must not import @/gateway. (@/apps is allowed — e.g. email service uses the app registry.)",
-      "files": ["**/src/services/**"],
+      "//": "Rule 2: src/services/** must not import @/gateway. (@/apps is allowed \u2014 e.g. email service uses the app registry.)",
+      "files": [
+        "**/src/services/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "group": ["@/gateway/**", "@/gateway"],
+                "group": [
+                  "@/gateway/**",
+                  "@/gateway"
+                ],
                 "message": "Layering violation: src/services/** must not import @/gateway."
               }
             ]
@@ -192,15 +209,22 @@
       }
     },
     {
-      "//": "Rule 3: src/apps/** must not import @/gateway or @/core. (@/services is allowed for now — e.g. webchat.)",
-      "files": ["**/src/apps/**"],
+      "//": "Rule 3: src/apps/** must not import @/gateway or @/core. (@/services is allowed for now \u2014 e.g. webchat.)",
+      "files": [
+        "**/src/apps/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "group": ["@/core/**", "@/core", "@/gateway/**", "@/gateway"],
+                "group": [
+                  "@/core/**",
+                  "@/core",
+                  "@/gateway/**",
+                  "@/gateway"
+                ],
                 "message": "Layering violation: src/apps/** (adapters) must not import @/core or @/gateway. See CLAUDE.md kernel/adapter architecture."
               }
             ]
@@ -209,8 +233,10 @@
       }
     },
     {
-      "//": "Rule 4: src/events/** may only import from @/types and @/utils (plus relative/external imports, which are unaffected). Deny-list of all top-level src dirs — add new ones here too (e.g. @/pipeline, added alongside the src/pipeline/ assembly layer).",
-      "files": ["**/src/events/**"],
+      "//": "Rule 4: src/events/** may only import from @/types and @/utils (plus relative/external imports, which are unaffected). Deny-list of all top-level src dirs \u2014 add new ones here too (e.g. @/pipeline, added alongside the src/pipeline/ assembly layer).",
+      "files": [
+        "**/src/events/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -252,7 +278,9 @@
     },
     {
       "//": "Rule 5: src/db/** must not import @/core (plus rule 6: must not import @/gateway either), plus @/pipeline (assembly layer).",
-      "files": ["**/src/db/**"],
+      "files": [
+        "**/src/db/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -276,7 +304,10 @@
     },
     {
       "//": "Rule 7: src/monitoring/** and src/scheduler/** must not import @/gateway, @/core, or @/pipeline.",
-      "files": ["**/src/monitoring/**", "**/src/scheduler/**"],
+      "files": [
+        "**/src/monitoring/**",
+        "**/src/scheduler/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
@@ -300,39 +331,30 @@
     },
     {
       "//": "Rule 6 exception: src/gateway/** and src/index.ts are the only places allowed to import @/gateway.",
-      "files": ["**/src/gateway/**", "**/src/index.ts"],
+      "files": [
+        "**/src/gateway/**",
+        "**/src/index.ts"
+      ],
       "rules": {
         "no-restricted-imports": "off"
       }
     },
     {
-      "//": "Rule 8: src/pipeline/** is the message-processing composition root (assembly layer) — analogous to src/index.ts. It may import @/apps, @/services, @/core, and @thebutler/pipeline, but must not import @/gateway.",
-      "files": ["**/src/pipeline/**"],
+      "//": "Rule 8: src/pipeline/** is the message-processing composition root (assembly layer) \u2014 analogous to src/index.ts. It may import @/apps, @/services, @/core, and @thebutler/pipeline, but must not import @/gateway.",
+      "files": [
+        "**/src/pipeline/**"
+      ],
       "rules": {
         "no-restricted-imports": [
           "error",
           {
             "patterns": [
               {
-                "group": ["@/gateway/**", "@/gateway"],
+                "group": [
+                  "@/gateway/**",
+                  "@/gateway"
+                ],
                 "message": "Layering violation: src/pipeline/** (assembly) must not import @/gateway."
-              }
-            ]
-          }
-        ]
-      }
-    },
-    {
-      "//": "GRANDFATHERED (rule 3, not in the original known-violations list — discovered while wiring this guardrail; flagged for follow-up, see PR description): src/apps/tools/site-scraper/routes.ts -> @/gateway/middleware. Do not add new files here — fix the underlying import instead.",
-      "files": ["**/src/apps/tools/site-scraper/routes.ts"],
-      "rules": {
-        "no-restricted-imports": [
-          "error",
-          {
-            "patterns": [
-              {
-                "group": ["@/core/**", "@/core"],
-                "message": "Layering violation: src/apps/** (adapters) must not import @/core."
               }
             ]
           }

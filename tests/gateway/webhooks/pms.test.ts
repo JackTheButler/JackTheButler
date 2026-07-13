@@ -25,7 +25,7 @@ vi.mock('@/apps/index.js', () => ({
 
 const mockUpsertGuest = vi.fn();
 const mockUpsertReservation = vi.fn();
-vi.mock('@/apps/pms/sync.js', () => ({
+vi.mock('@/services/pms-sync.js', () => ({
   pmsSyncService: {
     upsertGuest: (...args: unknown[]) => mockUpsertGuest(...args),
     upsertReservation: (...args: unknown[]) => mockUpsertReservation(...args),

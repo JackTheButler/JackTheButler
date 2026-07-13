@@ -25,4 +25,3 @@ export { htmlToCleanText, type CleanTextResult } from './html-to-text.js';
 export { extractContentWithAI, type AIExtractedEntry, type AIExtractionContext } from './ai-parser.js';
 export { generateQAPairs, type GeneratedQA } from './qa-generator.js';
 export { deduplicateEntries, type DuplicatePair, type DeduplicationResult } from './deduplicator.js';
-export { siteScraperRoutes } from './routes.js';

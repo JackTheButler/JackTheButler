@@ -7,7 +7,7 @@
 
 import { Hono } from 'hono';
 import { scheduler } from '@/scheduler/index.js';
-import { pmsSyncService } from '@/apps/pms/sync.js';
+import { pmsSyncService } from '@/services/pms-sync.js';
 import { createLogger } from '@/utils/logger.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/core/permissions/index.js';

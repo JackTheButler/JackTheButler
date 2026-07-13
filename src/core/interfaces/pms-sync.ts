@@ -2,7 +2,7 @@
  * PMS Sync Interface
  *
  * Defines the contract the kernel needs from a PMS sync implementation,
- * without depending on the concrete adapter in src/apps/pms/sync.ts.
+ * without depending on the concrete adapter in src/services/pms-sync.ts.
  * This is part of the kernel - business logic depends on this interface,
  * not on the concrete implementation. The composition root (src/index.ts)
  * registers the real implementation at startup via `registerPMSSync()`.
@@ -26,7 +26,7 @@ export type PMSSyncResult = SyncResult;
 /**
  * Minimal PMS sync contract the kernel depends on.
  *
- * The concrete implementation (`PMSSyncService` in `src/apps/pms/sync.ts`)
+ * The concrete implementation (`PMSSyncService` in `src/services/pms-sync.ts`)
  * satisfies this interface without casts.
  */
 export interface PMSSync {
