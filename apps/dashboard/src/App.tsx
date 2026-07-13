@@ -16,9 +16,6 @@ import { ConversationsPage } from '@/pages/inbox/Conversations';
 import { TasksPage } from '@/pages/tasks/Tasks';
 import { AppsPage } from '@/pages/engine/apps/Apps';
 import { AppEditPage } from '@/pages/engine/apps/AppEdit';
-import { AutomationsPage } from '@/pages/engine/automations/Automations';
-import { AutomationEditPage } from '@/pages/engine/automations/AutomationEdit';
-import { AutomationGeneratePage } from '@/pages/engine/automations/AutomationGenerate';
 import { SettingsPage } from '@/pages/settings/Settings';
 import { SiteScraperPage } from '@/pages/tools/SiteScraper';
 import { KnowledgeBasePage } from '@/pages/tools/KnowledgeBase';
@@ -44,9 +41,6 @@ export function App() {
           <Route path="/tasks" element={<ProtectedRoute permission={PERMISSIONS.TASKS_VIEW}><TasksPage /></ProtectedRoute>} />
           <Route path="/engine/apps" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><AppsPage /></ProtectedRoute>} />
           <Route path="/engine/apps/:appId" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><AppEditPage /></ProtectedRoute>} />
-          <Route path="/engine/automations" element={<ProtectedRoute permission={PERMISSIONS.AUTOMATIONS_VIEW}><AutomationsPage /></ProtectedRoute>} />
-          <Route path="/engine/automations/generate" element={<ProtectedRoute permission={PERMISSIONS.AUTOMATIONS_MANAGE}><AutomationGeneratePage /></ProtectedRoute>} />
-          <Route path="/engine/automations/:ruleId" element={<ProtectedRoute permission={PERMISSIONS.AUTOMATIONS_VIEW}><AutomationEditPage /></ProtectedRoute>} />
           <Route path="/settings/:tab?" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><SettingsPage /></ProtectedRoute>} />
           <Route path="/engine" element={<Navigate to="/settings" replace />} />
           <Route path="/guests" element={<ProtectedRoute permission={PERMISSIONS.GUESTS_VIEW}><GuestsPage /></ProtectedRoute>} />

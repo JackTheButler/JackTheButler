@@ -14,7 +14,6 @@ import {
   MessageSquare,
   ClipboardList,
   Puzzle,
-  Zap,
   ChevronUp,
   Power,
   User,
@@ -245,7 +244,7 @@ export function Layout() {
   useEffect(() => {
     const collapsibleSections = [
       { id: 'content', paths: ['/tools/knowledge-base', '/tools/site-scraper'] },
-      { id: 'engine', paths: ['/engine/apps', '/engine/automations'] },
+      { id: 'engine', paths: ['/engine/apps'] },
     ];
 
     const newExpandedState: Record<string, boolean> = {};
@@ -382,7 +381,6 @@ export function Layout() {
       permission: PERMISSIONS.SETTINGS_VIEW,
       items: [
         { path: '/engine/apps', label: t('nav.apps'), icon: <Puzzle size={20} />, permission: PERMISSIONS.SETTINGS_VIEW },
-        { path: '/engine/automations', label: t('nav.automations'), icon: <Zap size={20} />, permission: PERMISSIONS.AUTOMATIONS_VIEW },
       ],
     },
   ];

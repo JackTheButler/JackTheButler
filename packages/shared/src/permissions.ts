@@ -26,10 +26,6 @@ export const PERMISSIONS = {
   KNOWLEDGE_VIEW: 'knowledge:view',
   KNOWLEDGE_MANAGE: 'knowledge:manage',
 
-  // Automations
-  AUTOMATIONS_VIEW: 'automations:view',
-  AUTOMATIONS_MANAGE: 'automations:manage',
-
   // Settings & Apps
   SETTINGS_VIEW: 'settings:view',
   SETTINGS_MANAGE: 'settings:manage',

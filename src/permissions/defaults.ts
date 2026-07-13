@@ -44,8 +44,6 @@ export const DEFAULT_ROLES: Omit<Role, 'createdAt' | 'updatedAt'>[] = [
       PERMISSIONS.TASKS_MANAGE,
       PERMISSIONS.KNOWLEDGE_VIEW,
       PERMISSIONS.KNOWLEDGE_MANAGE,
-      PERMISSIONS.AUTOMATIONS_VIEW,
-      PERMISSIONS.AUTOMATIONS_MANAGE,
       PERMISSIONS.SETTINGS_VIEW,
       PERMISSIONS.SETTINGS_MANAGE,
       // View-only admin (can see users but not manage)

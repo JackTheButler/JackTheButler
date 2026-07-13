@@ -3,7 +3,7 @@
  * Butler's event bus once the inbound has been persisted (i.e. right
  * after the package's `saveInboundMessage`).
  *
- * Consumers (WebSocket bridge, automation rules, activity-log writer)
+ * Consumers (WebSocket bridge, activity-log writer)
  * see new inbound messages in real time even while the rest of the
  * pipeline (classification, retrieval, response, translation, save) is
  * still running.

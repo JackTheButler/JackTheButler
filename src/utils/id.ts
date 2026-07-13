@@ -19,14 +19,9 @@ export const ID_PREFIXES = {
   staff: 'stf',
   session: 'ses',
   knowledge: 'kb',
-  rule: 'rule',
   alog: 'alog',
   app: 'app',
   appLog: 'aplog',
-  // Phase 20: Automation
-  action: 'act',
-  notification: 'notif',
-  execution: 'exec',
   // Phase 9: Roles
   role: 'role',
   // Phase 10: Auth

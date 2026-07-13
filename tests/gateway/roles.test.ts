@@ -415,7 +415,7 @@ describe('Roles API', () => {
 
       expect(json.permissions).toBeDefined();
       expect(Array.isArray(json.permissions)).toBe(true);
-      expect(json.permissions.length).toBe(17); // 8 groups x 2 (view + manage) + health:view
+      expect(json.permissions.length).toBe(15); // 7 groups x 2 (view + manage) + health:view
 
       expect(json.groups).toBeDefined();
       expect(Array.isArray(json.groups)).toBe(true);

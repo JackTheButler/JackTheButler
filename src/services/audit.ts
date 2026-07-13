@@ -36,9 +36,6 @@ export type AuditAction =
   | 'config_change'
   | 'app_test'
   | 'app_toggle'
-  // Automation
-  | 'rule_executed'
-  | 'rule_failed'
   // Conversations
   | 'message_sent'
   | 'conversation_escalated'
@@ -58,7 +55,6 @@ export type ResourceType =
   | 'task'
   | 'app'
   | 'role'
-  | 'automation'
   | 'knowledge'
   | 'system';
 

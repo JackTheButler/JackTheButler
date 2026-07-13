@@ -11,7 +11,6 @@ import { conversationsRouter } from './conversations.js';
 import { tasksRouter } from './tasks.js';
 import { adminRouter } from './admin.js';
 import { appRoutes } from './apps.js';
-import { automationRoutes } from './automation.js';
 import { hotelProfileRoutes } from './hotel-profile.js';
 import { authSettingsRoutes } from './auth-settings.js';
 import { knowledgeRoutes } from './knowledge.js';
@@ -46,9 +45,6 @@ api.route('/admin', adminRouter);
 
 // App management routes
 api.route('/apps', appRoutes);
-
-// Automation management routes
-api.route('/automation', automationRoutes);
 
 // Hotel profile settings routes
 api.route('/settings/hotel', hotelProfileRoutes);

@@ -19,7 +19,6 @@ export { DemoDataCard } from './shared/DemoDataCard';
 export {
   ConversationListSkeleton,
   ApprovalTableSkeleton,
-  AutomationCardSkeleton,
   AppCardSkeleton,
 } from './Skeletons';
 

@@ -15,8 +15,6 @@ import { scheduler } from '@/scheduler/index.js';
 import { appConfigService } from '@/apps/config.js';
 import { pmsSyncService } from '@/services/pms-sync.js';
 import { registerPMSSync } from '@/core/interfaces/pms-sync.js';
-import { getAutomationEngine } from '@/core/automation/index.js';
-import { subscribeAutomationToEvents } from '@/core/automation/event-subscriber.js';
 import { subscribeActivityLogToEvents } from '@/services/activity-log.js';
 import { subscribeMemoryExtractionToEvents } from '@/core/memory/event-subscriber.js';
 import { getAppRegistry } from '@/apps/index.js';
@@ -56,7 +54,7 @@ async function main(): Promise<void> {
 
   // Register the PMS sync implementation for the kernel (src/core) to use
   // via the PMSSync interface. Must happen before the scheduler starts and
-  // before the automation engine / guest-context code paths run.
+  // before guest-context code paths run.
   registerPMSSync(pmsSyncService);
 
   // Load enabled extensions from database. The new pipeline's
@@ -145,13 +143,6 @@ async function main(): Promise<void> {
     // Start background scheduler (PMS sync)
     scheduler.start();
 
-    // Start automation engine
-    const automationEngine = getAutomationEngine();
-    automationEngine.startScheduler(60000); // Check time-based rules every 60 seconds
-
-    // Subscribe automation engine to system events
-    subscribeAutomationToEvents();
-
     // Subscribe activity log to system events (Layer 1)
     subscribeActivityLogToEvents();
 
@@ -174,10 +165,6 @@ async function main(): Promise<void> {
   // Graceful shutdown
   const shutdown = () => {
     startupLog.info('Shutting down...');
-
-    // Stop automation engine
-    getAutomationEngine().stopScheduler();
-    startupLog.info('Automation engine stopped');
 
     // Stop scheduler
     scheduler.stop();

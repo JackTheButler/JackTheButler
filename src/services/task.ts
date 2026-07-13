@@ -19,7 +19,7 @@ const log = createLogger('task');
 
 export type TaskType = 'housekeeping' | 'maintenance' | 'concierge' | 'room_service' | 'other';
 
-export type TaskSource = 'manual' | 'auto' | 'automation';
+export type TaskSource = 'manual' | 'auto';
 
 export interface CreateTaskInput {
   conversationId?: string | undefined;

@@ -78,8 +78,8 @@ let cached: { pipeline: Pipeline<ButlerContext>; lang: string } | null = null;
 // stages spliced in at the appropriate slots:
 //   - `emitMessageReceived` after `saveInboundMessage` — fires
 //     `MESSAGE_RECEIVED` on the event bus immediately after the inbound
-//     is persisted, so the dashboard's live feed and automation rules
-//     react without waiting for the full pipeline to finish.
+//     is persisted, so the dashboard's live feed reacts without waiting
+//     for the full pipeline to finish.
 //   - `checkVerification` after `classifyIntent` — hospitality identity
 //     verification (last name + confirmation number lookup).
 //   - `routeTask` after `checkVerification` — creates a row in `tasks`

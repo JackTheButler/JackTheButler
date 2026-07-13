@@ -44,9 +44,6 @@ export const EventTypes = {
   RESERVATION_CHECKED_OUT: 'reservation.checked_out',
   RESERVATION_CANCELLED: 'reservation.cancelled',
 
-  // Staff notification events
-  STAFF_NOTIFICATION: 'staff.notification',
-
   // WebChat lifecycle events
   WEBCHAT_CONNECTED: 'webchat.connected',
   WEBCHAT_DISCONNECTED: 'webchat.disconnected',
@@ -244,20 +241,6 @@ export interface ReservationCancelledEvent extends BaseEvent {
 }
 
 /**
- * Staff notification event
- */
-export interface StaffNotificationEvent extends BaseEvent {
-  type: typeof EventTypes.STAFF_NOTIFICATION;
-  payload: {
-    role?: string;
-    staffId?: string;
-    message: string;
-    priority: 'low' | 'standard' | 'high' | 'urgent';
-    automationRuleId?: string;
-  };
-}
-
-/**
  * WebChat guest connected event
  */
 export interface WebchatConnectedEvent extends BaseEvent {
@@ -303,7 +286,6 @@ export type AppEvent =
   | ReservationCheckedInEvent
   | ReservationCheckedOutEvent
   | ReservationCancelledEvent
-  | StaffNotificationEvent
   | WebchatConnectedEvent
   | WebchatDisconnectedEvent
   | WebchatErrorEvent;

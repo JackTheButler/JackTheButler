@@ -87,20 +87,6 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     group: 'knowledge',
   },
 
-  // Automations
-  {
-    key: PERMISSIONS.AUTOMATIONS_VIEW,
-    label: 'View Automations',
-    description: 'View automation rules and AI autonomy settings',
-    group: 'automations',
-  },
-  {
-    key: PERMISSIONS.AUTOMATIONS_MANAGE,
-    label: 'Manage Automations',
-    description: 'Configure automation rules and AI behavior',
-    group: 'automations',
-  },
-
   // Settings & Apps
   {
     key: PERMISSIONS.SETTINGS_VIEW,
@@ -166,11 +152,6 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     key: 'knowledge',
     label: 'Knowledge Base',
     permissions: PERMISSION_DEFINITIONS.filter((p) => p.group === 'knowledge'),
-  },
-  {
-    key: 'automations',
-    label: 'Automations',
-    permissions: PERMISSION_DEFINITIONS.filter((p) => p.group === 'automations'),
   },
   {
     key: 'settings',

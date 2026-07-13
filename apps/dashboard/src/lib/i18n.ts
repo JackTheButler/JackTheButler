@@ -11,7 +11,6 @@ import enConversations from '@/locales/en/conversations.json';
 import enGuests from '@/locales/en/guests.json';
 import enReservations from '@/locales/en/reservations.json';
 import enSettings from '@/locales/en/settings.json';
-import enAutomations from '@/locales/en/automations.json';
 import enKnowledge from '@/locales/en/knowledge.json';
 import enSetup from '@/locales/en/setup.json';
 import enUsers from '@/locales/en/users.json';
@@ -25,7 +24,6 @@ import esConversations from '@/locales/es/conversations.json';
 import esGuests from '@/locales/es/guests.json';
 import esReservations from '@/locales/es/reservations.json';
 import esSettings from '@/locales/es/settings.json';
-import esAutomations from '@/locales/es/automations.json';
 import esKnowledge from '@/locales/es/knowledge.json';
 import esSetup from '@/locales/es/setup.json';
 import esUsers from '@/locales/es/users.json';
@@ -39,7 +37,6 @@ import arConversations from '@/locales/ar/conversations.json';
 import arGuests from '@/locales/ar/guests.json';
 import arReservations from '@/locales/ar/reservations.json';
 import arSettings from '@/locales/ar/settings.json';
-import arAutomations from '@/locales/ar/automations.json';
 import arKnowledge from '@/locales/ar/knowledge.json';
 import arSetup from '@/locales/ar/setup.json';
 import arUsers from '@/locales/ar/users.json';
@@ -53,7 +50,6 @@ import hiConversations from '@/locales/hi/conversations.json';
 import hiGuests from '@/locales/hi/guests.json';
 import hiReservations from '@/locales/hi/reservations.json';
 import hiSettings from '@/locales/hi/settings.json';
-import hiAutomations from '@/locales/hi/automations.json';
 import hiKnowledge from '@/locales/hi/knowledge.json';
 import hiSetup from '@/locales/hi/setup.json';
 import hiUsers from '@/locales/hi/users.json';
@@ -67,7 +63,6 @@ import ruConversations from '@/locales/ru/conversations.json';
 import ruGuests from '@/locales/ru/guests.json';
 import ruReservations from '@/locales/ru/reservations.json';
 import ruSettings from '@/locales/ru/settings.json';
-import ruAutomations from '@/locales/ru/automations.json';
 import ruKnowledge from '@/locales/ru/knowledge.json';
 import ruSetup from '@/locales/ru/setup.json';
 import ruUsers from '@/locales/ru/users.json';
@@ -81,7 +76,6 @@ import zhConversations from '@/locales/zh/conversations.json';
 import zhGuests from '@/locales/zh/guests.json';
 import zhReservations from '@/locales/zh/reservations.json';
 import zhSettings from '@/locales/zh/settings.json';
-import zhAutomations from '@/locales/zh/automations.json';
 import zhKnowledge from '@/locales/zh/knowledge.json';
 import zhSetup from '@/locales/zh/setup.json';
 import zhUsers from '@/locales/zh/users.json';
@@ -97,7 +91,6 @@ export const namespaces = [
   'guests',
   'reservations',
   'settings',
-  'automations',
   'knowledge',
   'setup',
   'users',
@@ -120,7 +113,6 @@ i18n
         guests: enGuests,
         reservations: enReservations,
         settings: enSettings,
-        automations: enAutomations,
         knowledge: enKnowledge,
         setup: enSetup,
         users: enUsers,
@@ -135,7 +127,6 @@ i18n
         guests: esGuests,
         reservations: esReservations,
         settings: esSettings,
-        automations: esAutomations,
         knowledge: esKnowledge,
         setup: esSetup,
         users: esUsers,
@@ -150,7 +141,6 @@ i18n
         guests: arGuests,
         reservations: arReservations,
         settings: arSettings,
-        automations: arAutomations,
         knowledge: arKnowledge,
         setup: arSetup,
         users: arUsers,
@@ -165,7 +155,6 @@ i18n
         guests: hiGuests,
         reservations: hiReservations,
         settings: hiSettings,
-        automations: hiAutomations,
         knowledge: hiKnowledge,
         setup: hiSetup,
         users: hiUsers,
@@ -180,7 +169,6 @@ i18n
         guests: ruGuests,
         reservations: ruReservations,
         settings: ruSettings,
-        automations: ruAutomations,
         knowledge: ruKnowledge,
         setup: ruSetup,
         users: ruUsers,
@@ -195,7 +183,6 @@ i18n
         guests: zhGuests,
         reservations: zhReservations,
         settings: zhSettings,
-        automations: zhAutomations,
         knowledge: zhKnowledge,
         setup: zhSetup,
         users: zhUsers,
@@ -209,7 +196,7 @@ i18n
     // Load all namespaces (they're bundled anyway)
     ns: namespaces as unknown as string[],
     // Search other namespaces when key not found in default
-    fallbackNS: ['auth', 'dashboard', 'tasks', 'conversations', 'guests', 'reservations', 'settings', 'automations', 'knowledge', 'setup', 'users', 'roles'],
+    fallbackNS: ['auth', 'dashboard', 'tasks', 'conversations', 'guests', 'reservations', 'settings', 'knowledge', 'setup', 'users', 'roles'],
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],

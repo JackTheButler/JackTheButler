@@ -16,7 +16,7 @@ const listQuerySchema = z.object({
   department: z.string().optional(),
   assignedTo: z.string().optional(),
   conversationId: z.string().optional(),
-  source: z.enum(['manual', 'auto', 'automation']).optional(),
+  source: z.enum(['manual', 'auto']).optional(),
   limit: z.coerce.number().min(1).max(100).default(50),
   offset: z.coerce.number().min(0).default(0),
 });

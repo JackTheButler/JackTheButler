@@ -171,36 +171,6 @@ function createTestDb() {
       created_at TEXT NOT NULL DEFAULT (datetime('now')),
       updated_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
-
-    CREATE TABLE IF NOT EXISTS automation_rules (
-      id TEXT PRIMARY KEY,
-      name TEXT NOT NULL,
-      description TEXT,
-      trigger_type TEXT NOT NULL,
-      trigger_config TEXT NOT NULL,
-      action_type TEXT NOT NULL,
-      action_config TEXT NOT NULL,
-      actions TEXT,
-      retry_config TEXT,
-      enabled INTEGER NOT NULL DEFAULT 1,
-      last_run_at TEXT,
-      last_error TEXT,
-      run_count INTEGER NOT NULL DEFAULT 0,
-      consecutive_failures INTEGER NOT NULL DEFAULT 0,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
-
-    CREATE TABLE IF NOT EXISTS automation_logs (
-      id TEXT PRIMARY KEY,
-      rule_id TEXT NOT NULL REFERENCES automation_rules(id),
-      status TEXT NOT NULL,
-      trigger_data TEXT,
-      action_result TEXT,
-      error_message TEXT,
-      execution_time_ms INTEGER,
-      created_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
   `);
 
   return drizzle(sqlite, { schema });
@@ -214,38 +184,6 @@ describe('P0 Use Cases', () => {
   });
 
   describe('G-01: Pre-arrival Messaging', () => {
-    it('should have automation rule for pre-arrival messages', async () => {
-      // Create pre-arrival automation rule
-      const ruleId = generateId('rule');
-      await db.insert(schema.automationRules).values({
-        id: ruleId,
-        name: 'Pre-arrival Welcome',
-        description: 'Sends welcome message 3 days before arrival',
-        triggerType: 'time_based',
-        triggerConfig: JSON.stringify({
-          type: 'before_arrival',
-          offsetDays: -3,
-          time: '10:00',
-        }),
-        actionType: 'send_message',
-        actionConfig: JSON.stringify({
-          template: 'pre_arrival_welcome',
-          channel: 'preferred',
-        }),
-        enabled: true,
-      });
-
-      // Verify rule exists and is enabled
-      const rules = await db
-        .select()
-        .from(schema.automationRules)
-        .where(eq(schema.automationRules.enabled, true));
-
-      expect(rules.length).toBe(1);
-      expect(rules[0].name).toBe('Pre-arrival Welcome');
-      expect(rules[0].triggerType).toBe('time_based');
-    });
-
     it('should find reservations arriving in 3 days', async () => {
       // Create guest
       const guestId = generateId('guest');

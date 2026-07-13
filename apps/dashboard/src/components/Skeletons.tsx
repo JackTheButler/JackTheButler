@@ -45,34 +45,6 @@ export function ApprovalTableSkeleton({ count = 5 }: { count?: number }) {
 }
 
 /**
- * Skeleton for automation rule cards.
- */
-export function AutomationCardSkeleton({ count = 3 }: { count?: number }) {
-  return (
-    <div className="grid grid-cols-1 gap-4">
-      {Array.from({ length: count }).map((_, i) => (
-        <Card key={i} className="p-4">
-          <div className="flex items-start justify-between">
-            <div className="flex items-start gap-3 flex-1">
-              <Skeleton className="h-10 w-10 rounded-lg shrink-0" />
-              <div className="space-y-2 flex-1">
-                <Skeleton className="h-5 w-48" />
-                <Skeleton className="h-4 w-full max-w-md" />
-                <div className="flex gap-2 pt-1">
-                  <Skeleton className="h-5 w-20" />
-                  <Skeleton className="h-5 w-24" />
-                </div>
-              </div>
-            </div>
-            <Skeleton className="h-6 w-10 rounded-full" />
-          </div>
-        </Card>
-      ))}
-    </div>
-  );
-}
-
-/**
  * Skeleton for app cards in a grid.
  */
 export function AppCardSkeleton({ count = 4 }: { count?: number }) {

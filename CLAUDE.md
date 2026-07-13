@@ -30,7 +30,6 @@ jack/
 ├── src/
 │   ├── core/             # Kernel - business logic (v1.1.0+)
 │   │   ├── ai/           # Knowledge base (RAG) logic
-│   │   ├── automation/   # Rules engine: actions, chain-executor, retry-handler
 │   │   ├── conversation/ # guest-context (conversation state lives in the pipeline)
 │   │   ├── interfaces/   # Seams core consumes without importing apps (pms-sync)
 │   │   ├── memory/       # Guest memory extraction + event-subscriber
@@ -242,7 +241,7 @@ ENCRYPTION_KEY=your-encryption-key-min-32-chars   # For DB credential storage
 | New tool app | `src/apps/tools/site-scraper/index.ts` |
 | App manifest types | `src/apps/types.ts` |
 | Core interface | `packages/shared/src/channel.ts` (adapter contracts consumed by `src/core/pipeline/adapters.ts`) |
-| Core module | `src/core/automation/index.ts` |
+| Core module | `src/core/memory/event-subscriber.ts` |
 | Database table | `src/db/schema.ts` (all tables in one file) |
 | Database setup | `src/db/index.ts` |
 | WebSocket events | `src/gateway/websocket-bridge.ts` |

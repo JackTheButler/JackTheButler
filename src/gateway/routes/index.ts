@@ -7,4 +7,3 @@ export { authRoutes } from './auth.js';
 export { apiRoutes } from './api.js';
 export { conversationsRouter } from './conversations.js';
 export { appRoutes } from './apps.js';
-export { automationRoutes } from './automation.js';

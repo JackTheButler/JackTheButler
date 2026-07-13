@@ -7,7 +7,7 @@ import type { ConversationState, ChannelType, TaskStatus, ReservationStatus } fr
 export type { ConversationState, ChannelType, TaskStatus, ReservationStatus };
 
 // --- Status Types ---
-export type TaskSource = 'manual' | 'auto' | 'automation';
+export type TaskSource = 'manual' | 'auto';
 
 // --- Guest ---
 
