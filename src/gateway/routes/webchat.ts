@@ -8,7 +8,7 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { webchatActionService } from '@/apps/channels/webchat/actions.js';
+import { webchatActionService } from '@/services/webchat-actions.js';
 import { webchatSessionService } from '@/services/webchat-session.js';
 import { appConfigService } from '@/apps/config.js';
 import { validateBody } from '../middleware/validator.js';

@@ -18,7 +18,7 @@ import { webchatConnectionManager } from '@/apps/channels/webchat/connections.js
 import { t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
 import type { Guest, Reservation } from '@/db/schema.js';
-import type { ActionResult } from './actions.js';
+import type { ActionResult } from './webchat-actions.js';
 import {
   lookupReservationByConfirmation,
   lookupReservationsByEmail,

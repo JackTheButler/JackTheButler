@@ -21,7 +21,7 @@ vi.mock('@/services/webchat-session.js', () => ({
   webchatSessionService: { cleanupExpired: vi.fn().mockResolvedValue(0) },
 }));
 
-vi.mock('@/apps/channels/webchat/actions.js', () => ({
+vi.mock('@/services/webchat-actions.js', () => ({
   cleanupRateLimitMaps: vi.fn().mockReturnValue(0),
 }));
 
@@ -29,7 +29,7 @@ const { Scheduler } = await import('@/scheduler/index.js');
 const { getAppRegistry } = await import('@/apps/registry.js');
 const { pmsSyncService, getPMSSyncConfig } = await import('@/services/pms-sync.js');
 const { webchatSessionService } = await import('@/services/webchat-session.js');
-const { cleanupRateLimitMaps } = await import('@/apps/channels/webchat/actions.js');
+const { cleanupRateLimitMaps } = await import('@/services/webchat-actions.js');
 
 const SYNC_INTERVAL_MS = 900_000;
 const LOG_PURGE_INTERVAL_MS = 24 * 60 * 60 * 1000;

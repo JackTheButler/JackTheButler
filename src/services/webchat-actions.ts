@@ -15,11 +15,11 @@ import { conversationService } from '@/services/conversation.js';
 import { webchatConnectionManager, getSessionLocale } from '@/apps/channels/webchat/connections.js';
 import { t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
-import { verifyReservation } from './verification.js';
+import { verifyReservation } from './webchat-verification.js';
 import { now } from '@/utils/time.js';
 
 // Re-export so scheduler.ts import path stays unchanged
-export { cleanupRateLimitMaps } from './verification.js';
+export { cleanupRateLimitMaps } from './webchat-verification.js';
 
 const log = createLogger('webchat-action');
 

@@ -13,7 +13,7 @@ import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/permissions/index.js';
 import type { ContentType, ChannelType } from '@jackthebutler/shared';
 import { getAppRegistry } from '@/apps/index.js';
-import { translate, getPropertyLanguage } from '@/utils/translation.js';
+import { translate, getPropertyLanguage } from '@/services/translation.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('api:conversations');

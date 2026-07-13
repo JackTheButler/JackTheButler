@@ -38,7 +38,7 @@ import {
   type OutboundMessage as PkgOutboundMessage,
 } from '@thebutler/pipeline';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
-import { getPropertyLanguage } from '@/utils/translation.js';
+import { getPropertyLanguage } from '@/services/translation.js';
 import { events, EventTypes } from '@/events/index.js';
 import { writeActivityLog } from '@/services/activity-log.js';
 import type { ButlerContext } from './context.js';

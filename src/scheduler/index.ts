@@ -71,7 +71,7 @@ export class Scheduler {
         log.info({ deleted: sessionsDeleted }, 'Cleaned up expired webchat sessions');
       }
 
-      const { cleanupRateLimitMaps } = await import('@/apps/channels/webchat/actions.js');
+      const { cleanupRateLimitMaps } = await import('@/services/webchat-actions.js');
       const rateLimitCleaned = cleanupRateLimitMaps();
       if (rateLimitCleaned > 0) {
         log.info({ cleaned: rateLimitCleaned }, 'Cleaned up stale rate-limit entries');

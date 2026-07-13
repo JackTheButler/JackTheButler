@@ -23,7 +23,7 @@ import { processMessage } from '@/pipeline/index.js';
 import { appConfigService } from '@/apps/config.js';
 import { conversationService } from '@/services/conversation.js';
 import { webchatSessionService } from '@/services/webchat-session.js';
-import { webchatActionService } from '@/apps/channels/webchat/actions.js';
+import { webchatActionService } from '@/services/webchat-actions.js';
 import { webchatConnectionManager, getSessionLocale, setSessionLocale, deleteSessionLocale } from '@/apps/channels/webchat/connections.js';
 import type { WebChatSession } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
