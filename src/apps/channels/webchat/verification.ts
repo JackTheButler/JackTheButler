@@ -12,9 +12,9 @@
 
 import { createHash, randomInt, timingSafeEqual } from 'node:crypto';
 import { createLogger } from '@/utils/logger.js';
-import { webchatSessionService } from '@/apps/channels/webchat/session.js';
+import { webchatSessionService } from '@/services/webchat-session.js';
 import { conversationService } from '@/services/conversation.js';
-import { webchatConnectionManager } from '@/apps/channels/webchat/index.js';
+import { webchatConnectionManager } from '@/apps/channels/webchat/connections.js';
 import { t } from '@/locales/webchat/index.js';
 import type { SupportedLocale } from '@/locales/webchat/index.js';
 import type { Guest, Reservation } from '@/db/schema.js';

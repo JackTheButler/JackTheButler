@@ -8,7 +8,5 @@
  */
 
 // WebChat (built-in, stays in src/)
-export {
-  manifest as webchatManifest,
-  webchatConnectionManager,
-} from './webchat/index.js';
+export { manifest as webchatManifest } from './webchat/index.js';
+export { webchatConnectionManager } from './webchat/connections.js';

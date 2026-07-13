@@ -22,8 +22,9 @@ import type {
 import { processMessage } from '@/pipeline/index.js';
 import { appConfigService } from '@/apps/config.js';
 import { conversationService } from '@/services/conversation.js';
-import { webchatSessionService } from '@/apps/channels/webchat/session.js';
+import { webchatSessionService } from '@/services/webchat-session.js';
 import { webchatActionService } from '@/apps/channels/webchat/actions.js';
+import { webchatConnectionManager, getSessionLocale, setSessionLocale, deleteSessionLocale } from '@/apps/channels/webchat/connections.js';
 import type { WebChatSession } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -61,94 +62,6 @@ function isRateLimited(sessionId: string): boolean {
   timestamps.push(now);
   return false;
 }
-
-// ============================================
-// Session Locale Tracking
-// ============================================
-
-/** In-memory locale per session (no DB migration needed) */
-const sessionLocales = new Map<string, SupportedLocale>();
-
-export function getSessionLocale(sessionId: string): SupportedLocale {
-  return sessionLocales.get(sessionId) ?? 'en';
-}
-
-export function setSessionLocale(sessionId: string, locale: SupportedLocale): void {
-  sessionLocales.set(sessionId, locale);
-}
-
-// ============================================
-// Connection Manager
-// ============================================
-
-/**
- * Manages WebSocket connections for webchat guests.
- * Supports multiple tabs per session (same sessionId → multiple sockets).
- */
-class WebChatConnectionManager {
-  private connections = new Map<string, Set<WebSocket>>();
-
-  /** Add a WebSocket to a session ID */
-  add(id: string, ws: WebSocket): void {
-    if (!this.connections.has(id)) {
-      this.connections.set(id, new Set());
-    }
-    this.connections.get(id)!.add(ws);
-  }
-
-  /** Remove a WebSocket from a session ID */
-  remove(id: string, ws: WebSocket): void {
-    const sockets = this.connections.get(id);
-    if (sockets) {
-      sockets.delete(ws);
-      if (sockets.size === 0) {
-        this.connections.delete(id);
-      }
-    }
-  }
-
-  /** Remove all connections for an ID */
-  removeAll(id: string): void {
-    this.connections.delete(id);
-  }
-
-  /** Send a message to all connections for an ID */
-  send(id: string, message: object): boolean {
-    const sockets = this.connections.get(id);
-    if (!sockets || sockets.size === 0) return false;
-
-    const data = JSON.stringify(message);
-    for (const ws of sockets) {
-      if (ws.readyState === WebSocket.OPEN) {
-        ws.send(data);
-      }
-    }
-    return true;
-  }
-
-  /** Send a message to all connections except the excluded one */
-  sendToOthers(id: string, exclude: WebSocket, message: object): boolean {
-    const sockets = this.connections.get(id);
-    if (!sockets || sockets.size === 0) return false;
-
-    const data = JSON.stringify(message);
-    let sent = false;
-    for (const ws of sockets) {
-      if (ws !== exclude && ws.readyState === WebSocket.OPEN) {
-        ws.send(data);
-        sent = true;
-      }
-    }
-    return sent;
-  }
-
-  /** Get number of active connections for an ID */
-  getCount(id: string): number {
-    return this.connections.get(id)?.size ?? 0;
-  }
-}
-
-export const webchatConnectionManager = new WebChatConnectionManager();
 
 // ============================================
 // Adapter
@@ -435,7 +348,7 @@ async function handleGuestConnectionAsync(ws: GuestSocket, req: IncomingMessage)
     webchatConnectionManager.remove(sessionId, ws);
     if (webchatConnectionManager.getCount(sessionId) === 0) {
       messageTimestamps.delete(sessionId);
-      sessionLocales.delete(sessionId);
+      deleteSessionLocale(sessionId);
     }
     log.info({ sessionId }, 'Guest webchat disconnected');
     events.emit({ type: EventTypes.WEBCHAT_DISCONNECTED, sessionId, timestamp: new Date() });

@@ -65,7 +65,7 @@ export class Scheduler {
 
     // WebChat session cleanup (every hour)
     this.scheduleJob('webchat-session-cleanup', 60 * 60 * 1000, async () => {
-      const { webchatSessionService } = await import('@/apps/channels/webchat/session.js');
+      const { webchatSessionService } = await import('@/services/webchat-session.js');
       const sessionsDeleted = await webchatSessionService.cleanupExpired();
       if (sessionsDeleted > 0) {
         log.info({ deleted: sessionsDeleted }, 'Cleaned up expired webchat sessions');

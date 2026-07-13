@@ -12,7 +12,6 @@ import { resolve } from 'node:path';
 import { createLogger } from '@/utils/logger.js';
 import { getAppRegistry, type AppRegistry } from './registry.js';
 import type { AnyAppManifest, AppCategory } from './types.js';
-import { manifest as localManifest } from './ai/providers/local.js';
 import { manifest as webchatManifest } from './channels/webchat/index.js';
 
 const log = createLogger('apps:loader');
@@ -108,7 +107,8 @@ export class AppLoader {
     const pluginCount = manifests.length;
 
     // Register built-ins that live in src/ and cannot be npm packages
-    manifests.push(localManifest, webchatManifest);
+    // (local AI is now a workspace package discovered above — see packages/ai-local)
+    manifests.push(webchatManifest);
 
     const filtered = categories
       ? manifests.filter((m) => categories.includes(m.category))

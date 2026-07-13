@@ -19,10 +19,21 @@ import type {
   ConnectionTestResult,
   PluginContext,
 } from './types.js';
-import type { AIProvider, ChannelAdapter, PMSAdapter } from '@jackthebutler/shared';
+import type { AIProvider, ChannelAdapter, PMSAdapter, ModelDownloadProgress } from '@jackthebutler/shared';
 import type { ChannelType } from '@/types/index.js';
+import { events, EventTypes } from '@/events/index.js';
 
 const log = createLogger('apps:registry');
+
+/** Build the context handed to a plugin factory: instrumented logger + host event hooks. */
+function createPluginContext(manifest: AnyAppManifest): PluginContext {
+  return {
+    appLog: createAppLogger(manifest.category, manifest.id),
+    emitModelProgress: (payload: ModelDownloadProgress) => {
+      events.emit({ type: EventTypes.MODEL_DOWNLOAD_PROGRESS, timestamp: new Date(), payload });
+    },
+  };
+}
 
 /**
  * Registry entry status
@@ -142,7 +153,7 @@ export class AppRegistry {
       switch (category) {
         case 'ai': {
           const aiManifest = manifest as AIAppManifest;
-          const context: PluginContext = { appLog: createAppLogger(manifest.category, manifest.id) };
+          const context = createPluginContext(manifest);
           const provider = aiManifest.createProvider(ext.config, context);
           this.aiProviders.set(appId, provider);
           ext.instance = provider;
@@ -150,7 +161,7 @@ export class AppRegistry {
         }
         case 'channel': {
           const channelManifest = manifest as ChannelAppManifest;
-          const context: PluginContext = { appLog: createAppLogger(manifest.category, manifest.id) };
+          const context = createPluginContext(manifest);
           const adapter = channelManifest.createAdapter(ext.config, context);
           this.channelAdapters.set(appId, adapter);
           ext.instance = adapter;
@@ -158,7 +169,7 @@ export class AppRegistry {
         }
         case 'pms': {
           const pmsManifest = manifest as PMSAppManifest;
-          const context: PluginContext = { appLog: createAppLogger(manifest.category, manifest.id) };
+          const context = createPluginContext(manifest);
           const adapter = pmsManifest.createAdapter(ext.config, context);
           this.pmsAdapters.set(appId, adapter);
           ext.instance = adapter;

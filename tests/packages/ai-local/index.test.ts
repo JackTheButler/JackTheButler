@@ -12,7 +12,8 @@ const mockEmbeddingData = new Float32Array(384).fill(0.1);
 
 // Mock the transformers module (v3)
 vi.mock('@huggingface/transformers', () => ({
-  pipeline: vi.fn(async (task: string) => {
+  pipeline: vi.fn(async (task: string, _model?: string, opts?: { progress_callback?: (p: unknown) => void }) => {
+    opts?.progress_callback?.({ status: 'progress', file: 'model.onnx', progress: 42, loaded: 42, total: 100 });
     if (task === 'feature-extraction') {
       // Return an embedding function
       return async () => ({ data: mockEmbeddingData });
@@ -29,7 +30,7 @@ vi.mock('@huggingface/transformers', () => ({
 }));
 
 // Import after mock
-import { LocalAIProvider, createLocalProvider, manifest } from '@/apps/ai/providers/local.js';
+import { LocalAIProvider, createLocalProvider, manifest } from '@jackthebutler/ai-local';
 
 describe('LocalAIProvider', () => {
   describe('constructor', () => {
@@ -47,6 +48,30 @@ describe('LocalAIProvider', () => {
 
       expect(customProvider.id).toBe('local');
       expect(customProvider.name).toBe('local');
+    });
+  });
+
+  describe('model download progress', () => {
+    it('forwards Transformers.js progress to context.emitModelProgress', async () => {
+      const emitModelProgress = vi.fn();
+      const provider = new LocalAIProvider({}, { ...mockContext, emitModelProgress });
+
+      await provider.embed({ text: 'Hello world' });
+
+      expect(emitModelProgress).toHaveBeenCalledWith({
+        model: 'Xenova/all-MiniLM-L6-v2',
+        status: 'progress',
+        file: 'model.onnx',
+        progress: 42,
+        loaded: 42,
+        total: 100,
+      });
+    });
+
+    it('does not fail when emitModelProgress is absent', async () => {
+      const provider = new LocalAIProvider({}, mockContext);
+      const result = await provider.embed({ text: 'Hello world' });
+      expect(result.embedding.length).toBe(384);
     });
   });
 

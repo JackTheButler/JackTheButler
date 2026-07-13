@@ -1,0 +1,29 @@
+{
+  "name": "@jackthebutler/ai-local",
+  "version": "1.0.0",
+  "description": "Local (Transformers.js) AI provider for Jack The Butler — always-bundled zero-config fallback",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.js",
+      "types": "./dist/index.d.ts"
+    }
+  },
+  "files": ["dist", "README.md"],
+  "scripts": {
+    "build": "tsc",
+    "typecheck": "tsc --noEmit"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "dependencies": {
+    "@huggingface/transformers": "^3.4.0",
+    "@jackthebutler/shared": "workspace:*"
+  },
+  "devDependencies": {
+    "typescript": "^5.7.2"
+  }
+}

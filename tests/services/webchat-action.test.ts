@@ -10,7 +10,7 @@ import { createHash } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { db, webchatSessions, guests, reservations } from '@/db/index.js';
 import { WebChatActionService } from '@/apps/channels/webchat/actions.js';
-import { webchatSessionService } from '@/apps/channels/webchat/session.js';
+import { webchatSessionService } from '@/services/webchat-session.js';
 import { guestService } from '@/services/guest.js';
 import type { NormalizedReservation } from '@/core/interfaces/pms.js';
 
@@ -23,7 +23,7 @@ const { mockSend, mockGetActivePMSAdapter } = vi.hoisted(() => ({
   mockGetActivePMSAdapter: vi.fn(() => null as unknown),
 }));
 
-vi.mock('@/apps/channels/webchat/index.js', () => ({
+vi.mock('@/apps/channels/webchat/connections.js', () => ({
   webchatConnectionManager: { send: mockSend },
   getSessionLocale: vi.fn(() => 'en'),
 }));

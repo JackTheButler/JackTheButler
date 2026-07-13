@@ -1,10 +1,13 @@
 /**
- * Local AI Provider Extension
+ * Local AI Provider
  *
  * Built-in AI provider using Transformers.js for local inference.
  * Provides semantic embeddings and basic completion without external APIs.
  *
- * @module extensions/ai/providers/local
+ * Always bundled as a workspace dependency (not optional) so the
+ * zero-config local fallback is available on every install.
+ *
+ * @module ai-local
  */
 
 import type {
@@ -17,13 +20,10 @@ import type {
   ConnectionTestResult,
   EmbeddingRequest,
   EmbeddingResponse,
+  ModelDownloadProgress,
   PluginContext,
 } from '@jackthebutler/shared';
 import { withLogContext } from '@jackthebutler/shared';
-import { createLogger } from '@/utils/logger.js';
-import { events, EventTypes } from '@/events/index.js';
-
-const log = createLogger('extensions:ai:local');
 
 /**
  * Embedding model - small and fast, produces 384-dimensional vectors
@@ -54,9 +54,7 @@ let transformersModule: typeof import('@huggingface/transformers') | null = null
  */
 async function getTransformers(): Promise<typeof import('@huggingface/transformers')> {
   if (!transformersModule) {
-    log.debug('Loading @huggingface/transformers module...');
     transformersModule = await import('@huggingface/transformers');
-    log.debug('Transformers module loaded');
   }
   return transformersModule;
 }
@@ -107,18 +105,26 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 
   constructor(config: LocalConfig = {}, context: PluginContext) {
     this.appLog = context.appLog;
+    this.emitModelProgress = context.emitModelProgress;
     this.embeddingModel = config.embeddingModel || EMBEDDING_MODEL;
     this.completionModel = config.completionModel || COMPLETION_MODEL;
     this.utilityModel = config.utilityModel || this.completionModel;
+  }
 
-    log.info(
-      {
-        embeddingModel: this.embeddingModel,
-        completionModel: this.completionModel,
-        utilityModel: this.utilityModel,
-      },
-      'Local AI provider initialized'
-    );
+  private readonly emitModelProgress: PluginContext['emitModelProgress'];
+
+  /** progress_callback adapter: forwards Transformers.js download progress to the host. */
+  private progressCallbackFor(model: string) {
+    return (progress: { status: string; file?: string; progress?: number; loaded?: number; total?: number }) => {
+      this.emitModelProgress?.({
+        model,
+        status: progress.status as ModelDownloadProgress['status'],
+        ...(progress.file !== undefined ? { file: progress.file } : {}),
+        ...(progress.progress !== undefined ? { progress: progress.progress } : {}),
+        ...(progress.loaded !== undefined ? { loaded: progress.loaded } : {}),
+        ...(progress.total !== undefined ? { total: progress.total } : {}),
+      });
+    };
   }
 
   /**
@@ -127,8 +133,6 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
   async testConnection(): Promise<ConnectionTestResult> {
     const startTime = Date.now();
     try {
-      log.debug('Testing local AI provider by loading embedding model...');
-
       await this.appLog('connection_test', { model: this.embeddingModel }, () =>
         this.getEmbeddingPipeline()
       );
@@ -147,7 +151,6 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
     } catch (error) {
       const latencyMs = Date.now() - startTime;
       const message = error instanceof Error ? error.message : 'Unknown error';
-      log.error({ error }, 'Local AI provider test failed');
 
       return {
         success: false,
@@ -167,7 +170,6 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 
     // Prevent concurrent loading
     if (this.isLoadingEmbedding) {
-      log.debug('Waiting for embedding model to finish loading...');
       while (this.isLoadingEmbedding) {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
@@ -178,45 +180,12 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 
     this.isLoadingEmbedding = true;
     try {
-      log.info({ model: this.embeddingModel }, 'Loading embedding model (this may take a moment on first run)...');
       const { pipeline } = await getTransformers();
 
-      // Emit progress events during model download
-      const progressCallback = (progress: {
-        status: string;
-        file?: string;
-        progress?: number;
-        loaded?: number;
-        total?: number;
-      }) => {
-        const payload: {
-          model: string;
-          status: 'initiate' | 'download' | 'progress' | 'done' | 'ready';
-          file?: string;
-          progress?: number;
-          loaded?: number;
-          total?: number;
-        } = {
-          model: this.embeddingModel,
-          status: progress.status as 'initiate' | 'download' | 'progress' | 'done' | 'ready',
-        };
-        if (progress.file) payload.file = progress.file;
-        if (progress.progress !== undefined) payload.progress = Math.round(progress.progress * 100);
-        if (progress.loaded !== undefined) payload.loaded = progress.loaded;
-        if (progress.total !== undefined) payload.total = progress.total;
-
-        events.emit({
-          type: EventTypes.MODEL_DOWNLOAD_PROGRESS,
-          timestamp: new Date(),
-          payload,
-        });
-      };
-
       this.embeddingPipeline = (await pipeline('feature-extraction', this.embeddingModel, {
-        progress_callback: progressCallback,
+        progress_callback: this.progressCallbackFor(this.embeddingModel),
       })) as unknown as FeatureExtractionPipeline;
 
-      log.info({ model: this.embeddingModel }, 'Embedding model loaded');
       return this.embeddingPipeline;
     } finally {
       this.isLoadingEmbedding = false;
@@ -232,7 +201,6 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 
     // Prevent concurrent loading of the same model
     if (this.loadingPipelines.has(modelName)) {
-      log.debug({ model: modelName }, 'Waiting for model to finish loading...');
       while (this.loadingPipelines.has(modelName)) {
         await new Promise((resolve) => setTimeout(resolve, 100));
       }
@@ -242,45 +210,13 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 
     this.loadingPipelines.add(modelName);
     try {
-      log.info({ model: modelName }, 'Loading text generation model (this may take a moment on first run)...');
       const { pipeline: createPipeline } = await getTransformers();
 
-      const progressCallback = (progress: {
-        status: string;
-        file?: string;
-        progress?: number;
-        loaded?: number;
-        total?: number;
-      }) => {
-        const payload: {
-          model: string;
-          status: 'initiate' | 'download' | 'progress' | 'done' | 'ready';
-          file?: string;
-          progress?: number;
-          loaded?: number;
-          total?: number;
-        } = {
-          model: modelName,
-          status: progress.status as 'initiate' | 'download' | 'progress' | 'done' | 'ready',
-        };
-        if (progress.file) payload.file = progress.file;
-        if (progress.progress !== undefined) payload.progress = Math.round(progress.progress * 100);
-        if (progress.loaded !== undefined) payload.loaded = progress.loaded;
-        if (progress.total !== undefined) payload.total = progress.total;
-
-        events.emit({
-          type: EventTypes.MODEL_DOWNLOAD_PROGRESS,
-          timestamp: new Date(),
-          payload,
-        });
-      };
-
       const p = (await createPipeline('text-generation', modelName, {
-        progress_callback: progressCallback,
+        progress_callback: this.progressCallbackFor(modelName),
       })) as unknown as TextGenerationPipeline;
 
       this.completionPipelines.set(modelName, p);
-      log.info({ model: modelName }, 'Text generation model loaded');
       return p;
     } finally {
       this.loadingPipelines.delete(modelName);
@@ -291,8 +227,6 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
    * Generate embeddings using local transformer model
    */
   async embed(request: EmbeddingRequest): Promise<EmbeddingResponse> {
-    log.debug({ textLength: request.text.length }, 'Generating local embedding');
-
     return this.appLog('embedding', { model: this.embeddingModel, ...(request.purpose && { purpose: request.purpose }) }, async () => {
       const extractor = await this.getEmbeddingPipeline();
 
@@ -302,7 +236,6 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
       });
 
       const embedding = Array.from(output.data as Float32Array);
-      log.debug({ dimensions: embedding.length }, 'Local embedding generated');
 
       return withLogContext({ embedding, usage: { inputTokens: 0, outputTokens: 0 } }, {
         dimensions: embedding.length,
@@ -319,7 +252,6 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
    */
   async complete(request: CompletionRequest): Promise<CompletionResponse> {
     const modelName = request.modelTier === 'utility' ? this.utilityModel : this.completionModel;
-    log.debug({ messageCount: request.messages.length, model: modelName }, 'Generating local completion');
 
     const eventType = request.purpose ? `completion.${request.purpose}` : 'completion';
     return this.appLog(eventType, { model: modelName, ...(request.purpose && { purpose: request.purpose }) }, async () => {
@@ -335,8 +267,6 @@ export class LocalAIProvider implements AIProvider, BaseProvider {
 
       const generated = outputs[0]?.generated_text || '';
       const content = generated.slice(prompt.length).trim();
-
-      log.debug({ contentLength: content.length }, 'Local completion generated');
 
       const onCompleteContext = request.onComplete?.(content) ?? {};
       return withLogContext({ content, usage: { inputTokens: 0, outputTokens: 0 }, stopReason: 'end_turn' }, {
@@ -438,7 +368,7 @@ export function createLocalProvider(config: LocalConfig = {}, context: PluginCon
 }
 
 /**
- * Extension manifest for Local AI
+ * Manifest for Local AI
  */
 export const manifest: AIAppManifest = {
   id: 'local',
@@ -495,3 +425,5 @@ export const manifest: AIAppManifest = {
   },
   createProvider: (config, context) => createLocalProvider(config as unknown as LocalConfig, context),
 };
+
+export default { manifest };

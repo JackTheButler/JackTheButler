@@ -48,6 +48,7 @@ export type {
 export type {
   AppLogger,
   PluginContext,
+  ModelDownloadProgress,
   AppCategory,
   ProviderStatus,
   ConfigFieldType,

@@ -34,8 +34,24 @@ export type AppLogger = <T>(
  *   }
  * }
  */
+/**
+ * Progress of a model/resource download inside a plugin (e.g. first-run
+ * Transformers.js model fetch). Mirrors the host's ModelDownloadProgressEvent payload.
+ */
+export interface ModelDownloadProgress {
+  model: string;
+  status: 'initiate' | 'download' | 'progress' | 'done' | 'ready';
+  file?: string;
+  /** 0-100 */
+  progress?: number;
+  loaded?: number;
+  total?: number;
+}
+
 export interface PluginContext {
   appLog: AppLogger;
+  /** Optional: report model download progress back to the host (broadcast to dashboards). */
+  emitModelProgress?: (payload: ModelDownloadProgress) => void;
 }
 
 // ==================
