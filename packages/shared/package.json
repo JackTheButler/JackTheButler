@@ -1,25 +1,28 @@
 {
-  "name": "@jackthebutler/shared",
-  "version": "1.0.0",
+  "name": "@janetheoperator/shared",
+  "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "default": "./dist/index.js"
+    },
+    "./contracts": {
+      "types": "./dist/contracts.d.ts",
+      "default": "./dist/contracts.js"
     }
   },
-  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
-    "typecheck": "tsc --noEmit",
-    "prepare": "tsc"
-  },
-  "publishConfig": {
-    "access": "public"
+    "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "^5.7.2"
+    "typescript": "^5.7.0"
+  },
+  "dependencies": {
+    "zod": "^4.3.6"
   }
 }

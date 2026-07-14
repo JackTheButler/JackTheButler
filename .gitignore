@@ -1,38 +1,53 @@
 # Dependencies
 node_modules/
-resources/
+.pnpm-store/
 
 # Build output
 dist/
+apps/*/dist/
+packages/*/dist/
+.astro/
+*.tsbuildinfo
 
-# Data (database, uploads) - only root data folder
-/data/
+# Tests / coverage
+coverage/
 
-# Environment
+# Secrets & credentials — never commit
 .env
-.env.local
-.env.development
-.env.*.local
+.env.*
+!.env.example
+*.key
+*.pem
+*.p12
+*.pfx
+*.cert
+*.crt
+*.keystore
+id_rsa*
+id_ed25519*
+*.secret
+secrets.json
+credentials.json
+serviceAccount*.json
+gha-creds-*.json
+.npmrc.local
+
+# Local data / databases
+*.sqlite
+*.sqlite3
+*.db
+data/
 
 # Logs
-logs/
 *.log
 npm-debug.log*
 pnpm-debug.log*
 
-# IDE
+# Editor / OS
+.DS_Store
+Thumbs.db
 .idea/
 *.swp
-*.swo
-.DS_Store
-
-# Test coverage
-coverage/
-
-# Outreach drafts
-apps/landing/outreach/
-
-# Temporary files
-*.tmp
-*.temp
-.cache/
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json

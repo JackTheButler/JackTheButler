@@ -2,5 +2,7 @@ packages:
   - apps/*
   - packages/*
 
-ignoredBuiltDependencies:
-  - sharp
+# New home for this setting (pnpm 10/11 no longer read package.json's
+# "pnpm" field). Lets better-sqlite3 run its native build script.
+onlyBuiltDependencies:
+  - better-sqlite3

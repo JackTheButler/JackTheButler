@@ -1,23 +1,30 @@
-import { StrictMode } from 'react';
-import { createRoot } from 'react-dom/client';
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import React from 'react';
+import ReactDOM from 'react-dom/client';
+import { BrowserRouter } from 'react-router-dom';
+import { QueryClient } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { App } from './App';
-import './lib/i18n';
+import { Toaster } from '@/components/ui';
+import { PwaReloadPrompt } from '@/components/PwaReloadPrompt';
+import { InstallBanner } from '@/components/InstallBanner';
+import { persistOptions } from '@/lib/queryPersist';
 import './index.css';
 
 const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      staleTime: 1000 * 60,
-      retry: 1,
-    },
-  },
+  // Keep cached entries around long enough to be persisted across a close/reopen
+  // (default gcTime of 5m would drop the inbox list before we save it).
+  defaultOptions: { queries: { gcTime: 1000 * 60 * 60 * 24 } },
 });
 
-createRoot(document.getElementById('root')!).render(
-  <StrictMode>
-    <QueryClientProvider client={queryClient}>
-      <App />
-    </QueryClientProvider>
-  </StrictMode>
+ReactDOM.createRoot(document.getElementById('root')!).render(
+  <React.StrictMode>
+    <PersistQueryClientProvider client={queryClient} persistOptions={persistOptions}>
+      <BrowserRouter>
+        <App />
+        <Toaster />
+        <PwaReloadPrompt />
+        <InstallBanner />
+      </BrowserRouter>
+    </PersistQueryClientProvider>
+  </React.StrictMode>,
 );

@@ -1,66 +1,13 @@
-export { PERMISSIONS, WILDCARD_PERMISSION } from './permissions.js';
-export type { Permission } from './permissions.js';
+import { z } from 'zod';
 
-export type { ConversationState } from './conversation.js';
-export type { ReservationStatus } from './reservation.js';
+/** Shared types/schemas used by API + dashboard. */
+export const HealthResponse = z.object({
+  status: z.literal('ok'),
+  service: z.string(),
+  time: z.string(),
+});
 
-// Channel types
-export type {
-  ChannelType,
-  ContentType,
-  SendResult,
-  InboundMessage,
-  OutboundMessage,
-  ChannelAdapter,
-} from './channel.js';
+export type HealthResponse = z.infer<typeof HealthResponse>;
 
-// AI types
-export type {
-  MessageRole,
-  CompletionMessage,
-  ModelTier,
-  CompletionRequest,
-  TokenUsage,
-  CompletionResponse,
-  EmbeddingRequest,
-  EmbeddingResponse,
-  AIProvider,
-} from './ai.js';
-
-// PMS types
-export { IntegrationSources } from './pms.js';
-export type {
-  IntegrationSource,
-  GuestPreference,
-  NormalizedGuest,
-  NormalizedReservation,
-  RoomStatus,
-  NormalizedRoom,
-  PMSEventType,
-  PMSEvent,
-  ReservationQuery,
-  PMSAdapter,
-  SyncResult,
-} from './pms.js';
-
-// App manifest system + plugin utilities
-export type {
-  AppLogger,
-  PluginContext,
-  ModelDownloadProgress,
-  AppCategory,
-  ProviderStatus,
-  ConfigFieldType,
-  ConfigField,
-  ConnectionTestResult,
-  BaseProvider,
-  AppManifest,
-  AIAppManifest,
-  ChannelAppManifest,
-  PMSAppManifest,
-  ToolAppManifest,
-  AnyAppManifest,
-  AppInstance,
-} from './apps.js';
-
-export { withLogContext, AppLogError, LOG_EXTRA } from './apps.js';
+export * from './manifest.js';
+export * from './dto.js';

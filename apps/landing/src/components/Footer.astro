@@ -1,142 +1,37 @@
 ---
-// Footer with final CTA and structured navigation
-import { Calendar } from '@lucide/astro'
+import { site, nav } from '../config/site';
+import janeLogo from '../icons/jane.svg?raw';
+
+const year = new Date().getFullYear();
 ---
 
-<footer class="py-24 px-6 border-t border-neutral-200 dark:border-neutral-800">
-  <div class="max-w-6xl mx-auto">
-    <!-- Final CTA -->
-    <div class="text-center mb-16">
-      <h2 class="text-3xl sm:text-4xl font-bold mb-4">
-        Ready to deploy your AI concierge?
-      </h2>
-      <p class="text-neutral-600 dark:text-neutral-400 mb-8 max-w-xl mx-auto">
-        <strong>Deploy in 5 minutes.</strong> No credit card required. Own your data forever.
-      </p>
-      <div class="flex flex-col sm:flex-row items-center justify-center gap-4">
-        <a
-          href="https://calendly.com/a-karimzadeh/30min"
-          target="_blank"
-          rel="noopener"
-          class="inline-flex items-center gap-2 px-8 py-4 bg-blue-600 hover:bg-blue-700 dark:bg-blue-500 dark:hover:bg-blue-600 text-white font-semibold rounded-full transition-colors"
-        >
-          <Calendar class="w-5 h-5" />
-          Book a Free Setup Call
-        </a>
-        <a
-          href="https://railway.com/deploy/jack-the-butler"
-          class="inline-flex items-center gap-2 px-8 py-4 text-neutral-700 dark:text-neutral-300 font-semibold rounded-full border border-neutral-300 dark:border-neutral-700 hover:border-neutral-400 dark:hover:border-neutral-500 hover:text-neutral-900 dark:hover:text-white transition-colors"
-        >
-          Deploy Free on Railway
-        </a>
-      </div>
-    </div>
+<footer class="border-t border-line bg-surface">
+  <div
+    class="mx-auto flex max-w-6xl flex-col gap-6 px-6 py-12 md:flex-row md:items-center md:justify-between"
+  >
+    <a
+      href="/"
+      class="flex items-center gap-2 font-semibold text-ink [&_svg]:h-6 [&_svg]:w-auto"
+    >
+      <span class="text-ink" aria-hidden="true" set:html={janeLogo} />
+      {site.name}
+    </a>
 
-    <!-- Footer Links Grid -->
-    <div class="grid grid-cols-1 min-[400px]:grid-cols-2 md:grid-cols-4 gap-8 mb-12">
-      <!-- Product -->
-      <div>
-        <h3 class="font-semibold text-neutral-900 dark:text-white mb-4">Product</h3>
-        <ul class="space-y-3 text-sm">
-          <li>
-            <a href="/hotel-chatbot/" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Hotel Chatbot
-            </a>
-          </li>
-          <li>
-            <a href="/airbnb-chatbot/" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Airbnb Chatbot
-            </a>
-          </li>
-          <li>
-            <a href="/hostel-chatbot/" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Hostel Chatbot
-            </a>
-          </li>
-        </ul>
-      </div>
+    <nav class="flex flex-wrap gap-6">
+      {
+        nav.map((item) => (
+          <a
+            href={item.href}
+            class="text-sm text-muted transition-colors hover:text-ink"
+          >
+            {item.label}
+          </a>
+        ))
+      }
+    </nav>
 
-      <!-- Resources -->
-      <div>
-        <h3 class="font-semibold text-neutral-900 dark:text-white mb-4">Resources</h3>
-        <ul class="space-y-3 text-sm">
-          <li>
-            <a href="https://demo.jackthebutler.com/register" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Try Demo
-            </a>
-          </li>
-          <li>
-            <a href="/blog/" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Blog
-            </a>
-          </li>
-          <li>
-            <a href="/docs/getting-started/introduction/" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Documentation
-            </a>
-          </li>
-          <li>
-            <a href="/blog/what-is-hotel-chatbot/" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              What is a Hotel Chatbot?
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Open Source -->
-      <div>
-        <h3 class="font-semibold text-neutral-900 dark:text-white mb-4">Open Source</h3>
-        <ul class="space-y-3 text-sm">
-          <li>
-            <a href="https://github.com/JackTheButler/JackTheButler" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              GitHub
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/JackTheButler/JackTheButler/issues" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Report an Issue
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/JackTheButler/JackTheButler/blob/main/LICENSE" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              MIT License
-            </a>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Deploy -->
-      <div>
-        <h3 class="font-semibold text-neutral-900 dark:text-white mb-4">Deploy</h3>
-        <ul class="space-y-3 text-sm">
-          <li>
-            <a href="https://railway.com/deploy/jack-the-butler" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Railway
-            </a>
-          </li>
-          <li>
-            <a href="https://render.com/deploy?repo=https://github.com/JackTheButler/JackTheButler" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Render
-            </a>
-          </li>
-          <li>
-            <a href="https://github.com/JackTheButler/JackTheButler#docker" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-              Docker
-            </a>
-          </li>
-        </ul>
-      </div>
-    </div>
-
-    <!-- Bottom Bar -->
-    <div class="pt-8 border-t border-neutral-200 dark:border-neutral-800 flex flex-col sm:flex-row items-center justify-between gap-4">
-      <div class="flex items-center gap-2">
-        <img src="/butler.svg" alt="Jack The Butler" class="w-6 h-6 dark:invert" />
-        <span class="text-sm text-neutral-600 dark:text-neutral-400">Jack The Butler</span>
-      </div>
-      <p class="text-sm text-neutral-400 dark:text-neutral-600">
-        © {new Date().getFullYear()} Jack The Butler. Open source under MIT License.
-      </p>
-    </div>
+    <p class="text-sm text-muted">
+      &copy; {year} {site.name}. All rights reserved.
+    </p>
   </div>
 </footer>

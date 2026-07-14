@@ -1,0 +1,153 @@
+{
+  "version": "7",
+  "dialect": "sqlite",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "6",
+      "when": 1779170932439,
+      "tag": "0000_create_staff",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "6",
+      "when": 1779178063751,
+      "tag": "0001_create_chat_core",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "6",
+      "when": 1779181544619,
+      "tag": "0002_create_app_configs",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "6",
+      "when": 1779190248444,
+      "tag": "0003_add_customer_identities",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "6",
+      "when": 1779191480596,
+      "tag": "0004_require_channel_external_id",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "6",
+      "when": 1779257897972,
+      "tag": "0005_add_app_config_last_error",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "6",
+      "when": 1779274828169,
+      "tag": "0006_create_assistant_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "6",
+      "when": 1779298516431,
+      "tag": "0007_create_business_profile",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "6",
+      "when": 1779299070711,
+      "tag": "0008_add_business_support_email",
+      "breakpoints": true
+    },
+    {
+      "idx": 9,
+      "version": "6",
+      "when": 1779299632004,
+      "tag": "0009_add_message_language",
+      "breakpoints": true
+    },
+    {
+      "idx": 10,
+      "version": "6",
+      "when": 1779303693648,
+      "tag": "0010_add_knowledge_base",
+      "breakpoints": true
+    },
+    {
+      "idx": 11,
+      "version": "6",
+      "when": 1779310000000,
+      "tag": "0011_replace_kb_with_knowledge_entries",
+      "breakpoints": true
+    },
+    {
+      "idx": 12,
+      "version": "6",
+      "when": 1779352571790,
+      "tag": "0012_add_settings",
+      "breakpoints": true
+    },
+    {
+      "idx": 13,
+      "version": "6",
+      "when": 1779360488998,
+      "tag": "0013_add_assistant_response_length",
+      "breakpoints": true
+    },
+    {
+      "idx": 14,
+      "version": "6",
+      "when": 1779370000000,
+      "tag": "0014_rename_embedding_add_question_embedding",
+      "breakpoints": true
+    },
+    {
+      "idx": 15,
+      "version": "6",
+      "when": 1779422972786,
+      "tag": "0015_add_staff_roles_status",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "6",
+      "when": 1779525916618,
+      "tag": "0016_add_push_subscriptions",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1779606173842,
+      "tag": "0017_add_message_knowledge_hits",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "6",
+      "when": 1779621833619,
+      "tag": "0018_add_needs_human",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "6",
+      "when": 1779692706206,
+      "tag": "0019_big_landau",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "6",
+      "when": 1779719309753,
+      "tag": "0020_ambitious_war_machine",
+      "breakpoints": true
+    }
+  ]
+}

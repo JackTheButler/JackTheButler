@@ -1,0 +1,27 @@
+---
+const stats = [
+  { value: 92, suffix: '%', label: 'resolved without a human' },
+  { value: 3, suffix: 's', label: 'average reply time' },
+  { value: 24, suffix: '/7', label: 'always on, every day' },
+  { value: 9, suffix: '+', label: 'channels supported' },
+];
+---
+
+<section class="border-t border-line bg-panel">
+  <div
+    class="mx-auto grid max-w-6xl gap-8 px-6 py-14 sm:grid-cols-2 lg:grid-cols-4"
+    data-reveal-stagger
+  >
+    {
+      stats.map((s) => (
+        <div class="text-center">
+          <p class="text-4xl font-bold tracking-tight text-ink">
+            <span data-countup={s.value}>0</span>
+            {s.suffix}
+          </p>
+          <p class="mt-1 text-sm text-muted">{s.label}</p>
+        </div>
+      ))
+    }
+  </div>
+</section>

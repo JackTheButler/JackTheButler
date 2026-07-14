@@ -1,180 +1,62 @@
+import { serve } from '@hono/node-server';
+import { logger } from '@/core/logger.js';
+import { config } from '@/config.js';
+import { runMigrations } from '@/db/migrate.js';
+import { app, injectWebSocket } from '@/app.js';
+import { startScheduler, stopScheduler } from '@/core/scheduler.js';
+import { autoCloseIdleConversations } from '@/modules/conversations/service.js';
+import { backfillEpisodeIds, refreshEpisodes } from '@/modules/analytics/projection.js';
+
+/** Process entrypoint: apply migrations, then serve the app. */
+runMigrations();
+
+const server = serve({ fetch: app.fetch, port: config.port }, (info) => {
+  logger.info(`API listening on http://localhost:${info.port}`);
+});
+injectWebSocket(server);
+
+// Recurring background work (single replica). Both tasks are idempotent and
+// run an initial catch-up tick on boot. Tick cadence + windows are config
+// (production defaults; override via env for local testing). See
+// docs/CONVERSATIONS.md.
+startScheduler([
+  {
+    name: 'inactivity-auto-close',
+    intervalMs: config.schedulerTickMs,
+    run: () => {
+      const n = autoCloseIdleConversations();
+      if (n) logger.info({ closed: n }, 'auto-closed idle conversations');
+    },
+  },
+  {
+    name: 'episode-projection',
+    intervalMs: config.schedulerTickMs,
+    run: () => {
+      backfillEpisodeIds();
+      const n = refreshEpisodes();
+      if (n) logger.info({ materialized: n }, 'projected episodes');
+    },
+  },
+]);
+
 /**
- * Jack The Butler - Entry Point
- *
- * AI-powered hospitality assistant for hotels.
+ * Graceful shutdown. Without this, `tsx watch` restarts (every save) and
+ * Railway deploys leave the old process holding port 3000 — its persistent
+ * WebSocket + keep-alive connections never drain, so `close()` alone hangs
+ * forever. `closeAllConnections()` force-closes them so the listening socket
+ * is released immediately and the next start can bind. The timeout is a
+ * last-resort hard exit.
  */
-
-import { createServer } from 'node:http';
-import { loadConfig, getEnv } from '@/config/index.js';
-import { logger } from '@/utils/logger.js';
-import { initDb, closeDatabase, isDatabaseHealthy } from '@/db/index.js';
-import { seedDefaultRoles } from '@/permissions/seed.js';
-import { app, setupWebSocket } from '@/gateway/index.js';
-import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
-import { scheduler } from '@/scheduler/index.js';
-import { appConfigService } from '@/apps/config.js';
-import { subscribeMemoryExtractionToEvents } from '@/services/memory-events.js';
-import { getAppRegistry } from '@/apps/index.js';
-
-const APP_NAME = 'Jack The Butler';
-const VERSION = process.env.APP_VERSION ?? process.env.npm_package_version ?? 'unknown';
-
-const startupLog = logger.child({ component: 'startup' });
-
-async function main(): Promise<void> {
-  const config = loadConfig();
-
-  // Banner — written directly to stdout so it never enters the structured log pipeline
-  process.stdout.write(`
-    ╔════════════════════════════════════════╗
-    ║                                        ║
-    ║    🎩 ${APP_NAME}                  ║
-    ║       ${VERSION.padEnd(33)}║
-    ║                                        ║
-    ║    AI-Powered Hospitality Assistant    ║
-    ║                                        ║
-    ╚════════════════════════════════════════╝\n\n`);
-
-  startupLog.info({ env: getEnv(), port: config.port }, 'Starting Jack The Butler');
-
-  // Explicitly initialize the database (connect, load sqlite-vec, migrate)
-  // and seed default roles before anything else touches the DB.
-  initDb();
-  seedDefaultRoles();
-
-  // Verify database is healthy
-  if (!isDatabaseHealthy()) {
-    startupLog.fatal('Database health check failed');
-    process.exit(1);
-  }
-  startupLog.info('Database health check passed');
-
-  // Load enabled extensions from database. The new pipeline's
-  // `aiProvider` adapter calls `getActiveAIProvider()` on every request,
-  // so loading apps is enough — no responder cache to reset.
-  try {
-    await appConfigService.loadEnabledApps();
-  } catch (error) {
-    startupLog.error({ error }, 'Failed to load apps from database');
-  }
-
-  // Auto-activate webchat (built-in, no external dependencies)
-  try {
-    const { getAppRegistry } = await import('@/apps/index.js');
-    const registry = getAppRegistry();
-    const webchat = registry.get('channel-webchat');
-    if (webchat && webchat.status !== 'active') {
-      // Ensure DB config exists so dashboard shows correct status
-      const existing = await appConfigService.getAppConfig('channel-webchat');
-      if (!existing) {
-        await appConfigService.saveAppConfig('channel-webchat', {}, true);
-      } else if (existing.enabled) {
-        await registry.activate('channel-webchat', existing.config);
-      }
-      startupLog.info('WebChat channel auto-activated');
-    }
-  } catch (error) {
-    startupLog.error({ error }, 'Failed to auto-activate WebChat channel');
-  }
-
-  // Create HTTP server
-  const server = createServer((req, res) => {
-    // Convert Node.js request to Web Request
-    const url = `http://${req.headers.host}${req.url}`;
-    const headers = new Headers();
-    for (const [key, value] of Object.entries(req.headers)) {
-      if (value) {
-        headers.set(key, Array.isArray(value) ? value.join(', ') : value);
-      }
-    }
-
-    // Collect body for non-GET requests
-    const chunks: Buffer[] = [];
-    req.on('data', (chunk) => chunks.push(chunk));
-    req.on('end', async () => {
-      const body = chunks.length > 0 ? Buffer.concat(chunks) : undefined;
-
-      const method = req.method || 'GET';
-      const request = new Request(url, {
-        method,
-        headers,
-        body: body && method !== 'GET' && method !== 'HEAD' ? body : null,
-      });
-
-      try {
-        const response = await app.fetch(request);
-
-        // Send response
-        res.statusCode = response.status;
-        response.headers.forEach((value, key) => {
-          res.setHeader(key, value);
-        });
-
-        const responseBody = await response.arrayBuffer();
-        res.end(Buffer.from(responseBody));
-      } catch (error) {
-        startupLog.error({ error }, 'Request handling error');
-        res.statusCode = 500;
-        res.end(
-          JSON.stringify({ error: { code: 'INTERNAL_ERROR', message: 'Internal server error' } })
-        );
-      }
-    });
-  });
-
-  // Setup WebSocket on the same server
-  setupWebSocket(server);
-
-  // Setup event bridge for real-time dashboard updates
-  setupWebSocketBridge();
-
-  // Start listening
-  server.listen(config.port, () => {
-    startupLog.info({ port: config.port }, 'HTTP server listening');
-
-    // Start background scheduler (PMS sync)
-    scheduler.start();
-
-    // Subscribe memory extraction to conversation close events. Provider
-    // getters are injected as a test seam; each re-resolves from the
-    // registry per event so the active provider can change without a restart.
-    subscribeMemoryExtractionToEvents({
-      getActiveAIProvider: () => getAppRegistry().getActiveAIProvider(),
-      getEmbeddingProvider: () => getAppRegistry().getEmbeddingProvider(),
-    });
-
-    // Note: Email is now handled via extensions (Mailgun, SendGrid, Gmail SMTP)
-    // Inbound email uses webhooks instead of IMAP polling
-
-    startupLog.info('Ready!');
-  });
-
-  // Graceful shutdown
-  const shutdown = () => {
-    startupLog.info('Shutting down...');
-
-    // Stop scheduler
-    scheduler.stop();
-    startupLog.info('Scheduler stopped');
-
-    server.close(() => {
-      startupLog.info('HTTP server closed');
-      closeDatabase();
-      process.exit(0);
-    });
-
-    // Force exit after 10 seconds
-    setTimeout(() => {
-      startupLog.warn('Forcing shutdown after timeout');
-      process.exit(1);
-    }, 10000);
-  };
-
-  process.on('SIGTERM', shutdown);
-  process.on('SIGINT', shutdown);
+let shuttingDown = false;
+function shutdown(signal: NodeJS.Signals): void {
+  if (shuttingDown) return;
+  shuttingDown = true;
+  logger.info({ signal }, 'shutting down');
+  stopScheduler();
+  (server as { closeAllConnections?: () => void }).closeAllConnections?.();
+  server.close(() => process.exit(0));
+  setTimeout(() => process.exit(0), 3000).unref();
 }
 
-main().catch((error) => {
-  startupLog.fatal({ error }, 'Fatal error');
-  process.exit(1);
-});
+process.on('SIGTERM', () => shutdown('SIGTERM'));
+process.on('SIGINT', () => shutdown('SIGINT'));

@@ -1,240 +1,169 @@
-/**
- * Anthropic Claude Provider Extension
- *
- * Claude API integration for AI completions.
- *
- * @module extensions/ai/providers/anthropic
- */
-
-import Anthropic from '@anthropic-ai/sdk';
+import type { AppManifest } from '@janetheoperator/shared';
 import type {
-  AIProvider,
-  AIAppManifest,
-  AppLogger,
-  BaseProvider,
-  CompletionRequest,
-  CompletionResponse,
-  ConnectionTestResult,
-  EmbeddingRequest,
-  EmbeddingResponse,
-  PluginContext,
-} from '@jackthebutler/shared';
-import { withLogContext } from '@jackthebutler/shared';
+  AppConfig,
+  AppModule,
+  GenerationContract,
+  GenerationRequest,
+  GenerationResult,
+} from '@janetheoperator/shared/contracts';
 
 /**
- * Default Claude model
+ * Anthropic (Claude) AI app. Capability: `generation` (covers both
+ * answer-generation and utility calls like language/intent — the pipeline
+ * picks the model per role via the two model fields below).
+ *
+ * `check()` is a minimal `/v1/messages` ping; `generate()` is the real
+ * completion call the AI pipeline uses each turn.
  */
-const DEFAULT_MODEL = 'claude-sonnet-4-6';
 
-/**
- * Anthropic provider configuration
- */
-export interface AnthropicConfig {
+const ANTHROPIC_URL = 'https://api.anthropic.com/v1/messages';
+const ANTHROPIC_VERSION = '2023-06-01';
+const DEFAULT_MAX_TOKENS = 512;
+
+const COMPLETION_MODELS = ['claude-opus-4-7', 'claude-sonnet-4-6'] as const;
+const UTILITY_MODELS = ['claude-haiku-4-5-20251001'] as const;
+
+interface AnthropicConfig extends AppConfig {
   apiKey: string;
-  model?: string;
-  utilityModel?: string;
-  maxTokens?: number;
+  completionModel: string;
+  utilityModel: string;
 }
 
-/**
- * Anthropic Claude provider implementation
- */
-export class AnthropicProvider implements AIProvider, BaseProvider {
-  readonly id = 'anthropic';
-  readonly name = 'claude';
-  private client: Anthropic;
-  private model: string;
-  private utilityModel: string;
-  private maxTokens: number;
-  readonly appLog: AppLogger;
-
-  constructor(config: AnthropicConfig, context: PluginContext) {
-    this.appLog = context.appLog;
-    if (!config.apiKey) {
-      throw new Error('Anthropic provider requires API key');
-    }
-
-    this.client = new Anthropic({ apiKey: config.apiKey });
-    this.model = config.model || DEFAULT_MODEL;
-    this.utilityModel = config.utilityModel || this.model;
-    this.maxTokens = config.maxTokens || 1024;
-  }
-
-  /**
-   * Test connection to Anthropic API
-   */
-  async testConnection(): Promise<ConnectionTestResult> {
-    const startTime = Date.now();
-    try {
-      // Send a minimal request to verify the API key works
-      const response = await this.appLog('connection_test', { model: this.model }, async () => {
-        const result = await this.client.messages.create({
-          model: this.model,
-          max_tokens: 10,
-          messages: [{ role: 'user', content: 'Hi' }],
-        });
-        return withLogContext(result, {
-          inputTokens: result.usage.input_tokens,
-          outputTokens: result.usage.output_tokens,
-        });
-      });
-
-      const latencyMs = Date.now() - startTime;
-
-      return {
-        success: true,
-        message: 'Successfully connected to Anthropic API',
-        details: {
-          model: this.model,
-          responseId: response.id,
-        },
-        latencyMs,
-      };
-    } catch (error) {
-      const latencyMs = Date.now() - startTime;
-      const message = error instanceof Error ? error.message : 'Unknown error';
-
-      return {
-        success: false,
-        message: `Connection failed: ${message}`,
-        latencyMs,
-      };
-    }
-  }
-
-  /**
-   * Generate a completion using Claude
-   */
-  async complete(request: CompletionRequest): Promise<CompletionResponse> {
-    const model = request.modelTier === 'utility' ? this.utilityModel : this.model;
-    const systemMessage = request.messages.find((m) => m.role === 'system');
-    const otherMessages = request.messages.filter((m) => m.role !== 'system');
-
-    const createParams: Anthropic.MessageCreateParamsNonStreaming = {
-      model,
-      max_tokens: request.maxTokens || this.maxTokens,
-      messages: otherMessages.map((m) => ({
-        role: m.role as 'user' | 'assistant',
-        content: m.content,
-      })),
-    };
-
-    if (request.temperature !== undefined) {
-      createParams.temperature = request.temperature;
-    }
-    if (systemMessage?.content) {
-      createParams.system = systemMessage.content;
-    }
-    if (request.stopSequences && request.stopSequences.length > 0) {
-      createParams.stop_sequences = request.stopSequences;
-    }
-
-    const eventType = request.purpose ? `completion.${request.purpose}` : 'completion';
-    const response = await this.appLog(eventType, { model, ...(request.purpose && { purpose: request.purpose }) }, async () => {
-      const result = await this.client.messages.create(createParams);
-      const textBlock = result.content.find((c) => c.type === 'text');
-      const text = textBlock?.type === 'text' ? textBlock.text : '';
-      const onCompleteContext = request.onComplete?.(text) ?? {};
-      return withLogContext(result, {
-        messageId: result.id,
-        inputTokens: result.usage.input_tokens,
-        outputTokens: result.usage.output_tokens,
-        stopReason: result.stop_reason,
-        ...onCompleteContext,
-      });
-    });
-
-    const textContent = response.content.find((c) => c.type === 'text');
-    const content = textContent?.type === 'text' ? textContent.text : '';
-
-    return {
-      content,
-      usage: {
-        inputTokens: response.usage.input_tokens,
-        outputTokens: response.usage.output_tokens,
-      },
-      stopReason: response.stop_reason ?? undefined,
-    };
-  }
-
-  /**
-   * Embeddings are not supported by Anthropic.
-   * Configure OpenAI, Ollama, or Local as the embedding provider.
-   */
-  async embed(_request: EmbeddingRequest): Promise<EmbeddingResponse> {
-    throw new Error(
-      'Anthropic does not support embeddings. Configure OpenAI, Ollama, or Local as your embedding provider.'
-    );
-  }
-}
-
-/**
- * Create an Anthropic provider instance
- */
-export function createAnthropicProvider(config: AnthropicConfig, context: PluginContext): AnthropicProvider {
-  return new AnthropicProvider(config, context);
-}
-
-/**
- * Extension manifest for Anthropic Claude
- */
-export const manifest: AIAppManifest = {
-  id: 'anthropic',
-  name: 'Anthropic Claude',
+const manifest: AppManifest = {
+  id: 'ai-anthropic',
+  name: 'Anthropic (Claude)',
   category: 'ai',
-  version: '1.0.0',
-  description: 'Claude AI models by Anthropic - advanced reasoning and conversation',
-  icon: '🤖',
-  docsUrl: 'https://docs.anthropic.com',
-  configSchema: [
+  description: 'Generates AI replies using Anthropic\'s Claude models. Also handles language detection and translation.',
+  configFields: [
+    { key: 'apiKey', label: 'API key', type: 'password', required: true, secret: true },
     {
-      key: 'apiKey',
-      label: 'API Key',
-      type: 'password',
+      key: 'completionModel',
+      label: 'Model for responses',
+      type: 'select',
       required: true,
-      description: 'Your Anthropic API key',
-      placeholder: 'sk-ant-...',
-    },
-    {
-      key: 'model',
-      label: 'Completion Model',
-      type: 'select',
-      required: false,
-      description: 'Primary model for generating guest responses and conversations',
-      default: DEFAULT_MODEL,
       options: [
-        { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6 (Recommended)' },
-        { value: 'claude-opus-4-6', label: 'Claude Opus 4.6 (Most Capable)' },
-        { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (Fastest)' },
-      ],
-    },
-    {
-      key: 'utilityModel',
-      label: 'Utility Model',
-      type: 'select',
-      required: false,
-      description: 'Smaller model for translation, classification, and search queries. Falls back to completion model if not set.',
-      default: 'claude-haiku-4-5-20251001',
-      options: [
-        { value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5 (Recommended)' },
+        { value: 'claude-opus-4-7', label: 'Claude Opus 4.7' },
         { value: 'claude-sonnet-4-6', label: 'Claude Sonnet 4.6' },
       ],
     },
     {
-      key: 'maxTokens',
-      label: 'Max Tokens',
-      type: 'number',
-      required: false,
-      description: 'Maximum tokens in response',
-      default: 1024,
+      key: 'utilityModel',
+      label: 'Model for utility tasks',
+      type: 'select',
+      required: true,
+      options: [{ value: 'claude-haiku-4-5-20251001', label: 'Claude Haiku 4.5' }],
     },
   ],
-  capabilities: {
-    completion: true,
-    embedding: false,
-    streaming: true,
-  },
-  createProvider: (config, context) => createAnthropicProvider(config as unknown as AnthropicConfig, context),
 };
 
-export default { manifest };
+function str(v: unknown): string {
+  return typeof v === 'string' ? v.trim() : '';
+}
+
+export const aiAnthropicModule: AppModule<AnthropicConfig> = {
+  manifest,
+
+  validate(config: AppConfig) {
+    const errors: Record<string, string> = {};
+    if (!str(config.apiKey)) errors.apiKey = 'API key is required';
+    if (!(COMPLETION_MODELS as readonly string[]).includes(str(config.completionModel))) {
+      errors.completionModel = `Must be one of: ${COMPLETION_MODELS.join(', ')}`;
+    }
+    if (!(UTILITY_MODELS as readonly string[]).includes(str(config.utilityModel))) {
+      errors.utilityModel = `Must be one of: ${UTILITY_MODELS.join(', ')}`;
+    }
+    return Object.keys(errors).length ? { ok: false, errors } : { ok: true };
+  },
+
+  createInstance(config: AnthropicConfig): GenerationContract {
+    return {
+      async check() {
+        return await callAnthropic(config, {
+          messages: [{ role: 'user', content: 'ping' }],
+          maxTokens: 1,
+        })
+          .then(() => ({ ok: true, detail: `Connected (${config.completionModel})` }))
+          .catch((e: Error) => ({ ok: false, detail: e.message }));
+      },
+
+      async generate(request: GenerationRequest): Promise<GenerationResult> {
+        return callAnthropic(config, request);
+      },
+    };
+  },
+};
+
+/**
+ * Single fetch implementation shared by `check` and `generate`. Anthropic
+ * wants the system prompt as a top-level `system` string, separate from
+ * `messages` (which are user / assistant turns), so we split here.
+ * Throws a single-line error on non-2xx — callers map to their own result
+ * shapes.
+ */
+async function callAnthropic(
+  config: AnthropicConfig,
+  request: GenerationRequest,
+): Promise<GenerationResult> {
+  const systemParts: string[] = [];
+  const turns: Array<{ role: 'user' | 'assistant'; content: string }> = [];
+  for (const m of request.messages) {
+    if (m.role === 'system') systemParts.push(m.content);
+    else turns.push({ role: m.role, content: m.content });
+  }
+
+  // Route utility tier (detect / translate) to the cheaper Haiku-class
+  // model the operator picked; everything else (response generation) goes
+  // to the main completion model.
+  const model =
+    request.modelTier === 'utility' ? config.utilityModel : config.completionModel;
+
+  let res: Response;
+  try {
+    res = await fetch(ANTHROPIC_URL, {
+      method: 'POST',
+      headers: {
+        'x-api-key': config.apiKey,
+        'anthropic-version': ANTHROPIC_VERSION,
+        'content-type': 'application/json',
+      },
+      body: JSON.stringify({
+        model,
+        max_tokens: request.maxTokens ?? DEFAULT_MAX_TOKENS,
+        ...(request.temperature !== undefined && { temperature: request.temperature }),
+        ...(systemParts.length > 0 && { system: systemParts.join('\n\n') }),
+        messages: turns,
+      }),
+    });
+  } catch (e) {
+    throw new Error(e instanceof Error ? e.message : 'connection failed');
+  }
+
+  if (!res.ok) {
+    let detail = `HTTP ${res.status}`;
+    try {
+      const body = (await res.json()) as { error?: { message?: string } };
+      if (body?.error?.message) detail = body.error.message;
+    } catch {
+      /* keep status-line detail */
+    }
+    throw new Error(detail);
+  }
+
+  const body = (await res.json()) as {
+    content: Array<{ type: string; text?: string }>;
+    usage?: { input_tokens?: number; output_tokens?: number };
+  };
+  const text = body.content
+    .filter((b) => b.type === 'text' && typeof b.text === 'string')
+    .map((b) => b.text!)
+    .join('');
+  return {
+    content: text,
+    usage: body.usage
+      ? {
+          inputTokens: body.usage.input_tokens ?? 0,
+          outputTokens: body.usage.output_tokens ?? 0,
+        }
+      : undefined,
+  };
+}

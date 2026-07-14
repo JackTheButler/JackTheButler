@@ -1,34 +1,24 @@
 ---
-import Layout from '../layouts/Layout.astro'
-import Hero from '../components/Hero.astro'
-import Partners from '../components/Partners.astro'
-import Stats from '../components/Stats.astro'
-import Problem from '../components/Problem.astro'
-import ConversationPreview from '../components/ConversationPreview.astro'
-import HowItWorks from '../components/HowItWorks.astro'
-import Features from '../components/Features.astro'
-import Testimonials from '../components/Testimonials.astro'
-import WhySelfHosted from '../components/WhySelfHosted.astro'
-import DeployOptions from '../components/DeployOptions.astro'
-import FAQ from '../components/FAQ.astro'
-import Footer from '../components/Footer.astro'
+import BaseLayout from '../layouts/BaseLayout.astro';
+import Hero from '../components/Hero.astro';
+import StatsBand from '../components/StatsBand.astro';
+import Features from '../components/Features.astro';
+import SavingsCalculator from '../components/SavingsCalculator.astro';
+import HowItWorks from '../components/HowItWorks.astro';
+import Testimonials from '../components/Testimonials.astro';
+import Pricing from '../components/Pricing.astro';
+import FAQ from '../components/FAQ.astro';
+import CTA from '../components/CTA.astro';
 ---
 
-<Layout showIntro>
-  <main>
-    <Hero />
-    <Partners />
-    <Stats />
-    <Problem />
-    <ConversationPreview />
-    <HowItWorks />
-    <Features />
-    <Testimonials />
-    <WhySelfHosted />
-    <DeployOptions />
-    <FAQ />
-    <Footer />
-  </main>
-  <button data-butler-chat style="display:none">Chat</button>
-  <script is:inline src="https://demo.jackthebutler.com/widget.js" data-butler-key="wc_b50c560669b54cdcd5fa0d1ad70dcd8f"></script>
-</Layout>
+<BaseLayout>
+  <Hero />
+  <StatsBand />
+  <Features />
+  <SavingsCalculator />
+  <Pricing />
+  <HowItWorks />
+  <Testimonials />
+  <FAQ />
+  <CTA />
+</BaseLayout>

@@ -1,18 +1,8 @@
-/**
- * Drizzle Kit Configuration
- *
- * Used for generating and running database migrations.
- */
-
 import { defineConfig } from 'drizzle-kit';
 
 export default defineConfig({
-  schema: './src/db/schema.ts',
-  out: './migrations',
+  schema: './src/db/schema/index.ts',
+  out: './drizzle',
   dialect: 'sqlite',
-  dbCredentials: {
-    url: process.env.DATABASE_PATH || './data/jack.db',
-  },
-  verbose: true,
-  strict: true,
+  dbCredentials: { url: process.env.DB_PATH ?? 'data/app.db' },
 });

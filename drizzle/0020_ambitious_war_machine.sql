@@ -1,0 +1,1 @@
+ALTER TABLE `staff` ADD `last_seen_at` integer;

@@ -1,0 +1,1 @@
+ALTER TABLE `app_configs` ADD `last_error` text;

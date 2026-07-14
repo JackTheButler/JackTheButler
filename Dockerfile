@@ -1,130 +1,51 @@
-# Jack The Butler - Production Dockerfile
-# Build: docker build -t jack .
-# Run: docker run -d -p 3000:3000 -v jack-data:/app/data jack
+# Single-service image: one process serves the API + dashboard SPA + widget.
+# Multi-stage: build everything, then a slim runtime.
 
-# ===================
-# Base: install all deps (shared by both builders)
-# ===================
-FROM node:22-slim AS base
-
+# ---- build ----
+FROM node:22-bookworm-slim AS build
 WORKDIR /app
 
-# Install build dependencies for better-sqlite3 and native modules
-RUN apt-get update && apt-get install -y python3 make g++ && rm -rf /var/lib/apt/lists/*
+# Toolchain for better-sqlite3's native build.
+RUN apt-get update && apt-get install -y --no-install-recommends python3 make g++ \
+  && rm -rf /var/lib/apt/lists/*
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
+RUN corepack enable
 
-# Copy workspace manifests for dependency install
-# packages/ is copied whole so new plugins don't require Dockerfile changes
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
+# Install with the lockfile (better-sqlite3 builds via onlyBuiltDependencies).
+COPY pnpm-lock.yaml pnpm-workspace.yaml package.json ./
 COPY packages ./packages
-COPY apps/dashboard/package.json ./apps/dashboard/
-COPY apps/webchat/package.json ./apps/webchat/
+COPY apps ./apps
+RUN pnpm install --frozen-lockfile
 
-# Install all dependencies
-RUN pnpm install --frozen-lockfile && npm rebuild better-sqlite3
+COPY . .
 
-# ===================
-# Shared: build @jack/shared (required by backend, plugins, and dashboard)
-# ===================
-FROM base AS shared-builder
+# Build packages + API, then the widget bundle, then the dashboard SPA.
+RUN pnpm build:all
 
-RUN pnpm --filter @jack/shared build
-
-# ===================
-# Backend: plugins + TypeScript (runs in parallel with frontend-builder)
-# ===================
-FROM shared-builder AS backend-builder
-
-ARG VERSION=dev
-
-COPY tsconfig.json ./
-COPY src ./src
-COPY migrations ./migrations
-
-# Build all plugin packages
-RUN pnpm --filter '@jack-plugins/*' build
-
-# Build backend TypeScript
-RUN pnpm build
-
-# ===================
-# Frontend: dashboard + webchat (runs in parallel with backend-builder)
-# ===================
-FROM shared-builder AS frontend-builder
-
-COPY apps/dashboard ./apps/dashboard
-COPY apps/webchat ./apps/webchat
-
-# Build dashboard
-RUN pnpm --filter @jack/dashboard build
-
-# Build webchat widget
-RUN pnpm --filter @jack/webchat build
-
-# ===================
-# Production Stage
-# ===================
-FROM node:22-slim
-
-ARG VERSION=dev
-
+# ---- runtime ----
+FROM node:22-bookworm-slim AS runtime
 WORKDIR /app
-
-# Install runtime deps (procps for health check)
-RUN apt-get update && apt-get install -y procps && rm -rf /var/lib/apt/lists/*
-
-# Install pnpm for production deps
-RUN corepack enable && corepack prepare pnpm@10.28.2 --activate
-
-# Copy workspace manifests — packages/ from backend-builder includes package.json + built dist/
-COPY package.json pnpm-lock.yaml* pnpm-workspace.yaml* ./
-COPY --from=backend-builder /app/packages ./packages
-COPY apps/dashboard/package.json ./apps/dashboard/
-COPY apps/webchat/package.json ./apps/webchat/
-
-# Install production dependencies only
-# --ignore-scripts prevents prepare scripts from running tsc (devDeps not available in prod)
-RUN pnpm install --prod --frozen-lockfile --ignore-scripts
-
-# Copy pre-built better-sqlite3 native binary from base (same platform, already compiled)
-COPY --from=base /app/node_modules/better-sqlite3/build ./node_modules/better-sqlite3/build
-
-# Copy @jack workspace packages from builder (workspace symlinks are not reliable in prod stage)
-COPY --from=backend-builder /app/node_modules/@jack ./node_modules/@jack
-
-# Copy built backend
-COPY --from=backend-builder /app/dist ./dist
-
-# Copy migrations folder
-COPY --from=backend-builder /app/migrations ./migrations
-
-# Copy built dashboard
-COPY --from=frontend-builder /app/apps/dashboard/dist ./dashboard
-
-# Copy built webchat widget
-COPY --from=frontend-builder /app/apps/webchat/dist ./widget
-
-# Create data directory
-RUN mkdir -p /app/data
-
-# Data volume for SQLite database
-VOLUME /app/data
-
-# Environment defaults
-ENV APP_VERSION=$VERSION
 ENV NODE_ENV=production
-ENV PORT=3000
-ENV DATABASE_PATH=/app/data/jack.db
-ENV LOG_LEVEL=info
+ENV DB_PATH=/data/app.db
 
-# Expose port
+# Only what the server needs at runtime.
+COPY --from=build /app/node_modules ./node_modules
+# Workspace packages: node_modules/@janetheoperator/* are pnpm symlinks into
+# packages/ — the targets must exist or Node throws ERR_MODULE_NOT_FOUND
+# (e.g. @janetheoperator/channel-webchat from the apps registry).
+COPY --from=build /app/packages ./packages
+COPY --from=build /app/package.json ./package.json
+COPY --from=build /app/dist ./dist
+COPY --from=build /app/drizzle ./drizzle
+COPY --from=build /app/apps/widget/dist ./apps/widget/dist
+COPY --from=build /app/apps/widget/loader.js ./apps/widget/loader.js
+COPY --from=build /app/apps/dashboard/dist ./apps/dashboard/dist
+
+# SQLite lives at DB_PATH (/data/app.db). Persistence comes from the mounted
+# volume — a Railway Volume mounted at /data (or the compose volume locally).
+# No Docker VOLUME directive: Railway rejects it.
+RUN mkdir -p /data
 EXPOSE 3000
 
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD pgrep -x node || exit 1
-
-# Run the application
+# Migrations run on startup (src/index.ts → runMigrations()).
 CMD ["node", "dist/index.js"]

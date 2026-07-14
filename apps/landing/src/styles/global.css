@@ -1,174 +1,195 @@
-@import "tailwindcss";
-@plugin "@tailwindcss/typography";
+@import 'tailwindcss';
 
+/* `dark:` utilities respond to a .dark class on <html> (manual toggle),
+   not just the OS setting. */
 @custom-variant dark (&:where(.dark, .dark *));
 
-/* Page blur-to-sharp on load */
-@keyframes blurToSharp {
-  from {
-    opacity: 0;
-    filter: blur(10px);
-  }
-  to {
-    opacity: 1;
-    filter: blur(0);
-  }
+/* Theme tokens mirrored from the dashboard (apps/dashboard/src/index.css).
+   `inline` keeps the utilities pointing at the CSS vars below so they can
+   be swapped at runtime for dark mode. */
+@theme inline {
+  --color-surface: var(--c-surface);
+  --color-panel: var(--c-panel);
+  --color-ink: var(--c-ink);
+  --color-muted: var(--c-muted);
+  --color-line: var(--c-line);
+  --color-accent: var(--c-accent);
+  --color-accent-soft: var(--c-accent-soft);
+  --color-on-accent: var(--c-on-accent);
+  --color-staff: var(--c-staff);
+  --color-staff-soft: var(--c-staff-soft);
+  /* Restrained warm accent for focal points; same in both themes. */
+  --color-brand: #b0623f;
+  --color-brand-soft: #f1e6df;
 }
 
-.animate-fadeIn {
-  animation: blurToSharp 0.4s ease-out forwards;
+:root {
+  --c-surface: #faf9f5;
+  --c-panel: #ffffff;
+  --c-ink: #1f1e1d;
+  --c-muted: #6b6862;
+  --c-line: #e8e5dd;
+  --c-accent: #1f1e1d;
+  --c-accent-soft: #eceae4;
+  --c-on-accent: #ffffff;
+  --c-staff: #3b4252;
+  --c-staff-soft: #e6e8ec;
+  /* Hero backdrop, warm light ramp fading into the surface. */
+  --hero-gradient: linear-gradient(
+    115deg,
+    #4a2f23 0%,
+    #8a4f3a 28%,
+    #b06a4a 52%,
+    #cf9a68 70%,
+    #ead9c2 100%
+  );
+  color-scheme: light;
 }
 
-/* Theme transition animation */
+.dark {
+  --c-surface: #1a1917;
+  --c-panel: #23221e;
+  --c-ink: #eceae4;
+  --c-muted: #9c988e;
+  --c-line: #38362f;
+  --c-accent: #e8e6df;
+  --c-accent-soft: #3c3a34;
+  --c-on-accent: #1a1917;
+  --c-staff: #7c869c;
+  --c-staff-soft: #2c303a;
+  /* Darker, warmer ramp that fades into the dark surface. */
+  --hero-gradient: linear-gradient(
+    115deg,
+    #1f130d 0%,
+    #4a2c1f 28%,
+    #6b4231 52%,
+    #5a3a2c 70%,
+    #1a1917 100%
+  );
+  color-scheme: dark;
+}
+
+.hero-bg {
+  background: var(--hero-gradient);
+}
+
+/* Theme-change circular reveal (View Transitions API). Disable the default
+   cross-fade; the new theme is clipped open from the toggle button by the
+   animation in ThemeToggle.astro. */
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
   mix-blend-mode: normal;
 }
-
 ::view-transition-old(root) {
   z-index: 1;
 }
-
 ::view-transition-new(root) {
   z-index: 9999;
-  animation: reveal 0.5s ease-out;
 }
 
-@keyframes reveal {
-  from {
-    clip-path: circle(0px at var(--x) var(--y));
+/* Top scroll-progress bar */
+#scroll-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  height: 3px;
+  width: 0;
+  z-index: 60;
+  background: var(--color-brand);
+  transition: width 0.1s linear;
+}
+
+/* CTA sheen sweep */
+@keyframes sheen-sweep {
+  0% {
+    transform: translateX(-120%) skewX(-20deg);
   }
-  to {
-    clip-path: circle(var(--r) at var(--x) var(--y));
+  60%,
+  100% {
+    transform: translateX(320%) skewX(-20deg);
+  }
+}
+.sheen {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+}
+.sheen::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: 35%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgb(255 255 255 / 0.12),
+    transparent
+  );
+  transform: translateX(-120%) skewX(-20deg);
+  animation: sheen-sweep 6s ease-in-out infinite;
+  pointer-events: none;
+}
+@media (prefers-reduced-motion: reduce) {
+  .sheen::after {
+    animation: none;
+    display: none;
   }
 }
 
-/* Hide scrollbar */
-.scrollbar-hide {
-  -ms-overflow-style: none;
-  scrollbar-width: none;
-}
-
-.scrollbar-hide::-webkit-scrollbar {
-  display: none;
-}
-
-/* Scroll animations */
-.animate-on-scroll {
-  opacity: 0;
-  transform: translateY(30px);
-  transition: opacity 0.6s ease-out, transform 0.6s ease-out;
-}
-
-.animate-on-scroll.is-visible {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Staggered children */
-.stagger-children > * {
-  opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
-}
-
-.stagger-children.is-visible > *:nth-child(1) { transition-delay: 0ms; }
-.stagger-children.is-visible > *:nth-child(2) { transition-delay: 100ms; }
-.stagger-children.is-visible > *:nth-child(3) { transition-delay: 200ms; }
-.stagger-children.is-visible > *:nth-child(4) { transition-delay: 300ms; }
-.stagger-children.is-visible > *:nth-child(5) { transition-delay: 400ms; }
-.stagger-children.is-visible > *:nth-child(6) { transition-delay: 500ms; }
-
-.stagger-children.is-visible > * {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-/* Hero entrance animation */
-.hero-animate {
-  opacity: 0;
-  transform: translateY(20px);
-}
-
-.hero-animate.is-loaded {
-  animation: heroFadeIn 0.6s ease-out forwards;
-}
-
-.hero-animate.delay-1 { animation-delay: 0ms; }
-.hero-animate.delay-2 { animation-delay: 150ms; }
-.hero-animate.delay-3 { animation-delay: 300ms; }
-.hero-animate.delay-4 { animation-delay: 450ms; }
-
-@keyframes heroFadeIn {
-  to {
+/* Scroll-reveal: hidden only when JS is present (no-JS keeps content visible)
+   and motion is allowed. The .is-visible class is added by an observer. */
+@media (prefers-reduced-motion: no-preference) {
+  .js [data-reveal] {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.7s ease,
+      transform 0.7s ease;
+  }
+  .js [data-reveal].is-visible {
     opacity: 1;
-    transform: translateY(0);
+    transform: none;
+  }
+  /* Stagger children when the parent opts in */
+  .js [data-reveal-stagger] > * {
+    opacity: 0;
+    transform: translateY(20px);
+    transition:
+      opacity 0.6s ease,
+      transform 0.6s ease;
+  }
+  .js [data-reveal-stagger].is-visible > * {
+    opacity: 1;
+    transform: none;
+  }
+  .js [data-reveal-stagger].is-visible > *:nth-child(2) {
+    transition-delay: 0.08s;
+  }
+  .js [data-reveal-stagger].is-visible > *:nth-child(3) {
+    transition-delay: 0.16s;
+  }
+  .js [data-reveal-stagger].is-visible > *:nth-child(4) {
+    transition-delay: 0.24s;
   }
 }
 
-/* Scale in animation */
-.scale-in {
-  opacity: 0;
-  transform: scale(0.95);
-  transition: opacity 0.5s ease-out, transform 0.5s ease-out;
+/* Shared card affordance: soft lift on hover. */
+.card-hover {
+  transition:
+    box-shadow 0.25s ease,
+    transform 0.25s ease;
 }
-
-.scale-in.is-visible {
-  opacity: 1;
-  transform: scale(1);
+.card-hover:hover {
+  transform: translateY(-4px);
+  box-shadow:
+    0 12px 32px -12px rgb(31 30 29 / 0.18),
+    0 0 0 1px rgb(31 30 29 / 0.04);
 }
-
-/* Docs code blocks */
-.prose pre {
-  background-color: #e5e5e5;
-  color: #171717;
-  border: 1px solid #d4d4d4;
-}
-
-.dark .prose pre {
-  background-color: #171717;
-  color: #f5f5f5;
-  border: 1px solid #262626;
-}
-
-/* Pagefind search highlight */
-mark.pagefind-highlight {
-  background-color: #fef08a;
-  color: inherit;
-  padding: 0.125rem 0.0625rem;
-  border-radius: 0.125rem;
-  scroll-margin-top: 6rem;
-}
-
-.dark mark.pagefind-highlight {
-  background-color: #854d0e;
-  color: #fef9c3;
-}
-
-/* Breathing glow animation */
-@keyframes glowPulse {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.25), 0 0 30px rgba(59, 130, 246, 0.1);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.4), 0 0 50px rgba(59, 130, 246, 0.2);
-  }
-}
-
-.animate-glow-pulse {
-  animation: glowPulse 3s ease-in-out infinite;
-}
-
-.dark .animate-glow-pulse {
-  animation: glowPulseDark 3s ease-in-out infinite;
-}
-
-@keyframes glowPulseDark {
-  0%, 100% {
-    box-shadow: 0 0 15px rgba(59, 130, 246, 0.3), 0 0 30px rgba(59, 130, 246, 0.15);
-  }
-  50% {
-    box-shadow: 0 0 25px rgba(59, 130, 246, 0.5), 0 0 50px rgba(59, 130, 246, 0.25);
-  }
+.dark .card-hover:hover {
+  box-shadow:
+    0 12px 32px -12px rgb(0 0 0 / 0.55),
+    0 0 0 1px rgb(255 255 255 / 0.06);
 }

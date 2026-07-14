@@ -1,0 +1,400 @@
+import { useEffect, useState } from 'react';
+import {
+  ChatWidget,
+  type WidgetMessage,
+  type WidgetTheme,
+} from '@janetheoperator/widget-ui';
+import { PageShell } from '@/components/PageShell';
+import { PageHeader } from '@/components/PageHeader';
+import { Loading } from '@/components/Loading';
+import {
+  Avatar,
+  Badge,
+  Button,
+  Card,
+  ColorInput,
+  Field,
+  Input,
+  SaveButton,
+  Select,
+  SelectItem,
+  Switch,
+  Textarea,
+  cn,
+  toast,
+  Alert,
+} from '@/components/ui';
+import { ApiError } from '@/lib/api';
+import { useApp, useSaveAppConfig, useSetAppEnabled } from './useApps';
+import { iconFor } from './icon';
+
+/** Real webchat config — load/save/enable via the apps API (replaces the
+ *  slice-1 local mock and the curl steps). */
+
+const CANNED: WidgetMessage[] = [
+  { id: '1', author: 'customer', content: 'Hi, do you offer annual billing?' },
+  { id: '2', author: 'ai', content: 'Yes, annual billing saves 20% vs monthly.' },
+];
+
+const DEFAULTS = {
+  title: 'Support',
+  welcomeMessage: 'Hi 👋 How can we help?',
+  accentColor: '#4f46e5',
+  position: 'bottom-right',
+  allowedDomains: '',
+};
+
+type Form = typeof DEFAULTS;
+
+/** Inline `<code>` chip styled for use inside the dark Theme help cards
+ *  below. Same dark surface + soft text the surrounding console uses,
+ *  so it stays legible against the dark background. */
+function ConsoleInline({ children }: { children: React.ReactNode }) {
+  return (
+    <code className="rounded bg-white/5 px-1 font-mono text-[10.5px] text-zinc-200">
+      {children}
+    </code>
+  );
+}
+
+/** A single dark "console" card for the Theme help block. Header (with a
+ *  language badge) + the snippet line + a hint footer separated by hair
+ *  rules — reads like a docs example. */
+function ConsoleSnippet({
+  title,
+  lang,
+  code,
+  children,
+}: {
+  title: string;
+  lang: string;
+  code: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="overflow-hidden rounded-xl bg-[#0d1017] ring-1 ring-white/10">
+      <div className="flex items-center justify-between border-b border-white/5 px-3.5 py-2">
+        <p className="text-xs font-medium text-zinc-200">{title}</p>
+        <span className="rounded bg-white/5 px-1.5 py-0.5 font-mono text-[10px] font-medium uppercase tracking-wider text-zinc-400">
+          {lang}
+        </span>
+      </div>
+      <pre className="overflow-x-auto px-3.5 py-3 font-mono text-[12px] leading-relaxed text-zinc-100">
+        {code}
+      </pre>
+      <div className="border-t border-white/5 px-3.5 py-2 text-[11px] text-zinc-400">
+        {children}
+      </div>
+    </div>
+  );
+}
+
+export function WebchatConfigPanel() {
+  const { data: detail, isLoading } = useApp('webchat');
+  const saveConfig = useSaveAppConfig('webchat');
+  const setEnabled = useSetAppEnabled('webchat');
+
+  const [form, setForm] = useState<Form | null>(null);
+  const [previewTheme, setPreviewTheme] = useState<WidgetTheme>('light');
+  const [previewDevice, setPreviewDevice] = useState<'desktop' | 'mobile'>('desktop');
+  const [open, setOpen] = useState(true);
+  const [messages, setMessages] = useState<WidgetMessage[]>(CANNED);
+  const [copied, setCopied] = useState(false);
+
+  // Initialise the form from server config once it arrives.
+  useEffect(() => {
+    if (detail && !form) {
+      const c = detail.config as Partial<Form>;
+      setForm({ ...DEFAULTS, ...c });
+    }
+  }, [detail, form]);
+
+  const set = <K extends keyof Form>(k: K, v: Form[K]) =>
+    setForm((f) => (f ? { ...f, [k]: v } : f));
+
+  const snippet = `<script src="${window.location.origin}/widget.js" data-jane-widget defer></script>`;
+  const copy = async () => {
+    await navigator.clipboard.writeText(snippet);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 1500);
+  };
+
+  if (isLoading || !form || !detail) {
+    return (
+      <PageShell>
+        <Loading />
+      </PageShell>
+    );
+  }
+
+  const live = detail.status === 'active';
+  const statusLabel = live
+    ? 'Active'
+    : detail.status === 'error'
+      ? 'Invalid'
+      : detail.status === 'disabled'
+        ? 'Off'
+        : 'Not configured';
+  const statusTone: 'primary' | 'accent' | 'muted' = live
+    ? 'primary'
+    : detail.status === 'disabled'
+      ? 'accent'
+      : 'muted';
+  const statusErrorTone = detail.status === 'error';
+  // The toggle only means something once config is saved + valid.
+  const configured = detail.status === 'active' || detail.status === 'disabled';
+  const statusDetail = !detail.enabled
+    ? 'Turn on to go live on your allowed domains.'
+    : live
+      ? 'Your widget is live on allowed domains.'
+      : detail.status === 'error'
+        ? 'Fix the highlighted fields and save to go live.'
+        : 'Save valid settings to go live.';
+
+  return (
+    <PageShell>
+      <div className="space-y-6 p-6">
+        <PageHeader
+          title="WebChat"
+          subtitle="Configure the chat widget customers use on your website."
+          icon={
+            <Avatar
+              size="md"
+              shape="square"
+              tone={live ? 'solid' : 'muted'}
+              icon={
+                iconFor('webchat') ? (
+                  <img
+                    src={iconFor('webchat')}
+                    alt=""
+                    className={cn(
+                      'h-5 w-5 object-contain',
+                      live ? 'invert dark:invert-0' : 'dark:invert',
+                    )}
+                  />
+                ) : undefined
+              }
+              name={iconFor('webchat') ? undefined : 'WebChat'}
+            />
+          }
+        />
+
+        <Card title="Status">
+          <div className="flex flex-wrap items-center justify-between gap-3">
+            <p className="flex min-w-0 flex-wrap items-center gap-2 text-sm text-muted">
+              <Badge
+                tone={statusTone}
+                className={statusErrorTone ? 'text-red-600' : undefined}
+              >
+                {statusLabel}
+              </Badge>
+              <span className="min-w-0 break-words">{statusDetail}</span>
+            </p>
+            <label className="flex shrink-0 items-center gap-2 text-sm">
+              <span className="text-muted">
+                {!configured ? 'Configure first' : detail.enabled ? 'Enabled' : 'Disabled'}
+              </span>
+              <Switch
+                checked={detail.enabled}
+                disabled={!configured}
+                aria-label="Enable WebChat"
+                onCheckedChange={(v) =>
+                  setEnabled.mutate(v, {
+                    onSuccess: () =>
+                      toast.success(v ? 'WebChat enabled' : 'WebChat disabled'),
+                    onError: () => toast.error('Could not change status'),
+                  })
+                }
+              />
+            </label>
+          </div>
+        </Card>
+
+        <div className="grid gap-6 lg:grid-cols-2">
+          <div className="min-w-0 space-y-6">
+          <Card title="Widget settings">
+            <Field label="Title">
+              <Input value={form.title} onChange={(e) => set('title', e.target.value)} />
+            </Field>
+            <Field label="Welcome message">
+              <Textarea
+                rows={2}
+                value={form.welcomeMessage}
+                onChange={(e) => set('welcomeMessage', e.target.value)}
+              />
+            </Field>
+            <div className="grid gap-4 sm:grid-cols-2">
+              <Field label="Accent color">
+                <ColorInput value={form.accentColor} onChange={(v) => set('accentColor', v)} />
+              </Field>
+              <Field label="Position">
+                <Select
+                  value={form.position}
+                  onValueChange={(v) => set('position', v)}
+                >
+                  <SelectItem value="bottom-right">Bottom right</SelectItem>
+                  <SelectItem value="bottom-left">Bottom left</SelectItem>
+                </Select>
+              </Field>
+            </div>
+            <Field
+              label="Allowed domains"
+              hint="Comma/newline separated. Domain, host:port, or full URL (scheme/port ignored), e.g. localhost, example.com."
+            >
+              <Textarea
+                rows={3}
+                value={form.allowedDomains}
+                onChange={(e) => set('allowedDomains', e.target.value)}
+              />
+            </Field>
+            {saveConfig.isError &&
+              (() => {
+                const err = saveConfig.error;
+                const details =
+                  err instanceof ApiError && err.details && typeof err.details === 'object'
+                    ? (err.details as Record<string, string>)
+                    : null;
+                return (
+                  <Alert variant="error">
+                    {details ? (
+                      <ul className="space-y-1">
+                        {Object.entries(details).map(([field, msg]) => (
+                          <li key={field}>
+                            <span className="font-semibold">{field}:</span> {msg}
+                          </li>
+                        ))}
+                      </ul>
+                    ) : (
+                      'Could not save. Please check the fields.'
+                    )}
+                  </Alert>
+                );
+              })()}
+            <div className="flex items-center justify-end gap-3">
+              <SaveButton
+                size="md"
+                isPending={saveConfig.isPending}
+                isSuccess={saveConfig.isSuccess}
+                onSave={() =>
+                  saveConfig.mutate(form, {
+                    onSuccess: () => toast.success('WebChat settings saved'),
+                    onError: () =>
+                      toast.error('Could not save. Check the highlighted fields.'),
+                  })
+                }
+              />
+            </div>
+          </Card>
+
+          <Card title="Install">
+            <p className="text-sm text-muted">
+              Add the chat to your site by pasting this snippet just before the closing{' '}
+              <code className="rounded bg-surface px-1 text-ink">&lt;/body&gt;</code> tag on
+              every page where you want the chat to appear. A small launcher will show in
+              the bottom corner, and visitors click it to open the chat.
+            </p>
+            <pre className="overflow-x-auto rounded-lg border border-line bg-surface p-3 text-xs">
+              {snippet}
+            </pre>
+            <div className="flex justify-end">
+              <Button size="md" onClick={copy}>
+                {copied ? 'Copied' : 'Copy snippet'}
+              </Button>
+            </div>
+            {/* Theming reference. Two ways to override the default
+                (which is to follow the visitor's system setting) — each
+                shown as a labelled block with a copy-shaped code line,
+                so the page scans like documentation rather than prose. */}
+            <div className="space-y-3 border-t border-line pt-4">
+              <div>
+                <h4 className="text-sm font-medium text-ink">Theme (optional)</h4>
+                <p className="mt-1 text-sm text-muted">
+                  The chat picks up each visitor’s light/dark preference from their browser
+                  automatically, with no setup needed. Override it only if you want one fixed
+                  look or to sync with a light/dark toggle you already have on your site.
+                </p>
+              </div>
+
+              <div className="space-y-3">
+                <ConsoleSnippet
+                  title="Force a theme (script tag)"
+                  lang="HTML"
+                  code={'data-jane-theme="dark"'}
+                >
+                  Use <ConsoleInline>"dark"</ConsoleInline>,{' '}
+                  <ConsoleInline>"light"</ConsoleInline>, or{' '}
+                  <ConsoleInline>"auto"</ConsoleInline>.
+                </ConsoleSnippet>
+
+                <ConsoleSnippet
+                  title="Sync with your theme switcher"
+                  lang="JS"
+                  code={"JaneWidget.setTheme('dark')"}
+                >
+                  Pass <ConsoleInline>'light'</ConsoleInline>,{' '}
+                  <ConsoleInline>'dark'</ConsoleInline>, or{' '}
+                  <ConsoleInline>'auto'</ConsoleInline> (revert to system).
+                </ConsoleSnippet>
+              </div>
+            </div>
+          </Card>
+          </div>
+
+          <Card title="Live preview" className="min-w-0">
+              <div className="grid gap-3 sm:grid-cols-2">
+                <Field label="Preview theme">
+                  <Select
+                    value={previewTheme}
+                    onValueChange={(v) => setPreviewTheme(v as WidgetTheme)}
+                  >
+                    <SelectItem value="light">Light</SelectItem>
+                    <SelectItem value="dark">Dark</SelectItem>
+                  </Select>
+                </Field>
+                <Field label="Preview device">
+                  <Select
+                    value={previewDevice}
+                    onValueChange={(v) => setPreviewDevice(v as 'desktop' | 'mobile')}
+                  >
+                    <SelectItem value="desktop">Desktop</SelectItem>
+                    <SelectItem value="mobile">Mobile (fullscreen)</SelectItem>
+                  </Select>
+                </Field>
+              </div>
+              <div
+                className="relative mx-auto h-[620px] overflow-hidden rounded-xl border border-line"
+                style={{
+                  background: previewTheme === 'dark' ? '#0c0d0f' : '#fafafa',
+                  // Mobile preview narrows the frame so the fullscreen panel
+                  // looks phone-shaped; desktop fills the column.
+                  width: previewDevice === 'mobile' ? 360 : '100%',
+                  maxWidth: '100%',
+                }}
+              >
+                <ChatWidget
+                  inline
+                  mobile={previewDevice === 'mobile'}
+                  theme={previewTheme}
+                  config={{
+                    title: form.title,
+                    welcomeMessage: form.welcomeMessage,
+                    accentColor: form.accentColor,
+                    position: form.position as 'bottom-right' | 'bottom-left',
+                  }}
+                  messages={messages}
+                  open={open}
+                  onToggle={() => setOpen((o) => !o)}
+                  onSend={(text) =>
+                    setMessages((m) => [
+                      ...m,
+                      { id: String(Date.now()), author: 'customer', content: text },
+                    ])
+                  }
+                />
+              </div>
+            </Card>
+        </div>
+      </div>
+    </PageShell>
+  );
+}

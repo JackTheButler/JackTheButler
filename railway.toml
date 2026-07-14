@@ -1,9 +1,13 @@
+# Railway deploy config. The Dockerfile builds API + dashboard + widget into
+# one image; migrations run on boot. SQLite needs a persistent Volume.
+
 [build]
 builder = "DOCKERFILE"
 dockerfilePath = "Dockerfile"
 
 [deploy]
-healthcheckPath = "/health/live"
-healthcheckTimeout = 30
+healthcheckPath = "/health"
+healthcheckTimeout = 120
 restartPolicyType = "ON_FAILURE"
-restartPolicyMaxRetries = 3
+# SQLite is local to one instance — do NOT scale horizontally.
+numReplicas = 1

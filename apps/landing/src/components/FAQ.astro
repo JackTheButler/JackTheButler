@@ -1,47 +1,60 @@
 ---
-// FAQ section
-import { ChevronDown } from '@lucide/astro'
+import { Plus } from '@lucide/astro';
+import SectionHeading from './SectionHeading.astro';
 
 const faqs = [
   {
-    question: 'How much does it cost?',
-    answer: 'Jack is free and open source. You only pay for your server (Railway free tier works) and AI API usage (typically $5-20/month for a small hotel).'
+    q: 'What counts as a resolution?',
+    a: 'A resolution is one conversation Jane closes without human help. If a conversation is escalated to your team, it is never charged.',
   },
   {
-    question: 'What AI providers are supported?',
-    answer: 'Claude (Anthropic), GPT (OpenAI), Ollama for local models, and built-in local AI using Transformers.js. Mix and match as needed.'
+    q: 'How long does it take to go live?',
+    a: 'Most teams are live the same day. Paste one snippet on your site, point Jane at your help docs, and it starts answering.',
   },
   {
-    question: 'Can I run it without cloud AI?',
-    answer: 'Yes! Jack includes local AI models that run entirely on your server. No external API calls required for basic functionality.'
+    q: 'What happens when Jane can’t answer?',
+    a: 'Jane escalates to your team with the full transcript and a summary attached, routed to the right place. The customer never repeats themselves.',
   },
   {
-    question: 'How do I connect WhatsApp?',
-    answer: 'Through WhatsApp Business API (Meta). The setup wizard guides you through the process. SMS works via Twilio, email via any SMTP.'
+    q: 'Which channels are supported?',
+    a: 'Webchat out of the box, plus messaging and email channels like WhatsApp, Telegram, Messenger and more.',
   },
   {
-    question: 'Is my data secure?',
-    answer: 'Your data stays on your server. We never see it. All credentials are encrypted at rest. You control backups and access.'
-  }
-]
+    q: 'Do I need a credit card to start?',
+    a: 'No. The free tier includes 10 resolutions per month so you can try Jane on a real site before paying anything.',
+  },
+];
 ---
 
-<section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
-  <div class="max-w-3xl mx-auto">
-    <h2 class="animate-on-scroll text-3xl sm:text-4xl font-bold text-center mb-16">
-      Frequently asked questions
-    </h2>
+<section id="faq" class="border-t border-line bg-panel">
+  <div class="mx-auto max-w-3xl px-6 py-24">
+    <SectionHeading
+      eyebrow="FAQ"
+      title="Questions, answered"
+      subtitle="The things teams ask before rolling Jane out."
+    />
 
-    <div class="stagger-children space-y-4">
-      {faqs.map((faq) => (
-        <details class="group p-6 rounded-2xl bg-white dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800">
-          <summary class="flex items-center justify-between cursor-pointer list-none">
-            <h3 class="text-lg font-semibold pr-4">{faq.question}</h3>
-            <ChevronDown class="w-5 h-5 text-neutral-500 dark:text-neutral-400 group-open:rotate-180 transition-transform" />
-          </summary>
-          <p class="mt-4 text-neutral-600 dark:text-neutral-400">{faq.answer}</p>
-        </details>
-      ))}
+    <div class="mt-12 divide-y divide-line border-y border-line" data-reveal>
+      {
+        faqs.map((item) => (
+          <details class="faq group">
+            <summary class="flex cursor-pointer list-none items-center justify-between gap-4 py-5 text-left font-medium text-ink">
+              {item.q}
+              <Plus class="faq-icon size-5 shrink-0 text-brand transition-transform" />
+            </summary>
+            <p class="pb-5 text-sm text-muted">{item.a}</p>
+          </details>
+        ))
+      }
     </div>
   </div>
 </section>
+
+<style>
+  .faq summary::-webkit-details-marker {
+    display: none;
+  }
+  .faq[open] .faq-icon {
+    transform: rotate(45deg);
+  }
+</style>

@@ -1,0 +1,95 @@
+---
+import SectionHeading from './SectionHeading.astro';
+
+const MIN = 500;
+const MAX = 50000;
+const DEFAULT = 8000;
+const RESOLVE_RATE = 0.92; // share Jane closes without a human
+const MINUTES_PER_CONVO = 12; // avg human handle time saved per resolution
+---
+
+<section class="border-t border-line bg-surface">
+  <div class="mx-auto max-w-4xl px-6 py-24">
+    <SectionHeading
+      eyebrow="See the impact"
+      title="What could Jane save you?"
+      subtitle="Drag your monthly conversation volume to estimate what Jane takes off your team’s plate."
+    />
+
+    <div
+      class="card-hover mt-14 rounded-2xl border border-line bg-panel p-8 md:p-10"
+      data-reveal
+    >
+      <div class="flex items-end justify-between">
+        <div>
+          <p class="text-sm text-muted">Conversations / mo</p>
+          <p
+            id="calc-convos"
+            class="text-2xl font-semibold text-ink"
+          >
+          </p>
+        </div>
+      </div>
+
+      <input
+        id="calc-slider"
+        type="range"
+        min={MIN}
+        max={MAX}
+        value={DEFAULT}
+        step="100"
+        class="mt-6 w-full accent-brand"
+        aria-label="Monthly conversations"
+      />
+      <div class="mt-2 flex justify-between text-xs text-muted">
+        <span>{MIN.toLocaleString()}</span>
+        <span>{MAX.toLocaleString()}+</span>
+      </div>
+
+      <div class="mt-8 grid gap-4 sm:grid-cols-2">
+        <div class="rounded-xl bg-surface p-5">
+          <p id="calc-resolved" class="text-3xl font-bold text-brand"></p>
+          <p class="mt-1 text-sm text-muted">resolved by Jane / mo</p>
+        </div>
+        <div class="rounded-xl bg-surface p-5">
+          <p id="calc-hours" class="text-3xl font-bold text-ink"></p>
+          <p class="mt-1 text-sm text-muted">team hours saved / mo</p>
+        </div>
+      </div>
+
+      <p class="mt-6 text-xs text-muted">
+        Estimate assumes Jane resolves {Math.round(RESOLVE_RATE * 100)}% of
+        conversations and saves ~{MINUTES_PER_CONVO} min of agent time per
+        resolution.
+      </p>
+    </div>
+  </div>
+</section>
+
+<script
+  is:inline
+  define:vars={{ rate: RESOLVE_RATE, mins: MINUTES_PER_CONVO, def: DEFAULT }}
+>
+  (function () {
+    var slider = document.getElementById('calc-slider');
+    if (!slider) return;
+    var convosEl = document.getElementById('calc-convos');
+    var resolvedEl = document.getElementById('calc-resolved');
+    var hoursEl = document.getElementById('calc-hours');
+    var nf = new Intl.NumberFormat('en-US');
+
+    function render(v) {
+      var convos = Number(v);
+      var resolved = Math.round(convos * rate);
+      var hours = Math.round((resolved * mins) / 60);
+      convosEl.textContent = nf.format(convos);
+      resolvedEl.textContent = nf.format(resolved);
+      hoursEl.textContent = nf.format(hours);
+    }
+
+    slider.addEventListener('input', function (e) {
+      render(e.target.value);
+    });
+    render(def);
+  })();
+</script>

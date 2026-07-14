@@ -1,29 +1,24 @@
 {
-  "name": "@jackthebutler/ai-anthropic",
-  "version": "1.0.0",
-  "description": "Anthropic Claude AI provider for Jack The Butler",
+  "name": "@janetheoperator/ai-anthropic",
+  "version": "0.1.0",
+  "private": true,
   "type": "module",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "import": "./dist/index.js",
-      "types": "./dist/index.d.ts"
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
     }
   },
-  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "typecheck": "tsc --noEmit"
   },
-  "publishConfig": {
-    "access": "public"
+  "devDependencies": {
+    "typescript": "^5.7.0"
   },
   "dependencies": {
-    "@anthropic-ai/sdk": "^0.71.2",
-    "@jackthebutler/shared": "workspace:*"
-  },
-  "devDependencies": {
-    "typescript": "^5.7.2"
+    "@janetheoperator/shared": "workspace:*"
   }
 }

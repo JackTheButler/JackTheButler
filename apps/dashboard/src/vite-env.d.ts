@@ -1,18 +1,6 @@
 /// <reference types="vite/client" />
+/// <reference types="vite-plugin-pwa/react" />
 
-declare module '*.css' {
-  const content: string;
-  export default content;
-}
-
-// View Transitions API
-interface ViewTransition {
-  ready: Promise<void>;
-  finished: Promise<void>;
-  updateCallbackDone: Promise<void>;
-  skipTransition(): void;
-}
-
-interface Document {
-  startViewTransition?(callback: () => void | Promise<void>): ViewTransition;
-}
+/** Injected at build time by vite.config.ts `define`. */
+declare const __APP_VERSION__: string;
+declare const __BUILD_TIME__: string;

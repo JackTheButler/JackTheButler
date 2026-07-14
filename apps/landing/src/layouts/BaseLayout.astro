@@ -1,0 +1,156 @@
+---
+import '../styles/global.css';
+import Header from '../components/Header.astro';
+import Footer from '../components/Footer.astro';
+import { site } from '../config/site';
+
+interface Props {
+  title?: string;
+  description?: string;
+}
+
+const { title, description = site.description } = Astro.props;
+const pageTitle = title ? `${title} · ${site.name}` : site.name;
+
+// Local dev build serves the widget from the running app; production builds
+// point at the CDN. `import.meta.env.PROD` is true in `astro build`.
+const widgetSrc = import.meta.env.PROD
+  ? 'https://demo.janetheoperator.com/widget.js'
+  : 'http://localhost:5173/widget.js';
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content={description} />
+    <link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+    <link rel="icon" type="image/png" sizes="96x96" href="/favicon-96x96.png" />
+    <link rel="shortcut icon" href="/favicon.ico" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
+    <link rel="manifest" href="/site.webmanifest" />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: light)"
+      content="#faf9f5"
+    />
+    <meta
+      name="theme-color"
+      media="(prefers-color-scheme: dark)"
+      content="#1a1917"
+    />
+    <title>{pageTitle}</title>
+    {/* Set theme + js class before paint to avoid any flash. Default is the
+        OS preference; a stored choice overrides it. */}
+    <script is:inline>
+      (function () {
+        var root = document.documentElement;
+        root.classList.add('js');
+        try {
+          var stored = localStorage.getItem('theme');
+          var dark =
+            stored === 'dark' ||
+            (stored !== 'light' &&
+              window.matchMedia('(prefers-color-scheme: dark)').matches);
+          root.classList.toggle('dark', dark);
+        } catch (e) {}
+      })();
+    </script>
+  </head>
+  <body class="min-h-screen bg-surface font-sans text-ink antialiased">
+    <div id="scroll-progress" aria-hidden="true"></div>
+    <Header />
+    <main>
+      <slot />
+    </main>
+    <Footer />
+
+    <script is:inline>
+      const els = document.querySelectorAll('[data-reveal], [data-reveal-stagger]');
+      if (!('IntersectionObserver' in window) || els.length === 0) {
+        els.forEach((el) => el.classList.add('is-visible'));
+      } else {
+        const io = new IntersectionObserver(
+          (entries) => {
+            for (const e of entries) {
+              if (e.isIntersecting) {
+                e.target.classList.add('is-visible');
+                io.unobserve(e.target);
+              }
+            }
+          },
+          { rootMargin: '0px 0px -10% 0px', threshold: 0.1 }
+        );
+        els.forEach((el) => io.observe(el));
+      }
+    </script>
+
+    <script is:inline>
+      // Top scroll-progress bar
+      (function () {
+        var bar = document.getElementById('scroll-progress');
+        if (!bar) return;
+        function update() {
+          var h =
+            document.documentElement.scrollHeight - window.innerHeight;
+          var p = h > 0 ? (window.scrollY / h) * 100 : 0;
+          bar.style.width = p + '%';
+        }
+        window.addEventListener('scroll', update, { passive: true });
+        window.addEventListener('resize', update);
+        update();
+      })();
+
+      // Count-up: animate [data-countup] from 0 to its number when in view
+      (function () {
+        var nums = document.querySelectorAll('[data-countup]');
+        if (!nums.length) return;
+        var reduce = window.matchMedia(
+          '(prefers-reduced-motion: reduce)'
+        ).matches;
+
+        function run(el) {
+          var target = parseFloat(el.getAttribute('data-countup'));
+          var dur = 1100;
+          if (reduce || !('requestAnimationFrame' in window)) {
+            el.textContent = String(target);
+            return;
+          }
+          var start = null;
+          function step(ts) {
+            if (start === null) start = ts;
+            var t = Math.min((ts - start) / dur, 1);
+            var eased = 1 - Math.pow(1 - t, 3);
+            el.textContent = String(Math.round(target * eased));
+            if (t < 1) requestAnimationFrame(step);
+            else el.textContent = String(target);
+          }
+          requestAnimationFrame(step);
+        }
+
+        if (!('IntersectionObserver' in window)) {
+          nums.forEach(run);
+          return;
+        }
+        var io = new IntersectionObserver(
+          function (entries) {
+            for (var i = 0; i < entries.length; i++) {
+              if (entries[i].isIntersecting) {
+                run(entries[i].target);
+                io.unobserve(entries[i].target);
+              }
+            }
+          },
+          { threshold: 0.4 }
+        );
+        nums.forEach(function (n) {
+          io.observe(n);
+        });
+      })();
+    </script>
+
+    {/* Jane webchat widget (local dev test build) */}
+    <script src={widgetSrc} data-jane-widget defer is:inline></script>
+  </body>
+</html>

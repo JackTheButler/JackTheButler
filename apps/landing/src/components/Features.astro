@@ -1,60 +1,172 @@
 ---
-// Features grid
-import { Inbox, Lightbulb, Bell, User, ClipboardCheck, BarChart3 } from '@lucide/astro'
+import { Zap, Users, MessageCircle, BarChart3, Check } from '@lucide/astro';
+import SectionHeading from './SectionHeading.astro';
 
 const features = [
   {
-    icon: Inbox,
-    title: 'Multi-Channel Inbox',
-    description: 'WhatsApp, SMS, Email, and Web Chat in one unified dashboard.'
+    key: 'instant',
+    icon: Zap,
+    eyebrow: 'Always on',
+    title: 'Instant resolutions, around the clock',
+    body: 'Jane answers common questions in seconds, 24/7, in any language, so customers never wait in a queue.',
+    points: ['Sub-5-second replies', 'No queues, no hold music', 'Works while you sleep'],
   },
   {
-    icon: Lightbulb,
-    title: 'AI-Powered Responses',
-    description: 'Answers using your hotel\'s knowledge. Sounds like your team.'
+    key: 'escalation',
+    icon: Users,
+    eyebrow: 'Human in the loop',
+    title: 'Smart escalation to your team',
+    body: 'When a conversation needs a person, Jane hands it off with the full thread and a summary attached, so no “let me repeat my issue”.',
+    points: ['Context-rich handoff', 'Routed to the right team', 'Nothing falls through'],
   },
   {
-    icon: Bell,
-    title: 'Smart Escalation',
-    description: 'Routes complex requests to staff. You handle what matters.'
+    key: 'webchat',
+    icon: MessageCircle,
+    eyebrow: 'Drop-in widget',
+    title: 'Embeddable webchat in minutes',
+    body: 'Paste one snippet and Jane is live on your site. No rebuild, no SDK wrangling, fully themeable.',
+    points: ['One-line install', 'Matches your brand', 'Mobile-ready'],
   },
   {
-    icon: User,
-    title: 'Guest Memory',
-    description: 'Remembers preferences across conversations. Personal touch at scale.'
-  },
-  {
-    icon: ClipboardCheck,
-    title: 'Task Management',
-    description: 'Creates and tracks tasks automatically. Nothing falls through.'
-  },
-  {
+    key: 'insights',
     icon: BarChart3,
-    title: 'Analytics',
-    description: 'Insights on response times, topics, and guest satisfaction.'
-  }
-]
+    eyebrow: 'Know what’s happening',
+    title: 'Insights that actually matter',
+    body: 'See what customers ask, where Jane resolves, and where your team should focus next, all in one view.',
+    points: ['Top intents & gaps', 'Resolution rate trends', 'Export anywhere'],
+  },
+];
 ---
 
-<section class="py-24 px-6">
-  <div class="max-w-5xl mx-auto">
-    <h2 class="animate-on-scroll text-3xl sm:text-4xl font-bold text-center mb-4">
-      Everything you need
-    </h2>
-    <p class="animate-on-scroll text-neutral-600 dark:text-neutral-400 text-center mb-16 max-w-2xl mx-auto">
-      A complete hotel chatbot platform. No modules to buy, no per-message fees.
-    </p>
+<section id="features" class="border-t border-line bg-panel">
+  <div class="mx-auto max-w-6xl px-6 py-24">
+    <SectionHeading
+      eyebrow="Capabilities"
+      title="Everything you need to support customers"
+      subtitle="Jane combines an AI agent with the tooling your team needs to stay in control."
+    />
 
-    <div class="stagger-children grid sm:grid-cols-2 lg:grid-cols-3 gap-6">
-      {features.map((feature) => (
-        <div class="p-6 rounded-2xl bg-neutral-50 dark:bg-neutral-900/50 border border-neutral-200 dark:border-neutral-800 hover:border-neutral-300 dark:hover:border-neutral-700 transition-colors">
-          <div class="w-10 h-10 rounded-xl bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center mb-4">
-            <feature.icon class="w-5 h-5" />
+    <div class="mt-20 space-y-20 md:space-y-28">
+      {
+        features.map((feature, i) => (
+          <div
+            data-reveal
+            class={`flex flex-col gap-10 lg:flex-row lg:items-center lg:gap-16 ${
+              i % 2 === 1 ? 'lg:flex-row-reverse' : ''
+            }`}
+          >
+            {/* Copy */}
+            <div class="lg:flex-1">
+              <span class="inline-flex items-center gap-2 text-sm font-semibold text-brand">
+                <feature.icon class="size-4" />
+                {feature.eyebrow}
+              </span>
+              <h3 class="mt-3 text-2xl font-bold tracking-tight text-ink md:text-3xl">
+                {feature.title}
+              </h3>
+              <p class="mt-4 text-muted">{feature.body}</p>
+              <ul class="mt-6 space-y-2">
+                {feature.points.map((p) => (
+                  <li class="flex items-center gap-2 text-sm text-ink">
+                    <Check class="size-4 shrink-0 text-brand" />
+                    {p}
+                  </li>
+                ))}
+              </ul>
+            </div>
+
+            {/* Visual */}
+            <div class="lg:flex-1">
+              <div class="card-hover rounded-2xl border border-line bg-surface p-6 shadow-sm">
+                {feature.key === 'instant' && (
+                  <div class="space-y-3">
+                    <div class="flex justify-end">
+                      <p class="max-w-[80%] rounded-2xl rounded-br-sm bg-accent-soft px-4 py-2 text-sm text-ink">
+                        Do you ship to Canada?
+                      </p>
+                    </div>
+                    <div class="flex justify-start">
+                      <p class="max-w-[85%] rounded-2xl rounded-bl-sm bg-accent px-4 py-2 text-sm text-on-accent">
+                        Yes, standard shipping to Canada is 3 to 5 business days,
+                        free over $50.
+                      </p>
+                    </div>
+                    <p class="text-right text-xs font-medium text-muted">
+                      answered in 3s
+                    </p>
+                  </div>
+                )}
+
+                {feature.key === 'escalation' && (
+                  <div class="space-y-4">
+                    <p class="text-xs font-medium text-muted">
+                      Escalated · billing dispute
+                    </p>
+                    <div class="rounded-xl border border-line bg-surface p-4">
+                      <p class="text-sm text-ink">
+                        Customer was double-charged on May 14. Refund needs
+                        manager approval.
+                      </p>
+                      <div class="mt-3 flex flex-wrap gap-2 text-xs">
+                        <span class="rounded-full bg-accent-soft px-2.5 py-1 text-ink">
+                          Full transcript
+                        </span>
+                        <span class="rounded-full bg-accent-soft px-2.5 py-1 text-ink">
+                          Order #4821
+                        </span>
+                      </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                      <span class="flex size-8 items-center justify-center rounded-full bg-staff text-xs font-semibold text-white">
+                        AL
+                      </span>
+                      <span class="text-sm text-ink">
+                        Assigned to <strong>Alex</strong> · Support
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {feature.key === 'webchat' && (
+                  <div class="space-y-4">
+                    <pre class="overflow-x-auto rounded-xl bg-accent p-4 text-xs leading-relaxed text-on-accent"><code>{'<script src="https://cdn.janetheoperator.com/widget.js"\n  data-key="YOUR_KEY" defer></script>'}</code></pre>
+                    <div class="flex justify-end">
+                      <span class="inline-flex items-center gap-2 rounded-full bg-accent px-4 py-2 text-sm font-medium text-on-accent shadow-sm">
+                        <MessageCircle class="size-4" />
+                        Chat with us
+                      </span>
+                    </div>
+                  </div>
+                )}
+
+                {feature.key === 'insights' && (
+                  <div>
+                    <p class="text-xs font-medium text-muted">
+                      Resolution rate · last 7 days
+                    </p>
+                    <div class="mt-4 flex items-end gap-3">
+                      {[52, 61, 58, 70, 76, 84, 92].map((h) => (
+                        <div class="flex flex-1 flex-col items-center gap-1">
+                          <div
+                            class="flex w-full items-end"
+                            style="height: 8rem"
+                          >
+                            <div
+                              class="w-full rounded-t bg-brand"
+                              style={`height: ${h}%`}
+                            />
+                          </div>
+                          <span class="text-[10px] text-muted">{h}%</span>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
           </div>
-          <h3 class="text-lg font-semibold mb-2">{feature.title}</h3>
-          <p class="text-neutral-600 dark:text-neutral-400 text-sm">{feature.description}</p>
-        </div>
-      ))}
+        ))
+      }
     </div>
   </div>
 </section>

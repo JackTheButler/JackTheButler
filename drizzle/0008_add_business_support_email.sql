@@ -1,0 +1,1 @@
+ALTER TABLE `business_profile` ADD `support_email` text;

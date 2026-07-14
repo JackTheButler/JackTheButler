@@ -1,58 +1,120 @@
-import { BrowserRouter, Routes, Route, Navigate } from 'react-router-dom';
-import { ThemeProvider } from '@/contexts/ThemeContext';
-import { AppConfigProvider } from '@/contexts/AppConfigContext';
-import { LoginPage } from '@/pages/Login';
-import { ForgotPasswordPage } from '@/pages/ForgotPassword';
-import { ResetPasswordPage } from '@/pages/ResetPassword';
-import { RegisterPage } from '@/pages/Register';
-import { VerifyEmailPage } from '@/pages/VerifyEmail';
-import { SetupPage } from '@/pages/Setup';
-import { AccessDeniedPage } from '@/pages/AccessDenied';
-import { Layout } from '@/components/layout/Layout';
-import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
-import { PERMISSIONS } from '@/hooks/usePermissions';
-import { HomePage } from '@/pages/home/Home';
-import { ConversationsPage } from '@/pages/inbox/Conversations';
-import { AppsPage } from '@/pages/engine/apps/Apps';
-import { AppEditPage } from '@/pages/engine/apps/AppEdit';
-import { SettingsPage } from '@/pages/settings/Settings';
-import { SiteScraperPage } from '@/pages/tools/SiteScraper';
-import { KnowledgeBasePage } from '@/pages/tools/KnowledgeBase';
-import { GuestsPage, GuestProfilePage, GuestFormPage } from '@/pages/guests';
-import { ReservationsPage, ReservationDetailPage } from '@/pages/reservations';
+import { useEffect, type ReactNode } from 'react';
+import { Routes, Route, Navigate, useNavigate } from 'react-router-dom';
+import { AuthGate } from '@/features/auth/AuthGate';
+import { AcceptInvite } from '@/features/auth/AcceptInvite';
+import { useSession } from '@/features/auth/useAuth';
+import { AppLayout } from '@/components/AppLayout';
+import { InboxPage } from '@/features/inbox/InboxPage';
+import { AppsPage } from '@/features/apps/AppsPage';
+import { WebchatConfigPanel } from '@/features/apps/WebchatConfigPanel';
+import { AppConfigPanel } from '@/features/apps/AppConfigPanel';
+import { KnowledgeBasePage } from '@/features/knowledge/KnowledgeBasePage';
+import { AnalyticsPage } from '@/features/analytics/AnalyticsPage';
+import { AssistantPage } from '@/features/assistant/AssistantPage';
+import { TeamPage } from '@/features/team/TeamPage';
+import { SettingsPage } from '@/features/settings/SettingsPage';
+
+/** Admin-only route guard. Agents (Inbox + Knowledge only) hitting an
+ *  admin route are redirected to the inbox. */
+function AdminOnly({ children }: { children: ReactNode }) {
+  const { user } = useSession();
+  return user?.role === 'admin' ? <>{children}</> : <Navigate to="/" replace />;
+}
+
+/** Routes notification taps client-side: the service worker focuses this tab
+ *  and posts the deep-link URL, which we hand to the router (no reload). */
+function PushNavigationListener() {
+  const navigate = useNavigate();
+  useEffect(() => {
+    if (!('serviceWorker' in navigator)) return;
+    const onMessage = (e: MessageEvent) => {
+      const data = e.data as { type?: string; url?: string } | undefined;
+      if (data?.type === 'NAVIGATE' && data.url) navigate(data.url);
+    };
+    navigator.serviceWorker.addEventListener('message', onMessage);
+    return () => navigator.serviceWorker.removeEventListener('message', onMessage);
+  }, [navigate]);
+  return null;
+}
 
 export function App() {
   return (
-    <AppConfigProvider>
-    <ThemeProvider>
-      <BrowserRouter>
-        <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/forgot-password" element={<ForgotPasswordPage />} />
-        <Route path="/reset-password" element={<ResetPasswordPage />} />
-        <Route path="/register" element={<RegisterPage />} />
-        <Route path="/verify-email" element={<VerifyEmailPage />} />
-        <Route path="/setup" element={<SetupPage />} />
-        <Route path="/access-denied" element={<AccessDeniedPage />} />
-        <Route element={<Layout />}>
-          <Route path="/" element={<HomePage />} />
-          <Route path="/inbox" element={<ProtectedRoute permission={PERMISSIONS.CONVERSATIONS_VIEW}><ConversationsPage /></ProtectedRoute>} />
-          <Route path="/engine/apps" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><AppsPage /></ProtectedRoute>} />
-          <Route path="/engine/apps/:appId" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><AppEditPage /></ProtectedRoute>} />
-          <Route path="/settings/:tab?" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><SettingsPage /></ProtectedRoute>} />
-          <Route path="/engine" element={<Navigate to="/settings" replace />} />
-          <Route path="/guests" element={<ProtectedRoute permission={PERMISSIONS.GUESTS_VIEW}><GuestsPage /></ProtectedRoute>} />
-          <Route path="/guests/new" element={<ProtectedRoute permission={PERMISSIONS.GUESTS_MANAGE}><GuestFormPage /></ProtectedRoute>} />
-          <Route path="/guests/:id" element={<ProtectedRoute permission={PERMISSIONS.GUESTS_VIEW}><GuestProfilePage /></ProtectedRoute>} />
-          <Route path="/reservations" element={<ProtectedRoute permission={PERMISSIONS.RESERVATIONS_VIEW}><ReservationsPage /></ProtectedRoute>} />
-          <Route path="/reservations/:id" element={<ProtectedRoute permission={PERMISSIONS.RESERVATIONS_VIEW}><ReservationDetailPage /></ProtectedRoute>} />
-          <Route path="/tools/knowledge-base" element={<ProtectedRoute permission={PERMISSIONS.KNOWLEDGE_VIEW}><KnowledgeBasePage /></ProtectedRoute>} />
-          <Route path="/tools/site-scraper" element={<ProtectedRoute permission={PERMISSIONS.KNOWLEDGE_MANAGE}><SiteScraperPage /></ProtectedRoute>} />
+    <>
+      <PushNavigationListener />
+      <Routes>
+        {/* Public — reachable while logged out, so it sits outside the AuthGate. */}
+        <Route path="/accept-invite" element={<AcceptInvite />} />
+        <Route path="*" element={<GatedApp />} />
+      </Routes>
+    </>
+  );
+}
+
+function GatedApp() {
+  return (
+    <AuthGate>
+      <Routes>
+        <Route element={<AppLayout />}>
+          <Route path="/" element={<InboxPage />} />
+          <Route path="/knowledge" element={<KnowledgeBasePage />} />
+          <Route path="/analytics" element={<AnalyticsPage />} />
+
+          {/* Admin-only areas */}
+          <Route
+            path="/apps"
+            element={
+              <AdminOnly>
+                <AppsPage />
+              </AdminOnly>
+            }
+          />
+          <Route
+            path="/apps/webchat"
+            element={
+              <AdminOnly>
+                <WebchatConfigPanel />
+              </AdminOnly>
+            }
+          />
+          <Route
+            path="/apps/:id"
+            element={
+              <AdminOnly>
+                <AppConfigPanel />
+              </AdminOnly>
+            }
+          />
+          <Route
+            path="/assistant"
+            element={
+              <AdminOnly>
+                <AssistantPage />
+              </AdminOnly>
+            }
+          />
+          <Route
+            path="/assistant/:section"
+            element={
+              <AdminOnly>
+                <AssistantPage />
+              </AdminOnly>
+            }
+          />
+          <Route
+            path="/team"
+            element={
+              <AdminOnly>
+                <TeamPage />
+              </AdminOnly>
+            }
+          />
+          {/* Settings is open to all staff; the SettingsPage shows agents only
+              their Profile tab and admins the workspace tabs too. */}
+          <Route path="/settings" element={<SettingsPage />} />
+          <Route path="/settings/:section" element={<SettingsPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Route>
-        </Routes>
-      </BrowserRouter>
-    </ThemeProvider>
-    </AppConfigProvider>
+      </Routes>
+    </AuthGate>
   );
 }

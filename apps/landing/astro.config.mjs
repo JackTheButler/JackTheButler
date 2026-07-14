@@ -1,14 +1,9 @@
-// @ts-check
 import { defineConfig } from 'astro/config';
 import tailwindcss from '@tailwindcss/vite';
 
-const isProduction = process.env.NODE_ENV === 'production';
-
-// https://astro.build/config
 export default defineConfig({
-  site: isProduction ? 'https://jackthebutler.com' : 'http://localhost:4321',
-  base: '/',
+  server: { port: 4321 },
   vite: {
-    plugins: [tailwindcss()]
-  }
+    plugins: [tailwindcss()],
+  },
 });

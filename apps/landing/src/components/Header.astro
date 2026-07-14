@@ -1,229 +1,40 @@
 ---
-// Header with logo, navigation, and theme toggle
-import { Github, Menu, X, Home, FileText, Rocket, Play, Package, Sparkles } from '@lucide/astro'
-
-const pathname = Astro.url.pathname
-const isActive = (href: string) => pathname.startsWith(href)
-const linkClass = (href: string) => isActive(href)
-  ? 'text-neutral-900 dark:text-white font-medium transition-colors'
-  : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors'
+import { site, nav } from '../config/site';
+import janeLogo from '../icons/jane.svg?raw';
+import ThemeToggle from './ThemeToggle.astro';
 ---
 
-<header id="header" class="fixed top-0 left-0 right-0 z-50 px-6 py-4 transition-all duration-300" data-scrolled="false">
-  <div class="max-w-6xl mx-auto flex items-center justify-between">
-    <!-- Logo and Mobile Menu -->
-    <div class="flex items-center">
-      <a href="/" class="flex items-center gap-2 text-lg font-semibold">
-        <img src={`${import.meta.env.BASE_URL}butler.svg`} alt="Jack The Butler" class="w-8 h-8 dark:invert transition-transform duration-500 ease-out hover:rotate-[360deg]" />
-        <span class="hidden md:inline">Jack The Butler</span>
-      </a>
-      <!-- Hamburger Menu Button (mobile only) -->
-      <button
-        id="mobile-menu-toggle"
-        type="button"
-        class="md:hidden w-8 h-8 flex items-center justify-center text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors cursor-pointer"
-        aria-label="Toggle menu"
-      >
-        <Menu id="menu-icon" class="w-5 h-5" />
-        <X id="close-icon" class="w-5 h-5 hidden" />
-      </button>
-    </div>
+<header class="sticky top-0 z-50 border-b border-line/70 bg-surface/80 backdrop-blur">
+  <div class="mx-auto flex h-16 max-w-6xl items-center justify-between px-6">
+    <a
+      href="/"
+      class="flex items-center gap-2 font-semibold text-ink [&_svg]:h-7 [&_svg]:w-auto"
+    >
+      <span class="text-ink" aria-hidden="true" set:html={janeLogo} />
+      <span class="hidden sm:inline">{site.name}</span>
+    </a>
 
-    <!-- Nav Items -->
-    <div class="flex items-center gap-6">
-      <!-- Nav Links -->
-      <nav class="hidden md:flex items-center gap-6 text-sm">
-        <a href="/" class={pathname === '/' ? 'text-neutral-900 dark:text-white font-medium transition-colors' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors'}>
-          Home
-        </a>
-        <a href="https://demo.jackthebutler.com/register" class="text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-          Try Demo
-        </a>
-        <a href="/features/" class={linkClass('/features/')}>
-          Features
-        </a>
-        <a href="/apps/" class={`hidden lg:block ${linkClass('/apps/')}`}>
-          Apps
-        </a>
-        <a href="/docs/getting-started/introduction/" class={`hidden lg:block ${linkClass('/docs/')}`}>
-          Docs
-        </a>
-        <a href="https://github.com/JackTheButler/JackTheButler" class="hidden lg:block text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-          <Github class="w-5 h-5" />
-        </a>
-      </nav>
-
-      <!-- Deploy CTA -->
-      <a
-        href="/#deploy"
-        class="hidden sm:inline-flex items-center px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-semibold rounded-full transition-colors"
-      >
-        Deploy Free
-      </a>
-
-      <!-- Theme Toggle -->
-      <button
-        id="theme-toggle"
-        type="button"
-        class="w-8 h-8 rounded-full bg-neutral-100 dark:bg-neutral-800 flex items-center justify-center hover:bg-neutral-200 dark:hover:bg-neutral-700 transition-colors relative overflow-hidden cursor-pointer"
-        aria-label="Toggle theme"
-      >
-      <!-- Sun icon (visible in dark mode) - filled for better visibility -->
-      <svg id="sun-icon" class="w-6 h-6 text-yellow-500 absolute transition-all duration-300 ease-out opacity-0 dark:opacity-100 scale-50 dark:scale-100 rotate-90 dark:rotate-0" viewBox="0 0 24 24">
-        <path fill="currentColor" fill-rule="evenodd" d="M13 3a1 1 0 1 0-2 0v2a1 1 0 1 0 2 0zM6.343 4.929A1 1 0 0 0 4.93 6.343l1.414 1.414a1 1 0 0 0 1.414-1.414zm12.728 1.414a1 1 0 0 0-1.414-1.414l-1.414 1.414a1 1 0 0 0 1.414 1.414zM12 7a5 5 0 1 0 0 10a5 5 0 0 0 0-10m-9 4a1 1 0 1 0 0 2h2a1 1 0 1 0 0-2zm16 0a1 1 0 1 0 0 2h2a1 1 0 1 0 0-2zM7.757 17.657a1 1 0 1 0-1.414-1.414l-1.414 1.414a1 1 0 1 0 1.414 1.414zm9.9-1.414a1 1 0 0 0-1.414 1.414l1.414 1.414a1 1 0 0 0 1.414-1.414zM13 19a1 1 0 1 0-2 0v2a1 1 0 1 0 2 0z" clip-rule="evenodd"/>
-      </svg>
-      <!-- Moon icon (visible in light mode) - filled for better visibility -->
-      <svg id="moon-icon" class="w-5 h-5 text-indigo-400 absolute transition-all duration-300 ease-out opacity-100 dark:opacity-0 scale-100 dark:scale-50 rotate-0 dark:rotate-90" viewBox="0 0 24 24">
-        <path fill="currentColor" d="M9.272 2.406a1 1 0 0 0-1.23-1.355C6.59 1.535 5.432 2.488 4.37 3.55a11.4 11.4 0 0 0 0 16.182c4.518 4.519 11.51 4.261 15.976-.205c1.062-1.062 2.014-2.22 2.498-3.673A1 1 0 0 0 21.55 14.6c-3.59 1.322-7.675.734-10.433-2.025C8.35 9.808 7.788 5.744 9.272 2.406"/>
-      </svg>
-    </button>
-    </div>
-  </div>
-
-  <!-- Mobile Menu Dropdown -->
-  <div id="mobile-menu" class="hidden md:hidden pb-4 pt-6">
-    <nav class="max-w-6xl mx-auto flex flex-col gap-5 text-sm px-2">
-      <a href="/" class={`flex items-center gap-2 ${pathname === '/' ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'} transition-colors`}>
-        <Home class="w-4 h-4" />
-        Home
-      </a>
-      <a href="https://demo.jackthebutler.com/register" class="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-        <Play class="w-4 h-4" />
-        Try Demo
-      </a>
-      <a href="/features/" class={`flex items-center gap-2 ${isActive('/features/') ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'} transition-colors`}>
-        <Sparkles class="w-4 h-4" />
-        Features
-      </a>
-      <a href="/apps/" class={`flex items-center gap-2 ${isActive('/apps/') ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'} transition-colors`}>
-        <Package class="w-4 h-4" />
-        Apps
-      </a>
-      <a href="/docs/getting-started/introduction/" class={`flex items-center gap-2 ${isActive('/docs/') ? 'text-neutral-900 dark:text-white font-medium' : 'text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white'} transition-colors`}>
-        <FileText class="w-4 h-4" />
-        Docs
-      </a>
-      <a href="https://github.com/JackTheButler/JackTheButler" class="flex items-center gap-2 text-neutral-600 dark:text-neutral-400 hover:text-neutral-900 dark:hover:text-white transition-colors">
-        <Github class="w-4 h-4" />
-        GitHub
-      </a>
-      <a
-        href="/#deploy"
-        class="inline-flex items-center justify-center gap-2 px-4 py-2 bg-neutral-900 hover:bg-neutral-800 dark:bg-white dark:hover:bg-neutral-100 text-white dark:text-neutral-900 text-sm font-semibold rounded-full transition-colors mt-2"
-      >
-        <Rocket class="w-4 h-4" />
-        Deploy Free
-      </a>
+    <nav class="hidden items-center gap-8 md:flex">
+      {
+        nav.map((item) => (
+          <a
+            href={item.href}
+            class="text-sm text-muted transition-colors hover:text-ink"
+          >
+            {item.label}
+          </a>
+        ))
+      }
     </nav>
+
+    <div class="flex items-center gap-2">
+      <ThemeToggle />
+      <a
+        href={site.ctaHref}
+        class="rounded-lg bg-accent px-4 py-2 text-sm font-medium text-on-accent transition-opacity hover:opacity-90"
+      >
+        {site.ctaLabel}
+      </a>
+    </div>
   </div>
 </header>
-
-<script is:inline>
-  // Header scroll effect
-  (function() {
-    var header = document.getElementById('header');
-    var menu = document.getElementById('mobile-menu');
-
-    function updateHeader() {
-      // Don't change if mobile menu is open
-      if (menu && !menu.classList.contains('hidden')) {
-        return;
-      }
-      if (window.scrollY > 10) {
-        header.dataset.scrolled = 'true';
-      } else {
-        header.dataset.scrolled = 'false';
-      }
-    }
-
-    window.addEventListener('scroll', updateHeader);
-    updateHeader(); // Check on load
-  })();
-
-  // Mobile menu toggle
-  (function() {
-    var header = document.getElementById('header');
-    var toggle = document.getElementById('mobile-menu-toggle');
-    var menu = document.getElementById('mobile-menu');
-    var menuIcon = document.getElementById('menu-icon');
-    var closeIcon = document.getElementById('close-icon');
-
-    function closeMenu() {
-      menu.classList.add('hidden');
-      menuIcon.classList.remove('hidden');
-      closeIcon.classList.add('hidden');
-      // Restore scroll-based background
-      header.dataset.scrolled = window.scrollY > 10 ? 'true' : 'false';
-    }
-
-    function openMenu() {
-      menu.classList.remove('hidden');
-      menuIcon.classList.add('hidden');
-      closeIcon.classList.remove('hidden');
-      // Force background on when menu is open
-      header.dataset.scrolled = 'true';
-    }
-
-    toggle.addEventListener('click', function(e) {
-      e.stopPropagation();
-      var isOpen = !menu.classList.contains('hidden');
-      if (isOpen) {
-        closeMenu();
-      } else {
-        openMenu();
-      }
-    });
-
-    // Close menu when tapping outside
-    document.addEventListener('click', function(e) {
-      var isOpen = !menu.classList.contains('hidden');
-      if (isOpen && !header.contains(e.target)) {
-        closeMenu();
-      }
-    });
-  })();
-
-  document.getElementById('theme-toggle').addEventListener('click', function(e) {
-    var isDark = document.documentElement.classList.contains('dark');
-    var newTheme = isDark ? 'light' : 'dark';
-
-    // Get button position for animation origin
-    var rect = this.getBoundingClientRect();
-    var x = rect.left + rect.width / 2;
-    var y = rect.top + rect.height / 2;
-
-    // Calculate the max radius needed to cover the screen
-    var maxRadius = Math.hypot(
-      Math.max(x, window.innerWidth - x),
-      Math.max(y, window.innerHeight - y)
-    );
-
-    // Check for View Transitions API support
-    if (document.startViewTransition) {
-      document.documentElement.style.setProperty('--x', x + 'px');
-      document.documentElement.style.setProperty('--y', y + 'px');
-      document.documentElement.style.setProperty('--r', maxRadius + 'px');
-
-      document.startViewTransition(function() {
-        document.documentElement.classList.toggle('dark');
-        localStorage.setItem('theme', newTheme);
-      });
-    } else {
-      // Fallback for browsers without View Transitions
-      document.documentElement.classList.toggle('dark');
-      localStorage.setItem('theme', newTheme);
-    }
-  });
-</script>
-
-<style>
-  header[data-scrolled="true"] {
-    backdrop-filter: blur(24px) saturate(180%);
-    -webkit-backdrop-filter: blur(24px) saturate(180%);
-    background-color: rgba(255, 255, 255, 0.5);
-  }
-
-  :global(.dark) header[data-scrolled="true"] {
-    background-color: rgba(10, 10, 10, 0.5);
-  }
-</style>

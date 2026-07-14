@@ -1,40 +1,20 @@
-# Dependencies (will be installed in container)
-node_modules/
-
-# Build output (will be built in container)
-dist/
-**/*.tsbuildinfo
-
-# Data
-data/
-
-# Environment files
+node_modules
+**/node_modules
+dist
+**/dist
+.astro
+*.tsbuildinfo
+data
+*.sqlite
+*.sqlite3
+*.db
+.git
+.github
+coverage
 .env
-.env.local
-.env.*.local
-
-# Git
-.git/
-.gitignore
-
-# Documentation
-docs/
-*.md
-!README.md
-
-# IDE
-.idea/
-.vscode/
-*.swp
-*.swo
-.DS_Store
-
-# Tests
-tests/
-coverage/
-vitest.config.ts
-
-# Development files
+.env.*
+!.env.example
 *.log
-*.tmp
-.cache/
+.DS_Store
+.vscode
+.idea

@@ -1,60 +1,67 @@
 ---
-// How It Works - 3 steps
+import { PlugZap, ShieldCheck } from '@lucide/astro';
+import SectionHeading from './SectionHeading.astro';
+import janeLogo from '../icons/jane.svg?raw';
+
+const steps = [
+  {
+    step: '01',
+    icon: PlugZap,
+    title: 'Connect your channels',
+    body: 'Drop the webchat widget on your site and point Jane at your help docs and FAQs.',
+  },
+  {
+    step: '02',
+    jane: true,
+    title: 'Jane handles conversations',
+    body: 'Customers get instant, accurate answers around the clock, with no queue and no waiting.',
+  },
+  {
+    step: '03',
+    icon: ShieldCheck,
+    title: 'Your team stays in control',
+    body: 'Anything Jane can’t resolve is escalated to a human with full context attached.',
+  },
+];
 ---
 
-<section class="py-24 px-6 bg-neutral-50 dark:bg-neutral-900/30">
-  <div class="max-w-5xl mx-auto">
-    <h2 class="animate-on-scroll text-3xl sm:text-4xl font-bold text-center mb-4">
-      Up and running in 3 steps
-    </h2>
-    <p class="animate-on-scroll text-neutral-600 dark:text-neutral-400 text-center mb-16 max-w-2xl mx-auto">
-      No complex setup. No lengthy onboarding. Deploy and start handling guests in minutes.
-    </p>
+<section id="how-it-works" class="border-t border-line bg-surface">
+  <div class="mx-auto max-w-6xl px-6 py-24">
+    <SectionHeading
+      eyebrow="How it works"
+      title="Live in three steps"
+      subtitle="No rebuild, no long onboarding. Jane is answering customers the same day."
+    />
 
-    <div class="stagger-children grid md:grid-cols-3 gap-8">
-      <!-- Step 1 -->
-      <div class="relative">
-        <div class="flex items-start gap-4">
-          <div class="w-16 h-16 rounded-2xl bg-blue-100 dark:bg-blue-500/10 text-blue-600 dark:text-blue-400 flex items-center justify-center text-2xl font-bold shrink-0">
-            1
-          </div>
-          <div>
-            <h3 class="text-xl font-semibold mb-2">Deploy</h3>
-            <p class="text-neutral-600 dark:text-neutral-400">
-              One click on Railway or Docker. Your own server, your own data. Under 5 minutes.
-            </p>
-          </div>
-        </div>
+    <div class="relative mt-20" data-reveal-stagger>
+      {/* Connecting line (desktop) */}
+      <div
+        aria-hidden="true"
+        class="absolute left-0 right-0 top-8 hidden h-px bg-line md:block"
+      >
       </div>
 
-      <!-- Step 2 -->
-      <div class="relative">
-        <div class="flex items-start gap-4">
-          <div class="w-16 h-16 rounded-2xl bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-2xl font-bold shrink-0">
-            2
-          </div>
-          <div>
-            <h3 class="text-xl font-semibold mb-2">Connect</h3>
-            <p class="text-neutral-600 dark:text-neutral-400">
-              Link your WhatsApp, SMS, or email. Add your hotel's knowledge and policies.
-            </p>
-          </div>
-        </div>
-      </div>
-
-      <!-- Step 3 -->
-      <div class="relative">
-        <div class="flex items-start gap-4">
-          <div class="w-16 h-16 rounded-2xl bg-purple-100 dark:bg-purple-500/10 text-purple-600 dark:text-purple-400 flex items-center justify-center text-2xl font-bold shrink-0">
-            3
-          </div>
-          <div>
-            <h3 class="text-xl font-semibold mb-2">Relax</h3>
-            <p class="text-neutral-600 dark:text-neutral-400">
-              Jack handles guest inquiries automatically. Get notified only when you're needed.
-            </p>
-          </div>
-        </div>
+      <div class="grid gap-12 md:grid-cols-3 md:gap-10">
+        {
+          steps.map((item) => (
+            <div class="relative">
+              <div class="flex items-center gap-4">
+                <span class="relative z-10 flex size-16 shrink-0 items-center justify-center rounded-2xl border border-line bg-panel text-brand shadow-sm [&_svg]:size-7">
+                  {item.jane ? (
+                    <span set:html={janeLogo} />
+                  ) : (
+                    <item.icon class="size-7" />
+                  )}
+                </span>
+                <span class="text-5xl font-bold tracking-tight text-line">
+                  {item.step}
+                </span>
+              </div>
+              <h3 class="mt-6 text-lg font-semibold text-ink">{item.title}</h3>
+              <p class="mt-2 text-sm text-muted">{item.body}</p>
+            </div>
+          ))
+        }
       </div>
     </div>
   </div>
