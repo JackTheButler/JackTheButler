@@ -5,13 +5,13 @@
  * Use this to hide UI elements from users who lack specific permissions.
  *
  * @example
- * <PermissionGate permission="tasks:manage">
- *   <CreateTaskButton />
+ * <PermissionGate permission="guests:manage">
+ *   <CreateGuestButton />
  * </PermissionGate>
  *
  * @example
- * <PermissionGate permissions={["tasks:view", "tasks:manage"]} requireAll={false}>
- *   <TaskList />
+ * <PermissionGate permissions={["guests:view", "guests:manage"]} requireAll={false}>
+ *   <GuestList />
  * </PermissionGate>
  */
 

@@ -217,7 +217,7 @@
       "title": "Danger Zone",
       "description": "Destructive actions that cannot be undone",
       "resetDatabase": "Reset Database",
-      "resetDescription": "This will permanently delete all data including guests, reservations, conversations, tasks, and knowledge base entries. This action cannot be undone.",
+      "resetDescription": "This will permanently delete all data including guests, reservations, conversations, and knowledge base entries. This action cannot be undone.",
       "resetButton": "Reset Database",
       "resetConfirmTitle": "Reset Database",
       "resetConfirmDescription": "This will permanently delete ALL data. This action cannot be undone.",

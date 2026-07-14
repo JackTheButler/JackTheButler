@@ -24,11 +24,6 @@ export const EventTypes = {
   CONVERSATION_RESOLVED: 'conversation.resolved',
   CONVERSATION_CLOSED: 'conversation.closed',
 
-  // Task events
-  TASK_CREATED: 'task.created',
-  TASK_ASSIGNED: 'task.assigned',
-  TASK_COMPLETED: 'task.completed',
-
   // Guest events
   GUEST_CREATED: 'guest.created',
   GUEST_UPDATED: 'guest.updated',
@@ -124,35 +119,6 @@ export interface ConversationClosedEvent extends BaseEvent {
 }
 
 /**
- * Task created event
- */
-export interface TaskCreatedEvent extends BaseEvent {
-  type: typeof EventTypes.TASK_CREATED;
-  taskId: string;
-  conversationId?: string;
-  type_: string;
-  department: string;
-  priority: string;
-}
-
-/**
- * Task assigned event
- */
-export interface TaskAssignedEvent extends BaseEvent {
-  type: typeof EventTypes.TASK_ASSIGNED;
-  taskId: string;
-  assignedTo: string;
-}
-
-/**
- * Task completed event
- */
-export interface TaskCompletedEvent extends BaseEvent {
-  type: typeof EventTypes.TASK_COMPLETED;
-  taskId: string;
-}
-
-/**
  * Model download progress event
  */
 export interface ModelDownloadProgressEvent extends BaseEvent {
@@ -233,9 +199,6 @@ export type AppEvent =
   | ConversationUpdatedEvent
   | ConversationEscalatedEvent
   | ConversationClosedEvent
-  | TaskCreatedEvent
-  | TaskAssignedEvent
-  | TaskCompletedEvent
   | ModelDownloadProgressEvent
   | ReservationCreatedEvent
   | ReservationUpdatedEvent

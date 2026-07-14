@@ -12,7 +12,6 @@
  * - G-05: Complaints handling
  * - G-08: Check-out assistance
  * - S-01: Staff conversation management
- * - S-02: Staff task management
  */
 
 import { describe, it, expect, beforeEach, afterEach } from 'vitest';
@@ -148,29 +147,6 @@ function createTestDb() {
       created_at TEXT NOT NULL DEFAULT (datetime('now'))
     );
 
-    CREATE TABLE IF NOT EXISTS tasks (
-      id TEXT PRIMARY KEY,
-      conversation_id TEXT REFERENCES conversations(id),
-      message_id TEXT REFERENCES messages(id),
-      type TEXT NOT NULL,
-      department TEXT NOT NULL,
-      room_number TEXT,
-      description TEXT NOT NULL,
-      items TEXT,
-      priority TEXT NOT NULL DEFAULT 'standard',
-      status TEXT NOT NULL DEFAULT 'pending',
-      source TEXT NOT NULL DEFAULT 'manual',
-      assigned_to TEXT REFERENCES staff(id),
-      external_id TEXT,
-      external_system TEXT,
-      due_at TEXT,
-      started_at TEXT,
-      completed_at TEXT,
-      notes TEXT,
-      completion_notes TEXT,
-      created_at TEXT NOT NULL DEFAULT (datetime('now')),
-      updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-    );
   `);
 
   return drizzle(sqlite, { schema });
@@ -279,7 +255,7 @@ describe('P0 Use Cases', () => {
   });
 
   describe('G-03: Service Requests (Housekeeping)', () => {
-    it('should create task from housekeeping request', async () => {
+    it('should log housekeeping request as an inbound message with the classified intent', async () => {
       // Create guest and reservation
       const guestId = generateId('guest');
       await db.insert(schema.guests).values({
@@ -325,30 +301,15 @@ describe('P0 Use Cases', () => {
         confidence: 0.95,
       });
 
-      // Create task from the request
-      const taskId = generateId('task');
-      await db.insert(schema.tasks).values({
-        id: taskId,
-        conversationId,
-        type: 'housekeeping',
-        department: 'housekeeping',
-        roomNumber: '305',
-        description: 'Guest requests extra towels',
-        items: JSON.stringify(['towels']),
-        priority: 'standard',
-        status: 'pending',
-      });
-
-      // Verify task was created
-      const tasks = await db
+      // Verify message was stored with correct intent
+      const msgs = await db
         .select()
-        .from(schema.tasks)
-        .where(eq(schema.tasks.conversationId, conversationId));
+        .from(schema.messages)
+        .where(eq(schema.messages.conversationId, conversationId));
 
-      expect(tasks.length).toBe(1);
-      expect(tasks[0].type).toBe('housekeeping');
-      expect(tasks[0].roomNumber).toBe('305');
-      expect(tasks[0].status).toBe('pending');
+      expect(msgs.length).toBe(1);
+      expect(msgs[0].intent).toBe('request.housekeeping.towels');
+      expect(msgs[0].confidence).toBeGreaterThan(0.9);
     });
   });
 
@@ -401,7 +362,7 @@ describe('P0 Use Cases', () => {
   });
 
   describe('G-05: Complaints Handling', () => {
-    it('should escalate complaint and create task', async () => {
+    it('should escalate complaint to staff', async () => {
       // Create guest
       const guestId = generateId('guest');
       await db.insert(schema.guests).values({
@@ -448,19 +409,6 @@ describe('P0 Use Cases', () => {
         confidence: 0.88,
       });
 
-      // Create maintenance task
-      const taskId = generateId('task');
-      await db.insert(schema.tasks).values({
-        id: taskId,
-        conversationId,
-        type: 'maintenance',
-        department: 'maintenance',
-        roomNumber: '412',
-        description: 'AC not working - guest complaint',
-        priority: 'urgent',
-        status: 'pending',
-      });
-
       // Verify escalation
       const conv = await db
         .select()
@@ -469,16 +417,6 @@ describe('P0 Use Cases', () => {
         .get();
 
       expect(conv?.state).toBe('escalated');
-
-      // Verify urgent task created
-      const task = await db
-        .select()
-        .from(schema.tasks)
-        .where(eq(schema.tasks.conversationId, conversationId))
-        .get();
-
-      expect(task?.priority).toBe('urgent');
-      expect(task?.type).toBe('maintenance');
     });
   });
 
@@ -608,129 +546,6 @@ describe('P0 Use Cases', () => {
         .get();
 
       expect(conv?.assignedTo).toBe(staffId);
-    });
-  });
-
-  describe('S-02: Staff Task Management', () => {
-    it('should allow staff to claim and complete tasks', async () => {
-      // Create staff member
-      const staffId = generateId('staff');
-      await db.insert(schema.staff).values({
-        id: staffId,
-        email: 'housekeeper@hotel.com',
-        name: 'Maria Garcia',
-        roleId: 'role-staff',
-      });
-
-      // Create task
-      const taskId = generateId('task');
-      await db.insert(schema.tasks).values({
-        id: taskId,
-        type: 'housekeeping',
-        department: 'housekeeping',
-        roomNumber: '301',
-        description: 'Extra pillows needed',
-        priority: 'standard',
-        status: 'pending',
-      });
-
-      // Staff claims task
-      await db
-        .update(schema.tasks)
-        .set({
-          assignedTo: staffId,
-          status: 'assigned',
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(schema.tasks.id, taskId));
-
-      // Verify assignment
-      let task = await db
-        .select()
-        .from(schema.tasks)
-        .where(eq(schema.tasks.id, taskId))
-        .get();
-
-      expect(task?.assignedTo).toBe(staffId);
-      expect(task?.status).toBe('assigned');
-
-      // Staff marks in progress
-      await db
-        .update(schema.tasks)
-        .set({
-          status: 'in_progress',
-          startedAt: new Date().toISOString(),
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(schema.tasks.id, taskId));
-
-      // Staff completes task
-      await db
-        .update(schema.tasks)
-        .set({
-          status: 'completed',
-          completedAt: new Date().toISOString(),
-          completionNotes: 'Delivered 2 extra pillows',
-          updatedAt: new Date().toISOString(),
-        })
-        .where(eq(schema.tasks.id, taskId));
-
-      // Verify completion
-      task = await db
-        .select()
-        .from(schema.tasks)
-        .where(eq(schema.tasks.id, taskId))
-        .get();
-
-      expect(task?.status).toBe('completed');
-      expect(task?.completedAt).toBeDefined();
-      expect(task?.completionNotes).toBe('Delivered 2 extra pillows');
-    });
-
-    it('should filter tasks by department', async () => {
-      // Create tasks in different departments
-      await db.insert(schema.tasks).values({
-        id: generateId('task'),
-        type: 'housekeeping',
-        department: 'housekeeping',
-        description: 'Clean room 201',
-        roomNumber: '201',
-        status: 'pending',
-      });
-
-      await db.insert(schema.tasks).values({
-        id: generateId('task'),
-        type: 'maintenance',
-        department: 'maintenance',
-        description: 'Fix light in room 202',
-        roomNumber: '202',
-        status: 'pending',
-      });
-
-      await db.insert(schema.tasks).values({
-        id: generateId('task'),
-        type: 'housekeeping',
-        department: 'housekeeping',
-        description: 'Extra towels for room 203',
-        roomNumber: '203',
-        status: 'pending',
-      });
-
-      // Filter by housekeeping department
-      const housekeepingTasks = await db
-        .select()
-        .from(schema.tasks)
-        .where(eq(schema.tasks.department, 'housekeeping'));
-
-      expect(housekeepingTasks.length).toBe(2);
-
-      // Filter by maintenance department
-      const maintenanceTasks = await db
-        .select()
-        .from(schema.tasks)
-        .where(eq(schema.tasks.department, 'maintenance'));
-
-      expect(maintenanceTasks.length).toBe(1);
     });
   });
 

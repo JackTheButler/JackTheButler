@@ -17,13 +17,9 @@ vi.mock('@/gateway/websocket.js', () => ({
 import { broadcast } from '@/gateway/websocket.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { events, EventTypes } from '@/events/index.js';
-import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
 import { generateId } from '@/utils/id.js';
 import type {
-  TaskCreatedEvent,
-  TaskAssignedEvent,
-  TaskCompletedEvent,
   ConversationCreatedEvent,
   MessageSentEvent,
   MessageReceivedEvent,
@@ -52,54 +48,6 @@ describe('websocket-bridge', () => {
 
   afterEach(() => {
     vi.restoreAllMocks();
-  });
-
-  // ─────────────────────────────────────────────────────────────
-  // Task stats
-  // ─────────────────────────────────────────────────────────────
-
-  describe('task stats broadcasts', () => {
-    it.each([
-      ['task.created', EventTypes.TASK_CREATED],
-      ['task.assigned', EventTypes.TASK_ASSIGNED],
-      ['task.completed', EventTypes.TASK_COMPLETED],
-    ])('broadcasts stats:tasks on %s', async (_label, type) => {
-      const taskId = generateId('task');
-      events.emit({
-        type,
-        timestamp: new Date(),
-        taskId,
-        assignedTo: 'staff-1',
-      } as unknown as TaskAssignedEvent | TaskCompletedEvent);
-      await flush();
-
-      const statsCalls = callsOfType('stats:tasks');
-      expect(statsCalls.length).toBeGreaterThanOrEqual(1);
-      expect(statsCalls[0]).toMatchObject({
-        payload: {
-          pending: expect.any(Number),
-          inProgress: expect.any(Number),
-          completed: expect.any(Number),
-          total: expect.any(Number),
-        },
-      });
-    });
-
-    it('does not broadcast stats:tasks when taskService.getStats rejects', async () => {
-      vi.spyOn(taskService, 'getStats').mockRejectedValueOnce(new Error('db down'));
-
-      events.emit({
-        type: EventTypes.TASK_CREATED,
-        timestamp: new Date(),
-        taskId: generateId('task'),
-        type_: 'maintenance',
-        department: 'engineering',
-        priority: 'standard',
-      } as TaskCreatedEvent);
-      await flush();
-
-      expect(callsOfType('stats:tasks')).toHaveLength(0);
-    });
   });
 
   // ─────────────────────────────────────────────────────────────

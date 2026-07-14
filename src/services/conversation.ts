@@ -5,7 +5,7 @@
  */
 
 import { eq, and, desc, sql } from 'drizzle-orm';
-import { db, conversations, messages, guests, staff, tasks } from '@/db/index.js';
+import { db, conversations, messages, guests, staff } from '@/db/index.js';
 import type { Conversation, Message } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -198,10 +198,9 @@ export class ConversationService {
 
     const results = await query;
 
-    // Get message and task counts
+    // Get message counts
     const conversationIds = results.map((c) => c.id);
     const messageCounts = await this.getMessageCounts(conversationIds);
-    const taskCounts = await this.getTaskCounts(conversationIds);
 
     return results.map((c) => {
       const guestName = c.guestFirstName && c.guestLastName
@@ -219,7 +218,6 @@ export class ConversationService {
         lastMessageAt: c.lastMessageAt,
         createdAt: c.createdAt,
         messageCount: messageCounts.get(c.id) || 0,
-        taskCount: taskCounts.get(c.id) || 0,
         guestLanguage: c.guestLanguage,
       };
 
@@ -254,7 +252,6 @@ export class ConversationService {
   async getDetails(id: string): Promise<ConversationDetails> {
     const conversation = await this.getById(id);
     const messageCount = (await this.getMessageCounts([id])).get(id) || 0;
-    const taskCount = (await this.getTaskCounts([id])).get(id) || 0;
 
     // Get guest name if linked
     let guestName: string | undefined;
@@ -287,7 +284,6 @@ export class ConversationService {
       lastMessageAt: conversation.lastMessageAt,
       resolvedAt: conversation.resolvedAt,
       messageCount,
-      taskCount,
       guestLanguage: conversation.guestLanguage,
       createdAt: conversation.createdAt,
       updatedAt: conversation.updatedAt,
@@ -491,26 +487,6 @@ export class ConversationService {
       .groupBy(messages.conversationId);
 
     return new Map(counts.map((c) => [c.conversationId, c.count]));
-  }
-
-  /**
-   * Get task counts for multiple conversations
-   */
-  private async getTaskCounts(conversationIds: string[]): Promise<Map<string, number>> {
-    if (conversationIds.length === 0) {
-      return new Map();
-    }
-
-    const counts = await db
-      .select({
-        conversationId: tasks.conversationId,
-        count: sql<number>`count(*)`.as('count'),
-      })
-      .from(tasks)
-      .where(sql`${tasks.conversationId} IN (${sql.join(conversationIds.map(id => sql`${id}`), sql`, `)})`)
-      .groupBy(tasks.conversationId);
-
-    return new Map(counts.map((c) => [c.conversationId!, c.count]));
   }
 
   /**

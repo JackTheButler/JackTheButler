@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { app } from '@/gateway/server.js';
-import { db, staff, roles, guests, reservations, conversations, tasks } from '@/db/index.js';
+import { db, staff, roles, guests, reservations, conversations } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { AuthService } from '@/auth/index.js';
@@ -461,14 +461,12 @@ describe('Reservations API', () => {
   describe('GET /api/v1/reservations/:id', () => {
     it('returns a single reservation with guest and related data', async () => {
       const conversationId = generateId('conversation');
-      const taskId = generateId('task');
 
-      // Other-guest fixtures: a second guest with their own conversation and
-      // task, used to prove related tasks are scoped to the *correct* guest
-      // and not leaked across guests.
+      // Other-guest fixture: a second guest with their own conversation,
+      // used to prove related conversations are scoped to the *correct*
+      // guest and not leaked across guests.
       const otherGuestId = generateId('guest');
       const otherConversationId = generateId('conversation');
-      const otherTaskId = generateId('task');
 
       await db.insert(conversations).values({
         id: conversationId,
@@ -482,24 +480,8 @@ describe('Reservations API', () => {
         updatedAt: now(),
       });
 
-      // Tasks link to conversations, not reservations directly. Related
-      // tasks for a reservation are found via the guest's conversations
-      // (reservation -> guest -> conversations -> tasks), so this task is
-      // linked through `conversationId`, not the reservation id.
-      await db.insert(tasks).values({
-        id: taskId,
-        conversationId,
-        type: 'housekeeping',
-        department: 'housekeeping',
-        description: 'Extra towels',
-        status: 'pending',
-        priority: 'standard',
-        createdAt: now(),
-        updatedAt: now(),
-      });
-
-      // A different guest with their own conversation and task — this task
-      // must NOT show up in the first guest's reservation related tasks.
+      // A different guest with their own conversation — this conversation
+      // must NOT show up in the first guest's reservation related data.
       await db.insert(guests).values({
         id: otherGuestId,
         firstName: 'Grace',
@@ -520,18 +502,6 @@ describe('Reservations API', () => {
         updatedAt: now(),
       });
 
-      await db.insert(tasks).values({
-        id: otherTaskId,
-        conversationId: otherConversationId,
-        type: 'housekeeping',
-        department: 'housekeeping',
-        description: 'Should not appear',
-        status: 'pending',
-        priority: 'standard',
-        createdAt: now(),
-        updatedAt: now(),
-      });
-
       const res = await app.request(`/api/v1/reservations/${todayArrivalResId}`, {
         headers: { Authorization: `Bearer ${adminToken}` },
       });
@@ -542,11 +512,8 @@ describe('Reservations API', () => {
       expect(json.guest.email).toBe('ada-reservations-test@example.com');
       expect(json.guest.preferences).toEqual(['quiet room']);
       expect(json._related.conversations.some((c: { id: string }) => c.id === conversationId)).toBe(true);
-      expect(json._related.tasks.some((t: { id: string }) => t.id === taskId)).toBe(true);
-      expect(json._related.tasks.some((t: { id: string }) => t.id === otherTaskId)).toBe(false);
+      expect(json._related.conversations.some((c: { id: string }) => c.id === otherConversationId)).toBe(false);
 
-      await db.delete(tasks).where(eq(tasks.id, taskId));
-      await db.delete(tasks).where(eq(tasks.id, otherTaskId));
       await db.delete(conversations).where(eq(conversations.id, conversationId));
       await db.delete(conversations).where(eq(conversations.id, otherConversationId));
       await db.delete(guests).where(eq(guests.id, otherGuestId));

@@ -2,12 +2,9 @@
  * Shared API types for the dashboard.
  */
 
-import type { ConversationState, ChannelType, TaskStatus, ReservationStatus } from '@jackthebutler/shared';
+import type { ConversationState, ChannelType, ReservationStatus } from '@jackthebutler/shared';
 
-export type { ConversationState, ChannelType, TaskStatus, ReservationStatus };
-
-// --- Status Types ---
-export type TaskSource = 'manual' | 'auto';
+export type { ConversationState, ChannelType, ReservationStatus };
 
 // --- Guest ---
 
@@ -95,25 +92,6 @@ export interface ReservationSummary {
   status: ReservationStatus | string;
 }
 
-// --- Task ---
-
-export interface Task {
-  id: string;
-  conversationId: string | null;
-  messageId?: string | null;
-  source?: TaskSource;
-  type: string;
-  department: string;
-  roomNumber: string | null;
-  description: string;
-  priority: string;
-  status: TaskStatus | string;
-  assignedTo: string | null;
-  assignedName?: string;
-  dueAt?: string | null;
-  createdAt: string;
-}
-
 // --- Conversation ---
 
 export interface Conversation {
@@ -128,6 +106,5 @@ export interface Conversation {
   lastMessageAt: string | null;
   createdAt: string;
   messageCount: number;
-  taskCount?: number;
   guestLanguage?: string | null;
 }

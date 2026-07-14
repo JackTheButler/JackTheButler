@@ -51,7 +51,6 @@
   "nav": {
     "home": "الرئيسية",
     "inbox": "البريد",
-    "tasks": "المهام",
     "operations": "العمليات",
     "guests": "الضيوف",
     "reservations": "الحجوزات",
@@ -68,8 +67,6 @@
   "filters": {
     "all": "الكل",
     "pending": "قيد الانتظار",
-    "inProgress": "قيد التنفيذ",
-    "completed": "مكتمل",
     "cancelled": "ملغي",
     "confirmed": "مؤكد",
     "checkedIn": "تم التسجيل",

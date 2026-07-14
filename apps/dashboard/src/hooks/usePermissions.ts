@@ -24,8 +24,8 @@ interface PermissionUtils {
    *
    * @example
    * const { can } = usePermissions();
-   * if (can('tasks:manage')) {
-   *   // Show create task button
+   * if (can('guests:manage')) {
+   *   // Show create guest button
    * }
    */
   can: (permission: string) => boolean;
@@ -37,8 +37,8 @@ interface PermissionUtils {
    *
    * @example
    * const { canAny } = usePermissions();
-   * if (canAny(['tasks:view', 'tasks:manage'])) {
-   *   // Show tasks menu item
+   * if (canAny(['guests:view', 'guests:manage'])) {
+   *   // Show guests menu item
    * }
    */
   canAny: (permissions: string[]) => boolean;
@@ -83,19 +83,19 @@ interface PermissionUtils {
  * @returns Permission utilities
  *
  * @example
- * function TasksPage() {
+ * function GuestsPage() {
  *   const { can, canAny, isAdmin } = usePermissions();
  *
  *   // Hide create button if no manage permission
- *   const canCreate = can(PERMISSIONS.TASKS_MANAGE);
+ *   const canCreate = can(PERMISSIONS.GUESTS_MANAGE);
  *
- *   // Show page if user has any task permission
- *   const canViewPage = canAny([PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE]);
+ *   // Show page if user has any guest permission
+ *   const canViewPage = canAny([PERMISSIONS.GUESTS_VIEW, PERMISSIONS.GUESTS_MANAGE]);
  *
  *   return (
  *     <div>
- *       {canViewPage && <TaskList />}
- *       {canCreate && <CreateTaskButton />}
+ *       {canViewPage && <GuestList />}
+ *       {canCreate && <CreateGuestButton />}
  *       {isAdmin && <AdminOnlyFeature />}
  *     </div>
  *   );
@@ -158,7 +158,7 @@ export function useCanAny(permissions: string[]): boolean {
  * @returns boolean indicating if user has all permissions
  *
  * @example
- * const hasFullAccess = useCanAll([PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE]);
+ * const hasFullAccess = useCanAll([PERMISSIONS.GUESTS_VIEW, PERMISSIONS.GUESTS_MANAGE]);
  */
 export function useCanAll(permissions: string[]): boolean {
   const { hasAllPermissions } = useAuth();

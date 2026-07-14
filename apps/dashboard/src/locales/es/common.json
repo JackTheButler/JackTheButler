@@ -51,7 +51,6 @@
   "nav": {
     "home": "Inicio",
     "inbox": "Bandeja",
-    "tasks": "Tareas",
     "operations": "Operaciones",
     "guests": "Huéspedes",
     "reservations": "Reservaciones",
@@ -68,8 +67,6 @@
   "filters": {
     "all": "Todos",
     "pending": "Pendiente",
-    "inProgress": "En Progreso",
-    "completed": "Completado",
     "cancelled": "Cancelado",
     "confirmed": "Confirmado",
     "checkedIn": "Registrado",

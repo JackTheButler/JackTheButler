@@ -36,8 +36,8 @@ export function buildQueryString(
  * buildUrl('/reservations', { search: 'john', status: 'confirmed' })
  * // Returns: '/reservations?search=john&status=confirmed'
  *
- * buildUrl('/tasks', { status: 'all' })
- * // Returns: '/tasks'
+ * buildUrl('/guests', { status: 'all' })
+ * // Returns: '/guests'
  */
 export function buildUrl(
   path: string,

@@ -52,7 +52,7 @@
       "description": "Agrega huéspedes, reservas y base de conocimientos de demostración para explorar el sistema. Puedes restablecer todo en Configuración cuando estés listo para el uso real.",
       "createAll": "Cargar datos de ejemplo",
       "confirmTitle": "¿Cargar datos de ejemplo?",
-      "confirmDescription": "Esto agregará huéspedes, reservas, conversaciones, tareas y entradas de base de conocimiento de demostración. Los datos existentes no se verán afectados.",
+      "confirmDescription": "Esto agregará huéspedes, reservas, conversaciones y entradas de base de conocimiento de demostración. Los datos existentes no se verán afectados.",
       "confirm": "Cargar datos",
       "success": "¡Datos de ejemplo cargados correctamente!",
       "error": "Error al cargar los datos de ejemplo. Por favor, inténtalo de nuevo.",

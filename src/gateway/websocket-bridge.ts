@@ -10,7 +10,6 @@
 import { events, EventTypes } from '@/events/index.js';
 import type { AppEvent, ModelDownloadProgressEvent } from '@/types/events.js';
 import { broadcast } from './websocket.js';
-import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
 import { createLogger } from '@/utils/logger.js';
 
@@ -20,23 +19,6 @@ const log = createLogger('websocket-bridge');
  * Setup event listeners that bridge domain events to WebSocket broadcasts
  */
 export function setupWebSocketBridge() {
-
-  // ─────────────────────────────────────────────────────────────
-  // Task Events
-  // ─────────────────────────────────────────────────────────────
-
-  const broadcastTaskStats = async () => {
-    try {
-      const stats = await taskService.getStats();
-      broadcast({ type: 'stats:tasks', payload: stats });
-    } catch (error) {
-      log.error({ error }, 'Failed to broadcast task stats');
-    }
-  };
-
-  events.on(EventTypes.TASK_CREATED, broadcastTaskStats);
-  events.on(EventTypes.TASK_ASSIGNED, broadcastTaskStats);
-  events.on(EventTypes.TASK_COMPLETED, broadcastTaskStats);
 
   // ─────────────────────────────────────────────────────────────
   // Conversation Events

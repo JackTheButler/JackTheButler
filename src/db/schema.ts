@@ -7,7 +7,6 @@
  * - reservations: Booking records
  * - conversations: Communication threads
  * - messages: Individual messages
- * - tasks: Service requests and work orders
  * - staff: Hotel staff users
  *
  * @see docs/03-architecture/data-model.md
@@ -378,66 +377,6 @@ export const messages = sqliteTable(
 );
 
 // ===================
-// Tasks
-// ===================
-
-/**
- * Service requests and work orders
- */
-export const tasks = sqliteTable(
-  'tasks',
-  {
-    id: text('id').primaryKey(),
-    conversationId: text('conversation_id').references(() => conversations.id),
-    messageId: text('message_id').references(() => messages.id),
-
-    // Source: manual, auto
-    source: text('source').notNull().default('manual'),
-
-    // Type: housekeeping, maintenance, concierge, room_service, other
-    type: text('type').notNull(),
-    department: text('department').notNull(),
-
-    // Details
-    roomNumber: text('room_number'),
-    description: text('description').notNull(),
-    // Priority: urgent, high, standard, low
-    priority: text('priority').notNull().default('standard'),
-
-    // Status: pending, assigned, in_progress, completed, cancelled
-    status: text('status').notNull().default('pending'),
-    assignedTo: text('assigned_to').references(() => staff.id),
-
-    // Timing
-    dueAt: text('due_at'),
-    startedAt: text('started_at'),
-    completedAt: text('completed_at'),
-
-    // Notes
-    notes: text('notes'),
-    completionNotes: text('completion_notes'),
-
-    createdAt: text('created_at')
-      .notNull()
-      .default(sql`(datetime('now'))`),
-    updatedAt: text('updated_at')
-      .notNull()
-      .default(sql`(datetime('now'))`),
-  },
-  (table) => [
-    index('idx_tasks_conversation').on(table.conversationId),
-    index('idx_tasks_message').on(table.messageId),
-    index('idx_tasks_status').on(table.status),
-    index('idx_tasks_department').on(table.department, table.status),
-    index('idx_tasks_assigned').on(table.assignedTo),
-    index('idx_tasks_room').on(table.roomNumber),
-    index('idx_tasks_priority').on(table.priority),
-    index('idx_tasks_source').on(table.source),
-    index('idx_tasks_created').on(table.createdAt),
-  ]
-);
-
-// ===================
 // Knowledge Base
 // ===================
 
@@ -523,9 +462,6 @@ export type NewConversation = typeof conversations.$inferInsert;
 
 export type Message = typeof messages.$inferSelect;
 export type NewMessage = typeof messages.$inferInsert;
-
-export type Task = typeof tasks.$inferSelect;
-export type NewTask = typeof tasks.$inferInsert;
 
 export type KnowledgeItem = typeof knowledgeBase.$inferSelect;
 export type NewKnowledgeItem = typeof knowledgeBase.$inferInsert;

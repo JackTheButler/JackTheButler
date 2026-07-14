@@ -217,7 +217,7 @@
       "title": "危险区域",
       "description": "无法撤销的破坏性操作",
       "resetDatabase": "重置数据库",
-      "resetDescription": "这将永久删除所有数据，包括客人、预订、对话、任务和知识库条目。此操作无法撤销。",
+      "resetDescription": "这将永久删除所有数据，包括客人、预订、对话和知识库条目。此操作无法撤销。",
       "resetButton": "重置数据库",
       "resetConfirmTitle": "重置数据库",
       "resetConfirmDescription": "这将永久删除所有数据。此操作无法撤销。",

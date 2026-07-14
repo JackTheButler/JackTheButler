@@ -142,7 +142,7 @@ describe('Roles API', () => {
         body: JSON.stringify({
           name: 'API Test Role',
           description: 'Created via API test',
-          permissions: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE],
+          permissions: [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE],
         }),
       });
 
@@ -150,7 +150,7 @@ describe('Roles API', () => {
       const json = await res.json();
       expect(json.role.name).toBe('API Test Role');
       expect(json.role.description).toBe('Created via API test');
-      expect(json.role.permissions).toContain(PERMISSIONS.TASKS_VIEW);
+      expect(json.role.permissions).toContain(PERMISSIONS.RESERVATIONS_VIEW);
       expect(json.role.isSystem).toBe(false);
 
       // Clean up
@@ -166,7 +166,7 @@ describe('Roles API', () => {
         },
         body: JSON.stringify({
           name: 'Admin', // Already exists
-          permissions: [PERMISSIONS.TASKS_VIEW],
+          permissions: [PERMISSIONS.RESERVATIONS_VIEW],
         }),
       });
 
@@ -214,7 +214,7 @@ describe('Roles API', () => {
         },
         body: JSON.stringify({
           name: 'Should Not Create',
-          permissions: [PERMISSIONS.TASKS_VIEW],
+          permissions: [PERMISSIONS.RESERVATIONS_VIEW],
         }),
       });
 
@@ -229,7 +229,7 @@ describe('Roles API', () => {
         id: customRoleId,
         name: 'Update Test Role',
         description: 'For update testing',
-        permissions: JSON.stringify([PERMISSIONS.TASKS_VIEW]),
+        permissions: JSON.stringify([PERMISSIONS.RESERVATIONS_VIEW]),
         isSystem: false,
       });
     });
@@ -243,7 +243,7 @@ describe('Roles API', () => {
         },
         body: JSON.stringify({
           description: 'Updated description',
-          permissions: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.GUESTS_VIEW],
+          permissions: [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.GUESTS_VIEW],
         }),
       });
 
@@ -282,7 +282,7 @@ describe('Roles API', () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          permissions: [...viewerRole.permissions, PERMISSIONS.TASKS_MANAGE],
+          permissions: [...viewerRole.permissions, PERMISSIONS.RESERVATIONS_MANAGE],
         }),
       });
 
@@ -328,7 +328,7 @@ describe('Roles API', () => {
         },
         body: JSON.stringify({
           name: 'To Be Deleted',
-          permissions: [PERMISSIONS.TASKS_VIEW],
+          permissions: [PERMISSIONS.RESERVATIONS_VIEW],
         }),
       });
 
@@ -363,7 +363,7 @@ describe('Roles API', () => {
         },
         body: JSON.stringify({
           name: 'Role With User',
-          permissions: [PERMISSIONS.TASKS_VIEW],
+          permissions: [PERMISSIONS.RESERVATIONS_VIEW],
         }),
       });
 
@@ -415,7 +415,7 @@ describe('Roles API', () => {
 
       expect(json.permissions).toBeDefined();
       expect(Array.isArray(json.permissions)).toBe(true);
-      expect(json.permissions.length).toBe(15); // 7 groups x 2 (view + manage) + health:view
+      expect(json.permissions.length).toBe(13); // 6 groups x 2 (view + manage) + health:view
 
       expect(json.groups).toBeDefined();
       expect(Array.isArray(json.groups)).toBe(true);
@@ -432,14 +432,14 @@ describe('Roles API', () => {
       });
 
       const json = await res.json();
-      const taskViewPerm = json.permissions.find(
-        (p: { key: string }) => p.key === PERMISSIONS.TASKS_VIEW
+      const reservationsViewPerm = json.permissions.find(
+        (p: { key: string }) => p.key === PERMISSIONS.RESERVATIONS_VIEW
       );
 
-      expect(taskViewPerm).toBeDefined();
-      expect(taskViewPerm.label).toBe('View Tasks');
-      expect(taskViewPerm.description).toBeDefined();
-      expect(taskViewPerm.group).toBe('tasks');
+      expect(reservationsViewPerm).toBeDefined();
+      expect(reservationsViewPerm.label).toBe('View Reservations');
+      expect(reservationsViewPerm.description).toBeDefined();
+      expect(reservationsViewPerm.group).toBe('reservations');
     });
 
     it('should deny access to non-admin users', async () => {

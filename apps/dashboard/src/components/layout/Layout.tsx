@@ -12,7 +12,6 @@ import { cn } from '@/lib/utils';
 import {
   Home,
   MessageSquare,
-  ClipboardList,
   Puzzle,
   ChevronUp,
   Power,
@@ -118,14 +117,6 @@ export function Layout() {
 
   // Connect to WebSocket for real-time updates
   useWebSocket();
-
-  // Fetch task stats for badge (initial load - WebSocket pushes updates)
-  const { data: taskStats } = useQuery({
-    queryKey: ['taskStats'],
-    queryFn: () => api.get<{ pending: number; inProgress: number; completed: number; total: number }>('/tasks/stats'),
-    staleTime: Infinity,
-    enabled: isAuthenticated,
-  });
 
   // Fetch conversation stats for badge (initial load - WebSocket pushes updates)
   const { data: conversationStats } = useQuery({
@@ -344,7 +335,6 @@ export function Layout() {
     navigate('/login');
   };
 
-  const pendingTasks = taskStats?.pending || undefined;
   const escalatedConversations = conversationStats?.escalated || undefined;
 
   const navSections: NavSection[] = [
@@ -352,7 +342,6 @@ export function Layout() {
       items: [
         { path: '/', label: t('nav.home'), icon: <Home size={20} /> },
         { path: '/inbox', label: t('nav.inbox'), icon: <MessageSquare size={20} />, badge: escalatedConversations, permission: PERMISSIONS.CONVERSATIONS_VIEW },
-        { path: '/tasks', label: t('nav.tasks'), icon: <ClipboardList size={20} />, badge: pendingTasks, permission: PERMISSIONS.TASKS_VIEW },
       ],
     },
     {

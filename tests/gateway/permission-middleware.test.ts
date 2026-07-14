@@ -35,12 +35,12 @@ describe('Permission Middleware', () => {
 
   testApp.use('*', requireAuth);
 
-  testApp.get('/tasks', requirePermission(PERMISSIONS.TASKS_VIEW), (c) => {
-    return c.json({ success: true, route: 'tasks:view' });
+  testApp.get('/conv-test', requirePermission(PERMISSIONS.CONVERSATIONS_VIEW), (c) => {
+    return c.json({ success: true, route: 'conv:view' });
   });
 
-  testApp.post('/tasks', requirePermission(PERMISSIONS.TASKS_MANAGE), (c) => {
-    return c.json({ success: true, route: 'tasks:manage' });
+  testApp.post('/conv-test', requirePermission(PERMISSIONS.CONVERSATIONS_MANAGE), (c) => {
+    return c.json({ success: true, route: 'conv:manage' });
   });
 
   testApp.get('/admin', requirePermission(PERMISSIONS.ADMIN_MANAGE), (c) => {
@@ -49,7 +49,7 @@ describe('Permission Middleware', () => {
 
   testApp.get(
     '/multi-perm',
-    requirePermission(PERMISSIONS.TASKS_VIEW, PERMISSIONS.GUESTS_VIEW),
+    requirePermission(PERMISSIONS.CONVERSATIONS_VIEW, PERMISSIONS.GUESTS_VIEW),
     (c) => {
       return c.json({ success: true, route: 'multi' });
     }
@@ -57,7 +57,7 @@ describe('Permission Middleware', () => {
 
   testApp.get(
     '/any-perm',
-    requireAnyPermission(PERMISSIONS.ADMIN_MANAGE, PERMISSIONS.TASKS_VIEW),
+    requireAnyPermission(PERMISSIONS.ADMIN_MANAGE, PERMISSIONS.CONVERSATIONS_VIEW),
     (c) => {
       return c.json({ success: true, route: 'any' });
     }
@@ -71,12 +71,12 @@ describe('Permission Middleware', () => {
     await db.delete(staff).where(eq(staff.id, customUserId));
     await db.delete(roles).where(eq(roles.id, customRoleId));
 
-    // Create custom role with only tasks:view permission
+    // Create custom role with only conv:view permission
     await db.insert(roles).values({
       id: customRoleId,
       name: 'Custom Test Role',
       description: 'For permission middleware testing',
-      permissions: JSON.stringify([PERMISSIONS.TASKS_VIEW]),
+      permissions: JSON.stringify([PERMISSIONS.CONVERSATIONS_VIEW]),
       isSystem: false,
     });
 
@@ -141,7 +141,7 @@ describe('Permission Middleware', () => {
   describe('requirePermission', () => {
     describe('Admin user (wildcard permission)', () => {
       it('should allow access to any route', async () => {
-        const res1 = await testApp.request('/tasks', {
+        const res1 = await testApp.request('/conv-test', {
           headers: { Authorization: `Bearer ${adminToken}` },
         });
         expect(res1.status).toBe(200);
@@ -154,15 +154,15 @@ describe('Permission Middleware', () => {
     });
 
     describe('Staff user (limited permissions)', () => {
-      it('should allow access to tasks:view', async () => {
-        const res = await testApp.request('/tasks', {
+      it('should allow access to conv:view', async () => {
+        const res = await testApp.request('/conv-test', {
           headers: { Authorization: `Bearer ${staffToken}` },
         });
         expect(res.status).toBe(200);
       });
 
-      it('should allow access to tasks:manage', async () => {
-        const res = await testApp.request('/tasks', {
+      it('should allow access to conv:manage', async () => {
+        const res = await testApp.request('/conv-test', {
           method: 'POST',
           headers: { Authorization: `Bearer ${staffToken}` },
         });
@@ -178,15 +178,15 @@ describe('Permission Middleware', () => {
     });
 
     describe('Viewer user (view-only permissions)', () => {
-      it('should allow access to tasks:view', async () => {
-        const res = await testApp.request('/tasks', {
+      it('should allow access to conv:view', async () => {
+        const res = await testApp.request('/conv-test', {
           headers: { Authorization: `Bearer ${viewerToken}` },
         });
         expect(res.status).toBe(200);
       });
 
-      it('should deny access to tasks:manage', async () => {
-        const res = await testApp.request('/tasks', {
+      it('should deny access to conv:manage', async () => {
+        const res = await testApp.request('/conv-test', {
           method: 'POST',
           headers: { Authorization: `Bearer ${viewerToken}` },
         });
@@ -201,16 +201,16 @@ describe('Permission Middleware', () => {
       });
     });
 
-    describe('Custom user (tasks:view only)', () => {
-      it('should allow access to tasks:view', async () => {
-        const res = await testApp.request('/tasks', {
+    describe('Custom user (conv:view only)', () => {
+      it('should allow access to conv:view', async () => {
+        const res = await testApp.request('/conv-test', {
           headers: { Authorization: `Bearer ${customToken}` },
         });
         expect(res.status).toBe(200);
       });
 
-      it('should deny access to tasks:manage', async () => {
-        const res = await testApp.request('/tasks', {
+      it('should deny access to conv:manage', async () => {
+        const res = await testApp.request('/conv-test', {
           method: 'POST',
           headers: { Authorization: `Bearer ${customToken}` },
         });
@@ -226,14 +226,14 @@ describe('Permission Middleware', () => {
         expect(res.status).toBe(200);
       });
 
-      it('should allow staff (has both tasks:view and guests:view)', async () => {
+      it('should allow staff (has both conv:view and guests:view)', async () => {
         const res = await testApp.request('/multi-perm', {
           headers: { Authorization: `Bearer ${staffToken}` },
         });
         expect(res.status).toBe(200);
       });
 
-      it('should deny custom user (only has tasks:view, not guests:view)', async () => {
+      it('should deny custom user (only has conv:view, not guests:view)', async () => {
         const res = await testApp.request('/multi-perm', {
           headers: { Authorization: `Bearer ${customToken}` },
         });
@@ -257,7 +257,7 @@ describe('Permission Middleware', () => {
       expect(res.status).toBe(200);
     });
 
-    it('should allow custom user (has tasks:view)', async () => {
+    it('should allow custom user (has conv:view)', async () => {
       const res = await testApp.request('/any-perm', {
         headers: { Authorization: `Bearer ${customToken}` },
       });
@@ -267,12 +267,12 @@ describe('Permission Middleware', () => {
 
   describe('No authentication', () => {
     it('should return 401 without token', async () => {
-      const res = await testApp.request('/tasks');
+      const res = await testApp.request('/conv-test');
       expect(res.status).toBe(401);
     });
 
     it('should return 401 with invalid token', async () => {
-      const res = await testApp.request('/tasks', {
+      const res = await testApp.request('/conv-test', {
         headers: { Authorization: 'Bearer invalid-token' },
       });
       expect(res.status).toBe(401);

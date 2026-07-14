@@ -5,9 +5,9 @@ import { buildUrl } from '@/lib/query';
 type QueryParams = Record<string, string | number | boolean | null | undefined>;
 
 interface UseFilteredQueryOptions<TData> {
-  /** Base query key (e.g., 'reservations', 'tasks') */
+  /** Base query key (e.g., 'reservations', 'guests') */
   queryKey: string;
-  /** API endpoint path (e.g., '/reservations', '/tasks') */
+  /** API endpoint path (e.g., '/reservations', '/guests') */
   endpoint: string;
   /** Query parameters to include in the request */
   params?: QueryParams;
@@ -21,9 +21,9 @@ interface UseFilteredQueryOptions<TData> {
  * A wrapper around useQuery that handles common filtered query patterns.
  *
  * @example
- * const { data, isLoading } = useFilteredQuery<{ tasks: Task[] }>({
- *   queryKey: 'tasks',
- *   endpoint: '/tasks',
+ * const { data, isLoading } = useFilteredQuery<{ reservations: Reservation[] }>({
+ *   queryKey: 'reservations',
+ *   endpoint: '/reservations',
  *   params: { status: statusFilter, limit: 50 },
  *   refetchInterval: 10000,
  * });

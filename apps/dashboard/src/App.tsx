@@ -13,7 +13,6 @@ import { ProtectedRoute } from '@/components/auth/ProtectedRoute';
 import { PERMISSIONS } from '@/hooks/usePermissions';
 import { HomePage } from '@/pages/home/Home';
 import { ConversationsPage } from '@/pages/inbox/Conversations';
-import { TasksPage } from '@/pages/tasks/Tasks';
 import { AppsPage } from '@/pages/engine/apps/Apps';
 import { AppEditPage } from '@/pages/engine/apps/AppEdit';
 import { SettingsPage } from '@/pages/settings/Settings';
@@ -38,7 +37,6 @@ export function App() {
         <Route element={<Layout />}>
           <Route path="/" element={<HomePage />} />
           <Route path="/inbox" element={<ProtectedRoute permission={PERMISSIONS.CONVERSATIONS_VIEW}><ConversationsPage /></ProtectedRoute>} />
-          <Route path="/tasks" element={<ProtectedRoute permission={PERMISSIONS.TASKS_VIEW}><TasksPage /></ProtectedRoute>} />
           <Route path="/engine/apps" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><AppsPage /></ProtectedRoute>} />
           <Route path="/engine/apps/:appId" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><AppEditPage /></ProtectedRoute>} />
           <Route path="/settings/:tab?" element={<ProtectedRoute permission={PERMISSIONS.SETTINGS_VIEW}><SettingsPage /></ProtectedRoute>} />

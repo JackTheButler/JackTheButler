@@ -52,7 +52,7 @@
       "description": "Add demo guests, reservations, and knowledge base entries to explore the system. You can reset everything in Settings when ready for real use.",
       "createAll": "Load Sample Data",
       "confirmTitle": "Load Sample Data?",
-      "confirmDescription": "This will add demo guests, reservations, conversations, tasks, and knowledge base entries to your database. Existing data will not be affected.",
+      "confirmDescription": "This will add demo guests, reservations, conversations, and knowledge base entries to your database. Existing data will not be affected.",
       "confirm": "Load Data",
       "success": "Sample data loaded successfully!",
       "nextStepLabel": "Next step:",

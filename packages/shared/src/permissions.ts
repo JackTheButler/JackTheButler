@@ -18,10 +18,6 @@ export const PERMISSIONS = {
   RESERVATIONS_VIEW: 'reservations:view',
   RESERVATIONS_MANAGE: 'reservations:manage',
 
-  // Tasks
-  TASKS_VIEW: 'tasks:view',
-  TASKS_MANAGE: 'tasks:manage',
-
   // Knowledge
   KNOWLEDGE_VIEW: 'knowledge:view',
   KNOWLEDGE_MANAGE: 'knowledge:manage',

@@ -4,8 +4,8 @@
  * Read-only queries for reservation lists, today's activity, and reservation detail.
  */
 
-import { eq, and, desc, gte, inArray, sql } from 'drizzle-orm';
-import { db, reservations, guests, conversations, tasks } from '@/db/index.js';
+import { eq, and, desc, gte, sql } from 'drizzle-orm';
+import { db, reservations, guests, conversations } from '@/db/index.js';
 import type { Guest, Reservation } from '@/db/schema.js';
 import { settingsService } from '@/services/settings.js';
 import { NotFoundError } from '@/errors/index.js';
@@ -68,7 +68,6 @@ export interface ReservationDetail extends Omit<Reservation, 'specialRequests' |
   guest: ReservationDetailGuest | null;
   _related: {
     conversations: { id: string; channelType: string; state: string; lastMessageAt: string | null }[];
-    tasks: { id: string; type: string; description: string; status: string; priority: string }[];
   };
 }
 
@@ -241,7 +240,7 @@ export class ReservationService {
   }
 
   /**
-   * A single reservation with full guest details and related conversations/tasks.
+   * A single reservation with full guest details and related conversations.
    * Throws NotFoundError if the reservation does not exist.
    */
   async getById(id: string): Promise<ReservationDetail> {
@@ -262,28 +261,6 @@ export class ReservationService {
       .where(eq(conversations.reservationId, id))
       .orderBy(desc(conversations.lastMessageAt))
       .all();
-
-    // Tasks link to conversations, not reservations directly, so we first
-    // find the conversation IDs belonging to this reservation's guest, then
-    // fetch tasks scoped to that set.
-    const guestConversations = await db
-      .select({ id: conversations.id })
-      .from(conversations)
-      .where(eq(conversations.guestId, result.reservation.guestId))
-      .all();
-
-    const guestConversationIds = guestConversations.map((c) => c.id);
-
-    const relatedTasks =
-      guestConversationIds.length > 0
-        ? await db
-            .select()
-            .from(tasks)
-            .where(inArray(tasks.conversationId, guestConversationIds))
-            .orderBy(desc(tasks.createdAt))
-            .limit(10)
-            .all()
-        : [];
 
     return {
       ...result.reservation,
@@ -307,13 +284,6 @@ export class ReservationService {
           channelType: c.channelType,
           state: c.state,
           lastMessageAt: c.lastMessageAt,
-        })),
-        tasks: relatedTasks.map((t) => ({
-          id: t.id,
-          type: t.type,
-          description: t.description,
-          status: t.status,
-          priority: t.priority,
         })),
       },
     };

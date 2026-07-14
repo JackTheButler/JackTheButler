@@ -81,7 +81,7 @@ describe('RoleService', () => {
       const input = {
         name: 'Test Role',
         description: 'A test role',
-        permissions: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE],
+        permissions: [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE],
       };
 
       const role = await service.createRole(input);
@@ -89,15 +89,15 @@ describe('RoleService', () => {
 
       expect(role.name).toBe('Test Role');
       expect(role.description).toBe('A test role');
-      expect(role.permissions).toContain(PERMISSIONS.TASKS_VIEW);
-      expect(role.permissions).toContain(PERMISSIONS.TASKS_MANAGE);
+      expect(role.permissions).toContain(PERMISSIONS.RESERVATIONS_VIEW);
+      expect(role.permissions).toContain(PERMISSIONS.RESERVATIONS_MANAGE);
       expect(role.isSystem).toBe(false);
     });
 
     it('should reject duplicate role names', async () => {
       const input = {
         name: 'Admin', // Already exists
-        permissions: [PERMISSIONS.TASKS_VIEW],
+        permissions: [PERMISSIONS.RESERVATIONS_VIEW],
       };
 
       await expect(service.createRole(input)).rejects.toThrow(ValidationError);
@@ -131,7 +131,7 @@ describe('RoleService', () => {
       const created = await service.createRole({
         name: 'Update Test Role',
         description: 'Original description',
-        permissions: [PERMISSIONS.TASKS_VIEW],
+        permissions: [PERMISSIONS.RESERVATIONS_VIEW],
       });
       testRoleIds.push(created.id);
 
@@ -145,15 +145,15 @@ describe('RoleService', () => {
     it('should update role permissions', async () => {
       const created = await service.createRole({
         name: 'Permission Update Role',
-        permissions: [PERMISSIONS.TASKS_VIEW],
+        permissions: [PERMISSIONS.RESERVATIONS_VIEW],
       });
       testRoleIds.push(created.id);
 
       const updated = await service.updateRole(created.id, {
-        permissions: [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE],
+        permissions: [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE],
       });
 
-      expect(updated.permissions).toContain(PERMISSIONS.TASKS_MANAGE);
+      expect(updated.permissions).toContain(PERMISSIONS.RESERVATIONS_MANAGE);
     });
 
     it('should prevent renaming system roles', async () => {
@@ -177,7 +177,7 @@ describe('RoleService', () => {
     it('should delete custom role', async () => {
       const created = await service.createRole({
         name: 'Delete Test Role',
-        permissions: [PERMISSIONS.TASKS_VIEW],
+        permissions: [PERMISSIONS.RESERVATIONS_VIEW],
       });
 
       await service.deleteRole(created.id);
@@ -194,7 +194,7 @@ describe('RoleService', () => {
       // Create a role and assign a user
       const created = await service.createRole({
         name: 'Role With Users',
-        permissions: [PERMISSIONS.TASKS_VIEW],
+        permissions: [PERMISSIONS.RESERVATIONS_VIEW],
       });
       testRoleIds.push(created.id);
 
@@ -242,7 +242,7 @@ describe('RoleService', () => {
     });
 
     it('should return false for non-existent user', async () => {
-      const result = await service.userHasPermission('non-existent-user', PERMISSIONS.TASKS_VIEW);
+      const result = await service.userHasPermission('non-existent-user', PERMISSIONS.RESERVATIONS_VIEW);
       expect(result).toBe(false);
     });
   });

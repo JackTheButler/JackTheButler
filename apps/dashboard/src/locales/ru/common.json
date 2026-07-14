@@ -51,7 +51,6 @@
   "nav": {
     "home": "Главная",
     "inbox": "Входящие",
-    "tasks": "Задачи",
     "operations": "Операции",
     "guests": "Гости",
     "reservations": "Бронирования",
@@ -68,8 +67,6 @@
   "filters": {
     "all": "Все",
     "pending": "Ожидает",
-    "inProgress": "В работе",
-    "completed": "Завершено",
     "cancelled": "Отменено",
     "confirmed": "Подтверждено",
     "checkedIn": "Заселён",

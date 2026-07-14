@@ -1,15 +1,12 @@
-import { useState, useRef, useEffect, useMemo } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useTranslation } from 'react-i18next';
-import { ArrowLeft, ChevronDown, Languages, ListTodo, Wrench, Sparkles, ConciergeBell, UtensilsCrossed, HelpCircle, SquareArrowOutUpRight } from 'lucide-react';
+import { ArrowLeft, ChevronDown, Languages, SquareArrowOutUpRight } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { api } from '@/lib/api';
 import { cn } from '@/lib/utils';
-import { formatTime, formatDateTime } from '@/lib/formatters';
-import { priorityVariants, taskStatusVariants } from '@/lib/config';
+import { formatTime } from '@/lib/formatters';
 import { usePermissions, PERMISSIONS } from '@/hooks/usePermissions';
-import type { Task } from '@/types/api';
-import { DrawerRoot, DrawerContent } from '@/components/ui/drawer';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { ChannelIcon } from '@/components/shared/ChannelIcon';
@@ -53,10 +50,8 @@ export function ConversationView({ id, onBack }: Props) {
   const queryClient = useQueryClient();
   const { can } = usePermissions();
   const canManageConversations = can(PERMISSIONS.CONVERSATIONS_MANAGE);
-  const canManageTasks = can(PERMISSIONS.TASKS_MANAGE);
   const [input, setInput] = useState('');
   const [stateMenuOpen, setStateMenuOpen] = useState(false);
-  const [taskDrawerOpen, setTaskDrawerOpen] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
   const stateMenuRef = useRef<HTMLDivElement>(null);
 
@@ -68,12 +63,6 @@ export function ConversationView({ id, onBack }: Props) {
   const { data: msgData, isLoading: loadingMessages } = useQuery({
     queryKey: ['messages', id],
     queryFn: () => api.get<{ messages: Message[] }>(`/conversations/${id}/messages`),
-  });
-
-  const { data: taskData } = useQuery({
-    queryKey: ['tasks', 'conversation', id],
-    queryFn: () => api.get<{ tasks: Task[] }>(`/tasks?conversationId=${id}`),
-    refetchInterval: 10000,
   });
 
   const sendMutation = useMutation({
@@ -97,20 +86,6 @@ export function ConversationView({ id, onBack }: Props) {
     },
   });
 
-  const claimTaskMutation = useMutation({
-    mutationFn: (taskId: string) => api.post(`/tasks/${taskId}/claim`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', 'conversation', id] });
-    },
-  });
-
-  const completeTaskMutation = useMutation({
-    mutationFn: (taskId: string) => api.post(`/tasks/${taskId}/complete`, {}),
-    onSuccess: () => {
-      queryClient.invalidateQueries({ queryKey: ['tasks', 'conversation', id] });
-    },
-  });
-
   // Close state menu when clicking outside
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
@@ -124,20 +99,6 @@ export function ConversationView({ id, onBack }: Props) {
 
   const conv = convData?.conversation;
   const messages = msgData?.messages || [];
-  const tasks = taskData?.tasks || [];
-
-  // Create a map of messageId -> tasks
-  const tasksByMessageId = useMemo(() => {
-    const map = new Map<string, Task[]>();
-    for (const task of tasks) {
-      if (task.messageId) {
-        const existing = map.get(task.messageId) || [];
-        existing.push(task);
-        map.set(task.messageId, existing);
-      }
-    }
-    return map;
-  }, [tasks]);
 
   // Scroll to bottom when messages change
   useEffect(() => {
@@ -272,22 +233,7 @@ export function ConversationView({ id, onBack }: Props) {
         ) : messages.length === 0 ? (
           <div className="text-center text-muted-foreground">{t('conversations.noMessages')}</div>
         ) : (
-          messages.map((msg) => {
-            const messageTasks = tasksByMessageId.get(msg.id) || [];
-            return (
-              <div key={msg.id}>
-                <MessageBubble message={msg} t={t} />
-                {messageTasks.length > 0 && (
-                  <TaskIndicator
-                    tasks={messageTasks}
-                    isInbound={msg.direction === 'inbound'}
-                    onClick={() => setTaskDrawerOpen(true)}
-                    t={t}
-                  />
-                )}
-              </div>
-            );
-          })
+          messages.map((msg) => <MessageBubble key={msg.id} message={msg} t={t} />)
         )}
         <div ref={messagesEndRef} />
       </div>
@@ -314,30 +260,6 @@ export function ConversationView({ id, onBack }: Props) {
           </div>
         </div>
       )}
-
-      {/* Tasks Drawer */}
-      <DrawerRoot open={taskDrawerOpen} onOpenChange={setTaskDrawerOpen}>
-        <DrawerContent title={t('conversations.tasksTitle', { count: tasks.length })}>
-          <div className="p-4 space-y-3">
-            {tasks.length === 0 ? (
-              <p className="text-center text-muted-foreground py-8">{t('conversations.noTasksConversation')}</p>
-            ) : (
-              tasks.map((task) => (
-                <TaskCard
-                  key={task.id}
-                  task={task}
-                  t={t}
-                  onClaim={() => claimTaskMutation.mutate(task.id)}
-                  onComplete={() => completeTaskMutation.mutate(task.id)}
-                  isClaimPending={claimTaskMutation.isPending}
-                  isCompletePending={completeTaskMutation.isPending}
-                  canManageTasks={canManageTasks}
-                />
-              ))
-            )}
-          </div>
-        </DrawerContent>
-      </DrawerRoot>
     </div>
   );
 }
@@ -419,140 +341,6 @@ function MessageBubble({ message, t }: { message: Message; t: (key: string) => s
           )}
         </div>
       </div>
-    </div>
-  );
-}
-
-function TaskIndicator({
-  tasks,
-  isInbound,
-  onClick,
-  t,
-}: {
-  tasks: Task[];
-  isInbound: boolean;
-  onClick: () => void;
-  t: (key: string, options?: Record<string, unknown>) => string;
-}) {
-  const statusTextColors: Record<string, string> = {
-    pending: 'text-yellow-600',
-    in_progress: 'text-yellow-600',
-    completed: 'text-green-600',
-    cancelled: 'text-muted-foreground/70',
-  };
-
-  return (
-    <div className={cn('flex mt-1', isInbound ? 'justify-start' : 'justify-end')}>
-      <button
-        onClick={onClick}
-        className="flex items-center gap-1.5 text-xs text-muted-foreground bg-muted/50 hover:bg-muted px-2 py-1 rounded transition-colors"
-      >
-        <ListTodo className="w-3 h-3" />
-        <span>
-          {tasks.length > 1
-            ? t('conversations.tasksCreated', { count: tasks.length })
-            : t('conversations.taskCreated', { count: tasks.length })}
-        </span>
-        {tasks.map((task) => (
-          <span
-            key={task.id}
-            className={cn(statusTextColors[task.status] || 'text-muted-foreground')}
-          >
-            ({t(`tasks.statuses.${task.status}`)})
-          </span>
-        ))}
-      </button>
-    </div>
-  );
-}
-
-const taskTypeIcons: Record<string, React.ComponentType<{ className?: string }>> = {
-  housekeeping: Sparkles,
-  maintenance: Wrench,
-  concierge: ConciergeBell,
-  room_service: UtensilsCrossed,
-  other: HelpCircle,
-};
-
-function TaskCard({
-  task,
-  t,
-  onClaim,
-  onComplete,
-  isClaimPending,
-  isCompletePending,
-  canManageTasks,
-}: {
-  task: Task;
-  t: (key: string, options?: Record<string, unknown>) => string;
-  onClaim: () => void;
-  onComplete: () => void;
-  isClaimPending: boolean;
-  isCompletePending: boolean;
-  canManageTasks: boolean;
-}) {
-  const Icon = taskTypeIcons[task.type] || HelpCircle;
-
-  return (
-    <div className={cn(
-      'border rounded-lg p-3',
-      task.status === 'pending' && 'bg-warning border-warning-border'
-    )}>
-      {/* Header row: Icon + Type + Priority + Status */}
-      <div className="flex items-center gap-2 mb-2">
-        <Icon className="w-4 h-4 text-muted-foreground" />
-        <span className="text-sm font-medium capitalize">{task.type.replace('_', ' ')}</span>
-        <Badge variant={priorityVariants[task.priority]} className="capitalize">
-          {task.priority}
-        </Badge>
-        <Badge variant={taskStatusVariants[task.status]}>
-          {t(`tasks.statuses.${task.status}`)}
-        </Badge>
-      </div>
-
-      {/* Description */}
-      <p className="text-sm text-foreground mb-2">{task.description}</p>
-
-      {/* Meta row: Room + Department + Time */}
-      <div className="flex flex-wrap items-center gap-2 text-xs text-muted-foreground mb-3">
-        {task.roomNumber && (
-          <Badge className="bg-muted text-muted-foreground">{t('conversations.room', { number: task.roomNumber })}</Badge>
-        )}
-        <span className="capitalize">{task.department.replace('_', ' ')}</span>
-        <span>·</span>
-        <span>{formatDateTime(task.createdAt)}</span>
-      </div>
-
-      {/* Assigned */}
-      {task.assignedName && (
-        <p className="text-xs text-muted-foreground mb-3">
-          {t('conversations.assignedTo')} <span className="font-medium text-foreground">{task.assignedName}</span>
-        </p>
-      )}
-
-      {/* Actions */}
-      {canManageTasks && (
-        <div className="flex gap-2">
-          {task.status === 'pending' && (
-            <Button
-              size="xs"
-              onClick={onClaim}
-              loading={isClaimPending}
-            >
-              {t('conversations.claim')}
-            </Button>
-          )}
-          {task.status === 'in_progress' && (
-            <Button
-              size="xs"
-              onClick={onComplete}
-              loading={isCompletePending}
-            >
-              {t('conversations.complete')}
-            </Button>
-          )}
-        </div>
-      )}
     </div>
   );
 }

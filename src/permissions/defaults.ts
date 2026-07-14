@@ -40,8 +40,6 @@ export const DEFAULT_ROLES: Omit<Role, 'createdAt' | 'updatedAt'>[] = [
       PERMISSIONS.GUESTS_MANAGE,
       PERMISSIONS.RESERVATIONS_VIEW,
       PERMISSIONS.RESERVATIONS_MANAGE,
-      PERMISSIONS.TASKS_VIEW,
-      PERMISSIONS.TASKS_MANAGE,
       PERMISSIONS.KNOWLEDGE_VIEW,
       PERMISSIONS.KNOWLEDGE_MANAGE,
       PERMISSIONS.SETTINGS_VIEW,
@@ -56,15 +54,13 @@ export const DEFAULT_ROLES: Omit<Role, 'createdAt' | 'updatedAt'>[] = [
   {
     id: SYSTEM_ROLE_IDS.STAFF,
     name: 'Staff',
-    description: 'Handle guest requests, tasks, and day-to-day operations',
+    description: 'Handle guest requests and day-to-day operations',
     permissions: [
       // Core operational permissions
       PERMISSIONS.CONVERSATIONS_VIEW,
       PERMISSIONS.CONVERSATIONS_MANAGE,
       PERMISSIONS.GUESTS_VIEW,
       PERMISSIONS.RESERVATIONS_VIEW,
-      PERMISSIONS.TASKS_VIEW,
-      PERMISSIONS.TASKS_MANAGE,
       PERMISSIONS.KNOWLEDGE_VIEW,
     ],
     isSystem: true,
@@ -78,7 +74,6 @@ export const DEFAULT_ROLES: Omit<Role, 'createdAt' | 'updatedAt'>[] = [
       PERMISSIONS.CONVERSATIONS_VIEW,
       PERMISSIONS.GUESTS_VIEW,
       PERMISSIONS.RESERVATIONS_VIEW,
-      PERMISSIONS.TASKS_VIEW,
       PERMISSIONS.KNOWLEDGE_VIEW,
     ],
     isSystem: true,

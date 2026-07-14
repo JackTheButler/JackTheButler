@@ -6,10 +6,10 @@
  *
  * @example
  * <Route
- *   path="/tasks"
+ *   path="/guests"
  *   element={
- *     <ProtectedRoute permission="tasks:view">
- *       <TasksPage />
+ *     <ProtectedRoute permission="guests:view">
+ *       <GuestsPage />
  *     </ProtectedRoute>
  *   }
  * />

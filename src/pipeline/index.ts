@@ -53,7 +53,6 @@ import { checkVerification } from './stages/check-verification.js';
 import { extractResponseTags } from './stages/extract-response-tags.js';
 import { emitMessageReceived } from './stages/emit-message-received.js';
 import { emitMessageSent } from './stages/emit-message-sent.js';
-import { routeTask } from './stages/route-task.js';
 
 export type { ButlerContext } from './context.js';
 
@@ -74,8 +73,6 @@ let cached: { pipeline: Pipeline<ButlerContext>; lang: string } | null = null;
 //     for the full pipeline to finish.
 //   - `checkVerification` after `classifyIntent` — hospitality identity
 //     verification (last name + confirmation number lookup).
-//   - `routeTask` after `checkVerification` — creates a row in `tasks`
-//     when the classified intent calls for staff action.
 //   - `extractResponseTags` after `generateResponse` — pulls `[ACTION:...]`
 //     and `[QUICK_REPLIES:...]` tags out of `aiResponse.content` into
 //     `aiResponse.metadata` for the webchat UI; runs before translation so
@@ -91,7 +88,6 @@ const stages: readonly Stage<ButlerContext>[] = [
   emitMessageReceived,
   classifyIntent,
   checkVerification,
-  routeTask,
   computeEmbedding,
   loadKnowledge,
   loadMemories,

@@ -51,7 +51,6 @@
   "nav": {
     "home": "होम",
     "inbox": "इनबॉक्स",
-    "tasks": "कार्य",
     "operations": "संचालन",
     "guests": "अतिथि",
     "reservations": "आरक्षण",
@@ -68,8 +67,6 @@
   "filters": {
     "all": "सभी",
     "pending": "लंबित",
-    "inProgress": "प्रगति में",
-    "completed": "पूर्ण",
     "cancelled": "रद्द",
     "confirmed": "पुष्टि",
     "checkedIn": "चेक इन",

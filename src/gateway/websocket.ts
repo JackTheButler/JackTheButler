@@ -10,7 +10,6 @@ import type { Duplex } from 'node:stream';
 import { jwtVerify } from 'jose';
 import { loadConfig } from '@/config/index.js';
 import { createLogger } from '@/utils/logger.js';
-import { taskService } from '@/services/task.js';
 import { conversationService } from '@/services/conversation.js';
 import { handleGuestConnection } from '@/apps/channels/webchat/index.js';
 
@@ -275,11 +274,7 @@ export function getConnectionCount(): number {
  * Send initial stats to a newly connected authenticated client
  */
 async function sendInitialStats(ws: AuthenticatedSocket) {
-  const [taskStats, convStats] = await Promise.all([
-    taskService.getStats(),
-    conversationService.getStats(),
-  ]);
+  const convStats = await conversationService.getStats();
 
-  sendMessage(ws, { type: 'stats:tasks', payload: taskStats });
   sendMessage(ws, { type: 'stats:conversations', payload: convStats });
 }

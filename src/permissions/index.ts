@@ -59,20 +59,6 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
     group: 'reservations',
   },
 
-  // Tasks
-  {
-    key: PERMISSIONS.TASKS_VIEW,
-    label: 'View Tasks',
-    description: 'View task list and task details',
-    group: 'tasks',
-  },
-  {
-    key: PERMISSIONS.TASKS_MANAGE,
-    label: 'Manage Tasks',
-    description: 'Create, assign, complete, and delete tasks',
-    group: 'tasks',
-  },
-
   // Knowledge
   {
     key: PERMISSIONS.KNOWLEDGE_VIEW,
@@ -142,11 +128,6 @@ export const PERMISSION_GROUPS: PermissionGroup[] = [
     key: 'reservations',
     label: 'Reservations',
     permissions: PERMISSION_DEFINITIONS.filter((p) => p.group === 'reservations'),
-  },
-  {
-    key: 'tasks',
-    label: 'Tasks',
-    permissions: PERMISSION_DEFINITIONS.filter((p) => p.group === 'tasks'),
   },
   {
     key: 'knowledge',

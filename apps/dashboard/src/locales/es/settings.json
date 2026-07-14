@@ -217,7 +217,7 @@
       "title": "Zona de Peligro",
       "description": "Acciones destructivas que no se pueden deshacer",
       "resetDatabase": "Restablecer Base de Datos",
-      "resetDescription": "Esto eliminará permanentemente todos los datos incluyendo huéspedes, reservaciones, conversaciones, tareas y entradas de la base de conocimiento. Esta acción no se puede deshacer.",
+      "resetDescription": "Esto eliminará permanentemente todos los datos incluyendo huéspedes, reservaciones, conversaciones y entradas de la base de conocimiento. Esta acción no se puede deshacer.",
       "resetButton": "Restablecer Base de Datos",
       "resetConfirmTitle": "Restablecer Base de Datos",
       "resetConfirmDescription": "Esto eliminará permanentemente TODOS los datos. Esta acción no se puede deshacer.",

@@ -4,7 +4,7 @@
  * Two responsibilities in one file:
  *   1. `IntentDefinitions` — the hotel-specific intents with descriptions,
  *      examples, and routing metadata (department, priority, identity
- *      requirements). Imported by `task-router` for routing decisions.
+ *      requirements) consumed by the prompt builder and verification stage.
  *   2. `intentProvider` — the package's `IntentProvider` implementation,
  *      projecting `IntentDefinition` rows into the package's `Intent`
  *      shape with metadata folded onto `intent.metadata`.

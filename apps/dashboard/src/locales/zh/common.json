@@ -51,7 +51,6 @@
   "nav": {
     "home": "首页",
     "inbox": "收件箱",
-    "tasks": "任务",
     "operations": "运营",
     "guests": "客人",
     "reservations": "预订",
@@ -68,8 +67,6 @@
   "filters": {
     "all": "全部",
     "pending": "待处理",
-    "inProgress": "进行中",
-    "completed": "已完成",
     "cancelled": "已取消",
     "confirmed": "已确认",
     "checkedIn": "已入住",

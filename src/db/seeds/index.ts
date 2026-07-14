@@ -6,15 +6,14 @@
 
 import { sql } from 'drizzle-orm';
 import { db } from '@/db/index.js';
-import { guests, reservations, knowledgeBase, conversations, messages, tasks } from '@/db/schema.js';
+import { guests, reservations, knowledgeBase, conversations, messages } from '@/db/schema.js';
 import { createLogger } from '@/utils/logger.js';
 import { demoGuests } from './guests.js';
 import { demoReservations } from './reservations.js';
 import { demoKnowledgeBase } from './knowledge-base.js';
 import { demoConversations, demoMessages } from './conversations.js';
-import { demoTasks } from './tasks.js';
 
-export { demoGuests, demoReservations, demoKnowledgeBase, demoConversations, demoMessages, demoTasks };
+export { demoGuests, demoReservations, demoKnowledgeBase, demoConversations, demoMessages };
 
 const log = createLogger('db:seeds');
 
@@ -24,7 +23,6 @@ export interface DemoDataCounts {
   knowledgeBase: number;
   conversations: number;
   messages: number;
-  tasks: number;
 }
 
 /**
@@ -38,7 +36,6 @@ export async function loadDemoData(): Promise<DemoDataCounts> {
     knowledgeBase: 0,
     conversations: 0,
     messages: 0,
-    tasks: 0,
   };
 
   for (const guest of demoGuests) {
@@ -86,20 +83,11 @@ export async function loadDemoData(): Promise<DemoDataCounts> {
     }
   }
 
-  for (const task of demoTasks) {
-    try {
-      await db.insert(tasks).values(task);
-      counts.tasks++;
-    } catch (e) {
-      log.warn({ id: task.id, err: e }, 'Skipping demo task');
-    }
-  }
-
   return counts;
 }
 
 /** Guest-facing data tables cleared by resetDemoData — config/staff/roles are preserved. */
-const RESETTABLE_TABLES = ['messages', 'tasks', 'webchat_sessions', 'conversations', 'reservations', 'knowledge_base', 'guests'];
+const RESETTABLE_TABLES = ['messages', 'webchat_sessions', 'conversations', 'reservations', 'knowledge_base', 'guests'];
 
 /**
  * Delete all rows from guest-facing data tables, preserving config, staff, and roles.

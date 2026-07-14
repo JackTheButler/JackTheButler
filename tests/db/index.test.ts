@@ -120,27 +120,6 @@ describe('Database', () => {
         created_at TEXT NOT NULL DEFAULT (datetime('now'))
       );
 
-      CREATE TABLE tasks (
-        id TEXT PRIMARY KEY,
-        conversation_id TEXT REFERENCES conversations(id),
-        type TEXT NOT NULL,
-        department TEXT NOT NULL,
-        room_number TEXT,
-        description TEXT NOT NULL,
-        items TEXT,
-        priority TEXT NOT NULL DEFAULT 'standard',
-        status TEXT NOT NULL DEFAULT 'pending',
-        assigned_to TEXT REFERENCES staff(id),
-        external_id TEXT,
-        external_system TEXT,
-        due_at TEXT,
-        started_at TEXT,
-        completed_at TEXT,
-        notes TEXT,
-        completion_notes TEXT,
-        created_at TEXT NOT NULL DEFAULT (datetime('now')),
-        updated_at TEXT NOT NULL DEFAULT (datetime('now'))
-      );
     `);
   });
 
@@ -179,10 +158,6 @@ describe('Database', () => {
       expect(result).toBeDefined();
     });
 
-    it('should have tasks table', () => {
-      const result = sqlite.prepare("SELECT name FROM sqlite_master WHERE type='table' AND name='tasks'").get();
-      expect(result).toBeDefined();
-    });
   });
 
   describe('CRUD operations', () => {

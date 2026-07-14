@@ -6,7 +6,6 @@ import LanguageDetector from 'i18next-browser-languagedetector';
 import enCommon from '@/locales/en/common.json';
 import enAuth from '@/locales/en/auth.json';
 import enDashboard from '@/locales/en/dashboard.json';
-import enTasks from '@/locales/en/tasks.json';
 import enConversations from '@/locales/en/conversations.json';
 import enGuests from '@/locales/en/guests.json';
 import enReservations from '@/locales/en/reservations.json';
@@ -19,7 +18,6 @@ import enRoles from '@/locales/en/roles.json';
 import esCommon from '@/locales/es/common.json';
 import esAuth from '@/locales/es/auth.json';
 import esDashboard from '@/locales/es/dashboard.json';
-import esTasks from '@/locales/es/tasks.json';
 import esConversations from '@/locales/es/conversations.json';
 import esGuests from '@/locales/es/guests.json';
 import esReservations from '@/locales/es/reservations.json';
@@ -32,7 +30,6 @@ import esRoles from '@/locales/es/roles.json';
 import arCommon from '@/locales/ar/common.json';
 import arAuth from '@/locales/ar/auth.json';
 import arDashboard from '@/locales/ar/dashboard.json';
-import arTasks from '@/locales/ar/tasks.json';
 import arConversations from '@/locales/ar/conversations.json';
 import arGuests from '@/locales/ar/guests.json';
 import arReservations from '@/locales/ar/reservations.json';
@@ -45,7 +42,6 @@ import arRoles from '@/locales/ar/roles.json';
 import hiCommon from '@/locales/hi/common.json';
 import hiAuth from '@/locales/hi/auth.json';
 import hiDashboard from '@/locales/hi/dashboard.json';
-import hiTasks from '@/locales/hi/tasks.json';
 import hiConversations from '@/locales/hi/conversations.json';
 import hiGuests from '@/locales/hi/guests.json';
 import hiReservations from '@/locales/hi/reservations.json';
@@ -58,7 +54,6 @@ import hiRoles from '@/locales/hi/roles.json';
 import ruCommon from '@/locales/ru/common.json';
 import ruAuth from '@/locales/ru/auth.json';
 import ruDashboard from '@/locales/ru/dashboard.json';
-import ruTasks from '@/locales/ru/tasks.json';
 import ruConversations from '@/locales/ru/conversations.json';
 import ruGuests from '@/locales/ru/guests.json';
 import ruReservations from '@/locales/ru/reservations.json';
@@ -71,7 +66,6 @@ import ruRoles from '@/locales/ru/roles.json';
 import zhCommon from '@/locales/zh/common.json';
 import zhAuth from '@/locales/zh/auth.json';
 import zhDashboard from '@/locales/zh/dashboard.json';
-import zhTasks from '@/locales/zh/tasks.json';
 import zhConversations from '@/locales/zh/conversations.json';
 import zhGuests from '@/locales/zh/guests.json';
 import zhReservations from '@/locales/zh/reservations.json';
@@ -86,7 +80,6 @@ export const namespaces = [
   'common',
   'auth',
   'dashboard',
-  'tasks',
   'conversations',
   'guests',
   'reservations',
@@ -108,7 +101,6 @@ i18n
         common: enCommon,
         auth: enAuth,
         dashboard: enDashboard,
-        tasks: enTasks,
         conversations: enConversations,
         guests: enGuests,
         reservations: enReservations,
@@ -122,7 +114,6 @@ i18n
         common: esCommon,
         auth: esAuth,
         dashboard: esDashboard,
-        tasks: esTasks,
         conversations: esConversations,
         guests: esGuests,
         reservations: esReservations,
@@ -136,7 +127,6 @@ i18n
         common: arCommon,
         auth: arAuth,
         dashboard: arDashboard,
-        tasks: arTasks,
         conversations: arConversations,
         guests: arGuests,
         reservations: arReservations,
@@ -150,7 +140,6 @@ i18n
         common: hiCommon,
         auth: hiAuth,
         dashboard: hiDashboard,
-        tasks: hiTasks,
         conversations: hiConversations,
         guests: hiGuests,
         reservations: hiReservations,
@@ -164,7 +153,6 @@ i18n
         common: ruCommon,
         auth: ruAuth,
         dashboard: ruDashboard,
-        tasks: ruTasks,
         conversations: ruConversations,
         guests: ruGuests,
         reservations: ruReservations,
@@ -178,7 +166,6 @@ i18n
         common: zhCommon,
         auth: zhAuth,
         dashboard: zhDashboard,
-        tasks: zhTasks,
         conversations: zhConversations,
         guests: zhGuests,
         reservations: zhReservations,
@@ -196,7 +183,7 @@ i18n
     // Load all namespaces (they're bundled anyway)
     ns: namespaces as unknown as string[],
     // Search other namespaces when key not found in default
-    fallbackNS: ['auth', 'dashboard', 'tasks', 'conversations', 'guests', 'reservations', 'settings', 'knowledge', 'setup', 'users', 'roles'],
+    fallbackNS: ['auth', 'dashboard', 'conversations', 'guests', 'reservations', 'settings', 'knowledge', 'setup', 'users', 'roles'],
     detection: {
       order: ['localStorage', 'navigator'],
       caches: ['localStorage'],

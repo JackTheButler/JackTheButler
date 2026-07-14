@@ -5,7 +5,7 @@
  */
 
 import { eq, and, desc, sql, or, like } from 'drizzle-orm';
-import { db, staff, roles, conversations, tasks } from '@/db/index.js';
+import { db, staff, roles, conversations } from '@/db/index.js';
 import type { Staff } from '@/db/schema.js';
 import { generateId } from '@/utils/id.js';
 import { createLogger } from '@/utils/logger.js';
@@ -479,7 +479,7 @@ export class StaffService {
   }
 
   /**
-   * Get reference count for a staff member (conversations, tasks, approvals)
+   * Get reference count for a staff member (conversations, approvals)
    */
   async getReferenceCount(id: string): Promise<number> {
     const [convCount] = await db
@@ -487,12 +487,7 @@ export class StaffService {
       .from(conversations)
       .where(eq(conversations.assignedTo, id));
 
-    const [taskCount] = await db
-      .select({ count: sql<number>`count(*)`.as('count') })
-      .from(tasks)
-      .where(eq(tasks.assignedTo, id));
-
-    return (convCount?.count || 0) + (taskCount?.count || 0);
+    return convCount?.count || 0;
   }
 
   /**

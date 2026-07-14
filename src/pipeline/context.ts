@@ -24,16 +24,4 @@ export interface ButlerContext extends MessageContext {
    * to phrase its reply (success / partial / failed / max-attempts).
    */
   verification?: VerificationState;
-
-  /**
-   * True when `routeTask` created a task on this turn for the classified
-   * intent. Surfaced on the `processor.outcome` activity-log row for
-   * run-to-task correlation in the dashboard.
-   */
-  taskCreated?: boolean;
-
-  /**
-   * Id of the task row inserted by `routeTask`, if any.
-   */
-  taskId?: string;
 }

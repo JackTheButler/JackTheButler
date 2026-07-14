@@ -51,7 +51,6 @@
   "nav": {
     "home": "Home",
     "inbox": "Inbox",
-    "tasks": "Tasks",
     "operations": "Operations",
     "guests": "Guests",
     "reservations": "Reservations",
@@ -68,8 +67,6 @@
   "filters": {
     "all": "All",
     "pending": "Pending",
-    "inProgress": "In Progress",
-    "completed": "Completed",
     "cancelled": "Cancelled",
     "confirmed": "Confirmed",
     "checkedIn": "Checked In",

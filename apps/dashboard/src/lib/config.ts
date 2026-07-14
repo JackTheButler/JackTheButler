@@ -5,7 +5,6 @@
 
 import type { BadgeVariant } from '@/components/ui/badge';
 import type {
-  TaskStatus,
   ReservationStatus,
   ConversationState,
 } from '@/types/api';
@@ -15,13 +14,6 @@ import type {
 export type FilterOption<T> = { value: T | 'all'; label: string };
 
 // Factory functions that accept translation function
-export const getTaskStatusFilters = (t: (key: string) => string): FilterOption<TaskStatus>[] => [
-  { value: 'all', label: t('filters.all') },
-  { value: 'pending', label: t('filters.pending') },
-  { value: 'in_progress', label: t('filters.inProgress') },
-  { value: 'completed', label: t('filters.completed') },
-];
-
 export const getReservationStatusFilters = (t: (key: string) => string): FilterOption<ReservationStatus>[] => [
   { value: 'all', label: t('filters.all') },
   { value: 'confirmed', label: t('filters.confirmed') },
@@ -47,13 +39,6 @@ export const getApprovalStatusFilters = (t: (key: string) => string): FilterOpti
 ];
 
 // Legacy exports for backward compatibility (will use English labels)
-export const taskStatusFilters: FilterOption<TaskStatus>[] = [
-  { value: 'all', label: 'All' },
-  { value: 'pending', label: 'Pending' },
-  { value: 'in_progress', label: 'In Progress' },
-  { value: 'completed', label: 'Completed' },
-];
-
 export const reservationStatusFilters: FilterOption<ReservationStatus>[] = [
   { value: 'all', label: 'All' },
   { value: 'confirmed', label: 'Confirmed' },
@@ -78,14 +63,6 @@ export const approvalStatusFilters: FilterOption<ApprovalStatus>[] = [
 
 // --- Badge Variant Mappings ---
 
-export const taskStatusVariants: Record<string, BadgeVariant> = {
-  pending: 'warning',
-  assigned: 'default',
-  in_progress: 'warning',
-  completed: 'success',
-  cancelled: 'default',
-};
-
 export const reservationStatusVariants: Record<string, BadgeVariant> = {
   confirmed: 'default',
   checked_in: 'success',
@@ -106,13 +83,6 @@ export const approvalStatusVariants: Record<string, BadgeVariant> = {
   pending: 'warning',
   approved: 'success',
   rejected: 'error',
-};
-
-export const priorityVariants: Record<string, BadgeVariant> = {
-  urgent: 'error',
-  high: 'warning',
-  standard: 'default',
-  low: 'default',
 };
 
 export const vipVariants: Record<string, BadgeVariant> = {

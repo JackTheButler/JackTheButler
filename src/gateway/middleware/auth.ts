@@ -109,10 +109,10 @@ export function requireRole(...roleIds: string[]): MiddlewareHandler {
  *
  * @example
  * // Require single permission
- * app.get('/tasks', requirePermission(PERMISSIONS.TASKS_VIEW), handler)
+ * app.get('/reservations', requirePermission(PERMISSIONS.RESERVATIONS_VIEW), handler)
  *
  * // Require multiple permissions (AND logic)
- * app.post('/tasks', requirePermission(PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE), handler)
+ * app.post('/reservations', requirePermission(PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE), handler)
  */
 export function requirePermission(...permissions: string[]): MiddlewareHandler {
   return async (c, next) => {
@@ -151,7 +151,7 @@ export function requirePermission(...permissions: string[]): MiddlewareHandler {
  *
  * @example
  * // User needs either view OR manage permission
- * app.get('/tasks/:id', requireAnyPermission(PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE), handler)
+ * app.get('/reservations/:id', requireAnyPermission(PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE), handler)
  */
 export function requireAnyPermission(...permissions: string[]): MiddlewareHandler {
   return async (c, next) => {

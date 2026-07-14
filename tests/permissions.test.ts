@@ -25,7 +25,7 @@ import {
 describe('Permission Constants', () => {
   it('should have 15 permissions defined', () => {
     const permissions = Object.values(PERMISSIONS);
-    expect(permissions).toHaveLength(15);
+    expect(permissions).toHaveLength(13);
   });
 
   it('should have permissions in resource:action format', () => {
@@ -56,75 +56,75 @@ describe('Permission Constants', () => {
   });
 
   it('should have 8 permission groups', () => {
-    expect(PERMISSION_GROUPS).toHaveLength(8);
+    expect(PERMISSION_GROUPS).toHaveLength(7);
   });
 });
 
 describe('hasPermission', () => {
   it('should return true when user has the permission', () => {
-    const userPermissions = [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE];
-    expect(hasPermission(userPermissions, PERMISSIONS.TASKS_VIEW)).toBe(true);
-    expect(hasPermission(userPermissions, PERMISSIONS.TASKS_MANAGE)).toBe(true);
+    const userPermissions = [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE];
+    expect(hasPermission(userPermissions, PERMISSIONS.RESERVATIONS_VIEW)).toBe(true);
+    expect(hasPermission(userPermissions, PERMISSIONS.RESERVATIONS_MANAGE)).toBe(true);
   });
 
   it('should return false when user lacks the permission', () => {
-    const userPermissions = [PERMISSIONS.TASKS_VIEW];
-    expect(hasPermission(userPermissions, PERMISSIONS.TASKS_MANAGE)).toBe(false);
+    const userPermissions = [PERMISSIONS.RESERVATIONS_VIEW];
+    expect(hasPermission(userPermissions, PERMISSIONS.RESERVATIONS_MANAGE)).toBe(false);
     expect(hasPermission(userPermissions, PERMISSIONS.ADMIN_MANAGE)).toBe(false);
   });
 
   it('should return true for wildcard permission', () => {
     const userPermissions = [WILDCARD_PERMISSION];
-    expect(hasPermission(userPermissions, PERMISSIONS.TASKS_VIEW)).toBe(true);
+    expect(hasPermission(userPermissions, PERMISSIONS.RESERVATIONS_VIEW)).toBe(true);
     expect(hasPermission(userPermissions, PERMISSIONS.ADMIN_MANAGE)).toBe(true);
     expect(hasPermission(userPermissions, 'any:permission')).toBe(true);
   });
 
   it('should return false for empty permissions', () => {
-    expect(hasPermission([], PERMISSIONS.TASKS_VIEW)).toBe(false);
+    expect(hasPermission([], PERMISSIONS.RESERVATIONS_VIEW)).toBe(false);
   });
 });
 
 describe('hasAnyPermission', () => {
   it('should return true when user has any of the permissions', () => {
-    const userPermissions = [PERMISSIONS.TASKS_VIEW];
-    expect(hasAnyPermission(userPermissions, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE])).toBe(true);
+    const userPermissions = [PERMISSIONS.RESERVATIONS_VIEW];
+    expect(hasAnyPermission(userPermissions, [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE])).toBe(true);
   });
 
   it('should return false when user has none of the permissions', () => {
     const userPermissions = [PERMISSIONS.GUESTS_VIEW];
-    expect(hasAnyPermission(userPermissions, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE])).toBe(false);
+    expect(hasAnyPermission(userPermissions, [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE])).toBe(false);
   });
 
   it('should return true for wildcard permission', () => {
     const userPermissions = [WILDCARD_PERMISSION];
-    expect(hasAnyPermission(userPermissions, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.ADMIN_MANAGE])).toBe(true);
+    expect(hasAnyPermission(userPermissions, [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.ADMIN_MANAGE])).toBe(true);
   });
 
   it('should return false for empty required permissions', () => {
-    const userPermissions = [PERMISSIONS.TASKS_VIEW];
+    const userPermissions = [PERMISSIONS.RESERVATIONS_VIEW];
     expect(hasAnyPermission(userPermissions, [])).toBe(false);
   });
 });
 
 describe('hasAllPermissions', () => {
   it('should return true when user has all permissions', () => {
-    const userPermissions = [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE, PERMISSIONS.GUESTS_VIEW];
-    expect(hasAllPermissions(userPermissions, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE])).toBe(true);
+    const userPermissions = [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE, PERMISSIONS.GUESTS_VIEW];
+    expect(hasAllPermissions(userPermissions, [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE])).toBe(true);
   });
 
   it('should return false when user lacks any permission', () => {
-    const userPermissions = [PERMISSIONS.TASKS_VIEW];
-    expect(hasAllPermissions(userPermissions, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE])).toBe(false);
+    const userPermissions = [PERMISSIONS.RESERVATIONS_VIEW];
+    expect(hasAllPermissions(userPermissions, [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE])).toBe(false);
   });
 
   it('should return true for wildcard permission', () => {
     const userPermissions = [WILDCARD_PERMISSION];
-    expect(hasAllPermissions(userPermissions, [PERMISSIONS.TASKS_VIEW, PERMISSIONS.ADMIN_MANAGE])).toBe(true);
+    expect(hasAllPermissions(userPermissions, [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.ADMIN_MANAGE])).toBe(true);
   });
 
   it('should return true for empty required permissions', () => {
-    const userPermissions = [PERMISSIONS.TASKS_VIEW];
+    const userPermissions = [PERMISSIONS.RESERVATIONS_VIEW];
     expect(hasAllPermissions(userPermissions, [])).toBe(true);
   });
 });
@@ -132,7 +132,7 @@ describe('hasAllPermissions', () => {
 describe('getAllPermissions', () => {
   it('should return all permission keys', () => {
     const all = getAllPermissions();
-    expect(all).toHaveLength(15);
+    expect(all).toHaveLength(13);
     expect(all).toContain(PERMISSIONS.CONVERSATIONS_VIEW);
     expect(all).toContain(PERMISSIONS.ADMIN_MANAGE);
     expect(all).toContain(PERMISSIONS.HEALTH_VIEW);
@@ -180,7 +180,7 @@ describe('getDefaultPermissionsForRole', () => {
   it('should return permissions for Staff role', () => {
     const permissions = getDefaultPermissionsForRole(SYSTEM_ROLE_IDS.STAFF);
     expect(permissions).toContain(PERMISSIONS.CONVERSATIONS_VIEW);
-    expect(permissions).toContain(PERMISSIONS.TASKS_MANAGE);
+    expect(permissions).toContain(PERMISSIONS.CONVERSATIONS_MANAGE);
     expect(permissions).not.toContain(PERMISSIONS.ADMIN_MANAGE);
   });
 
@@ -218,14 +218,14 @@ describe('getSystemRoleIds', () => {
 describe('expandPermissions', () => {
   it('should expand wildcard to all permissions', () => {
     const expanded = expandPermissions([WILDCARD_PERMISSION]);
-    expect(expanded).toHaveLength(15);
+    expect(expanded).toHaveLength(13);
     expect(expanded).toContain(PERMISSIONS.CONVERSATIONS_VIEW);
     expect(expanded).toContain(PERMISSIONS.ADMIN_MANAGE);
     expect(expanded).toContain(PERMISSIONS.HEALTH_VIEW);
   });
 
   it('should return permissions as-is when no wildcard', () => {
-    const permissions = [PERMISSIONS.TASKS_VIEW, PERMISSIONS.TASKS_MANAGE];
+    const permissions = [PERMISSIONS.RESERVATIONS_VIEW, PERMISSIONS.RESERVATIONS_MANAGE];
     const expanded = expandPermissions(permissions);
     expect(expanded).toEqual(permissions);
   });

@@ -8,16 +8,12 @@ import {
   Clock,
   Users,
   MessageSquare,
-  ListTodo,
   FileText,
   Star,
 } from 'lucide-react';
 import { api } from '@/lib/api';
 import { formatDate, formatDateShort, formatDateTime } from '@/lib/formatters';
-import {
-  reservationStatusVariants,
-  taskStatusVariants,
-} from '@/lib/config';
+import { reservationStatusVariants } from '@/lib/config';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Spinner } from '@/components/ui/spinner';
@@ -55,7 +51,6 @@ interface ReservationDetail {
   guest: GuestDetail | null;
   _related: {
     conversations: { id: string; channelType: string; state: string; lastMessageAt: string }[];
-    tasks: { id: string; type: string; description: string; status: string; priority: string }[];
   };
 }
 
@@ -268,46 +263,6 @@ export function ReservationDetailPage() {
                       </div>
                       <Badge variant={conv.state === 'active' ? 'success' : 'secondary'}>
                         {conv.state}
-                      </Badge>
-                    </Link>
-                  ))}
-                </div>
-              )}
-            </CardContent>
-          </Card>
-
-          {/* Related Tasks */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-base flex items-center gap-2">
-                <ListTodo className="w-4 h-4" />
-                {t('reservationDetail.tasks')}
-                <Badge variant="secondary" className="ms-auto">
-                  {reservation._related.tasks.length}
-                </Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              {reservation._related.tasks.length === 0 ? (
-                <p className="text-sm text-muted-foreground">{t('reservationDetail.noTasks')}</p>
-              ) : (
-                <div className="space-y-2">
-                  {reservation._related.tasks.map((task) => (
-                    <Link
-                      key={task.id}
-                      to={`/tasks?id=${task.id}`}
-                      className="flex items-center justify-between p-2 rounded hover:bg-muted transition-colors"
-                    >
-                      <div>
-                        <p className="text-sm font-medium capitalize">
-                          {task.type.replace('_', ' ')}
-                        </p>
-                        <p className="text-sm text-muted-foreground truncate max-w-md">
-                          {task.description}
-                        </p>
-                      </div>
-                      <Badge variant={taskStatusVariants[task.status]}>
-                        {t(`tasks.statuses.${task.status}`)}
                       </Badge>
                     </Link>
                   ))}

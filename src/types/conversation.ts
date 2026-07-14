@@ -26,7 +26,6 @@ export interface ConversationSummary {
   currentIntent?: string | null;
   lastMessageAt?: string | null;
   messageCount: number;
-  taskCount: number;
   guestLanguage?: string | null;
   createdAt: string;
 }

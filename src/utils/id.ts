@@ -15,7 +15,6 @@ export const ID_PREFIXES = {
   reservation: 'res',
   conversation: 'conv',
   message: 'msg',
-  task: 'tsk',
   staff: 'stf',
   session: 'ses',
   knowledge: 'kb',

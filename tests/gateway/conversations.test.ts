@@ -4,7 +4,7 @@
 
 import { describe, it, expect, beforeAll, beforeEach, afterEach } from 'vitest';
 import { app } from '@/gateway/server.js';
-import { db, staff, conversations, messages, tasks, webchatSessions } from '@/db/index.js';
+import { db, staff, conversations, messages, webchatSessions } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { authService } from '@/auth/index.js';
@@ -38,9 +38,7 @@ describe('Conversation Routes', () => {
 
   // Clean up before each test to ensure isolation
   // Must delete from child tables first due to foreign key constraints
-  // tasks references messages, so delete tasks first
   beforeEach(async () => {
-    await db.delete(tasks);
     await db.delete(messages);
     await db.delete(webchatSessions);
     await db.delete(conversations);
@@ -49,8 +47,6 @@ describe('Conversation Routes', () => {
   afterEach(async () => {
     // Clean up test conversations
     // Must delete from child tables first due to foreign key constraints
-    // tasks references messages, so delete tasks first
-    await db.delete(tasks);
     await db.delete(messages);
     await db.delete(webchatSessions);
     await db.delete(conversations);

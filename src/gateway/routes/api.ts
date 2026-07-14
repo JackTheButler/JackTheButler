@@ -8,7 +8,6 @@
 import { Hono } from 'hono';
 import { authRoutes } from './auth.js';
 import { conversationsRouter } from './conversations.js';
-import { tasksRouter } from './tasks.js';
 import { adminRouter } from './admin.js';
 import { appRoutes } from './apps.js';
 import { hotelProfileRoutes } from './hotel-profile.js';
@@ -35,9 +34,6 @@ api.route('/auth', authRoutes);
 
 // Conversation routes
 api.route('/conversations', conversationsRouter);
-
-// Task routes
-api.route('/tasks', tasksRouter);
 
 // Admin routes
 api.route('/admin', adminRouter);

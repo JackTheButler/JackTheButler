@@ -1,4 +1,4 @@
-import { MessageSquare, ListTodo } from 'lucide-react';
+import { MessageSquare } from 'lucide-react';
 import { useTranslation } from 'react-i18next';
 import { cn } from '@/lib/utils';
 import { formatTimeAgo } from '@/lib/formatters';
@@ -39,19 +39,13 @@ export function ConversationList({ conversations, selectedId, onSelect }: Props)
               </span>
             )}
           </div>
-          {/* Bottom row: msgs + tasks | State */}
+          {/* Bottom row: msgs | State */}
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-1.5 text-muted-foreground">
               <span className="flex items-center gap-0.5 text-xs bg-muted px-1.5 py-0.5 rounded-md">
                 <MessageSquare className="w-3 h-3" />
                 {conv.messageCount}
               </span>
-              {(conv.taskCount ?? 0) > 0 && (
-                <span className="flex items-center gap-0.5 text-xs bg-muted px-1.5 py-0.5 rounded-md">
-                  <ListTodo className="w-3 h-3" />
-                  {conv.taskCount}
-                </span>
-              )}
               {conv.guestLanguage && conv.guestLanguage !== 'en' && (
                 <Badge variant="outline" className="text-xs uppercase px-1.5">
                   {conv.guestLanguage}
