@@ -20,8 +20,6 @@ export interface MetricResult {
 
 export interface AnalyticsOverview {
   totalMessages: MetricResult;
-  autonomyRate: MetricResult;
-  avgResponseMs: MetricResult;
   activeGuests: MetricResult;
   newGuests: MetricResult;
 }

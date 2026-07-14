@@ -105,7 +105,7 @@ export const PERMISSION_DEFINITIONS: PermissionDefinition[] = [
   {
     key: PERMISSIONS.ADMIN_VIEW,
     label: 'View Administration',
-    description: 'View users, roles, and audit logs',
+    description: 'View users and roles',
     group: 'admin',
   },
   {

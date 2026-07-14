@@ -2,7 +2,7 @@
  * System Service
  *
  * Backs the system status/health/logs dashboard endpoints: knowledge base and
- * memory counts, per-app health cards, and the unified activity/app log stream.
+ * memory counts, per-app health cards, and the app log stream.
  */
 
 import { count, isNull, isNotNull, eq } from 'drizzle-orm';
@@ -10,7 +10,7 @@ import { db, sqlite, knowledgeBase, knowledgeEmbeddings, guestMemories } from '@
 import type { RegisteredApp } from '@/apps/registry.js';
 
 /**
- * Health status derived from recent app_logs / activity_log rows
+ * Health status derived from recent app_logs rows
  */
 export type HealthStatus = 'healthy' | 'warning' | 'error' | 'unknown';
 
@@ -33,7 +33,7 @@ export interface AppHealthItem {
 }
 
 /**
- * One row of the unified activity_log + app_logs stream
+ * One row of the app_logs stream
  */
 export interface LogEntry {
   id: string;
@@ -61,19 +61,6 @@ export interface LogFilters {
 // app_logs.provider_id = manifest.id. This is enforced by the createAppLogger()
 // convention in src/monitoring/instrumentation.ts. New adapters get health cards
 // automatically as long as they call createAppLogger(manifest.category, manifest.id).
-
-/**
- * Derive activity_log.source from manifest.id.
- * activity_log sources are the protocol name (whatsapp, sms, email, webchat),
- * while manifest IDs are provider-specific (whatsapp-meta, sms-twilio, etc.).
- * The prefix before the first '-' is the protocol.
- */
-function channelSource(manifestId: string): string {
-  // channel-webchat → webchat (strip 'channel-' prefix)
-  if (manifestId.startsWith('channel-')) return manifestId.slice('channel-'.length);
-  // whatsapp-meta → whatsapp, sms-twilio → sms, email-mailgun → email
-  return manifestId.split('-')[0] ?? manifestId;
-}
 
 function formatRelativeTime(isoString: string): string {
   const diffMs = Date.now() - new Date(isoString).getTime();
@@ -169,10 +156,6 @@ export class SystemService {
    * calls to report on yet). `activeApps` should already be filtered to status === 'active'.
    */
   getAppHealth(activeApps: RegisteredApp[]): AppHealthItem[] {
-    const todayStart = new Date();
-    todayStart.setHours(0, 0, 0, 0);
-    const todayISO = todayStart.toISOString();
-
     const results: AppHealthItem[] = [];
 
     for (const registryApp of activeApps) {
@@ -190,19 +173,7 @@ export class SystemService {
          WHERE app_id = ? AND provider_id = ? ORDER BY created_at DESC LIMIT 1`
       ).get(logAppId, providerId) as { status: string; created_at: string; error_message: string | null; latency_ms: number | null } | undefined;
 
-      let status = deriveStatus(lastRow);
-      // For channels without outbound API calls (e.g. webchat), app_logs goes stale.
-      // If activity_log shows recent messages, override warning → healthy.
-      if (status === 'warning' && category === 'channel') {
-        const source = channelSource(registryApp.manifest.id);
-        const recentActivity = sqlite.prepare(
-          `SELECT created_at FROM activity_log WHERE source = ? AND event_type = 'message.sent' ORDER BY created_at DESC LIMIT 1`
-        ).get(source) as { created_at: string } | undefined;
-        if (recentActivity) {
-          const ageMs = Date.now() - new Date(recentActivity.created_at).getTime();
-          if (ageMs < 24 * 60 * 60 * 1000) status = 'healthy';
-        }
-      }
+      const status = deriveStatus(lastRow);
 
       // Avg latency — last 20 successful rows
       const latencyRow = sqlite.prepare(
@@ -231,61 +202,12 @@ export class SystemService {
          ORDER BY created_at DESC LIMIT 1`
       ).get(logAppId, providerId) as { error_message: string } | undefined;
 
-      // Summary + detail per category
-      let summary = 'No activity recorded';
-      let detail = lastRow?.created_at ? `last activity ${formatRelativeTime(lastRow.created_at)}` : 'no activity yet';
-      let activityCount: number | null = null;
-
-      if (category === 'ai') {
-        const countRow = sqlite.prepare(
-          `SELECT COUNT(*) AS cnt FROM activity_log WHERE event_type = 'processor.outcome' AND status = 'success' AND created_at >= ?`
-        ).get(todayISO) as { cnt: number };
-        activityCount = countRow.cnt;
-        summary = `${countRow.cnt} conversation${countRow.cnt !== 1 ? 's' : ''} processed today`;
-      } else if (category === 'channel') {
-        const source = channelSource(registryApp.manifest.id);
-        const countRow = sqlite.prepare(
-          `SELECT COUNT(*) AS cnt FROM activity_log WHERE source = ? AND event_type = 'message.sent' AND created_at >= ?`
-        ).get(source, todayISO) as { cnt: number };
-        activityCount = countRow.cnt;
-        const label = source === 'whatsapp' ? 'WhatsApp messages' : source === 'sms' ? 'SMS messages' : source === 'webchat' ? 'messages' : 'emails';
-        summary = `${countRow.cnt} ${label} sent today`;
-        // Use activity_log for last activity timestamp — channels like webchat don't write to app_logs on every send
-        const lastActivityRow = sqlite.prepare(
-          `SELECT created_at FROM activity_log WHERE source = ? AND event_type = 'message.sent' ORDER BY created_at DESC LIMIT 1`
-        ).get(source) as { created_at: string } | undefined;
-        if (lastActivityRow) {
-          detail = `last activity ${formatRelativeTime(lastActivityRow.created_at)}`;
-        }
-      } else if (category === 'pms') {
-        const syncRow = sqlite.prepare(
-          `SELECT created_at, details, status FROM activity_log WHERE source = 'system' AND event_type = 'scheduler.outcome' ORDER BY created_at DESC LIMIT 1`
-        ).get() as { created_at: string; details: string | null; status: string } | undefined;
-
-        if (syncRow) {
-          const d = syncRow.details ? JSON.parse(syncRow.details) as Record<string, unknown> : {};
-          summary = `Last sync ${formatRelativeTime(syncRow.created_at)}`;
-          detail = d.created !== undefined ? `${d.created as number} created, ${d.updated as number} updated` : '';
-        } else {
-          summary = 'No sync recorded yet';
-          detail = '';
-        }
-      }
-
-      // Partial failure (PMS: sync errors in last run)
-      let partialFailure: string | null = null;
-      if (category === 'pms') {
-        const partialRow = sqlite.prepare(
-          `SELECT details FROM activity_log WHERE source = 'system' AND event_type = 'scheduler.outcome' AND status = 'success' ORDER BY created_at DESC LIMIT 1`
-        ).get() as { details: string | null } | undefined;
-        if (partialRow?.details) {
-          const d = JSON.parse(partialRow.details) as Record<string, unknown>;
-          const errors = d.errors as number | undefined;
-          if (errors && errors > 0) {
-            partialFailure = `${errors} sync error${errors > 1 ? 's' : ''} in last run`;
-          }
-        }
-      }
+      // Summary + detail — derived from app_logs only (activity_log-based
+      // per-category summaries were dropped along with the activity_log table).
+      const summary = 'No activity recorded';
+      const detail = lastRow?.created_at ? `last activity ${formatRelativeTime(lastRow.created_at)}` : 'no activity yet';
+      const activityCount: number | null = null;
+      const partialFailure: string | null = null;
 
       results.push({
         appId: registryApp.manifest.id,
@@ -307,7 +229,7 @@ export class SystemService {
   }
 
   /**
-   * Unified log stream from activity_log and app_logs, newest first, with server-side filters.
+   * Log stream from app_logs, newest first, with server-side filters.
    */
   getUnifiedLogs(filters: LogFilters = {}): { logs: LogEntry[]; hasMore: boolean; offset: number } {
     const source = filters.source ?? 'all';
@@ -317,16 +239,6 @@ export class SystemService {
     const since = filters.since ?? ''; // ISO timestamp — only entries newer than this
     const limit = Math.min(Math.max(1, filters.limit ?? 50), 200);
     const offset = Math.max(0, filters.offset ?? 0);
-
-    // Build WHERE conditions for activity_log (source = source column)
-    const actConds: string[] = [];
-    const actParams: (string | number)[] = [];
-    if (source !== 'all') { actConds.push('source = ?');            actParams.push(source); }
-    if (status !== 'all') { actConds.push('status = ?');            actParams.push(status); }
-    if (from)             { actConds.push("date(created_at) >= ?"); actParams.push(from); }
-    if (to)               { actConds.push("date(created_at) <= ?"); actParams.push(to); }
-    if (since)            { actConds.push('created_at > ?');        actParams.push(since); }
-    const actWhere = actConds.length ? `WHERE ${actConds.join(' AND ')}` : '';
 
     // Build WHERE conditions for app_logs (source = provider_id column)
     // Protocol-level filters (whatsapp/sms/email) use LIKE because provider_ids are
@@ -353,14 +265,12 @@ export class SystemService {
     const appWhere = appConds.length ? `WHERE ${appConds.join(' AND ')}` : '';
 
     const sql = `
-      SELECT id, source,      event_type, status, created_at, error_message, latency_ms, details FROM activity_log ${actWhere}
-      UNION ALL
-      SELECT id, provider_id, event_type, status, created_at, error_message, latency_ms, details FROM app_logs    ${appWhere}
+      SELECT id, provider_id AS source, event_type, status, created_at, error_message, latency_ms, details FROM app_logs ${appWhere}
       ORDER BY created_at DESC
       LIMIT ? OFFSET ?
     `;
 
-    const rows = sqlite.prepare(sql).all(...actParams, ...appParams, limit + 1, offset) as Array<{
+    const rows = sqlite.prepare(sql).all(...appParams, limit + 1, offset) as Array<{
       id: string;
       source: string;
       event_type: string;

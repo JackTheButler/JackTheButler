@@ -13,7 +13,6 @@ import { app, setupWebSocket } from '@/gateway/index.js';
 import { setupWebSocketBridge } from '@/gateway/websocket-bridge.js';
 import { scheduler } from '@/scheduler/index.js';
 import { appConfigService } from '@/apps/config.js';
-import { subscribeActivityLogToEvents } from '@/services/activity-log.js';
 import { subscribeMemoryExtractionToEvents } from '@/services/memory-events.js';
 import { getAppRegistry } from '@/apps/index.js';
 
@@ -135,9 +134,6 @@ async function main(): Promise<void> {
 
     // Start background scheduler (PMS sync)
     scheduler.start();
-
-    // Subscribe activity log to system events (Layer 1)
-    subscribeActivityLogToEvents();
 
     // Subscribe memory extraction to conversation close events. Provider
     // getters are injected as a test seam; each re-resolves from the

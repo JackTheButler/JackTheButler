@@ -7,9 +7,8 @@
 
 import { Hono } from 'hono';
 import { z } from 'zod';
-import { validateBody, requireAuth, getClientIp } from '../middleware/index.js';
+import { validateBody, requireAuth } from '../middleware/index.js';
 import { authService } from '@/auth/index.js';
-import { logAuthEvent } from '@/services/audit.js';
 import { authSettingsService } from '@/auth/settings.js';
 import { authTokenService } from '@/auth/tokens.js';
 import { emailService } from '@/services/email.js';
@@ -71,19 +70,15 @@ const verifyEmailSchema = z.object({
  */
 auth.post('/login', validateBody(loginSchema), async (c) => {
   const { email, password, rememberMe } = c.get('validatedBody') as z.infer<typeof loginSchema>;
-  const ip = getClientIp(c);
-  const userAgent = c.req.header('user-agent');
 
   try {
     const tokens = await authService.login(email, password, rememberMe);
 
     // Log successful login (userId not available from TokenPair, so we log email)
-    logAuthEvent('login', undefined, { email }, { ip, userAgent: userAgent ?? undefined }).catch(() => {});
 
     return c.json(tokens);
   } catch (error) {
     // Log failed login attempt
-    logAuthEvent('login_failed', undefined, { email, reason: (error as Error).message }, { ip, userAgent: userAgent ?? undefined }).catch(() => {});
     throw error;
   }
 });
@@ -117,12 +112,8 @@ auth.get('/me', requireAuth, async (c) => {
  * Invalidate refresh token (future: add to blacklist)
  */
 auth.post('/logout', requireAuth, async (c) => {
-  const userId = c.get('userId');
-  const ip = getClientIp(c);
-  const userAgent = c.req.header('user-agent');
 
   // Log logout event
-  logAuthEvent('logout', userId, {}, { ip, userAgent: userAgent ?? undefined }).catch(() => {});
 
   // In a production system, we would add the token to a blacklist
   // For now, just return success
@@ -185,9 +176,6 @@ auth.post('/register', validateBody(registerSchema), async (c) => {
     }
   }
 
-  const ip = getClientIp(c);
-  const userAgent = c.req.header('user-agent');
-  logAuthEvent('register', staffId, { email }, { ip, userAgent: userAgent ?? undefined }).catch(() => {});
 
   // Auto-login if account is immediately active (grace period, no approval needed)
   const canAutoLogin = status === 'active' && !needsApproval;

@@ -8,7 +8,7 @@
  */
 
 import { eq } from 'drizzle-orm';
-import { db, setupState, knowledgeBase, staff } from '@/db/index.js';
+import { db, knowledgeBase, staff } from '@/db/index.js';
 import { settingsService } from './settings.js';
 import { createLogger } from '@/utils/logger.js';
 import { appConfigService } from '@/apps/config.js';
@@ -23,6 +23,27 @@ const log = createLogger('service:setup');
  * Hotel profile settings key
  */
 const HOTEL_PROFILE_KEY = 'hotel_profile';
+
+/**
+ * Settings key the setup wizard state is stored under (formerly the
+ * standalone `setup_state` table — moved into `settings` as a single row).
+ */
+export const SETUP_STATE_KEY = 'setup_state';
+
+/**
+ * Shape persisted at settings['setup_state']. Mirrors the old setup_state
+ * table's columns (sub-fields kept JSON-stringified to match the previous
+ * on-disk representation).
+ */
+interface SetupStateRow {
+  id: string;
+  status: string;
+  currentStep: string | null;
+  completedSteps: string;
+  context: string;
+  createdAt: string;
+  updatedAt: string;
+}
 
 /**
  * Hotel profile interface (matches hotel-profile.ts schema)
@@ -795,7 +816,7 @@ export class SetupService {
    */
   async reset(): Promise<SetupStateRecord> {
     // Clear setup state
-    await db.delete(setupState).where(eq(setupState.id, 'setup')).run();
+    await settingsService.delete(SETUP_STATE_KEY);
 
     // Clear hotel profile from settings
     await settingsService.delete(HOTEL_PROFILE_KEY);
@@ -861,44 +882,40 @@ export class SetupService {
   }
 
   /**
-   * Get raw state record from database
+   * Get raw state record from settings['setup_state']
    */
-  private async getStateRecord(): Promise<typeof setupState.$inferSelect | undefined> {
-    return db
-      .select()
-      .from(setupState)
-      .where(eq(setupState.id, 'setup'))
-      .get();
+  private async getStateRecord(): Promise<SetupStateRow | undefined> {
+    const stored = await settingsService.get<SetupStateRow | null>(SETUP_STATE_KEY, null);
+    return stored ?? undefined;
   }
 
   /**
-   * Insert-or-update the 'setup' state row.
+   * Insert-or-update the 'setup' state row (stored as settings['setup_state']).
    *
-   * Every step method needs to persist a partial patch of state, but a plain
-   * `db.update(...).where(id = 'setup')` silently no-ops if the row doesn't
-   * exist yet (e.g. right after POST /reset deletes it). Upserting guarantees
+   * Every step method needs to persist a partial patch of state, but the row
+   * may not exist yet (e.g. right after POST /reset deletes it). Merging over
+   * the existing record (or schema-equivalent defaults when absent) guarantees
    * the patch always lands, matching the insert-or-update behavior `start()`
-   * already relied on.
+   * already relied on when this lived in the setup_state table.
    */
   private async upsertState(
-    patch: Partial<
-      Pick<typeof setupState.$inferInsert, 'status' | 'currentStep' | 'completedSteps' | 'context'>
-    >
+    patch: Partial<Pick<SetupStateRow, 'status' | 'currentStep' | 'completedSteps' | 'context'>>
   ): Promise<void> {
+    const existing = await this.getStateRecord();
     const updatedAt = now();
 
-    await db
-      .insert(setupState)
-      .values({
-        id: 'setup',
-        ...patch,
-        updatedAt,
-      })
-      .onConflictDoUpdate({
-        target: setupState.id,
-        set: { ...patch, updatedAt },
-      })
-      .run();
+    const merged: SetupStateRow = {
+      id: 'setup',
+      status: existing?.status ?? 'pending',
+      currentStep: existing?.currentStep ?? null,
+      completedSteps: existing?.completedSteps ?? '[]',
+      context: existing?.context ?? '{}',
+      createdAt: existing?.createdAt ?? updatedAt,
+      ...patch,
+      updatedAt,
+    };
+
+    await settingsService.set(SETUP_STATE_KEY, merged);
   }
 
   /**
@@ -919,7 +936,7 @@ export class SetupService {
   /**
    * Convert database record to typed record
    */
-  private dbToRecord(record: typeof setupState.$inferSelect): SetupStateRecord {
+  private dbToRecord(record: SetupStateRow): SetupStateRecord {
     let completedSteps: SetupStep[] = [];
     let context: SetupContext = {};
 

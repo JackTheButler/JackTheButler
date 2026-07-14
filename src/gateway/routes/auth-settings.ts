@@ -13,7 +13,6 @@ import { TEMPLATES_SETTINGS_KEY, type EmailTemplates } from '@/services/email.js
 import { validateBody } from '../middleware/validator.js';
 import { requireAuth, requirePermission } from '../middleware/auth.js';
 import { PERMISSIONS } from '@/permissions/index.js';
-import { logConfigChange } from '@/services/audit.js';
 
 const updateSchema = z.object({
   registrationEnabled: z.boolean().optional(),
@@ -75,9 +74,6 @@ authSettingsRoutes.put(
 
     const authSettings = await authSettingsService.update(input as Partial<AuthSettings>);
 
-    const userId = c.get('userId') as string;
-    const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined;
-    logConfigChange(userId, 'system', 'auth-settings', input, { ip, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
 
     return c.json({ settings: authSettings });
   }
@@ -111,9 +107,6 @@ authSettingsRoutes.put(
     const merged = { ...existing, ...body };
     await settingsService.set(TEMPLATES_SETTINGS_KEY, merged);
 
-    const userId = c.get('userId') as string;
-    const ip = c.req.header('x-forwarded-for') ?? c.req.header('x-real-ip') ?? undefined;
-    logConfigChange(userId, 'system', 'email-templates', { updatedKeys: Object.keys(body) }, { ip, userAgent: c.req.header('user-agent') ?? undefined }).catch(() => {});
 
     return c.json({ templates: merged });
   }

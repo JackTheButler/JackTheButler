@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { db, activityLog, appLogs, conversations, guests } from '@/db/index.js';
+import { db, appLogs, conversations, guests } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { generateId } from '@/utils/id.js';
 import { now } from '@/utils/time.js';
@@ -69,7 +69,6 @@ describe('Scheduler', () => {
     // The temp DB is shared across all tests in this file (fresh per file, not per test).
     // Reset rows touched by scheduled jobs so assertions on counts/rows aren't
     // contaminated by earlier tests in this suite.
-    await db.delete(activityLog);
     await db.delete(appLogs);
     await db.delete(conversations);
     await db.delete(guests);
@@ -119,18 +118,6 @@ describe('Scheduler', () => {
         expect(job.isRunning).toBe(false);
       }
       expect(webchatSessionService.cleanupExpired).toHaveBeenCalledTimes(1);
-    });
-
-    it('writes a scheduler.outcome activity_log row for each immediate run', async () => {
-      mockNoPMS();
-      scheduler = new Scheduler();
-      scheduler.start();
-      await vi.advanceTimersByTimeAsync(0);
-
-      const rows = await db.select().from(activityLog).where(eq(activityLog.eventType, 'scheduler.outcome'));
-      // log-purge, conversation-idle-timeout, webchat-session-cleanup (3 jobs registered, no PMS)
-      expect(rows.length).toBe(3);
-      expect(rows.every((r) => r.status === 'success')).toBe(true);
     });
 
     it('re-runs a job when its interval elapses', async () => {
@@ -185,13 +172,6 @@ describe('Scheduler', () => {
       expect(pmsJob?.lastResult).toBe('error');
       expect(pmsJob?.isRunning).toBe(false);
 
-      const failedRows = await db
-        .select()
-        .from(activityLog)
-        .where(eq(activityLog.eventType, 'scheduler.outcome'));
-      const pmsRow = failedRows.find((r) => r.details?.includes('pms-sync'));
-      expect(pmsRow?.status).toBe('failed');
-
       // Scheduler keeps running other jobs / future ticks despite the failure
       vi.mocked(pmsSyncService.syncReservations).mockResolvedValue({
         created: 1,
@@ -227,11 +207,6 @@ describe('Scheduler', () => {
 
       const pmsJob = scheduler.getStatus().jobs.find((j) => j.name === 'pms-sync');
       expect(pmsJob?.lastResult).toBe('success');
-
-      const rows = await db.select().from(activityLog).where(eq(activityLog.eventType, 'scheduler.outcome'));
-      const pmsRow = rows.find((r) => r.details?.includes('pms-sync'));
-      expect(pmsRow?.status).toBe('success');
-      expect(JSON.parse(pmsRow!.details!).errors).toBe(2);
     });
 
     it('reports lastResult "error" when every reservation in the sync failed', async () => {
@@ -257,27 +232,13 @@ describe('Scheduler', () => {
       const pmsJob = scheduler.getStatus().jobs.find((j) => j.name === 'pms-sync');
       expect(pmsJob?.lastResult).toBe('error');
       expect(pmsJob?.isRunning).toBe(false);
-
-      const rows = await db.select().from(activityLog).where(eq(activityLog.eventType, 'scheduler.outcome'));
-      const pmsRow = rows.find((r) => r.details?.includes('pms-sync'));
-      expect(pmsRow?.status).toBe('failed');
     });
 
-    it('purges activity_log and app_logs rows older than 30 days', async () => {
+    it('purges app_logs rows older than 30 days', async () => {
       mockNoPMS();
       const oldDate = new Date(Date.now() - 31 * 24 * 60 * 60 * 1000).toISOString();
       const recentDate = new Date(Date.now() - 1 * 24 * 60 * 60 * 1000).toISOString();
 
-      await db.insert(activityLog).values([
-        { id: generateId('alog'), source: 'system', eventType: 'test.old', status: 'success', createdAt: oldDate },
-        {
-          id: generateId('alog'),
-          source: 'system',
-          eventType: 'test.recent',
-          status: 'success',
-          createdAt: recentDate,
-        },
-      ]);
       await db.insert(appLogs).values([
         {
           id: generateId('appLog'),
@@ -287,18 +248,24 @@ describe('Scheduler', () => {
           status: 'success',
           createdAt: oldDate,
         },
+        {
+          id: generateId('appLog'),
+          appId: 'app-2',
+          providerId: 'provider-2',
+          eventType: 'sync',
+          status: 'success',
+          createdAt: recentDate,
+        },
       ]);
 
       scheduler = new Scheduler();
       scheduler.start();
       await vi.advanceTimersByTimeAsync(0);
 
-      const oldRows = await db.select().from(activityLog).where(eq(activityLog.eventType, 'test.old'));
-      expect(oldRows).toHaveLength(0);
-      const recentRows = await db.select().from(activityLog).where(eq(activityLog.eventType, 'test.recent'));
-      expect(recentRows).toHaveLength(1);
       const oldAppLogRows = await db.select().from(appLogs).where(eq(appLogs.appId, 'app-1'));
       expect(oldAppLogRows).toHaveLength(0);
+      const recentAppLogRows = await db.select().from(appLogs).where(eq(appLogs.appId, 'app-2'));
+      expect(recentAppLogRows).toHaveLength(1);
     });
 
     it('closes conversations idle beyond the 4h timeout and leaves recent ones untouched', async () => {
@@ -493,13 +460,18 @@ describe('Scheduler', () => {
       scheduler.start();
       await vi.advanceTimersByTimeAsync(0);
 
-      await db
-        .insert(activityLog)
-        .values({ id: generateId('alog'), source: 'system', eventType: 'manual.old', status: 'success', createdAt: oldDate });
+      await db.insert(appLogs).values({
+        id: generateId('appLog'),
+        appId: 'manual-app',
+        providerId: 'manual-provider',
+        eventType: 'sync',
+        status: 'success',
+        createdAt: oldDate,
+      });
 
       await scheduler.triggerJob('log-purge');
 
-      const rows = await db.select().from(activityLog).where(eq(activityLog.eventType, 'manual.old'));
+      const rows = await db.select().from(appLogs).where(eq(appLogs.appId, 'manual-app'));
       expect(rows).toHaveLength(0);
     });
 
@@ -545,20 +517,16 @@ describe('Scheduler', () => {
       await vi.advanceTimersByTimeAsync(0);
     });
 
-    it('manual triggers update lastRun/lastResult and write an activity_log row, same as a scheduled run', async () => {
+    it('manual triggers update lastRun/lastResult, same as a scheduled run', async () => {
       // triggerJob() now routes through the same wrappedHandler that scheduled runs use,
-      // so manually-triggered runs are visible to getStatus() and the activity_log audit
-      // trail exactly like scheduled runs of the same job.
+      // so manually-triggered runs are visible to getStatus() exactly like scheduled runs
+      // of the same job.
       mockActivePMS();
       scheduler = new Scheduler();
       scheduler.start();
       await vi.advanceTimersByTimeAsync(0);
 
       const before = scheduler.getStatus().jobs.find((j) => j.name === 'pms-sync');
-      const rowsBefore = await db
-        .select()
-        .from(activityLog)
-        .where(eq(activityLog.eventType, 'scheduler.outcome'));
 
       // Advance the (fake) clock so the manual run's lastRun timestamp differs from the
       // immediate on-start run's timestamp.
@@ -566,16 +534,11 @@ describe('Scheduler', () => {
       await scheduler.triggerJob('pms-sync');
 
       const after = scheduler.getStatus().jobs.find((j) => j.name === 'pms-sync');
-      const rowsAfter = await db
-        .select()
-        .from(activityLog)
-        .where(eq(activityLog.eventType, 'scheduler.outcome'));
 
       expect(pmsSyncService.syncReservations).toHaveBeenCalledTimes(2); // once on start(), once manual
       expect(after?.lastRun).not.toBe(before?.lastRun); // updated by the manual run
       expect(after?.lastResult).toBe('success');
       expect(after?.isRunning).toBe(false);
-      expect(rowsAfter.length).toBe(rowsBefore.length + 1); // new audit row for the manual run
     });
   });
 

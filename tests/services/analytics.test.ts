@@ -1,15 +1,15 @@
 /**
  * Analytics Service Tests
  *
- * Characterization tests: seed known conversations/messages/activity-log
- * rows via drizzle and assert the aggregated numbers the service computes.
+ * Characterization tests: seed known conversations/messages rows via drizzle
+ * and assert the aggregated numbers the service computes.
  * Dates are always relative to "now" (UTC) so the fixtures land in the
  * correct buckets regardless of when the suite runs.
  */
 
 import { describe, it, expect, afterEach } from 'vitest';
 import { db } from '@/db/index.js';
-import { guests, conversations, messages, activityLog } from '@/db/schema.js';
+import { guests, conversations, messages } from '@/db/schema.js';
 import { inArray } from 'drizzle-orm';
 import { getAnalyticsOverview } from '@/services/analytics.js';
 import { generateId } from '@/utils/id.js';
@@ -39,17 +39,14 @@ describe('AnalyticsService', () => {
   let guestIds: string[] = [];
   let conversationIds: string[] = [];
   let messageIds: string[] = [];
-  let activityLogIds: string[] = [];
 
   afterEach(async () => {
     if (messageIds.length) await db.delete(messages).where(inArray(messages.id, messageIds));
-    if (activityLogIds.length) await db.delete(activityLog).where(inArray(activityLog.id, activityLogIds));
     if (conversationIds.length) await db.delete(conversations).where(inArray(conversations.id, conversationIds));
     if (guestIds.length) await db.delete(guests).where(inArray(guests.id, guestIds));
     guestIds = [];
     conversationIds = [];
     messageIds = [];
-    activityLogIds = [];
   });
 
   async function makeGuest(createdAt: string): Promise<string> {
@@ -95,27 +92,6 @@ describe('AnalyticsService', () => {
     return id;
   }
 
-  async function makeActivityLog(opts: {
-    createdAt: string;
-    eventType?: string;
-    status?: string;
-    escalated?: boolean;
-    latencyMs?: number | null;
-  }): Promise<string> {
-    const id = generateId('alog');
-    await db.insert(activityLog).values({
-      id,
-      source: 'system',
-      eventType: opts.eventType ?? 'processor.outcome',
-      status: opts.status ?? 'success',
-      latencyMs: opts.latencyMs === undefined ? 100 : opts.latencyMs,
-      details: JSON.stringify({ escalated: opts.escalated ? 1 : 0 }),
-      createdAt: opts.createdAt,
-    });
-    activityLogIds.push(id);
-    return id;
-  }
-
   // A 7-day window covering "today" through 6 days ago.
   const range = { from: ymdAgo(6), to: ymdAgo(0) };
 
@@ -146,65 +122,6 @@ describe('AnalyticsService', () => {
       expect(byDate[ymdAgo(0)]).toBe(1);
       // Zero-filled day with no data
       expect(byDate[ymdAgo(5)]).toBe(0);
-    });
-  });
-
-  describe('autonomyRate', () => {
-    it('computes (total - escalated) / total as a percentage, weighted globally', async () => {
-      // Day -5: 3 successful outcomes, 1 escalated -> 66.7%
-      await makeActivityLog({ createdAt: isoAgo(5), escalated: true });
-      await makeActivityLog({ createdAt: isoAgo(5), escalated: false });
-      await makeActivityLog({ createdAt: isoAgo(5), escalated: false });
-      // Day -2: 2 successful outcomes, 0 escalated -> 100%
-      await makeActivityLog({ createdAt: isoAgo(2), escalated: false });
-      await makeActivityLog({ createdAt: isoAgo(2), escalated: false });
-      // Excluded: not a success
-      await makeActivityLog({ createdAt: isoAgo(2), status: 'failed', escalated: false });
-      // Excluded: wrong event type
-      await makeActivityLog({ createdAt: isoAgo(2), eventType: 'message.saved', escalated: false });
-      // Excluded: outside range
-      await makeActivityLog({ createdAt: isoAgo(20), escalated: true });
-
-      const result = await getAnalyticsOverview({ range });
-
-      // Global: 5 total, 1 escalated -> (5-1)/5 * 100 = 80.0
-      expect(result.autonomyRate.value).toBe(80);
-
-      const byDate = Object.fromEntries(result.autonomyRate.series.map((p) => [p.date, p.value]));
-      expect(byDate[ymdAgo(5)]).toBeCloseTo(66.7, 1);
-      expect(byDate[ymdAgo(2)]).toBe(100);
-      expect(byDate[ymdAgo(4)]).toBe(0);
-    });
-
-    it('returns 0 when there are no matching activity log rows', async () => {
-      const result = await getAnalyticsOverview({ range });
-
-      expect(result.autonomyRate.value).toBe(0);
-      expect(result.autonomyRate.series.every((p) => p.value === 0)).toBe(true);
-    });
-  });
-
-  describe('avgResponseMs', () => {
-    it('computes the weighted average latency across matching rows', async () => {
-      // Day -4: 100 + 200 -> per-day avg 150
-      await makeActivityLog({ createdAt: isoAgo(4), latencyMs: 100 });
-      await makeActivityLog({ createdAt: isoAgo(4), latencyMs: 200 });
-      // Day -1: 300 -> per-day avg 300
-      await makeActivityLog({ createdAt: isoAgo(1), latencyMs: 300 });
-      // Excluded: null latency
-      await makeActivityLog({ createdAt: isoAgo(1), latencyMs: null });
-      // Excluded: failed status
-      await makeActivityLog({ createdAt: isoAgo(1), status: 'failed', latencyMs: 999 });
-
-      const result = await getAnalyticsOverview({ range });
-
-      // Global weighted avg: (100+200+300) / 3 = 200
-      expect(result.avgResponseMs.value).toBe(200);
-
-      const byDate = Object.fromEntries(result.avgResponseMs.series.map((p) => [p.date, p.value]));
-      expect(byDate[ymdAgo(4)]).toBe(150);
-      expect(byDate[ymdAgo(1)]).toBe(300);
-      expect(byDate[ymdAgo(3)]).toBe(0);
     });
   });
 
@@ -296,8 +213,6 @@ describe('AnalyticsService', () => {
 
       expect(result.totalMessages.compareValue).toBeNull();
       expect(result.totalMessages.delta).toBeNull();
-      expect(result.autonomyRate.compareValue).toBeNull();
-      expect(result.avgResponseMs.compareValue).toBeNull();
       expect(result.activeGuests.compareValue).toBeNull();
       expect(result.newGuests.compareValue).toBeNull();
     });

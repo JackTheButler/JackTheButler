@@ -9,7 +9,7 @@ import { staff } from '@/db/schema.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { authService } from '@/auth/index.js';
-import { writeActivityLog } from '@/services/activity-log.js';
+import { writeAppLog } from '@/monitoring/instrumentation.js';
 import { describeError } from '@/gateway/routes/system.js';
 
 // ─── describeError (pure function) ────────────────────────────────────────────
@@ -88,9 +88,9 @@ describe('System Health & Logs API', () => {
     const tokens = await authService.login('logs-test-admin@test.com', 'test12345');
     adminToken = tokens.accessToken;
 
-    // Seed a couple of known activity_log rows for the logs endpoint tests
-    writeActivityLog('whatsapp-meta', 'message.sent', 'success', 'conv-logs-test', undefined, 100, { test: true });
-    writeActivityLog('system', 'processor.outcome', 'failed', undefined, 'provider error', undefined, undefined);
+    // Seed a couple of known app_logs rows for the logs endpoint tests
+    writeAppLog('channel', 'whatsapp-meta', 'message.sent', 'success', { test: true }, undefined, 100);
+    writeAppLog('system', 'system', 'processor.outcome', 'failed', {}, 'provider error', 0);
   });
 
   afterAll(async () => {

@@ -19,7 +19,6 @@ export const ID_PREFIXES = {
   staff: 'stf',
   session: 'ses',
   knowledge: 'kb',
-  alog: 'alog',
   app: 'app',
   appLog: 'aplog',
   // Phase 9: Roles

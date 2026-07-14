@@ -8,7 +8,7 @@
  */
 
 import { sql, and, eq, type AnyColumn, type SQL } from 'drizzle-orm';
-import { db, messages, conversations, guests, activityLog } from '@/db/index.js';
+import { db, messages, conversations, guests } from '@/db/index.js';
 import { createLogger } from '@/utils/logger.js';
 
 const log = createLogger('analytics');
@@ -42,8 +42,6 @@ export interface MetricResult {
 
 export interface AnalyticsOverview {
   totalMessages: MetricResult;
-  autonomyRate: MetricResult;
-  avgResponseMs: MetricResult;
   activeGuests: MetricResult;
   newGuests: MetricResult;
 }
@@ -154,79 +152,6 @@ async function queryTotalMessages(
   return { total: rows.reduce((s, r) => s + r.value, 0), series: toSeries(rows, range) };
 }
 
-async function queryAutonomyRate(
-  range: DateRange,
-  offsetMod: string | null,
-  negOffsetMod: string | null,
-): Promise<{ rate: number; series: SeriesPoint[] }> {
-  const dateExpr = localDateExpr(activityLog.createdAt, offsetMod);
-
-  const rows = await db
-    .select({
-      date: dateExpr,
-      total:     sql<number>`cast(count(*) as integer)`,
-      escalated: sql<number>`cast(sum(case when json_extract(${activityLog.details}, '$.escalated') = 1 then 1 else 0 end) as integer)`,
-    })
-    .from(activityLog)
-    .where(and(
-      eq(activityLog.eventType, 'processor.outcome'),
-      eq(activityLog.status, 'success'),
-      afterLocalDate(activityLog.createdAt, range.from, negOffsetMod),
-      beforeNextLocalDay(activityLog.createdAt, range.to, negOffsetMod),
-    ))
-    .groupBy(dateExpr)
-    .orderBy(dateExpr);
-
-  const totalAll = rows.reduce((s, r) => s + r.total, 0);
-  const totalEsc = rows.reduce((s, r) => s + r.escalated, 0);
-  const rate = totalAll > 0 ? Math.round(((totalAll - totalEsc) / totalAll) * 1000) / 10 : 0;
-
-  const seriesRows = rows.map((r) => ({
-    date: r.date,
-    value: r.total > 0 ? Math.round(((r.total - r.escalated) / r.total) * 1000) / 10 : 0,
-  }));
-
-  return { rate, series: toSeries(seriesRows, range) };
-}
-
-async function queryAvgResponseMs(
-  range: DateRange,
-  offsetMod: string | null,
-  negOffsetMod: string | null,
-): Promise<{ avg: number; series: SeriesPoint[] }> {
-  const dateExpr = localDateExpr(activityLog.createdAt, offsetMod);
-
-  // Select count + sum per day so we can derive both the per-day average (series)
-  // and the true weighted global average in JS — avoiding a second DB round-trip.
-  const rows = await db
-    .select({
-      date:       dateExpr,
-      count:      sql<number>`cast(count(*) as integer)`,
-      sumLatency: sql<number>`cast(sum(${activityLog.latencyMs}) as integer)`,
-    })
-    .from(activityLog)
-    .where(and(
-      eq(activityLog.eventType, 'processor.outcome'),
-      eq(activityLog.status, 'success'),
-      sql`${activityLog.latencyMs} is not null`,
-      afterLocalDate(activityLog.createdAt, range.from, negOffsetMod),
-      beforeNextLocalDay(activityLog.createdAt, range.to, negOffsetMod),
-    ))
-    .groupBy(dateExpr)
-    .orderBy(dateExpr);
-
-  const totalCount = rows.reduce((s, r) => s + r.count, 0);
-  const totalSum   = rows.reduce((s, r) => s + r.sumLatency, 0);
-  const avg = totalCount > 0 ? Math.round(totalSum / totalCount) : 0;
-
-  const seriesRows = rows.map((r) => ({
-    date: r.date,
-    value: r.count > 0 ? Math.round(r.sumLatency / r.count) : 0,
-  }));
-
-  return { avg, series: toSeries(seriesRows, range) };
-}
-
 async function queryActiveGuests(
   range: DateRange,
   offsetMod: string | null,
@@ -292,18 +217,14 @@ export async function getAnalyticsOverview(opts: OverviewOptions): Promise<Analy
   log.debug({ range, compareRange, utcOffsetMinutes }, 'Fetching analytics overview');
 
   // Note: better-sqlite3 is synchronous, so these resolve sequentially despite Promise.all.
-  const [msgs, autonomy, responseMs, activeGuests, newGuests] = await Promise.all([
+  const [msgs, activeGuests, newGuests] = await Promise.all([
     queryTotalMessages(range, offsetMod, negOffsetMod),
-    queryAutonomyRate(range, offsetMod, negOffsetMod),
-    queryAvgResponseMs(range, offsetMod, negOffsetMod),
     queryActiveGuests(range, offsetMod, negOffsetMod),
     queryNewGuests(range, offsetMod, negOffsetMod),
   ]);
 
   let cmp: [
     Awaited<ReturnType<typeof queryTotalMessages>>,
-    Awaited<ReturnType<typeof queryAutonomyRate>>,
-    Awaited<ReturnType<typeof queryAvgResponseMs>>,
     Awaited<ReturnType<typeof queryActiveGuests>>,
     Awaited<ReturnType<typeof queryNewGuests>>,
   ] | null = null;
@@ -311,8 +232,6 @@ export async function getAnalyticsOverview(opts: OverviewOptions): Promise<Analy
   if (compareRange) {
     cmp = await Promise.all([
       queryTotalMessages(compareRange, offsetMod, negOffsetMod),
-      queryAutonomyRate(compareRange, offsetMod, negOffsetMod),
-      queryAvgResponseMs(compareRange, offsetMod, negOffsetMod),
       queryActiveGuests(compareRange, offsetMod, negOffsetMod),
       queryNewGuests(compareRange, offsetMod, negOffsetMod),
     ]);
@@ -325,28 +244,16 @@ export async function getAnalyticsOverview(opts: OverviewOptions): Promise<Analy
       delta:        pctDelta(msgs.total, cmp?.[0].total ?? null),
       series:       msgs.series,
     },
-    autonomyRate: {
-      value:        autonomy.rate,
-      compareValue: cmp?.[1].rate ?? null,
-      delta:        pctDelta(autonomy.rate, cmp?.[1].rate ?? null),
-      series:       autonomy.series,
-    },
-    avgResponseMs: {
-      value:        responseMs.avg,
-      compareValue: cmp?.[2].avg ?? null,
-      delta:        pctDelta(responseMs.avg, cmp?.[2].avg ?? null),
-      series:       responseMs.series,
-    },
     activeGuests: {
       value:        activeGuests.total,
-      compareValue: cmp?.[3].total ?? null,
-      delta:        pctDelta(activeGuests.total, cmp?.[3].total ?? null),
+      compareValue: cmp?.[1].total ?? null,
+      delta:        pctDelta(activeGuests.total, cmp?.[1].total ?? null),
       series:       activeGuests.series,
     },
     newGuests: {
       value:        newGuests.total,
-      compareValue: cmp?.[4].total ?? null,
-      delta:        pctDelta(newGuests.total, cmp?.[4].total ?? null),
+      compareValue: cmp?.[2].total ?? null,
+      delta:        pctDelta(newGuests.total, cmp?.[2].total ?? null),
       series:       newGuests.series,
     },
   };

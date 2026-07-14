@@ -3,7 +3,7 @@
  */
 
 import { describe, it, expect, beforeEach, vi, afterEach } from 'vitest';
-import { db, setupState, knowledgeBase, staff } from '@/db/index.js';
+import { db, knowledgeBase, staff } from '@/db/index.js';
 import { eq } from 'drizzle-orm';
 import { SYSTEM_ROLE_IDS } from '@/permissions/defaults.js';
 import { authService } from '@/auth/index.js';
@@ -33,7 +33,7 @@ vi.mock('@/apps/index.js', () => ({
 }));
 
 // Import after mocks are set up
-import { SetupService } from '@/services/setup.js';
+import { SetupService, SETUP_STATE_KEY } from '@/services/setup.js';
 import { appConfigService } from '@/apps/config.js';
 
 const HOTEL_PROFILE_KEY = 'hotel_profile';
@@ -52,7 +52,7 @@ describe('SetupService', () => {
     mockRegistry.get.mockReturnValue(undefined);
     mockRegistry.activate.mockResolvedValue(undefined);
 
-    await db.delete(setupState).where(eq(setupState.id, 'setup'));
+    await settingsService.delete(SETUP_STATE_KEY);
     await db.delete(knowledgeBase);
     await db.delete(staff).where(eq(staff.id, 'staff-admin-butler'));
     await db.delete(staff).where(eq(staff.email, 'new-admin@test.com'));
@@ -63,7 +63,7 @@ describe('SetupService', () => {
   });
 
   afterEach(async () => {
-    await db.delete(setupState).where(eq(setupState.id, 'setup'));
+    await settingsService.delete(SETUP_STATE_KEY);
     await db.delete(knowledgeBase);
     await db.delete(staff).where(eq(staff.id, 'staff-admin-butler'));
     await db.delete(staff).where(eq(staff.email, 'new-admin@test.com'));
@@ -184,10 +184,10 @@ describe('SetupService', () => {
 
     it('should persist state even when the setup_state row is missing (e.g. after reset)', async () => {
       // No service.start() here — simulates calling a step method against a fresh
-      // install / post-reset DB where the 'setup' row hasn't been INSERTed yet.
+      // install / post-reset DB where settings['setup_state'] hasn't been set yet.
       // A plain UPDATE keyed on id='setup' would silently no-op in that case.
-      const row = await db.select().from(setupState).where(eq(setupState.id, 'setup')).get();
-      expect(row).toBeUndefined();
+      const row = await settingsService.get(SETUP_STATE_KEY, null);
+      expect(row).toBeNull();
 
       const state = await service.completeStep('bootstrap', 'welcome');
 
@@ -195,12 +195,11 @@ describe('SetupService', () => {
       expect(state.completedSteps).toContain('bootstrap');
       expect(state.status).toBe('in_progress');
 
-      // Verify it was actually persisted to the DB, not just returned in memory.
-      const persisted = await db
-        .select()
-        .from(setupState)
-        .where(eq(setupState.id, 'setup'))
-        .get();
+      // Verify it was actually persisted, not just returned in memory.
+      const persisted = await settingsService.get<{ currentStep: string | null; completedSteps: string } | null>(
+        SETUP_STATE_KEY,
+        null
+      );
       expect(persisted).toBeDefined();
       expect(persisted?.currentStep).toBe('welcome');
       expect(persisted?.completedSteps).toContain('bootstrap');
@@ -585,8 +584,8 @@ describe('SetupService', () => {
       const kbEntries = await db.select().from(knowledgeBase);
       expect(kbEntries).toHaveLength(0);
 
-      const stateRow = await db.select().from(setupState).where(eq(setupState.id, 'setup')).get();
-      expect(stateRow).toBeUndefined();
+      const stateRow = await settingsService.get(SETUP_STATE_KEY, null);
+      expect(stateRow).toBeNull();
     });
   });
 });

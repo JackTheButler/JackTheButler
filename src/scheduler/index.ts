@@ -8,7 +8,6 @@
 import { NotFoundError } from '@/errors/index.js';
 import { createLogger } from '@/utils/logger.js';
 import { pmsSyncService, getPMSSyncConfig } from '@/services/pms-sync.js';
-import { writeActivityLog } from '../services/activity-log.js';
 import { sqlite } from '@/db/index.js';
 import { getAppRegistry } from '@/apps/registry.js';
 import { conversationService } from '../services/conversation.js';
@@ -22,7 +21,7 @@ interface ScheduledJob {
   lastRun: Date | null;
   lastResult: 'success' | 'error' | null;
   isRunning: boolean;
-  /** The same wrapped handler used by the interval timer — invoked directly by triggerJob() so manual and scheduled runs share identical bookkeeping (isRunning/lastRun/lastResult/activity_log). */
+  /** The same wrapped handler used by the interval timer — invoked directly by triggerJob() so manual and scheduled runs share identical bookkeeping (isRunning/lastRun/lastResult). */
   wrappedHandler: () => Promise<void>;
 }
 
@@ -43,20 +42,18 @@ export class Scheduler {
       this.scheduleJob('pms-sync', syncIntervalMs, () => this.runPMSSync());
     }
 
-    // Log purge job — delete activity_log + app_logs entries older than 30 days (runs daily)
+    // Log purge job — delete app_logs entries older than 30 days (runs daily)
     this.scheduleJob('log-purge', 24 * 60 * 60 * 1000, async () => {
       const cutoff = new Date();
       cutoff.setDate(cutoff.getDate() - 30);
       const cutoffISO = cutoff.toISOString();
 
-      const actResult = sqlite.prepare('DELETE FROM activity_log WHERE created_at < ?').run(cutoffISO);
       const appResult = sqlite.prepare('DELETE FROM app_logs WHERE created_at < ?').run(cutoffISO);
-      const activityLogDeleted = actResult.changes ?? 0;
       const appLogsDeleted = appResult.changes ?? 0;
-      if (activityLogDeleted + appLogsDeleted > 0) {
-        log.info({ activityLog: activityLogDeleted, appLogs: appLogsDeleted }, 'Purged old log entries');
+      if (appLogsDeleted > 0) {
+        log.info({ appLogs: appLogsDeleted }, 'Purged old log entries');
       }
-      return { activityLogDeleted, appLogsDeleted, cutoffDate: cutoff.toISOString().split('T')[0] };
+      return { appLogsDeleted, cutoffDate: cutoff.toISOString().split('T')[0] };
     });
 
     // Conversation idle timeout (every 30 minutes)
@@ -118,8 +115,8 @@ export class Scheduler {
    * Manually trigger a job
    *
    * Routes through the same wrapped handler used by the interval timer, so a
-   * manual trigger sets isRunning, updates lastRun/lastResult, and writes the
-   * scheduler.outcome activity_log row exactly like a scheduled run does.
+   * manual trigger sets isRunning and updates lastRun/lastResult exactly like
+   * a scheduled run does.
    */
   async triggerJob(name: string): Promise<void> {
     const job = this.jobs.get(name);
@@ -159,31 +156,15 @@ export class Scheduler {
 
       job.isRunning = true;
       job.lastRun = new Date();
-      const t0 = Date.now();
-      let handlerDetails: Record<string, unknown> = {};
 
       try {
-        const result = await handler();
-        if (result) handlerDetails = result;
+        await handler();
         job.lastResult = 'success';
       } catch (err) {
         job.lastResult = 'error';
         log.error({ err, name }, 'Scheduled job failed');
       } finally {
         job.isRunning = false;
-        try {
-          writeActivityLog(
-            'system',
-            'scheduler.outcome',
-            job.lastResult === 'success' ? 'success' : 'failed',
-            undefined,
-            job.lastResult === 'error' ? `Job ${name} failed` : undefined,
-            Date.now() - t0,
-            { job: name, ...handlerDetails }
-          );
-        } catch {
-          // Never let a log write affect job scheduling
-        }
       }
     };
 

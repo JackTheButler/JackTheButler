@@ -19,7 +19,6 @@
 
 import {
   createPipeline,
-  PipelineError,
   resolveConversation,
   detectLanguage,
   translateInbound,
@@ -39,8 +38,6 @@ import {
 } from '@thebutler/pipeline';
 import type { InboundMessage, OutboundMessage } from '@/types/message.js';
 import { getPropertyLanguage } from '@/services/translation.js';
-import { events, EventTypes } from '@/events/index.js';
-import { writeActivityLog } from '@/services/activity-log.js';
 import type { ButlerContext } from './context.js';
 import {
   aiProvider,
@@ -56,10 +53,6 @@ import { checkVerification } from './stages/check-verification.js';
 import { extractResponseTags } from './stages/extract-response-tags.js';
 import { emitMessageReceived } from './stages/emit-message-received.js';
 import { emitMessageSent } from './stages/emit-message-sent.js';
-import {
-  writeProcessorOutcome,
-  buildOutcomeDetails,
-} from './stages/write-processor-outcome.js';
 import { routeTask } from './stages/route-task.js';
 
 export type { ButlerContext } from './context.js';
@@ -89,11 +82,6 @@ let cached: { pipeline: Pipeline<ButlerContext>; lang: string } | null = null;
 //     `translateOutbound` operates on tag-free text.
 //   - `emitMessageSent` after `saveOutboundMessage` — fires `MESSAGE_SENT`
 //     once the outbound is durable.
-//   - `writeProcessorOutcome` at the end — writes the success-path
-//     `processor.outcome` activity-log row consumed by System Health
-//     metrics, analytics, and the dashboard's activity feed. The
-//     failure-path equivalent is emitted by the outer `processMessage`
-//     wrapper, which has `err.ctx` access via `PipelineError`.
 const stages: readonly Stage<ButlerContext>[] = [
   resolveConversation,
   detectLanguage,
@@ -112,7 +100,6 @@ const stages: readonly Stage<ButlerContext>[] = [
   translateOutbound,
   saveOutboundMessage,
   emitMessageSent,
-  writeProcessorOutcome,
 ];
 
 function buildPipeline(systemLanguage: string): Pipeline<ButlerContext> {
@@ -143,65 +130,15 @@ async function getPipeline(): Promise<Pipeline<ButlerContext>> {
  * Process an inbound message through the pipeline. The active domain is
  * baked into `getPipeline()` (hospitality, for Butler); each call site
  * simply hands over the inbound message and receives the outbound reply.
- *
- * On failure, emits `MESSAGE_FAILED` and a failure-path
- * `processor.outcome` activity-log row using the `ctx` carried by the
- * thrown `PipelineError`, then re-throws so the caller can decide what
- * to do (retry, send a fallback reply, alert oncall).
+ * On failure, the error propagates so the caller can decide what to do
+ * (retry, send a fallback reply, alert oncall).
  */
 export async function processMessage(
   inbound: InboundMessage,
 ): Promise<OutboundMessage> {
   const pipeline = await getPipeline();
-  try {
-    const ctx = await pipeline.process(toPkgInbound(inbound));
-    return toButlerOutbound(ctx.outbound);
-  } catch (err) {
-    if (err instanceof PipelineError) {
-      emitFailureSignals(inbound, err);
-    }
-    throw err;
-  }
-}
-
-function emitFailureSignals(
-  inbound: InboundMessage,
-  err: PipelineError<ButlerContext>,
-): void {
-  const message = err.cause instanceof Error ? err.cause.message : String(err.cause);
-
-  if (err.ctx.conversation?.id && err.ctx.savedInboundId) {
-    try {
-      events.emit({
-        type: EventTypes.MESSAGE_FAILED,
-        conversationId: err.ctx.conversation.id,
-        messageId: err.ctx.savedInboundId,
-        channel: inbound.channel,
-        error: message,
-        timestamp: new Date(),
-      });
-    } catch {
-      // Never let event emission affect the original error.
-    }
-  }
-
-  try {
-    writeActivityLog(
-      inbound.channel,
-      'processor.outcome',
-      'failed',
-      err.ctx.conversation?.id,
-      message,
-      Date.now() - err.ctx.startTime,
-      {
-        actionTaken: 'failed',
-        error: message,
-        ...buildOutcomeDetails(err.ctx),
-      },
-    );
-  } catch {
-    // Never let an activity-log write replace the original error.
-  }
+  const ctx = await pipeline.process(toPkgInbound(inbound));
+  return toButlerOutbound(ctx.outbound);
 }
 
 // Butler's `InboundMessage` carries `timestamp` + `contentType` + `raw`;

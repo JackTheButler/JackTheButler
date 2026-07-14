@@ -17,7 +17,7 @@ const PRESET_VALUES: RangePreset[] = ['today', 'yesterday', '3d', '7d', '14d', '
 // Card config
 // ---------------------------------------------------------------------------
 
-type OverviewKey = 'totalMessages' | 'autonomyRate' | 'avgResponseMs' | 'activeGuests' | 'newGuests';
+type OverviewKey = 'totalMessages' | 'activeGuests' | 'newGuests';
 
 interface CardConfig {
   key: OverviewKey;
@@ -38,21 +38,6 @@ const CARD_CONFIGS: Omit<CardConfig, 'label'>[] = [
     chartType: 'area',
     color: 'hsl(214, 100%, 50%)',
     gradientId: 'grad-messages',
-  },
-  {
-    key: 'autonomyRate',
-    format: (v) => `${v}%`,
-    chartType: 'area',
-    color: 'hsl(142, 70%, 45%)',
-    gradientId: 'grad-autonomy',
-  },
-  {
-    key: 'avgResponseMs',
-    format: (v) => v >= 1000 ? `${(v / 1000).toFixed(1)}s` : `${v}ms`,
-    chartType: 'area',
-    color: 'hsl(262, 70%, 55%)',
-    gradientId: 'grad-response',
-    invertDelta: true,
   },
   {
     key: 'activeGuests',
@@ -209,8 +194,6 @@ export function AnalyticsCards() {
   // Inject translated labels at render time
   const labelMap: Record<OverviewKey, string> = {
     totalMessages:  t('home.analytics.totalMessages'),
-    autonomyRate:   t('home.analytics.autonomyRate'),
-    avgResponseMs:  t('home.analytics.avgResponseTime'),
     activeGuests:   t('home.analytics.activeGuests'),
     newGuests:      t('home.analytics.newGuests'),
   };

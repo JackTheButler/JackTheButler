@@ -272,7 +272,7 @@ systemRoutes.get('/health', requirePermission(PERMISSIONS.HEALTH_VIEW), (c) => {
 
 /**
  * GET /api/v1/system/logs
- * Returns a unified log stream from both activity_log and app_logs tables.
+ * Returns a log stream from the app_logs table.
  * Supports server-side filtering by source, status, and date range.
  */
 systemRoutes.get('/logs', requirePermission(PERMISSIONS.HEALTH_VIEW), (c) => {
